@@ -28,12 +28,8 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import type { DockWorkspace } from "@momo/workbench/dock";
-import {
-  createAppearance,
-  PRESET_THEME_IDS,
-  type AppearanceController,
-  type ThemeId,
-} from "@momo/workbench/appearance";
+import {AppearancePreferences} from "./AppearancePreferences";
+import {LanguagePreferences} from "./LanguagePreferences";
 import { Workbench } from "./Workbench";
 import { SoundLibrary } from "./SoundLibrary";
 import { Inspector, Range, CommitText } from "./Inspector";
@@ -202,14 +198,12 @@ export default function App() {
     [amount, setAmount] = useState(0.35),
     [busy, setBusy] = useState(false),
     [ioBusy, setIoBusy] = useState(false),
-    [help, setHelp] = useState(false),
-    [theme, setTheme] = useState("original");
+    [help, setHelp] = useState(false);
   const menu = useRef<HTMLDivElement>(null),
     manager = useRef<DockWorkspace | null>(null),
     projectInput = useRef<HTMLInputElement>(null),
     sampleInput = useRef<HTMLInputElement>(null),
-    compositionInput = useRef<HTMLInputElement>(null),
-    appearance = useRef<AppearanceController | null>(null);
+    compositionInput = useRef<HTMLInputElement>(null);
   const renderer = useRef<ReturnType<typeof createRenderer> | null>(null),
     player = useRef<AudioPlayer | null>(null),
     playToken = useRef(0),
@@ -347,25 +341,12 @@ export default function App() {
       .finally(() => {
         if (!cancelled) setReady(true);
       });
-    try {
-      const stored = localStorage.getItem("momo-sound-forge:appearance:v1");
-      if (stored) {
-        appearance.current = createAppearance({
-          storage: localStorage,
-          root: document.documentElement,
-          storageKey: "momo-sound-forge:appearance:v1",
-        });
-        setTheme(appearance.current.get().theme);
-      }
-    } catch {
-      /* Default theme remains usable. */
-    }
+
     return () => {
       cancelled = true;
       alive.current = false;
       renderer.current?.dispose();
       player.current?.dispose();
-      appearance.current?.dispose();
     };
   }, [flash]);
   useEffect(() => {
@@ -1005,47 +986,6 @@ export default function App() {
       setIoBusy(false);
     }
   }
-  function changeTheme(value: string) {
-    setTheme(value);
-    const root = document.documentElement;
-    if (value === "original") {
-      appearance.current?.dispose();
-      appearance.current = null;
-      for (const key of [
-        "theme",
-        "appearanceTheme",
-        "paletteRoles",
-        "interfaceStyle",
-        "density",
-        "tabStyle",
-        "tabOverride",
-        "momoWorkbench",
-      ])
-        delete root.dataset[key];
-      for (const property of Array.from(root.style))
-        if (property.startsWith("--ui-")) root.style.removeProperty(property);
-      root.style.removeProperty("color-scheme");
-      try {
-        localStorage.removeItem("momo-sound-forge:appearance:v1");
-      } catch {
-        /* Session preference remains active. */
-      }
-    } else {
-      try {
-        appearance.current ??= createAppearance({
-          storage: localStorage,
-          root,
-          storageKey: "momo-sound-forge:appearance:v1",
-        });
-        appearance.current.save({
-          ...appearance.current.get(),
-          theme: value as ThemeId,
-        });
-      } catch {
-        flash("status.error");
-      }
-    }
-  }
   const truncated = project.layers.some(
     (l) => !l.muted && l.start + l.duration > project.duration + 0.005,
   );
@@ -1142,7 +1082,8 @@ export default function App() {
       </div>
       <div className="transport">
         <button
-          className="primary play-button"
+          className="primary play-button momo-button"
+          data-variant="primary"
           disabled={!result && !playing && !pendingPlayback}
           onClick={() =>
             playing || pendingPlayback
@@ -1837,28 +1778,8 @@ export default function App() {
         </div>
         <div className="header-right">
           <div ref={menu} className="layout-menu" />
-          <select
-            aria-label={t("theme.label")}
-            className="theme-select"
-            value={theme}
-            onChange={(e) => changeTheme(e.target.value)}
-          >
-            <option value="original">{t("theme.original")}</option>
-            {PRESET_THEME_IDS.map((id) => (
-              <option key={id} value={id}>
-                {t(`theme.${id}`)}
-              </option>
-            ))}
-          </select>
-          <select
-            className="language-select"
-            aria-label="Language"
-            value={lang}
-            onChange={(e) => language.setLanguage(e.target.value)}
-          >
-            <option value="zh-CN">中文</option>
-            <option value="en">EN</option>
-          </select>
+          <AppearancePreferences />
+          <LanguagePreferences />
           <button
             className="icon-button"
             aria-label={t("help.label")}

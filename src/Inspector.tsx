@@ -68,7 +68,7 @@ export function Range({
 }) {
   const precision = step >= 1 ? 0 : step >= 0.1 ? 1 : step >= 0.01 ? 2 : 3;
   return (
-    <label className="range-field">
+    <label className="range-field momo-field">
       <span className="field-line">
         <span>{label}</span>
         <span className="number-wrap">

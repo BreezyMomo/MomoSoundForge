@@ -1,24 +1,4 @@
 :root {
-  color-scheme: dark;
-  --ui-bg: #101010;
-  --ui-inset: #141414;
-  --ui-panel: #191919;
-  --ui-surface: #252525;
-  --ui-hover: #303030;
-  --ui-line: #303030;
-  --ui-line-strong: #686868;
-  --ui-text: #ececeb;
-  --ui-muted: #b4b4b4;
-  --ui-subtle: #949494;
-  --ui-selected: #303030;
-  --ui-shadow: #0008;
-  --ui-pane-radius: 5px;
-  --ui-window-radius: 8px;
-  --ui-control-radius: 5px;
-  --ui-tab-height: 32px;
-  --ui-accent: #ececeb;
-  --ui-on-accent: #141414;
-  --ui-accent-text: #ececeb;
   --wave: #8ccde0;
   --line: var(--ui-line);
   font-family: Inter, "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
@@ -46,7 +26,7 @@ button {
   gap: 7px;
   border: 1px solid transparent;
   background: transparent;
-  border-radius: 5px;
+  border-radius: var(--ui-control-radius);
   cursor: pointer;
   white-space: nowrap;
   min-height: 30px;
@@ -74,8 +54,8 @@ select {
   min-width: 0;
   border: 1px solid var(--ui-line);
   background: var(--ui-inset);
-  border-radius: 5px;
-  padding: 7px 9px;
+  border-radius: var(--ui-control-radius);
+  padding: var(--ui-control-pad-y, 7px) var(--ui-control-pad-x, 9px);
 }
 select {
   max-width: 100%;
@@ -225,19 +205,6 @@ span {
   background: var(--ui-surface);
   color: var(--ui-subtle);
 }
-.theme-select,
-.language-select {
-  height: 30px;
-  padding: 4px 6px;
-  font-size: 12px;
-  background: transparent;
-}
-.theme-select {
-  width: 106px;
-}
-.language-select {
-  width: 63px;
-}
 .wide {
   width: 100%;
 }
@@ -264,7 +231,7 @@ span {
 .dock-stack {
   border: 0;
   background: var(--ui-panel);
-  border-radius: 5px;
+  border-radius: var(--ui-pane-radius);
 }
 .dock-stack-header {
   border-bottom: 1px solid var(--ui-line);
@@ -1432,9 +1399,6 @@ span {
   .header-right {
     margin-left: 0;
   }
-  .theme-select {
-    display: none;
-  }
   .export-button {
     padding: 5px 8px;
   }
@@ -1502,7 +1466,9 @@ span {
 }
 @media (max-width: 600px) {
   .app-header {
-    padding: 0 10px;
+    height: auto;
+    flex-wrap: wrap;
+    padding: 10px;
     gap: 8px;
   }
   .brand {
@@ -1530,10 +1496,8 @@ span {
   }
   .header-right {
     gap: 5px;
-  }
-  .language-select {
-    font-size: 11px;
-    width: 49px;
+    flex-basis: 100%;
+    justify-content: flex-end;
   }
   .export-button {
     font-size: 11px;
