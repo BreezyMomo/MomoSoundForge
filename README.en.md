@@ -99,3 +99,9 @@ The synth is a lightweight procedural implementation. Sawtooth and square waves 
 The unified sound list supports search, All / Favorites / Recent filters, collapsible categories, and list / waveform-grid views. Favorites and the latest 24 played, added or opened sounds are local preferences outside project history. Choose a category when saving or renaming; older saved sounds start uncategorized.
 
 Outer clip edges stretch the complete waveform with a corresponding pitch change. Enable Crop above the layers to reveal two internal handles on the selected clip. Cropped regions remain visible in gray and contribute no audio; the clip frame and later layers stay in place. Drag the handles back or choose Restore full clip to recover the content. Stretching preserves crop proportions. Both operations support undo and are saved with projects and library snapshots.
+
+## Sample instruments and note parts
+
+Use **Add instrument part** to create a playable multi-sample part. Import a portable `.sfinstrument` package, then add notes or import a `momo.note-events/v1` / `melody-design/recipe-v1` JSON file. Notes expose MIDI pitch, beat position, duration, velocity, instrument and articulation; BPM converts beats to seconds. Sample mapping supports key/velocity zones, deterministic round robin, verified sustain loops and recorded release samples. Missing coverage is silent with an explicit notice.
+
+Open `examples/instruments/flute/phrase.soundforge` for an editable five-note example using 18 real VSCO 2 CE flute recordings (CC0). The matching WAV, portable instrument, event JSON and conversion provenance are included. See [instrument format and integration guide](docs/instruments.md). The 10-second project window and 24 MiB decoded asset budget remain in force. This is a note-event editor, not a full MIDI sequencer or a general SFZ engine; pitch shifting uses ordinary resampling.

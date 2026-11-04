@@ -1,0 +1,99 @@
+.score-editor {
+  margin: 20px 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--ui-line);
+  min-width: 0;
+}
+.score-editor header,
+.score-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.score-editor header {
+  justify-content: space-between;
+}
+.score-editor h2 {
+  font-size: 15px;
+  margin: 0;
+}
+.score-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  min-width: 0;
+}
+.score-editor select,
+.score-editor input:not([type="checkbox"]) {
+  min-height: 32px;
+  max-width: 100%;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  padding: 5px 8px;
+  background: var(--ui-inset);
+  color: inherit;
+}
+.score-toolbar label {
+  max-width: 300px;
+}
+.score-toolbar input[type="number"] {
+  width: 90px;
+}
+.score-table-scroll {
+  overflow-x: auto;
+}
+.score-editor table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.score-editor td,
+.score-editor th {
+  padding: 8px 6px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--ui-line);
+  font-weight: 400;
+}
+.score-editor td input {
+  width: 74px;
+  font-variant-numeric: tabular-nums;
+}
+.score-editor td select {
+  width: 125px;
+}
+.score-editor td small {
+  display: block;
+  max-width: 180px;
+  overflow-wrap: anywhere;
+}
+.score-region-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.score-region-form p,
+.score-region-form .button-group {
+  grid-column: 1/-1;
+}
+.score-region-form .check-field {
+  flex-direction: row;
+  align-items: center;
+}
+.score-issues {
+  font-size: 12px;
+  line-height: 1.6;
+  padding-left: 20px;
+}
+
+.score-editor button[aria-pressed="true"] {
+  background: var(--ui-text);
+  color: var(--ui-bg);
+}
+
+.score-editor th:nth-child(7), .score-editor td:nth-child(7) { min-width: 140px; }

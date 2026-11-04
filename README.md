@@ -131,3 +131,7 @@ npm run preview
 统一导出面板提供 WAV（默认 PCM16）、OGG（Vorbis 质量 5）、MP3（VBR 质量 2）及 FLAC（PCM16 无损压缩）。单个文件和批量 ZIP 共用格式、采样率和声道设置。精确循环优先使用 WAV 或 FLAC；MP3 可能包含编码延迟。
 
 WAV 不加载额外编码器。其他格式首次使用时按需加载随应用提供的约 32 MB WebAssembly 编码器，之后复用；全部编码在浏览器本地完成，不上传音频、不依赖外部 CDN。编码时面板显示状态并禁用重复操作。第三方组件及源代码出处见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 乐器声部
+
+支持多采样区域、力度与演奏法选择、确定性轮替、持续循环与释放，以及按拍编辑的音符事件表。使用说明、便携格式、melody-design 接入和真实长笛示例见 [乐器声部文档](docs/instruments.md)。

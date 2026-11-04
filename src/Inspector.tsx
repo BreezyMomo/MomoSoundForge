@@ -176,9 +176,11 @@ export function Inspector({
             {t(
               layer.type === "sample"
                 ? "editor.sample"
-                : layer.type === "composition"
-                  ? "editor.composition"
-                  : "editor.synth",
+                : layer.type === "instrument"
+                  ? "score.title"
+                  : layer.type === "composition"
+                    ? "editor.composition"
+                    : "editor.synth",
             )}
           </span>
           <h2>{layer.name}</h2>
@@ -230,9 +232,11 @@ export function Inspector({
         ) : (
           <>
             <div className="asset-name">
-              {layer.type === "composition"
-                ? layer.project?.name
-                : project.assets[layer.assetId!]?.name}
+              {layer.type === "instrument"
+                ? t("score.editHint")
+                : layer.type === "composition"
+                  ? layer.project?.name
+                  : project.assets[layer.assetId!]?.name}
             </div>
             {layer.type === "composition" && (
               <>

@@ -1,0 +1,51 @@
+{
+  "schema": "momo.note-events/v1",
+  "bpm": 120,
+  "notes": [
+    {
+      "id": "note-1",
+      "instrumentId": "flute",
+      "midi": 69,
+      "start": 0,
+      "duration": 0.45,
+      "velocity": 35,
+      "articulation": "staccato"
+    },
+    {
+      "id": "note-2",
+      "instrumentId": "flute",
+      "midi": 69,
+      "start": 0.75,
+      "duration": 0.45,
+      "velocity": 75,
+      "articulation": "staccato"
+    },
+    {
+      "id": "note-3",
+      "instrumentId": "flute",
+      "midi": 76,
+      "start": 1.5,
+      "duration": 0.45,
+      "velocity": 105,
+      "articulation": "staccato"
+    },
+    {
+      "id": "note-4",
+      "instrumentId": "flute",
+      "midi": 69,
+      "start": 2.25,
+      "duration": 0.45,
+      "velocity": 65,
+      "articulation": "staccato"
+    },
+    {
+      "id": "note-5",
+      "instrumentId": "flute",
+      "midi": 84,
+      "start": 3,
+      "duration": 0.45,
+      "velocity": 95,
+      "articulation": "staccato"
+    }
+  ]
+}

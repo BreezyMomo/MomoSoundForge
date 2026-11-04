@@ -1,3 +1,5 @@
+import { ScoreEditor } from "./ScoreEditor";
+import { emptyScore } from "./instruments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
@@ -1261,6 +1263,29 @@ export default function App() {
           <button
             className="text-button"
             disabled={project.layers.length >= 16}
+            onClick={() => {
+              const layer = makeLayer({
+                type: "instrument",
+                name: t("score.title"),
+                score: emptyScore(),
+                duration: project.duration,
+                frequency: 440,
+                endFrequency: 440,
+                gain: 1,
+                attack: 0,
+                release: 0,
+                decay: 0,
+                cutoff: 22000,
+              });
+              edit((p) => ({ ...p, layers: [...p.layers, layer] }));
+              setSelected(layer.id);
+            }}
+          >
+            {t("score.addTrack")}
+          </button>
+          <button
+            className="text-button"
+            disabled={project.layers.length >= 16}
             onClick={addSynth}
           >
             <Plus size={15} />
@@ -1470,19 +1495,23 @@ export default function App() {
                     {t(
                       l.type === "synth"
                         ? "editor.synth"
-                        : l.type === "composition"
-                          ? "editor.composition"
-                          : "editor.sample",
+                        : l.type === "instrument"
+                          ? "score.title"
+                          : l.type === "composition"
+                            ? "editor.composition"
+                            : "editor.sample",
                     )}{" "}
                     ·{" "}
                     {l.type === "synth"
                       ? t(`wave.${l.wave}`)
-                      : l.type === "composition"
-                        ? t(
-                            "composition.layerCount",
-                            l.project?.layers.length ?? 0,
-                          )
-                        : project.assets[l.assetId!]?.name}
+                      : l.type === "instrument"
+                        ? t("score.noteCount", l.score?.notes.length ?? 0)
+                        : l.type === "composition"
+                          ? t(
+                              "composition.layerCount",
+                              l.project?.layers.length ?? 0,
+                            )
+                          : project.assets[l.assetId!]?.name}
                   </small>
                 </span>
               </button>
@@ -1664,6 +1693,14 @@ export default function App() {
           onChange={(v) => changeProject("echo", v)}
         />
       </div>
+      {selectedLayer?.type === "instrument" && (
+        <ScoreEditor
+          key={selectedLayer.id}
+          project={project}
+          layer={selectedLayer}
+          onChange={(next) => edit(() => next)}
+        />
+      )}
       <MacroEditor
         project={project}
         onChange={(next) => edit(() => next, "controls")}

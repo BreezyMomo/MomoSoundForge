@@ -1,4 +1,10 @@
 import {
+  validateScore,
+  scoreAssets,
+  MAX_TOTAL_NOTES,
+  type Score,
+} from "./instruments";
+import {
   resolveControls,
   validateAdvanced,
   type Automation,
@@ -15,7 +21,8 @@ export type Wave = "sine" | "triangle" | "saw" | "square" | "noise";
 export type Layer = {
   id: string;
   name: string;
-  type: "synth" | "sample" | "composition";
+  type: "synth" | "sample" | "composition" | "instrument";
+  score?: Score;
   project?: Project;
   wave: Wave;
   noiseSeed: number;
@@ -139,9 +146,18 @@ export function decodeSamples(data: string) {
   }
   return out;
 }
-type ReadBudget = { bytes: number; layers: number; stack: Set<object> };
+type ReadBudget = {
+  bytes: number;
+  layers: number;
+  notes: number;
+  stack: Set<object>;
+};
 export function parseProject(raw: unknown): Project {
-  return readProject(raw, { bytes: 0, layers: 0, stack: new Set() }, 0);
+  return readProject(
+    raw,
+    { bytes: 0, layers: 0, notes: 0, stack: new Set() },
+    0,
+  );
 }
 function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
   const fail = (): never => {
@@ -170,7 +186,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     Array.isArray(r.assets)
   )
     return fail();
-  if (Object.keys(r.assets).length > 16) return fail();
+  if (Object.keys(r.assets).length > 64) return fail();
   const assets: Project["assets"] = Object.create(null);
   for (const [id, a] of Object.entries(r.assets)) {
     if (
@@ -219,7 +235,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       !str(l.id) ||
       ids.has(l.id) ||
       !str(l.name) ||
-      !["synth", "sample", "composition"].includes(l.type) ||
+      !["synth", "sample", "composition", "instrument"].includes(l.type) ||
       !["sine", "triangle", "saw", "square", "noise"].includes(l.wave)
     )
       return fail();
@@ -259,6 +275,11 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       (!num(l.noiseSeed, 0, 4294967295) || !Number.isInteger(l.noiseSeed))
     )
       return fail();
+    if (l.type === "instrument") {
+      validateScore(l.score!, assets);
+      budget.notes += l.score!.notes.length;
+      if (budget.notes > MAX_TOTAL_NOTES) return fail();
+    }
     layers.push({
       ...makeLayer(),
       ...Object.fromEntries(
@@ -276,6 +297,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
         ].map((k) => [k, l[k as keyof Layer]]),
       ),
       noiseSeed: l.noiseSeed ?? r.seed,
+      ...(l.type === "instrument" ? { score: structuredClone(l.score!) } : {}),
       ...(l.automation !== undefined
         ? { automation: structuredClone(l.automation) }
         : {}),
@@ -366,6 +388,9 @@ export function projectForSave(p: Project): Project {
   const used = new Set(
     p.layers.filter((l) => l.type === "sample").map((l) => l.assetId),
   );
+  for (const layer of p.layers)
+    if (layer.type === "instrument" && layer.score)
+      for (const id of scoreAssets(layer.score)) used.add(id);
   return {
     ...p,
     schema: "momo.soundforge/v2",
@@ -382,12 +407,14 @@ export function projectForSave(p: Project): Project {
 
 export function assertProjectLimits(project: Project) {
   let layers = 0,
+    notes = 0,
     bytes = 0;
   const stack = new Set<Project>();
   const visit = (p: Project, depth: number) => {
     if (depth > MAX_COMPOSITION_DEPTH || stack.has(p) || p.layers.length > 16)
       throw Error("error.compositionLimit");
     stack.add(p);
+    if (Object.keys(p.assets).length > 64) throw Error("error.budget");
     for (const asset of Object.values(p.assets))
       for (const channel of asset.channels) {
         bytes += channel.length * 0.75;
@@ -395,6 +422,11 @@ export function assertProjectLimits(project: Project) {
       }
     for (const layer of p.layers) {
       if (++layers > MAX_TOTAL_LAYERS) throw Error("error.compositionLimit");
+      if (layer.type === "instrument") {
+        validateScore(layer.score!, p.assets);
+        notes += layer.score!.notes.length;
+        if (notes > MAX_TOTAL_NOTES) throw Error("score.invalid");
+      }
       if (layer.type === "composition") {
         if (!layer.project) throw Error("error.project");
         visit(layer.project, depth + 1);

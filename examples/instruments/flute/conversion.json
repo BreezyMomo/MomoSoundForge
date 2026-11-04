@@ -1,0 +1,412 @@
+{
+  "manifest": "momo.instrument-collection/v1",
+  "source": "https://versilian-studios.com/vsco-community/",
+  "sourceCommit": "440300901dfe9275fd84e0b7763af1f8443ae62e",
+  "license": "CC0-1.0",
+  "conversion": [
+    {
+      "id": "07-flute-3-A4-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_A3_v2_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-4-A4-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_A3_v1_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-5-A4-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_A3_v3_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-6-A4-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_A3_v1_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-7-A4-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_A3_v2_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-8-A4-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_A3_v3_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-9-E5-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_E4_v1_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-10-E5-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_E4_v2_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-11-E5-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_E4_v3_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-12-E5-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_E4_v1_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-13-E5-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_E4_v2_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-14-E5-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_E4_v3_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-15-C6-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_C5_v1_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-16-C6-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_C5_v2_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-17-C6-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_C5_v3_rr1.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_1",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0,
+        "randomHigh": 0.5
+      }
+    },
+    {
+      "id": "07-flute-18-C6-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_C5_v1_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-19-C6-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_C5_v2_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    },
+    {
+      "id": "07-flute-20-C6-staccato",
+      "source": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Woodwinds/Flute/stac/LDFlute_stac_C5_v3_rr2.wav",
+      "license": "CC0-1.0",
+      "originalLoop": {
+        "mode": null,
+        "startFrame": null,
+        "endFrame": null,
+        "frameSampleRate": 44100,
+        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
+      },
+      "loopEnabled": false,
+      "roundRobinMode": "deterministic-cycle",
+      "originalRoundRobin": {
+        "mode": "random-window",
+        "group": "gr_2",
+        "sequenceLength": null,
+        "index": null,
+        "randomLow": 0.5,
+        "randomHigh": 1
+      }
+    }
+  ],
+  "verification": {
+    "frames": 144000,
+    "sampleRate": 48000,
+    "peak": 0.1900322139263153,
+    "rms": 0.015918771356880378,
+    "reopenIdentical": true,
+    "subjectiveListening": false
+  }
+}

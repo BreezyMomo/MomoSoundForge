@@ -1,3 +1,4 @@
+import { renderScore } from "./instruments";
 import { resolveControls, curveValue, processEffects } from "./advanced";
 import {
   SAMPLE_RATE,
@@ -69,22 +70,35 @@ function renderNested(
             context,
           )
         : null;
-    const channels = child
-      ? [child.left, child.right]
-      : asset
-        ? samples(asset)
+    const performance =
+      layer.type === "instrument" && layer.score
+        ? renderScore(
+            layer.score,
+            project.assets,
+            layer.duration,
+            sampleRate,
+            project.seed ^ layer.noiseSeed,
+          )
         : null;
-    const sourceRate = child ? sampleRate : (asset?.sampleRate ?? sampleRate);
+    const channels = performance
+      ? [performance.left, performance.right]
+      : child
+        ? [child.left, child.right]
+        : asset
+          ? samples(asset)
+          : null;
+    const sourceRate =
+      child || performance ? sampleRate : (asset?.sampleRate ?? sampleRate);
     const offset = Math.round(layer.start * sampleRate),
       pan = ((layer.pan + 1) * Math.PI) / 4,
       pl =
-        layer.type === "composition"
+        layer.type === "composition" || layer.type === "instrument"
           ? layer.pan <= 0
             ? 1
             : Math.cos((layer.pan * Math.PI) / 2)
           : Math.cos(pan),
       pr =
-        layer.type === "composition"
+        layer.type === "composition" || layer.type === "instrument"
           ? layer.pan >= 0
             ? 1
             : Math.cos((-layer.pan * Math.PI) / 2)
@@ -136,7 +150,7 @@ function renderNested(
       const tail =
         release > 0
           ? clamp((layer.duration - t) / release, 0, 1)
-          : layer.type === "composition"
+          : layer.type === "composition" || layer.type === "instrument"
             ? 1
             : clamp(((layer.duration - t) * sampleRate) / 32, 0, 1);
       const envelope =
@@ -159,7 +173,7 @@ function renderNested(
           : alpha;
         filters[c] += coefficient * (input - filters[c]);
         const dc =
-          layer.type === "composition"
+          layer.type === "composition" || layer.type === "instrument"
             ? cutoff >= 22000
               ? input
               : filters[c]
@@ -203,14 +217,14 @@ function renderNested(
         const panValue = curveValue(layer.automation?.pan, u, layer.pan);
         const angle = ((panValue + 1) * Math.PI) / 4;
         const lpan = layer.automation?.pan?.length
-          ? layer.type === "composition"
+          ? layer.type === "composition" || layer.type === "instrument"
             ? panValue <= 0
               ? 1
               : Math.cos((panValue * Math.PI) / 2)
             : Math.cos(angle)
           : pl;
         const rpan = layer.automation?.pan?.length
-          ? layer.type === "composition"
+          ? layer.type === "composition" || layer.type === "instrument"
             ? panValue >= 0
               ? 1
               : Math.cos((-panValue * Math.PI) / 2)
