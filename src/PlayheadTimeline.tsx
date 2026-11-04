@@ -20,6 +20,7 @@ export function PlayheadTimeline({
   onSeek,
   onSeekEnd,
   compact = false,
+  loopRegion,
 }: {
   duration: number;
   position: number;
@@ -31,6 +32,7 @@ export function PlayheadTimeline({
   onSeek: (time: number) => void;
   onSeekEnd: (time: number) => void;
   compact?: boolean;
+  loopRegion?: { start: number; end: number };
 }) {
   const host = useRef<HTMLDivElement>(null),
     gesture = useRef<{
@@ -147,9 +149,23 @@ export function PlayheadTimeline({
       onLostPointerCapture={() => finish(true)}
       onKeyDown={keyboard}
     >
-      {!compact && <div className="mix-wave">
-        <Waveform data={left} right={right} label={t("editor.mix")} />
-      </div>}
+      {loopRegion && (
+        <div
+          className="loop-region-overlay"
+          title={t("pro.loop")}
+          style={{
+            left: `${(loopRegion.start / duration) * 100}%`,
+            width: `${((loopRegion.end - loopRegion.start) / duration) * 100}%`,
+          }}
+        >
+          <span>{t("pro.loop")}</span>
+        </div>
+      )}
+      {!compact && (
+        <div className="mix-wave">
+          <Waveform data={left} right={right} label={t("editor.mix")} />
+        </div>
+      )}
       <div className="time-ruler">
         {Array.from({ length: 5 }, (_, i) => (
           <span key={i}>

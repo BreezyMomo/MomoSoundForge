@@ -1,3 +1,11 @@
+import {
+  resolveControls,
+  validateAdvanced,
+  type Automation,
+  type Macro,
+  type Effects,
+  type LoopRegion,
+} from "./advanced";
 export const SAMPLE_RATE = 48000;
 export const MAX_SAMPLE_FRAMES = 5_760_000; // 30 seconds at the maximum accepted rate, 192 kHz.
 export const MAX_ASSET_BYTES = 24 * 1024 * 1024;
@@ -14,6 +22,8 @@ export type Layer = {
   assetId?: string;
   start: number;
   duration: number;
+  automation?: Automation;
+  controlValues?: Record<string, number>;
   sourceDuration?: number;
   cropStart?: number;
   cropEnd?: number;
@@ -41,6 +51,10 @@ export type SampleAsset = {
 export type Project = {
   schema: "momo.soundforge/v2";
   name: string;
+  controls?: Macro[];
+  controlValues?: Record<string, number>;
+  effects?: Effects;
+  loopRegion?: LoopRegion;
   seed: number;
   duration: number;
   master: number;
@@ -210,10 +224,13 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     )
       return fail();
     ids.add(l.id);
-    if ((l.sourceDuration !== undefined && !num(l.sourceDuration, 0.01, 10)) ||
-        (l.cropStart !== undefined && !num(l.cropStart, 0, 1)) ||
-        (l.cropEnd !== undefined && !num(l.cropEnd, 0, 1)) ||
-        (l.cropStart ?? 0) >= (l.cropEnd ?? 1)) return fail();
+    if (
+      (l.sourceDuration !== undefined && !num(l.sourceDuration, 0.01, 10)) ||
+      (l.cropStart !== undefined && !num(l.cropStart, 0, 1)) ||
+      (l.cropEnd !== undefined && !num(l.cropEnd, 0, 1)) ||
+      (l.cropStart ?? 0) >= (l.cropEnd ?? 1)
+    )
+      return fail();
     const ranges = {
       start: [0, 10],
       duration: [0.01, 10],
@@ -259,7 +276,15 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
         ].map((k) => [k, l[k as keyof Layer]]),
       ),
       noiseSeed: l.noiseSeed ?? r.seed,
-      ...(l.sourceDuration !== undefined ? { sourceDuration: l.sourceDuration } : {}),
+      ...(l.automation !== undefined
+        ? { automation: structuredClone(l.automation) }
+        : {}),
+      ...(l.controlValues !== undefined
+        ? { controlValues: structuredClone(l.controlValues) }
+        : {}),
+      ...(l.sourceDuration !== undefined
+        ? { sourceDuration: l.sourceDuration }
+        : {}),
       ...(l.cropStart !== undefined ? { cropStart: l.cropStart } : {}),
       ...(l.cropEnd !== undefined ? { cropEnd: l.cropEnd } : {}),
       ...(l.type === "composition"
@@ -268,7 +293,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     } as Layer);
   }
   budget.stack.delete(raw);
-  return {
+  const parsed: Project = {
     schema: "momo.soundforge/v2",
     name: r.name,
     seed: r.seed,
@@ -277,7 +302,19 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     echo: r.echo,
     layers,
     assets,
+    ...(r.controls !== undefined
+      ? { controls: structuredClone(r.controls) }
+      : {}),
+    ...(r.controlValues !== undefined
+      ? { controlValues: structuredClone(r.controlValues) }
+      : {}),
+    ...(r.effects !== undefined ? { effects: structuredClone(r.effects) } : {}),
+    ...(r.loopRegion !== undefined
+      ? { loopRegion: structuredClone(r.loopRegion) }
+      : {}),
   };
+  validateAdvanced(parsed);
+  return parsed;
 }
 export function varyProject(
   project: Project,
@@ -311,11 +348,16 @@ export function createLayerPreviewProject(
   project: Project,
   layerId: string,
 ): Project {
-  const layer = project.layers.find((item) => item.id === layerId);
+  const layer = resolveControls(project).layers.find(
+    (item) => item.id === layerId,
+  );
   if (!layer) throw Error("Unknown sound layer");
   return {
     ...project,
     duration: layer.duration,
+    controls: undefined,
+    controlValues: undefined,
+    loopRegion: undefined,
     layers: [{ ...layer, start: 0, muted: false, solo: false }],
   };
 }
@@ -389,6 +431,9 @@ export function wrapProject(project: Project): Project {
     echo: 0,
     assets: {},
     layers: [makeComposition(project)],
+    controls: undefined,
+    controlValues: undefined,
+    effects: undefined,
   };
   assertProjectLimits(result);
   return result;

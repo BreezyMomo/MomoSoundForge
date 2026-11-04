@@ -10,6 +10,7 @@ import {
   adjustClipTiming,
   adjustCrop,
   stretchClip,
+  snapTime,
   type CropEdit,
   timingChanged,
   type ClipEdit,
@@ -21,7 +22,7 @@ type Gesture = {
   pointerId: number;
   originX: number;
   width: number;
-  mode: ClipEdit | CropEdit;
+  mode: ClipEdit | CropEdit | "attack" | "release";
   layer: Layer;
   projectDuration: number;
   node: HTMLButtonElement;
@@ -33,6 +34,11 @@ export function TimelineClip({
   projectDuration,
   position,
   cropMode,
+  snapTargets = [],
+  displayLayer,
+  constrain,
+  disabledParameters = [],
+  onPreview,
   data,
   onSelect,
   onBegin,
@@ -42,6 +48,11 @@ export function TimelineClip({
   projectDuration: number;
   position: number;
   cropMode: boolean;
+  snapTargets?: number[];
+  displayLayer?: Layer;
+  constrain?: (next: Layer) => Layer;
+  disabledParameters?: string[];
+  onPreview?: (next: Layer | null) => void;
   data?: Float32Array;
   onSelect: () => void;
   onBegin: () => void;
@@ -52,19 +63,48 @@ export function TimelineClip({
   const waveform = useRef(data);
   if (data) waveform.current = data;
   const [draft, setDraft] = useState<Layer | null>(null);
-  const timing = draft ?? layer;
-  const changed = (a: Layer, b: Layer) => timingChanged(a, b) || a.cropStart !== b.cropStart || a.cropEnd !== b.cropEnd;
-  const adjust = (original: Layer, mode: ClipEdit | CropEdit, delta: number, duration: number, step: number): Layer => ({
+  const timing = displayLayer ?? draft ?? layer;
+  const changed = (a: Layer, b: Layer) =>
+    timingChanged(a, b) ||
+    a.cropStart !== b.cropStart ||
+    a.cropEnd !== b.cropEnd ||
+    a.attack !== b.attack ||
+    a.release !== b.release;
+  const adjust = (
+    original: Layer,
+    mode: ClipEdit | CropEdit | "attack" | "release",
+    delta: number,
+    duration: number,
+    step: number,
+  ): Layer => ({
     ...original,
-    ...(mode === "cropStart" || mode === "cropEnd"
-      ? adjustCrop(original, mode, Math.round(delta / step) * step)
-      : stretchClip(original, adjustClipTiming(original, mode, delta, duration, step))),
+    ...(mode === "attack" || mode === "release"
+      ? {
+          [mode]: Math.max(
+            0,
+            Math.min(
+              original.sourceDuration ?? original.duration,
+              mode === "attack" ? 3 : 5,
+              (original[mode] ?? 0) +
+                ((mode === "release" ? -delta : delta) *
+                  (original.sourceDuration ?? original.duration)) /
+                  original.duration,
+            ),
+          ),
+        }
+      : mode === "cropStart" || mode === "cropEnd"
+        ? adjustCrop(original, mode, Math.round(delta / step) * step)
+        : stretchClip(
+            original,
+            adjustClipTiming(original, mode, delta, duration, step),
+          )),
   });
   const finish = (commit: boolean) => {
     const active = gesture.current;
     if (!active) return;
     gesture.current = null;
     setDraft(null);
+    onPreview?.(null);
     if (active.node.hasPointerCapture(active.pointerId))
       active.node.releasePointerCapture(active.pointerId);
     if (commit && active.moved && changed(active.layer, active.timing))
@@ -88,7 +128,10 @@ export function TimelineClip({
     },
     [],
   );
-  const begin = (event: PointerEvent<HTMLButtonElement>, mode: ClipEdit | CropEdit) => {
+  const begin = (
+    event: PointerEvent<HTMLButtonElement>,
+    mode: ClipEdit | CropEdit | "attack" | "release",
+  ) => {
     if (event.button !== 0 || !event.isPrimary || gesture.current) return;
     const width = lane.current?.getBoundingClientRect().width ?? 0;
     if (!width) return;
@@ -123,7 +166,52 @@ export function TimelineClip({
       active.projectDuration,
       event.shiftKey ? 0.001 : 0.01,
     );
+    if (
+      snapTargets.length &&
+      !event.shiftKey &&
+      (active.mode === "move" ||
+        active.mode === "start" ||
+        active.mode === "end")
+    ) {
+      const edge =
+        active.mode === "end"
+          ? active.timing.start + active.timing.duration
+          : active.timing.start;
+      const snapped = snapTime(
+        edge,
+        snapTargets,
+        (8 / active.width) * active.projectDuration,
+      );
+      let shift = snapped - edge;
+      if (active.mode === "move") {
+        const end = active.timing.start + active.timing.duration;
+        const endShift =
+          snapTime(
+            end,
+            snapTargets,
+            (8 / active.width) * active.projectDuration,
+          ) - end;
+        if (
+          endShift !== 0 &&
+          (shift === 0 || Math.abs(endShift) < Math.abs(shift))
+        )
+          shift = endShift;
+      }
+      const delta =
+        active.mode === "end"
+          ? active.timing.duration - active.layer.duration
+          : active.timing.start - active.layer.start;
+      active.timing = adjust(
+        active.layer,
+        active.mode,
+        delta + shift,
+        active.projectDuration,
+        0.000001,
+      );
+    }
+    active.timing = constrain?.(active.timing) ?? active.timing;
     setDraft(active.timing);
+    onPreview?.(active.timing);
   };
   const end = (event: PointerEvent<HTMLButtonElement>) => {
     if (gesture.current?.pointerId !== event.pointerId) return;
@@ -132,7 +220,7 @@ export function TimelineClip({
   };
   const keyboard = (
     event: KeyboardEvent<HTMLButtonElement>,
-    mode: ClipEdit | CropEdit,
+    mode: ClipEdit | CropEdit | "attack" | "release",
   ) => {
     if (event.key === "Escape" && gesture.current) {
       event.preventDefault();
@@ -156,7 +244,10 @@ export function TimelineClip({
       );
     if (changed(layer, next)) onCommit(next);
   };
-  const events = (mode: ClipEdit | CropEdit) => ({
+  const events = (mode: ClipEdit | CropEdit | "attack" | "release") => ({
+    disabled: disabledParameters.includes(
+      mode === "move" || mode === "end" ? "start" : mode,
+    ),
     onPointerDown: (event: PointerEvent<HTMLButtonElement>) =>
       begin(event, mode),
     onPointerMove: move,
@@ -184,7 +275,8 @@ export function TimelineClip({
         >
           <span className="clip-label">
             {seconds(timing.start)} s · {seconds(timing.duration)} s
-            {timing.sourceDuration !== undefined && ` · ${(timing.sourceDuration / timing.duration).toFixed(2)}×`}
+            {timing.sourceDuration !== undefined &&
+              ` · ${(timing.sourceDuration / timing.duration).toFixed(2)}×`}
           </span>
           <Waveform data={waveform.current} label={layer.name} />
         </button>
@@ -200,14 +292,58 @@ export function TimelineClip({
           title={t("editor.resizeEnd", layer.name)}
           {...events("end")}
         />
-        <div className="clip-crop-mask clip-crop-before" style={{ width: `${(timing.cropStart ?? 0) * 100}%` }} />
-        <div className="clip-crop-mask clip-crop-after" style={{ width: `${(1 - (timing.cropEnd ?? 1)) * 100}%` }} />
-        {cropMode && <>
-          <button className="clip-crop-handle" style={{ left: `${(timing.cropStart ?? 0) * 100}%` }} aria-label={t("editor.cropStart", layer.name)} title={t("editor.cropStart", layer.name)} {...events("cropStart")} />
-          <button className="clip-crop-handle clip-crop-end" style={{ left: `${(timing.cropEnd ?? 1) * 100}%` }} aria-label={t("editor.cropEnd", layer.name)} title={t("editor.cropEnd", layer.name)} {...events("cropEnd")} />
-        </>}
+        <button
+          className="clip-fade-handle"
+          style={{
+            left: `${Math.min(1, timing.attack / (timing.sourceDuration ?? timing.duration)) * 100}%`,
+          }}
+          aria-label={t("pro.fadeIn", layer.name)}
+          title={t("pro.fadeIn", layer.name)}
+          {...events("attack")}
+        />
+        <button
+          className="clip-fade-handle clip-fade-end"
+          style={{
+            left: `${(1 - Math.min(1, timing.release / (timing.sourceDuration ?? timing.duration))) * 100}%`,
+          }}
+          aria-label={t("pro.fadeOut", layer.name)}
+          title={t("pro.fadeOut", layer.name)}
+          {...events("release")}
+        />
+        <div
+          className="clip-crop-mask clip-crop-before"
+          style={{ width: `${(timing.cropStart ?? 0) * 100}%` }}
+        />
+        <div
+          className="clip-crop-mask clip-crop-after"
+          style={{ width: `${(1 - (timing.cropEnd ?? 1)) * 100}%` }}
+        />
+        {cropMode && (
+          <>
+            <button
+              className="clip-crop-handle"
+              style={{ left: `${(timing.cropStart ?? 0) * 100}%` }}
+              aria-label={t("editor.cropStart", layer.name)}
+              title={t("editor.cropStart", layer.name)}
+              {...events("cropStart")}
+            />
+            <button
+              className="clip-crop-handle clip-crop-end"
+              style={{ left: `${(timing.cropEnd ?? 1) * 100}%` }}
+              aria-label={t("editor.cropEnd", layer.name)}
+              title={t("editor.cropEnd", layer.name)}
+              {...events("cropEnd")}
+            />
+          </>
+        )}
       </div>
-      <div className="layer-playhead" aria-hidden="true" style={{ left: `clamp(0px, ${Math.max(0, Math.min(1, position / projectDuration)) * 100}%, calc(100% - 1px))` }} />
+      <div
+        className="layer-playhead"
+        aria-hidden="true"
+        style={{
+          left: `clamp(0px, ${Math.max(0, Math.min(1, position / projectDuration)) * 100}%, calc(100% - 1px))`,
+        }}
+      />
     </div>
   );
 }

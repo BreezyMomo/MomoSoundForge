@@ -1,3 +1,4 @@
+import { resolveControls, curveValue, processEffects } from "./advanced";
 import {
   SAMPLE_RATE,
   clamp,
@@ -33,19 +34,21 @@ function renderNested(
   if (depth > MAX_COMPOSITION_DEPTH || context.stack.has(project))
     throw Error("Invalid nested audio");
   context.stack.add(project);
+  const resolved = resolveControls(project);
   const length = Math.round(project.duration * sampleRate),
     left = new Float32Array(length),
     right = new Float32Array(length),
     layers: Record<string, Float32Array> = Object.create(null);
-  const solo = project.layers.some((l) => l.solo && !l.muted);
-  for (const clip of project.layers) {
+  const solo = resolved.layers.some((l) => l.solo && !l.muted);
+  for (const clip of resolved.layers) {
     const layer = { ...clip, duration: clip.sourceDuration ?? clip.duration };
     if (++context.layers > MAX_TOTAL_LAYERS)
       throw Error("Too many sound layers");
     if (layer.type === "composition" && !layer.project)
       throw Error("Missing nested audio");
     const n = Math.round(layer.duration * sampleRate),
-      sourceLeft = new Float32Array(n), sourceRight = new Float32Array(n);
+      sourceLeft = new Float32Array(n),
+      sourceRight = new Float32Array(n);
     const noise = rng(layer.noiseSeed ^ stableHash(layer.id));
     let phase = 0;
     const filters = [0, 0],
@@ -59,7 +62,12 @@ function renderNested(
     const asset = layer.assetId ? project.assets[layer.assetId] : null;
     const child =
       layer.type === "composition" && layer.project
-        ? renderNested(layer.project, sampleRate, depth + 1, context)
+        ? renderNested(
+            resolveControls(layer.project, layer.controlValues),
+            sampleRate,
+            depth + 1,
+            context,
+          )
         : null;
     const channels = child
       ? [child.left, child.right]
@@ -131,12 +139,28 @@ function renderNested(
           : layer.type === "composition"
             ? 1
             : clamp(((layer.duration - t) * sampleRate) / 32, 0, 1);
-      const envelope = attack * tail * Math.exp(-layer.decay * u) * layer.gain;
+      const envelope =
+        attack *
+        tail *
+        Math.exp(-layer.decay * u) *
+        curveValue(layer.automation?.gain, u, layer.gain);
       const process = (input: number, c: number) => {
-        filters[c] += alpha * (input - filters[c]);
+        const cutoff = curveValue(
+          layer.automation?.cutoff,
+          u,
+          layer.cutoff,
+          true,
+        );
+        const coefficient = layer.automation?.cutoff?.length
+          ? 1 -
+            Math.exp(
+              (-2 * Math.PI * Math.min(cutoff, sampleRate * 0.45)) / sampleRate,
+            )
+          : alpha;
+        filters[c] += coefficient * (input - filters[c]);
         const dc =
           layer.type === "composition"
-            ? layer.cutoff >= 22000
+            ? cutoff >= 22000
               ? input
               : filters[c]
             : filters[c] - previousInputs[c] + 0.995 * previousOutputs[c];
@@ -156,19 +180,44 @@ function renderNested(
     const outputLength = Math.round(clip.duration * sampleRate);
     const audio = new Float32Array(outputLength);
     const read = (channel: Float32Array, pos: number) => {
-      const j = Math.floor(pos), f = pos - j;
-      return channel[j] * (1 - f) + channel[Math.min(j + 1, channel.length - 1)] * f;
+      const j = Math.floor(pos),
+        f = pos - j;
+      return (
+        channel[j] * (1 - f) + channel[Math.min(j + 1, channel.length - 1)] * f
+      );
     };
     for (let i = 0; i < outputLength; i++) {
-      const pos = i * n / outputLength;
-      const vl = read(sourceLeft, pos), vr = read(sourceRight, pos);
+      const pos = (i * n) / outputLength;
+      const vl = read(sourceLeft, pos),
+        vr = read(sourceRight, pos);
       // Preserve the complete waveform beneath the non-destructive crop mask.
       audio[i] = Math.abs(vl) >= Math.abs(vr) ? vl : vr;
       const u = i / outputLength;
-      if (u >= (clip.cropStart ?? 0) && u < (clip.cropEnd ?? 1) &&
-          offset + i < length && !layer.muted && (!solo || layer.solo)) {
-        left[offset + i] += vl * pl;
-        right[offset + i] += vr * pr;
+      if (
+        u >= (clip.cropStart ?? 0) &&
+        u < (clip.cropEnd ?? 1) &&
+        offset + i < length &&
+        !layer.muted &&
+        (!solo || layer.solo)
+      ) {
+        const panValue = curveValue(layer.automation?.pan, u, layer.pan);
+        const angle = ((panValue + 1) * Math.PI) / 4;
+        const lpan = layer.automation?.pan?.length
+          ? layer.type === "composition"
+            ? panValue <= 0
+              ? 1
+              : Math.cos((panValue * Math.PI) / 2)
+            : Math.cos(angle)
+          : pl;
+        const rpan = layer.automation?.pan?.length
+          ? layer.type === "composition"
+            ? panValue >= 0
+              ? 1
+              : Math.cos((-panValue * Math.PI) / 2)
+            : Math.sin(angle)
+          : pr;
+        left[offset + i] += vl * lpan;
+        right[offset + i] += vr * rpan;
       }
     }
     layers[layer.id] = audio;
@@ -180,6 +229,7 @@ function renderNested(
       right[i] += left[i - delay] * project.echo;
     }
   }
+  if (project.effects) processEffects(left, right, sampleRate, project.effects);
   let sourcePeak = 0;
   for (let i = 0; i < length; i++) {
     left[i] *= project.master;
@@ -187,7 +237,8 @@ function renderNested(
     sourcePeak = Math.max(sourcePeak, Math.abs(left[i]), Math.abs(right[i]));
   }
   // A single linked gain preserves transients and stereo balance while keeping WAV below full scale.
-  const reduction = sourcePeak > 0.98 ? 0.98 / sourcePeak : 1;
+  const ceiling = project.effects ? 10 ** (project.effects.ceiling / 20) : 0.98;
+  const reduction = sourcePeak > ceiling ? ceiling / sourcePeak : 1;
   let sum = 0,
     peak = 0;
   for (let i = 0; i < length; i++) {

@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Copy, Trash2, SlidersHorizontal } from "lucide-react";
 import type { Layer, Project } from "./model";
 import { t } from "./i18n";
+import { AutomationEditor } from "./AuthoringTools";
+import {
+  PARAMS,
+  boundControl,
+  resolveControls,
+  type Parameter,
+  type AutomationKey,
+} from "./advanced";
 export function CommitText({
   value,
   onCommit,
@@ -47,7 +55,9 @@ export function Range({
   step = 0.01,
   unit = "",
   onChange,
+  disabled = false,
 }: {
+  disabled?: boolean;
   label: string;
   value: number;
   min: number;
@@ -64,6 +74,7 @@ export function Range({
         <span className="number-wrap">
           <input
             aria-label={label}
+            disabled={disabled}
             type="number"
             value={Number(value.toFixed(precision))}
             min={min}
@@ -81,6 +92,7 @@ export function Range({
         </span>
       </span>
       <input
+        disabled={disabled}
         aria-label={`${label} slider`}
         type="range"
         min={min}
@@ -99,6 +111,7 @@ export function Inspector({
   onDuplicate,
   onDelete,
   onEnter,
+  onExpose,
 }: {
   layer?: Layer;
   project: Project;
@@ -106,6 +119,7 @@ export function Inspector({
   onDuplicate: () => void;
   onDelete: () => void;
   onEnter: () => void;
+  onExpose: (key: Parameter) => void;
 }) {
   if (!layer)
     return (
@@ -114,6 +128,8 @@ export function Inspector({
         <p>{t("prop.empty")}</p>
       </div>
     );
+  const effective =
+    resolveControls(project).layers.find((l) => l.id === layer.id) ?? layer;
   const range = (
     key: keyof Layer,
     label: string,
@@ -121,18 +137,37 @@ export function Inspector({
     max: number,
     step: number,
     unit = "",
-  ) => (
-    <Range
-      key={key}
-      label={t(label)}
-      value={layer[key] as number}
-      min={min}
-      max={max}
-      step={step}
-      unit={unit}
-      onChange={(v) => onChange(key, v)}
-    />
-  );
+  ) => {
+    const driver = boundControl(project, layer.id, key),
+      curve = layer.automation?.[key as AutomationKey]?.length;
+    return (
+      <div key={key} className="exposable-field">
+        <Range
+          label={t(label)}
+          value={effective[key] as number}
+          min={min}
+          max={max}
+          step={step}
+          unit={unit}
+          disabled={!!driver || !!curve}
+          onChange={(v) => onChange(key, v)}
+        />
+        {driver ? (
+          <small>{t("pro.controlled", driver.name)}</small>
+        ) : curve ? (
+          <small>{t("pro.curveControlled")}</small>
+        ) : key in PARAMS ? (
+          <button
+            className="expose-button"
+            title={t("pro.exposeHint")}
+            onClick={() => onExpose(key as Parameter)}
+          >
+            {t("pro.expose")}
+          </button>
+        ) : null}
+      </div>
+    );
+  };
   return (
     <div className="inspector-content">
       <div className="inspector-title">
@@ -208,6 +243,43 @@ export function Inspector({
                     layer.project?.duration.toFixed(2) ?? "0",
                   )}
                 </p>
+                {layer.project?.controls
+                  ?.filter((c) => !c.hidden)
+                  .map((c) => {
+                    const driver = project.controls?.find((x) =>
+                      x.mappings.some(
+                        (m) =>
+                          m.layerId === layer.id &&
+                          m.parameter === "control" &&
+                          m.controlId === c.id,
+                      ),
+                    );
+                    return (
+                      <div key={c.id}>
+                        <Range
+                          label={c.name}
+                          value={
+                            effective.controlValues?.[c.id] ??
+                            layer.project?.controlValues?.[c.id] ??
+                            c.defaultValue
+                          }
+                          min={c.min}
+                          max={c.max}
+                          step={(c.max - c.min) / 1000}
+                          disabled={!!driver}
+                          onChange={(v) =>
+                            onChange("controlValues", {
+                              ...layer.controlValues,
+                              [c.id]: v,
+                            })
+                          }
+                        />
+                        {driver && (
+                          <small>{t("pro.controlled", driver.name)}</small>
+                        )}
+                      </div>
+                    );
+                  })}
                 <button className="secondary wide" onClick={onEnter}>
                   {t("composition.enter")}
                 </button>
@@ -218,10 +290,19 @@ export function Inspector({
               min={0.1}
               max={4}
               step={0.01}
-              value={layer.frequency / 440}
+              value={effective.frequency / 440}
+              disabled={!!boundControl(project, layer.id, "frequency")}
               unit="×"
               onChange={(v) => onChange("frequency", v * 440)}
             />
+            {!boundControl(project, layer.id, "frequency") && (
+              <button
+                className="expose-button"
+                onClick={() => onExpose("frequency")}
+              >
+                {t("pro.expose")}
+              </button>
+            )}
             <p className="field-help">{t("prop.speedHint")}</p>
             {range("trim", "prop.trim", 0, 30, 0.01, "s")}
             <label className="check-field">
@@ -236,8 +317,8 @@ export function Inspector({
         )}
         {layer.type === "synth" && layer.wave !== "noise" && (
           <>
-            {range("frequency", "prop.frequency", 20, 12000, 1, "Hz")}
-            {range("endFrequency", "prop.endFrequency", 20, 12000, 1, "Hz")}
+            {range("frequency", "prop.frequency", 20, 20000, 1, "Hz")}
+            {range("endFrequency", "prop.endFrequency", 20, 20000, 1, "Hz")}
           </>
         )}
       </section>
@@ -262,6 +343,32 @@ export function Inspector({
           "s",
         )}
         {range("decay", "prop.decay", 0, 10, 0.1)}
+        <Range
+          label={t("pro.cropStart")}
+          min={0}
+          max={Math.max(0, (layer.cropEnd ?? 1) * layer.duration - 0.001)}
+          step={0.001}
+          unit="s"
+          value={(layer.cropStart ?? 0) * layer.duration}
+          onChange={(v) => onChange("cropStart", v / layer.duration)}
+        />
+        <Range
+          label={t("pro.cropEnd")}
+          min={(layer.cropStart ?? 0) * layer.duration + 0.001}
+          max={layer.duration}
+          step={0.001}
+          unit="s"
+          value={(layer.cropEnd ?? 1) * layer.duration}
+          onChange={(v) => onChange("cropEnd", v / layer.duration)}
+        />
+        <p className="field-help">
+          {t(
+            "pro.speed",
+            ((layer.sourceDuration ?? layer.duration) / layer.duration).toFixed(
+              3,
+            ),
+          )}
+        </p>
       </section>
       <section className="property-section">
         <h3>{t("prop.timbre")}</h3>
@@ -270,6 +377,12 @@ export function Inspector({
         {range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
         {range("drive", "prop.drive", 0, 10, 0.1)}
       </section>
+      <AutomationEditor
+        key={layer.id}
+        layer={layer}
+        project={project}
+        onChange={(v) => onChange("automation", v)}
+      />
     </div>
   );
 }

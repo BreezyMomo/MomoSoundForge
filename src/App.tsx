@@ -61,7 +61,20 @@ import {
   type Project,
   type RenderResult,
 } from "./model";
-import { encodeWav } from "./engine";
+import { MacroEditor, exposeParameter } from "./AuthoringTools";
+import { ProjectTools } from "./ProjectTools";
+import { encodeAudio, AUDIO_MIME } from "./encodeAudio";
+import { ExportDialog } from "./ExportDialog";
+import { reconcileAdvanced, boundControl, resolveControls } from "./advanced";
+import { boundedSelection } from "./timeline";
+import {
+  readExportSettings,
+  prepareExport,
+  audioResult,
+  makeLoop,
+  seamPreview,
+  type ExportSettings,
+} from "./exportAudio";
 import { AudioPlayer, createRenderer } from "./audio";
 import {
   download,
@@ -114,7 +127,76 @@ export default function App() {
     [monitor, setMonitor] = useState(0.7),
     [progress, setProgress] = useState(0);
   const [cue, setCue] = useState(0);
+  const [encodingStatus, setEncodingStatus] = useState("");
+  const encodedCache = useRef<{
+    project: Project;
+    settings: string;
+    promise: Promise<{ output: RenderResult; bytes: Uint8Array<ArrayBuffer> }>;
+  } | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [cropMode, setCropMode] = useState(false);
+  const [selection, setSelection] = useState<string[]>([]),
+    [zoom, setZoom] = useState(1),
+    [snap, setSnap] = useState(true),
+    [timelineDraft, setTimelineDraft] = useState<Layer[] | null>(null),
+    [groupScale, setGroupScale] = useState(1);
+  const selectedIds = selection.includes(selected)
+    ? selection.filter((id) => project.layers.some((l) => l.id === id))
+    : [selected];
+  const [exportSettings, setExportSettings] =
+    useState<ExportSettings>(readExportSettings);
+  const [exportOutput, setExportOutput] = useState<RenderResult | null>(null);
+  const outputVersion = useRef(0);
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "soundforge.export.v1",
+        JSON.stringify(exportSettings),
+      );
+    } catch {
+      /* Preferences are optional. */
+    }
+  }, [exportSettings]);
+  useEffect(() => {
+    setSelection([]);
+    setTimelineDraft(null);
+  }, [JSON.stringify(context.path)]);
+  useEffect(() => {
+    outputVersion.current++;
+    setExportOutput(null);
+  }, [project, exportSettings]);
+  const selectLayer = (
+    id: string,
+    event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
+  ) => {
+    if (event?.shiftKey) {
+      const a = project.layers.findIndex((l) => l.id === selected),
+        b = project.layers.findIndex((l) => l.id === id);
+      setSelection(
+        project.layers
+          .slice(Math.min(a, b), Math.max(a, b) + 1)
+          .map((l) => l.id),
+      );
+    } else if (event?.ctrlKey || event?.metaKey) {
+      const next = selectedIds.includes(id)
+        ? selectedIds.filter((x) => x !== id)
+        : [...selectedIds, id];
+      setSelection(next);
+      setSelected(next.includes(id) ? id : (next[0] ?? ""));
+      return;
+    } else if (event || !selectedIds.includes(id)) setSelection([id]);
+    setSelected(id);
+  };
+  const transformLayers = (p: Project, l: Layer, next: Partial<Layer>) => {
+    const ids = selectedIds.includes(l.id) ? selectedIds : [l.id];
+    if (
+      (Math.abs((next.start ?? l.start) - l.start) > 1e-6 ||
+        Math.abs((next.duration ?? l.duration) - l.duration) > 1e-6) &&
+      ids.some((id) => boundControl(p, id, "start"))
+    )
+      return p.layers;
+    return boundedSelection(p.layers, ids, l, next, p.duration);
+  };
   const [variations, setVariations] = useState<Variation[]>([]),
     [variationBase, setVariationBase] = useState<Project | null>(null),
     [amount, setAmount] = useState(0.35),
@@ -178,6 +260,7 @@ export default function App() {
         let next: Project;
         try {
           next = change(h.project);
+          if (next !== h.project) next = reconcileAdvanced(next);
           assertProjectLimits(next);
         } catch (error) {
           queueMicrotask(() =>
@@ -376,7 +459,7 @@ export default function App() {
             : 0;
         const started = await player.current!.play(
           result,
-          loop,
+          id.startsWith("loop-") || loop,
           monitor,
           () => {
             if (id === "main") updateCue(duration);
@@ -446,7 +529,9 @@ export default function App() {
     player.current?.setVolume(monitor);
   }, [monitor]);
   useEffect(() => {
-    player.current?.setLoop(loop);
+    player.current?.setLoop(
+      activePlaybackRef.current?.startsWith("loop-") || loop,
+    );
   }, [loop]);
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
@@ -567,7 +652,15 @@ export default function App() {
       (p) => ({
         ...p,
         layers: p.layers.map((l) =>
-          l.id === selected ? { ...l, ...(key === "duration" ? { sourceDuration: l.sourceDuration ?? l.duration } : {}), [key]: value } : l,
+          l.id === selected && !boundControl(p, l.id, key)
+            ? {
+                ...l,
+                ...(key === "duration"
+                  ? { sourceDuration: l.sourceDuration ?? l.duration }
+                  : {}),
+                [key]: value,
+              }
+            : l,
         ),
       }),
       `${selected}:${key}`,
@@ -582,6 +675,7 @@ export default function App() {
     scopeEpoch.current++;
     setEditPath([]);
     setVariations([]);
+    setSelection([]);
     updateCue(0);
     setSelected(next.layers[0].id);
     manager.current?.show("editor");
@@ -597,14 +691,101 @@ export default function App() {
     manager.current?.show("inspector");
   };
   const duplicate = () => {
-    if (!selectedLayer || project.layers.length >= 16) return;
-    const layer = {
-      ...selectedLayer,
+    const layers = resolveControls(project).layers.filter((l) =>
+      selectedIds.includes(l.id),
+    );
+    if (!layers.length || project.layers.length + layers.length > 16) {
+      flash("error.layers");
+      return;
+    }
+    const copies = layers.map((l) => ({
+      ...structuredClone(l),
       id: uid(),
-      name: `${selectedLayer.name} ${t("layer.copy")}`.slice(0, 120),
-    };
-    edit((p) => ({ ...p, layers: [...p.layers, layer] }));
-    setSelected(layer.id);
+      name: `${l.name} ${t("layer.copy")}`.slice(0, 120),
+    }));
+    edit((p) => ({ ...p, layers: [...p.layers, ...copies] }));
+    setSelection(copies.map((l) => l.id));
+    setSelected(copies[0].id);
+  };
+  async function finalOutput(p: Project, settings = exportSettings) {
+    const input = await renderer.current!.render({
+      ...p,
+      duration: p.duration + (settings.loopOnly ? 0 : settings.tail),
+    });
+    return prepareExport(
+      input,
+      { ...settings, loopOnly: settings.loopOnly && !!p.loopRegion },
+      p.loopRegion,
+    );
+  }
+  async function encodedOutput(p: Project, settings = exportSettings) {
+    const key = JSON.stringify(settings),
+      cached = encodedCache.current;
+    if (cached?.project === p && cached.settings === key) return cached.promise;
+    const promise = (async () => {
+      try {
+        const output = await finalOutput(p, settings);
+        const bytes = await encodeAudio(output, settings, setEncodingStatus);
+        return { output, bytes };
+      } finally {
+        setEncodingStatus("");
+      }
+    })();
+    encodedCache.current = { project: p, settings: key, promise };
+    promise.catch(() => {
+      if (encodedCache.current?.promise === promise)
+        encodedCache.current = null;
+    });
+    return promise;
+  }
+  async function exportCurrent() {
+    setIoBusy(true);
+    const version = outputVersion.current;
+    try {
+      const { output, bytes } = await encodedOutput(project);
+      if (version === outputVersion.current) setExportOutput(output);
+      download(
+        bytes,
+        `${safeFilename(exportSettings.prefix || project.name)}_01.${exportSettings.format}`,
+        AUDIO_MIME[exportSettings.format],
+      );
+      flash("status.exported");
+    } catch {
+      flash("error.encode");
+    } finally {
+      setIoBusy(false);
+    }
+  }
+  const auditionExport = () => {
+    const version = outputVersion.current;
+    void play(async () => {
+      const { output, bytes } = await encodedOutput(project);
+      let preview = output;
+      if (exportSettings.format !== "wav") {
+        const decoded = await player.current!.decode(
+          new Uint8Array(bytes).buffer,
+        );
+        preview = audioResult(
+          new Float32Array(decoded.getChannelData(0)),
+          new Float32Array(
+            decoded.getChannelData(decoded.numberOfChannels > 1 ? 1 : 0),
+          ),
+          decoded.sampleRate,
+        );
+        preview.sourcePeak = output.sourcePeak;
+        preview.gainReduction = output.gainReduction;
+      }
+      if (version === outputVersion.current) setExportOutput(preview);
+      return preview;
+    }, "export-preview");
+  };
+  const auditionLoop = (seam = false) => {
+    if (!result || !project.loopRegion) return;
+    const audio = makeLoop(result, project.loopRegion);
+    void play(
+      seam ? seamPreview(audio) : audio,
+      seam ? "loop-seam" : "loop-region",
+    );
   };
   async function openProject(file?: File) {
     if (!file) return;
@@ -776,18 +957,22 @@ export default function App() {
           duration: number;
         }[] = [];
       for (const [i, v] of variations.entries()) {
-        const name = `${String(i + 1).padStart(2, "0")}-${safeFilename(v.project.name)}`;
-        zip.file(`${name}.wav`, encodeWav(v.result));
+        const name = `${safeFilename(exportSettings.prefix || v.project.name)}_${String(i + 1).padStart(2, "0")}`;
+        const { output, bytes } = await encodedOutput(
+          v.project,
+          exportSettings,
+        );
+        zip.file(`${name}.${exportSettings.format}`, bytes);
         zip.file(
           `${name}.soundforge`,
           JSON.stringify(projectForSave(v.project)),
         );
         manifest.push({
-          file: `${name}.wav`,
+          file: `${name}.${exportSettings.format}`,
           project: `${name}.soundforge`,
           seed: v.project.seed,
-          sampleRate: v.result.sampleRate,
-          duration: v.project.duration,
+          sampleRate: output.sampleRate,
+          duration: output.left.length / output.sampleRate,
         });
       }
       zip.file(
@@ -795,7 +980,9 @@ export default function App() {
         JSON.stringify(
           {
             schema: "momo.soundforge-pack/v1",
-            format: "PCM16 stereo WAV",
+            format: exportSettings.format,
+            channels: exportSettings.mono ? 1 : 2,
+            settings: exportSettings,
             variations: manifest,
           },
           null,
@@ -942,7 +1129,14 @@ export default function App() {
           </h1>
         </div>
         <div className="project-actions">
-          <span className="format-label">{t("editor.format")}</span>
+          <span className="format-label">
+            {t(
+              "pro.format",
+              exportSettings.sampleRate / 1000,
+              t(exportSettings.mono ? "pro.mono" : "pro.stereo"),
+              exportSettings.format.toUpperCase(),
+            )}
+          </span>
           <div ref={setLibrarySaveHost} />
         </div>
       </div>
@@ -1019,6 +1213,7 @@ export default function App() {
         </div>
         <PlayheadTimeline
           duration={project.duration}
+          loopRegion={project.loopRegion}
           position={cue}
           left={result?.left}
           right={result?.right}
@@ -1082,188 +1277,366 @@ export default function App() {
         </div>
       </div>
       <div className="clip-edit-toolbar">
-        <button className="secondary clip-tool-button" aria-pressed={cropMode} onClick={() => setCropMode(v => !v)}><Scissors size={15} />{t(cropMode ? "editor.cropEnabled" : "editor.cropMode")}</button>
-        <button className="secondary clip-tool-button" disabled={!project.layers.some(l => l.id === selected && ((l.cropStart ?? 0) > 0 || (l.cropEnd ?? 1) < 1))} onClick={() => edit(p => ({ ...p, layers: p.layers.map(l => l.id === selected ? { ...l, cropStart: 0, cropEnd: 1 } : l) }))}><RotateCcw size={15} />{t("editor.resetCrop")}</button>
+        <button
+          className="secondary clip-tool-button"
+          aria-pressed={cropMode}
+          onClick={() => setCropMode((v) => !v)}
+        >
+          <Scissors size={15} />
+          {t(cropMode ? "editor.cropEnabled" : "editor.cropMode")}
+        </button>
+        <button
+          className="secondary clip-tool-button"
+          disabled={
+            !project.layers.some(
+              (l) =>
+                l.id === selected &&
+                ((l.cropStart ?? 0) > 0 || (l.cropEnd ?? 1) < 1),
+            )
+          }
+          onClick={() =>
+            edit((p) => ({
+              ...p,
+              layers: p.layers.map((l) =>
+                l.id === selected ? { ...l, cropStart: 0, cropEnd: 1 } : l,
+              ),
+            }))
+          }
+        >
+          <RotateCcw size={15} />
+          {t("editor.resetCrop")}
+        </button>
         <span>{t(cropMode ? "editor.cropHelp" : "editor.stretchHelp")}</span>
       </div>
-      <div className="layer-list">
-        <div className="layer-row timeline-ruler-row">
-          <PlayheadTimeline
-            compact
-            duration={project.duration}
-            position={cue}
-            disabled={!result}
-            version={project}
-            onSeekStart={beginSeek}
-            onSeek={updateCue}
-            onSeekEnd={endSeek}
+      <div className="timeline-tools">
+        <label>
+          <input
+            type="checkbox"
+            checked={snap}
+            onChange={(e) => setSnap(e.target.checked)}
           />
-        </div>
-        {project.layers.map((l, i) => (
-          <div
-            className={`layer-row ${selected === l.id ? "selected" : ""} ${l.muted ? "muted" : ""}`}
-            key={l.id}
-            data-layer-id={l.id}
-          >
+          {t("pro.snap")}
+        </label>
+        <label>
+          {t("pro.zoom")}
+          <input
+            aria-label={t("pro.zoom")}
+            type="range"
+            min={1}
+            max={8}
+            step={0.25}
+            value={zoom}
+            onChange={(e) => setZoom(+e.target.value)}
+          />
+        </label>
+        <button className="secondary" onClick={() => setZoom(1)}>
+          {t("pro.fit")}
+        </button>
+        <span>{t("pro.selection", selectedIds.length)}</span>
+        <button
+          className="secondary"
+          onClick={duplicate}
+          disabled={!selectedLayer}
+        >
+          {t("pro.copySelection")}
+        </button>
+        <details className="selection-tools">
+          <summary>{t("pro.selectionActions")}</summary>
+          <div>
             <button
-              className="layer-identity"
-              onClick={() => setSelected(l.id)}
-              onDoubleClick={() =>
-                l.type === "composition" && enterComposition(l.id)
-              }
-              title={
-                l.type === "composition"
-                  ? t("composition.enterHint")
-                  : undefined
-              }
-            >
-              <span className="layer-index">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span>
-                <strong>{l.name}</strong>
-                <small>
-                  {t(
-                    l.type === "synth"
-                      ? "editor.synth"
-                      : l.type === "composition"
-                        ? "editor.composition"
-                        : "editor.sample",
-                  )}{" "}
-                  ·{" "}
-                  {l.type === "synth"
-                    ? t(`wave.${l.wave}`)
-                    : l.type === "composition"
-                      ? t(
-                          "composition.layerCount",
-                          l.project?.layers.length ?? 0,
-                        )
-                      : project.assets[l.assetId!]?.name}
-                </small>
-              </span>
-            </button>
-            <button
-              className={`layer-preview icon-button ${playing === `layer-${l.id}` || pendingPlayback === `layer-${l.id}` ? "on" : ""}`}
-              disabled={!ready}
-              aria-pressed={
-                playing === `layer-${l.id}` ||
-                pendingPlayback === `layer-${l.id}`
-              }
-              aria-label={t(
-                playing === `layer-${l.id}` ||
-                  pendingPlayback === `layer-${l.id}`
-                  ? "editor.stopLayer"
-                  : "editor.playLayer",
-                l.name,
-              )}
-              title={t(
-                playing === `layer-${l.id}` ||
-                  pendingPlayback === `layer-${l.id}`
-                  ? "editor.stopLayer"
-                  : "editor.playLayer",
-                l.name,
-              )}
+              className="secondary"
+              disabled={!selectedLayer}
               onClick={() =>
-                void play(
-                  () =>
-                    renderer.current!.render(
-                      createLayerPreviewProject(current.current, l.id),
-                    ),
-                  `layer-${l.id}`,
-                )
-              }
-            >
-              {pendingPlayback === `layer-${l.id}` ? (
-                <LoaderCircle size={14} className="preview-loading" />
-              ) : playing === `layer-${l.id}` ? (
-                <Square size={13} fill="currentColor" />
-              ) : (
-                <Play size={14} fill="currentColor" />
-              )}
-            </button>
-            <TimelineClip
-              layer={l}
-              projectDuration={project.duration}
-              position={cue}
-              cropMode={cropMode && selected === l.id}
-              data={result?.layers[l.id]}
-              onSelect={() => setSelected(l.id)}
-              onBegin={stop}
-              onCommit={(timing) =>
                 edit((p) => ({
                   ...p,
-                  layers: p.layers.map((item) =>
-                    item.id === l.id ? { ...item, ...timing } : item,
+                  layers: transformLayers(p, selectedLayer!, { start: cue }),
+                }))
+              }
+            >
+              {t("pro.moveToCue")}
+            </button>
+            <button
+              className="secondary"
+              disabled={selectedIds.length < 2}
+              onClick={() =>
+                edit((p) => ({
+                  ...p,
+                  layers: p.layers.map((l) =>
+                    selectedIds.includes(l.id) &&
+                    !boundControl(p, l.id, "start")
+                      ? {
+                          ...l,
+                          start: Math.max(
+                            0,
+                            Math.min(cue, p.duration - l.duration),
+                          ),
+                        }
+                      : l,
                   ),
                 }))
               }
-            />
-            <div className="layer-controls">
-              <button
-                className={l.muted ? "toggle on" : "toggle"}
-                aria-pressed={l.muted}
-                aria-label={`${t("editor.muted")} ${l.name}`}
-                title={t("editor.muted")}
-                onClick={() =>
+            >
+              {t("pro.alignStart")}
+            </button>
+            <button
+              className="secondary"
+              disabled={selectedIds.length < 2}
+              onClick={() =>
+                edit((p) => ({
+                  ...p,
+                  layers: p.layers.map((l) =>
+                    selectedIds.includes(l.id) &&
+                    !boundControl(p, l.id, "start")
+                      ? { ...l, start: Math.max(0, cue - l.duration) }
+                      : l,
+                  ),
+                }))
+              }
+            >
+              {t("pro.alignEnd")}
+            </button>
+            <label>
+              {t("pro.groupScale")}
+              <input
+                type="number"
+                min={0.1}
+                max={4}
+                step={0.01}
+                value={groupScale}
+                onChange={(e) => {
+                  const v = e.target.valueAsNumber;
+                  if (Number.isFinite(v)) setGroupScale(clamp(v, 0.1, 4));
+                }}
+              />
+            </label>
+            <button
+              className="secondary"
+              disabled={!selectedLayer}
+              onClick={() => {
+                if (selectedLayer)
                   edit((p) => ({
                     ...p,
-                    layers: p.layers.map((a) =>
-                      a.id === l.id ? { ...a, muted: !a.muted } : a,
-                    ),
-                  }))
-                }
-              >
-                M
-              </button>
-              <button
-                className={l.solo ? "toggle on" : "toggle"}
-                aria-pressed={l.solo}
-                aria-label={`${t("editor.solo")} ${l.name}`}
-                title={t("editor.solo")}
-                onClick={() =>
-                  edit((p) => ({
-                    ...p,
-                    layers: p.layers.map((a) =>
-                      a.id === l.id ? { ...a, solo: !a.solo } : a,
-                    ),
-                  }))
-                }
-              >
-                S
-              </button>
-              <button
-                className={l.locked ? "toggle on" : "toggle"}
-                aria-pressed={l.locked}
-                aria-label={`${t("editor.lock")} ${l.name}`}
-                title={t("editor.lock")}
-                onClick={() =>
-                  edit((p) => ({
-                    ...p,
-                    layers: p.layers.map((a) =>
-                      a.id === l.id ? { ...a, locked: !a.locked } : a,
-                    ),
-                  }))
-                }
-              >
-                {l.locked ? (
-                  <LockKeyhole size={13} />
-                ) : (
-                  <LockKeyholeOpen size={13} />
-                )}
-              </button>
-            </div>
-          </div>
-        ))}
-        {!project.layers.length && (
-          <div className="empty-state">
-            <AudioLines size={26} />
-            <p>{t("editor.empty")}</p>
-            <button className="secondary" onClick={addSynth}>
-              <Plus size={15} />
-              {t("action.add")}
+                    layers: transformLayers(p, selectedLayer, {
+                      duration: selectedLayer.duration * groupScale,
+                    }),
+                  }));
+              }}
+            >
+              {t("action.apply")}
             </button>
           </div>
-        )}
+        </details>
+        <span className="field-help">{t("pro.selectHelp")}</span>
+      </div>
+      <div className="timeline-scroll">
+        <div className="layer-list" style={{ width: `${zoom * 100}%` }}>
+          <div className="layer-row timeline-ruler-row">
+            <PlayheadTimeline
+              compact
+              duration={project.duration}
+              loopRegion={project.loopRegion}
+              position={cue}
+              disabled={!result}
+              version={project}
+              onSeekStart={beginSeek}
+              onSeek={updateCue}
+              onSeekEnd={endSeek}
+            />
+          </div>
+          {project.layers.map((l, i) => (
+            <div
+              className={`layer-row ${selectedIds.includes(l.id) ? "selected" : ""} ${l.muted ? "muted" : ""}`}
+              key={l.id}
+              data-layer-id={l.id}
+            >
+              <button
+                className="layer-identity"
+                onClick={(e) => selectLayer(l.id, e)}
+                onDoubleClick={() =>
+                  l.type === "composition" && enterComposition(l.id)
+                }
+                title={
+                  l.type === "composition"
+                    ? t("composition.enterHint")
+                    : undefined
+                }
+              >
+                <span className="layer-index">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span>
+                  <strong>{l.name}</strong>
+                  <small>
+                    {t(
+                      l.type === "synth"
+                        ? "editor.synth"
+                        : l.type === "composition"
+                          ? "editor.composition"
+                          : "editor.sample",
+                    )}{" "}
+                    ·{" "}
+                    {l.type === "synth"
+                      ? t(`wave.${l.wave}`)
+                      : l.type === "composition"
+                        ? t(
+                            "composition.layerCount",
+                            l.project?.layers.length ?? 0,
+                          )
+                        : project.assets[l.assetId!]?.name}
+                  </small>
+                </span>
+              </button>
+              <button
+                className={`layer-preview icon-button ${playing === `layer-${l.id}` || pendingPlayback === `layer-${l.id}` ? "on" : ""}`}
+                disabled={!ready}
+                aria-pressed={
+                  playing === `layer-${l.id}` ||
+                  pendingPlayback === `layer-${l.id}`
+                }
+                aria-label={t(
+                  playing === `layer-${l.id}` ||
+                    pendingPlayback === `layer-${l.id}`
+                    ? "editor.stopLayer"
+                    : "editor.playLayer",
+                  l.name,
+                )}
+                title={t(
+                  playing === `layer-${l.id}` ||
+                    pendingPlayback === `layer-${l.id}`
+                    ? "editor.stopLayer"
+                    : "editor.playLayer",
+                  l.name,
+                )}
+                onClick={() =>
+                  void play(
+                    () =>
+                      renderer.current!.render(
+                        createLayerPreviewProject(current.current, l.id),
+                      ),
+                    `layer-${l.id}`,
+                  )
+                }
+              >
+                {pendingPlayback === `layer-${l.id}` ? (
+                  <LoaderCircle size={14} className="preview-loading" />
+                ) : playing === `layer-${l.id}` ? (
+                  <Square size={13} fill="currentColor" />
+                ) : (
+                  <Play size={14} fill="currentColor" />
+                )}
+              </button>
+              <TimelineClip
+                layer={l}
+                projectDuration={project.duration}
+                position={cue}
+                cropMode={cropMode && selected === l.id}
+                data={result?.layers[l.id]}
+                onSelect={() => selectLayer(l.id)}
+                onBegin={stop}
+                displayLayer={
+                  timelineDraft?.find((x) => x.id === l.id) ??
+                  resolveControls(project).layers.find((x) => x.id === l.id)
+                }
+                constrain={(next) =>
+                  transformLayers(project, l, next).find(
+                    (x) => x.id === l.id,
+                  ) ?? l
+                }
+                disabledParameters={(project.controls ?? []).flatMap((c) =>
+                  c.mappings
+                    .filter((m) => m.layerId === l.id)
+                    .map((m) => m.parameter),
+                )}
+                snapTargets={
+                  snap
+                    ? [
+                        0,
+                        project.duration,
+                        cue,
+                        ...project.layers
+                          .filter(
+                            (x) => !selectedIds.includes(x.id) && x.id !== l.id,
+                          )
+                          .flatMap((x) => [x.start, x.start + x.duration]),
+                      ]
+                    : []
+                }
+                onPreview={(next) =>
+                  setTimelineDraft(
+                    next ? transformLayers(project, l, next) : null,
+                  )
+                }
+                onCommit={(timing) =>
+                  edit((p) => ({ ...p, layers: transformLayers(p, l, timing) }))
+                }
+              />
+              <div className="layer-controls">
+                <button
+                  className={l.muted ? "toggle on" : "toggle"}
+                  aria-pressed={l.muted}
+                  aria-label={`${t("editor.muted")} ${l.name}`}
+                  title={t("editor.muted")}
+                  onClick={() =>
+                    edit((p) => ({
+                      ...p,
+                      layers: p.layers.map((a) =>
+                        a.id === l.id ? { ...a, muted: !a.muted } : a,
+                      ),
+                    }))
+                  }
+                >
+                  M
+                </button>
+                <button
+                  className={l.solo ? "toggle on" : "toggle"}
+                  aria-pressed={l.solo}
+                  aria-label={`${t("editor.solo")} ${l.name}`}
+                  title={t("editor.solo")}
+                  onClick={() =>
+                    edit((p) => ({
+                      ...p,
+                      layers: p.layers.map((a) =>
+                        a.id === l.id ? { ...a, solo: !a.solo } : a,
+                      ),
+                    }))
+                  }
+                >
+                  S
+                </button>
+                <button
+                  className={l.locked ? "toggle on" : "toggle"}
+                  aria-pressed={l.locked}
+                  aria-label={`${t("editor.lock")} ${l.name}`}
+                  title={t("editor.lock")}
+                  onClick={() =>
+                    edit((p) => ({
+                      ...p,
+                      layers: p.layers.map((a) =>
+                        a.id === l.id ? { ...a, locked: !a.locked } : a,
+                      ),
+                    }))
+                  }
+                >
+                  {l.locked ? (
+                    <LockKeyhole size={13} />
+                  ) : (
+                    <LockKeyholeOpen size={13} />
+                  )}
+                </button>
+              </div>
+            </div>
+          ))}
+          {!project.layers.length && (
+            <div className="empty-state">
+              <AudioLines size={26} />
+              <p>{t("editor.empty")}</p>
+              <button className="secondary" onClick={addSynth}>
+                <Plus size={15} />
+                {t("action.add")}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       {truncated && <p className="warning-line">{t("editor.clipped")}</p>}
       <div className="master-controls">
@@ -1291,6 +1664,18 @@ export default function App() {
           onChange={(v) => changeProject("echo", v)}
         />
       </div>
+      <MacroEditor
+        project={project}
+        onChange={(next) => edit(() => next, "controls")}
+      />
+      <ProjectTools
+        project={project}
+        cue={cue}
+        onChange={(next) => edit(() => next, "processing")}
+        onLoop={() => auditionLoop()}
+        onSeam={() => auditionLoop(true)}
+        busy={!result || ioBusy}
+      />
     </div>
   );
   const variants = (
@@ -1337,7 +1722,7 @@ export default function App() {
           <button
             className="icon-button"
             disabled={!variations.length || ioBusy}
-            onClick={() => void exportPack()}
+            onClick={() => setExportOpen(true)}
             aria-label={t("variants.export")}
             title={t("variants.export")}
           >
@@ -1485,19 +1870,11 @@ export default function App() {
           <button
             className="secondary export-button"
             disabled={!result || ioBusy}
-            onClick={() => {
-              if (result) {
-                download(
-                  encodeWav(result),
-                  `${safeFilename(project.name)}.wav`,
-                  "audio/wav",
-                );
-                flash("status.exported");
-              }
-            }}
+            onClick={() => setExportOpen(true)}
+            aria-haspopup="dialog"
           >
             <Download size={16} />
-            <span>{t("file.export")}</span>
+            <span>{t("export.open")}</span>
           </button>
         </div>
       </header>
@@ -1511,6 +1888,10 @@ export default function App() {
                 layer={selectedLayer}
                 project={project}
                 onChange={changeLayer}
+                onExpose={(key) =>
+                  selectedLayer &&
+                  edit((p) => exposeParameter(p, selectedLayer, key))
+                }
                 onDuplicate={duplicate}
                 onDelete={() =>
                   edit((p) => ({
@@ -1586,6 +1967,31 @@ export default function App() {
             <X size={14} />
           </button>
         </div>
+      )}
+      {exportOpen && (
+        <ExportDialog
+          project={project}
+          settings={exportSettings}
+          onSettings={(settings) => {
+            stop();
+            setExportSettings(settings);
+          }}
+          onPreview={auditionExport}
+          onExport={() => void exportCurrent()}
+          onExportPack={() => void exportPack()}
+          encodingStatus={encodingStatus}
+          variationCount={variations.length}
+          busy={!result || ioBusy || !!encodingStatus}
+          output={exportOutput}
+          onClose={() => {
+            if (
+              activePlaybackRef.current === "export-preview" ||
+              pendingPlaybackRef.current === "export-preview"
+            )
+              stop();
+            setExportOpen(false);
+          }}
+        />
       )}
       {help && (
         <div className="modal-backdrop" onClick={() => setHelp(false)}>
