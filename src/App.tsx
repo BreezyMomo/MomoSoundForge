@@ -1,0 +1,1368 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AudioLines,
+  Play,
+  Square,
+  Undo2,
+  Redo2,
+  FolderOpen,
+  Save,
+  Download,
+  Plus,
+  Upload,
+  Search,
+  LockKeyhole,
+  LockKeyholeOpen,
+  Volume2,
+  HelpCircle,
+  X,
+  Shuffle,
+  Check,
+  ChevronRight,
+  LoaderCircle,
+  Pause,
+  SkipBack,
+} from "lucide-react";
+import JSZip from "jszip";
+import type { DockWorkspace } from "@momo/workbench/dock";
+import {
+  createAppearance,
+  PRESET_THEME_IDS,
+  type AppearanceController,
+  type ThemeId,
+} from "@momo/workbench/appearance";
+import { Workbench } from "./Workbench";
+import { Inspector, Range, CommitText } from "./Inspector";
+import { Waveform } from "./Waveform";
+import { TimelineClip } from "./TimelineClip";
+import { PlayheadTimeline } from "./PlayheadTimeline";
+import { PRESETS, fromPreset } from "./presets";
+import {
+  SAMPLE_RATE,
+  MAX_ASSET_BYTES,
+  clamp,
+  encodeSamples,
+  makeLayer,
+  parseProject,
+  projectForSave,
+  uid,
+  varyProject,
+  createLayerPreviewProject,
+  type Layer,
+  type Project,
+  type RenderResult,
+} from "./model";
+import { encodeWav, renderProject } from "./engine";
+import { AudioPlayer, createRenderer } from "./audio";
+import { download, readDraft, safeFilename, writeDraft } from "./storage";
+import { language, t, useLanguage } from "./i18n";
+type Variation = { project: Project; result: RenderResult };
+const defaultProject = () =>
+  fromPreset("ice", t("preset.ice"), (key) => t(`layer.${key}`));
+const db = (v: number) => (v > 0 ? (20 * Math.log10(v)).toFixed(1) : "−∞");
+export default function App() {
+  const lang = useLanguage();
+  const [history, setHistory] = useState<{
+    past: Project[];
+    project: Project;
+    future: Project[];
+  }>(() => ({ past: [], project: defaultProject(), future: [] }));
+  const project = history.project,
+    current = useRef(project);
+  current.current = project;
+  const [selected, setSelected] = useState("ice-0"),
+    [ready, setReady] = useState(false),
+    [saveState, setSaveState] = useState("status.loading"),
+    [notice, setNotice] = useState<{ key: string; values: unknown[] } | null>(
+      null,
+    );
+  const [query, setQuery] = useState(""),
+    [category, setCategory] = useState("all"),
+    [rendered, setRendered] = useState<{
+      project: Project;
+      result: RenderResult;
+    } | null>(null),
+    [renderFailed, setRenderFailed] = useState(false);
+  const [playing, setPlaying] = useState<string | null>(null),
+    [pendingPlayback, setPendingPlayback] = useState<string | null>(null),
+    [loop, setLoop] = useState(false),
+    [monitor, setMonitor] = useState(0.7),
+    [progress, setProgress] = useState(0);
+  const [cue, setCue] = useState(0);
+  const [variations, setVariations] = useState<Variation[]>([]),
+    [variationBase, setVariationBase] = useState<Project | null>(null),
+    [amount, setAmount] = useState(0.35),
+    [busy, setBusy] = useState(false),
+    [ioBusy, setIoBusy] = useState(false),
+    [help, setHelp] = useState(false),
+    [theme, setTheme] = useState("original");
+  const menu = useRef<HTMLDivElement>(null),
+    manager = useRef<DockWorkspace | null>(null),
+    projectInput = useRef<HTMLInputElement>(null),
+    sampleInput = useRef<HTMLInputElement>(null),
+    appearance = useRef<AppearanceController | null>(null);
+  const renderer = useRef<ReturnType<typeof createRenderer> | null>(null),
+    player = useRef<AudioPlayer | null>(null),
+    playToken = useRef(0),
+    pendingPlaybackRef = useRef<string | null>(null),
+    playbackDuration = useRef(1),
+    cueRef = useRef(0),
+    activePlaybackRef = useRef<string | null>(null),
+    resumeSeekRef = useRef(false),
+    editGroup = useRef({ key: "", time: 0 }),
+    alive = useRef(true);
+  const flash = useCallback(
+    (key: string, ...values: unknown[]) => setNotice({ key, values }),
+    [],
+  );
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 5500);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  const updateCue = useCallback((time: number) => {
+    const value = clamp(time, 0, current.current.duration);
+    cueRef.current = value;
+    setCue(value);
+  }, []);
+  const stop = useCallback(() => {
+    if (activePlaybackRef.current === "main" && player.current)
+      updateCue(player.current.position());
+    playToken.current++;
+    activePlaybackRef.current = null;
+    resumeSeekRef.current = false;
+    pendingPlaybackRef.current = null;
+    player.current?.stop();
+    setPendingPlayback(null);
+    setPlaying(null);
+    setProgress(0);
+  }, [updateCue]);
+  const edit = useCallback(
+    (change: (p: Project) => Project, key = "") => {
+      stop();
+      const now = Date.now(),
+        coalesce =
+          key &&
+          editGroup.current.key === key &&
+          now - editGroup.current.time < 700;
+      editGroup.current = { key, time: now };
+      setHistory((h) => ({
+        past: coalesce ? h.past : [...h.past, h.project].slice(-50),
+        project: change(h.project),
+        future: [],
+      }));
+    },
+    [stop],
+  );
+  const undo = useCallback(() => {
+    stop();
+    editGroup.current = { key: "", time: 0 };
+    setHistory((h) =>
+      h.past.length
+        ? {
+            past: h.past.slice(0, -1),
+            project: h.past.at(-1)!,
+            future: [h.project, ...h.future],
+          }
+        : h,
+    );
+  }, [stop]);
+  const redo = useCallback(() => {
+    stop();
+    editGroup.current = { key: "", time: 0 };
+    setHistory((h) =>
+      h.future.length
+        ? {
+            past: [...h.past, h.project],
+            project: h.future[0],
+            future: h.future.slice(1),
+          }
+        : h,
+    );
+  }, [stop]);
+  const save = useCallback(() => {
+    download(
+      JSON.stringify(projectForSave(current.current)),
+      `${safeFilename(current.current.name)}.soundforge`,
+      "application/json",
+    );
+    flash("status.saved");
+  }, [flash]);
+  useEffect(() => {
+    alive.current = true;
+    renderer.current = createRenderer();
+    player.current = new AudioPlayer();
+    let cancelled = false;
+    readDraft()
+      .then((p) => {
+        if (cancelled) return;
+        if (p) {
+          setHistory({ past: [], project: p, future: [] });
+          setSelected(p.layers[0]?.id ?? "");
+          flash("status.restored");
+        }
+        setSaveState("status.local");
+      })
+      .catch(() => {
+        if (!cancelled) setSaveState("status.unavailable");
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
+    try {
+      const stored = localStorage.getItem("momo-sound-forge:appearance:v1");
+      if (stored) {
+        appearance.current = createAppearance({
+          storage: localStorage,
+          root: document.documentElement,
+          storageKey: "momo-sound-forge:appearance:v1",
+        });
+        setTheme(appearance.current.get().theme);
+      }
+    } catch {
+      /* Default theme remains usable. */
+    }
+    return () => {
+      cancelled = true;
+      alive.current = false;
+      renderer.current?.dispose();
+      player.current?.dispose();
+      appearance.current?.dispose();
+    };
+  }, [flash]);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+  useEffect(() => {
+    updateCue(cueRef.current);
+  }, [project.duration, updateCue]);
+  useEffect(() => {
+    if (!ready) return;
+    setSaveState("status.saving");
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      writeDraft(project)
+        .then(() => {
+          if (!cancelled) setSaveState("status.local");
+        })
+        .catch(() => {
+          if (!cancelled) setSaveState("status.unavailable");
+        });
+    }, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [project, ready]);
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    setRenderFailed(false);
+    const timer = setTimeout(() => {
+      renderer
+        .current!.render(project)
+        .then((result) => {
+          if (!cancelled) setRendered({ project, result });
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setRenderFailed(true);
+            flash("error.render");
+          }
+        });
+    }, 90);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [project, ready, flash]);
+  useEffect(() => {
+    if (!project.layers.some((l) => l.id === selected))
+      setSelected(project.layers[0]?.id ?? "");
+  }, [project, selected]);
+  const play = useCallback(
+    async (input: RenderResult | (() => Promise<RenderResult>), id: string) => {
+      if (
+        activePlaybackRef.current === id ||
+        pendingPlaybackRef.current === id
+      ) {
+        stop();
+        return;
+      }
+      const token = ++playToken.current;
+      if (activePlaybackRef.current === "main" && player.current)
+        updateCue(player.current.position());
+      player.current?.stop();
+      activePlaybackRef.current = null;
+      setPlaying(null);
+      setProgress(0);
+      pendingPlaybackRef.current = id;
+      setPendingPlayback(id);
+      let phase: "audio" | "render" = "audio";
+      try {
+        await player.current!.prepare();
+        if (token !== playToken.current) return;
+        phase = "render";
+        const result = typeof input === "function" ? await input() : input;
+        if (token !== playToken.current) return;
+        phase = "audio";
+        const duration = result.left.length / result.sampleRate;
+        const offset =
+          id === "main" && cueRef.current < duration - 1 / result.sampleRate
+            ? cueRef.current
+            : 0;
+        const started = await player.current!.play(
+          result,
+          loop,
+          monitor,
+          () => {
+            if (id === "main") updateCue(duration);
+            activePlaybackRef.current = null;
+            setPlaying(null);
+            setProgress(0);
+          },
+          () => token === playToken.current,
+          offset,
+        );
+        if (!started || token !== playToken.current) return;
+        playbackDuration.current = result.left.length / result.sampleRate;
+        activePlaybackRef.current = id;
+        setPlaying(id);
+        setProgress(offset / duration);
+        if (id === "main") updateCue(offset);
+      } catch {
+        if (token === playToken.current)
+          flash(phase === "render" ? "error.render" : "error.audio");
+      } finally {
+        if (token === playToken.current) {
+          pendingPlaybackRef.current = null;
+          setPendingPlayback(null);
+        }
+      }
+    },
+    [playing, stop, loop, monitor, flash, updateCue],
+  );
+  const result = rendered?.project === project ? rendered.result : null;
+  const beginSeek = () => {
+    const resume =
+      activePlaybackRef.current === "main" ||
+      pendingPlaybackRef.current === "main";
+    stop();
+    resumeSeekRef.current = resume;
+  };
+  const endSeek = (time: number) => {
+    updateCue(time);
+    const resume = resumeSeekRef.current;
+    resumeSeekRef.current = false;
+    if (resume && result && time < project.duration) void play(result, "main");
+  };
+  const rewind = () => {
+    beginSeek();
+    updateCue(0);
+    endSeek(0);
+  };
+  const previewLayer = project.layers.find(
+    (layer) => `layer-${layer.id}` === (playing ?? pendingPlayback),
+  );
+  useEffect(() => {
+    if (!playing) return;
+    let frame = 0;
+    const tick = () => {
+      const p = player.current;
+      if (p?.context) {
+        const time = p.position();
+        setProgress(time / playbackDuration.current);
+        if (playing === "main") updateCue(time);
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(frame);
+  }, [playing, updateCue]);
+  useEffect(() => {
+    player.current?.setVolume(monitor);
+  }, [monitor]);
+  useEffect(() => {
+    player.current?.setLoop(loop);
+  }, [loop]);
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement,
+        typing =
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement ||
+          target.isContentEditable;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        save();
+        return;
+      }
+      if (typing || help) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (playing || pendingPlayback) stop();
+        else if (result) void play(result, "main");
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        e.shiftKey ? redo() : undo();
+      }
+    };
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, [save, help, result, play, playing, pendingPlayback, stop, undo, redo]);
+  const selectedLayer = project.layers.find((l) => l.id === selected);
+  const changeLayer = (key: keyof Layer, value: Layer[keyof Layer]) =>
+    edit(
+      (p) => ({
+        ...p,
+        layers: p.layers.map((l) =>
+          l.id === selected ? { ...l, [key]: value } : l,
+        ),
+      }),
+      `${selected}:${key}`,
+    );
+  const changeProject = (
+    key: "duration" | "master" | "echo" | "seed",
+    value: number,
+  ) => edit((p) => ({ ...p, [key]: value }), key);
+  const setPreset = (id: string) => {
+    const next = fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`));
+    edit(() => next);
+    updateCue(0);
+    setSelected(next.layers[0].id);
+    manager.current?.show("editor");
+  };
+  const addSynth = () => {
+    if (project.layers.length >= 16) {
+      flash("error.layers");
+      return;
+    }
+    const l = makeLayer({ name: t("layer.new") });
+    edit((p) => ({ ...p, layers: [...p.layers, l] }));
+    setSelected(l.id);
+    manager.current?.show("inspector");
+  };
+  const duplicate = () => {
+    if (!selectedLayer || project.layers.length >= 16) return;
+    const layer = {
+      ...selectedLayer,
+      id: uid(),
+      name: `${selectedLayer.name} ${t("layer.copy")}`.slice(0, 120),
+    };
+    edit((p) => ({ ...p, layers: [...p.layers, layer] }));
+    setSelected(layer.id);
+  };
+  async function openProject(file?: File) {
+    if (!file) return;
+    setIoBusy(true);
+    try {
+      if (file.size > 36 * 1024 * 1024) throw Error("error.fileSize");
+      const next = parseProject(JSON.parse(await file.text()));
+      edit(() => next);
+      updateCue(0);
+      setSelected(next.layers[0]?.id ?? "");
+      setVariations([]);
+      manager.current?.show("editor");
+      flash("status.opened");
+    } catch (e) {
+      flash(
+        e instanceof Error && e.message === "error.fileSize"
+          ? e.message
+          : "error.project",
+      );
+    } finally {
+      setIoBusy(false);
+    }
+  }
+  async function importSample(file?: File) {
+    if (!file) return;
+    if (current.current.layers.length >= 16) {
+      flash("error.layers");
+      return;
+    }
+    setIoBusy(true);
+    try {
+      if (file.size > 24 * 1024 * 1024) throw Error("error.fileSize");
+      const context = await player.current!.prepare(),
+        buffer = await context.decodeAudioData(await file.arrayBuffer());
+      if (buffer.duration > 30) throw Error("error.budget");
+      const id = uid(),
+        channels = Array.from(
+          { length: Math.min(2, buffer.numberOfChannels) },
+          (_, i) => encodeSamples(buffer.getChannelData(i)),
+        ),
+        asset = {
+          id,
+          name: file.name.slice(0, 120) || "sample",
+          sampleRate: buffer.sampleRate,
+          channels,
+        };
+      if (current.current.layers.length >= 16) throw Error("error.layers");
+      const p = current.current,
+        total =
+          Object.values(projectForSave(p).assets).reduce(
+            (sum, a) =>
+              sum + a.channels.reduce((s, c) => s + c.length * 0.75, 0),
+            0,
+          ) + channels.reduce((s, c) => s + c.length * 0.75, 0);
+      if (total > MAX_ASSET_BYTES) throw Error("error.budget");
+      const layer = makeLayer({
+        name:
+          file.name.replace(/\.[^.]+$/, "").slice(0, 120) || t("editor.sample"),
+        type: "sample",
+        assetId: id,
+        frequency: 440,
+        endFrequency: 440,
+        duration: clamp(buffer.duration, 0.01, 10),
+        gain: 0.8,
+        decay: 0,
+        release: 0.02,
+        attack: 0.002,
+      });
+      edit((p) => ({
+        ...p,
+        duration: Math.max(p.duration, Math.min(10, buffer.duration + 0.05)),
+        assets: { ...projectForSave(p).assets, [id]: asset },
+        layers: [...p.layers, layer],
+      }));
+      setSelected(layer.id);
+      manager.current?.show("editor");
+      flash("status.imported", file.name);
+    } catch (e) {
+      flash(
+        e instanceof Error && e.message.startsWith("error.")
+          ? e.message
+          : "error.sample",
+      );
+    } finally {
+      setIoBusy(false);
+    }
+  }
+  async function generate() {
+    if (!renderer.current || busy) return;
+    stop();
+    setBusy(true);
+    const base = current.current,
+      items: Variation[] = [];
+    try {
+      for (let i = 0; i < 5; i++) {
+        const next = varyProject(
+          base,
+          (base.seed + 1 + i * 7919) >>> 0,
+          amount,
+        );
+        next.name = `${base.name.slice(0, 110)} ${String(i + 1).padStart(2, "0")}`;
+        items.push({
+          project: next,
+          result: await renderer.current.render(next),
+        });
+      }
+      if (alive.current) {
+        setVariations(items);
+        setVariationBase(base);
+      }
+    } catch {
+      flash("error.render");
+    } finally {
+      if (alive.current) setBusy(false);
+    }
+  }
+  async function exportPack() {
+    setIoBusy(true);
+    try {
+      const zip = new JSZip(),
+        manifest: {
+          file: string;
+          project: string;
+          seed: number;
+          sampleRate: number;
+          duration: number;
+        }[] = [];
+      for (const [i, v] of variations.entries()) {
+        const name = `${String(i + 1).padStart(2, "0")}-${safeFilename(v.project.name)}`;
+        zip.file(`${name}.wav`, encodeWav(v.result));
+        zip.file(
+          `${name}.soundforge`,
+          JSON.stringify(projectForSave(v.project)),
+        );
+        manifest.push({
+          file: `${name}.wav`,
+          project: `${name}.soundforge`,
+          seed: v.project.seed,
+          sampleRate: v.result.sampleRate,
+          duration: v.project.duration,
+        });
+      }
+      zip.file(
+        "manifest.json",
+        JSON.stringify(
+          {
+            schema: "momo.soundforge-pack/v1",
+            format: "PCM16 stereo WAV",
+            variations: manifest,
+          },
+          null,
+          2,
+        ),
+      );
+      const blob = await zip.generateAsync({
+        type: "blob",
+        compression: "STORE",
+      });
+      download(
+        blob,
+        `${safeFilename(variationBase?.name ?? "sound")}-variations.zip`,
+        "application/zip",
+      );
+      flash("status.pack");
+    } catch {
+      flash("status.error");
+    } finally {
+      setIoBusy(false);
+    }
+  }
+  function changeTheme(value: string) {
+    setTheme(value);
+    const root = document.documentElement;
+    if (value === "original") {
+      appearance.current?.dispose();
+      appearance.current = null;
+      for (const key of [
+        "theme",
+        "appearanceTheme",
+        "paletteRoles",
+        "interfaceStyle",
+        "density",
+        "tabStyle",
+        "tabOverride",
+        "momoWorkbench",
+      ])
+        delete root.dataset[key];
+      for (const property of Array.from(root.style))
+        if (property.startsWith("--ui-")) root.style.removeProperty(property);
+      root.style.removeProperty("color-scheme");
+      try {
+        localStorage.removeItem("momo-sound-forge:appearance:v1");
+      } catch {
+        /* Session preference remains active. */
+      }
+    } else {
+      try {
+        appearance.current ??= createAppearance({
+          storage: localStorage,
+          root,
+          storageKey: "momo-sound-forge:appearance:v1",
+        });
+        appearance.current.save({
+          ...appearance.current.get(),
+          theme: value as ThemeId,
+        });
+      } catch {
+        flash("status.error");
+      }
+    }
+  }
+  const thumbnails = useMemo(
+    () =>
+      Object.fromEntries(
+        PRESETS.map((p) => [
+          p.id,
+          renderProject(
+            fromPreset(p.id, p.id, (key) => key),
+            6000,
+          ).left,
+        ]),
+      ),
+    [],
+  );
+  const filtered = PRESETS.filter(
+    (p) =>
+      (category === "all" || p.category === category) &&
+      `${t(`preset.${p.id}`)} ${t(`preset.${p.id}.desc`)}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+  );
+  const truncated = project.layers.some(
+    (l) => !l.muted && l.start + l.duration > project.duration + 0.005,
+  );
+  const library = (
+    <div className="library-content">
+      <div className="library-intro">
+        <h2>{t("panel.library")}</h2>
+        <p>{t("library.hint")}</p>
+      </div>
+      <label className="search-field">
+        <Search size={15} />
+        <input
+          aria-label={t("library.search")}
+          placeholder={t("library.search")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </label>
+      <div className="category-tabs">
+        {["all", "interface", "magic", "motion"].map((c) => (
+          <button
+            key={c}
+            className={category === c ? "active" : ""}
+            onClick={() => setCategory(c)}
+          >
+            {t(`library.${c}`)}
+          </button>
+        ))}
+      </div>
+      <div className="preset-list">
+        {filtered.map((p) => (
+          <button
+            className="preset"
+            key={p.id}
+            onClick={() => setPreset(p.id)}
+            data-preset={p.id}
+          >
+            <span className="preset-label">
+              {t(`preset.${p.id}`)}
+              <ChevronRight size={14} />
+            </span>
+            <span className="preset-description">
+              {t(`preset.${p.id}.desc`)}
+            </span>
+            <Waveform data={thumbnails[p.id]} label={t(`preset.${p.id}`)} />
+            <span className="preset-meta">
+              {t(`library.${p.category}`)}
+              <span>{p.duration.toFixed(2)} s</span>
+            </span>
+          </button>
+        ))}
+        {!filtered.length && <p className="empty-copy">{t("library.none")}</p>}
+      </div>
+      <div className="library-import">
+        <p>{t("library.sampleHint")}</p>
+        <button
+          className="secondary wide"
+          disabled={ioBusy}
+          onClick={() => sampleInput.current?.click()}
+        >
+          <Upload size={15} />
+          {t("file.import")}
+        </button>
+      </div>
+    </div>
+  );
+  const editor = (
+    <div className="editor-content">
+      <div className="project-heading">
+        <div>
+          <span className="eyebrow">
+            Momo Sound Forge <span className="version">/ 0.1</span>
+          </span>
+          <h1>
+            <CommitText
+              className="project-name"
+              value={project.name}
+              label={t("editor.name")}
+              onCommit={(v) => edit((p) => ({ ...p, name: v }))}
+            />
+          </h1>
+        </div>
+        <span className="format-label">{t("editor.format")}</span>
+      </div>
+      <div className="transport">
+        <button
+          className="primary play-button"
+          disabled={!result && !playing && !pendingPlayback}
+          onClick={() =>
+            playing || pendingPlayback
+              ? stop()
+              : result && void play(result, "main")
+          }
+        >
+          {playing === "main" ? (
+            <Pause size={16} fill="currentColor" />
+          ) : playing || pendingPlayback ? (
+            <Square size={16} fill="currentColor" />
+          ) : (
+            <Play size={16} fill="currentColor" />
+          )}
+          {t(
+            playing === "main"
+              ? "action.pause"
+              : playing || pendingPlayback
+                ? "action.stop"
+                : "action.play",
+          )}
+        </button>
+        <button
+          className="icon-button"
+          aria-label={t("action.rewind")}
+          title={t("action.rewind")}
+          disabled={!ready}
+          onClick={rewind}
+        >
+          <SkipBack size={16} />
+        </button>
+        <label className="check-field">
+          <input
+            type="checkbox"
+            checked={loop}
+            onChange={(e) => setLoop(e.target.checked)}
+          />
+          {t("editor.loop")}
+        </label>
+        <span className="transport-spacer" />
+        <label className="monitor" title={t("editor.gain")}>
+          <Volume2 size={15} />
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step=".01"
+            value={monitor}
+            aria-label={t("editor.gain")}
+            onChange={(e) => setMonitor(e.target.valueAsNumber)}
+          />
+        </label>
+        <span className="time-readout">
+          {(previewLayer ? progress * previewLayer.duration : cue).toFixed(3)}{" "}
+          <span>
+            / {(previewLayer?.duration ?? project.duration).toFixed(2)} s
+          </span>
+        </span>
+      </div>
+      <div className="mix-area">
+        <div className="section-line">
+          <span>{t("editor.mix")}</span>
+          <span>
+            {result
+              ? `${t("editor.peak")} ${db(result.peak)} dBFS`
+              : t(renderFailed ? "error.render" : "editor.rendering")}
+          </span>
+        </div>
+        <PlayheadTimeline
+          duration={project.duration}
+          position={cue}
+          left={result?.left}
+          right={result?.right}
+          disabled={!result}
+          version={project}
+          onSeekStart={beginSeek}
+          onSeek={updateCue}
+          onSeekEnd={endSeek}
+        />
+        <div className="mix-foot">
+          <span>{t("editor.shortcut")}</span>
+          <span>
+            {previewLayer
+              ? t("editor.previewing", previewLayer.name)
+              : result && result.gainReduction < 0.999
+                ? t(
+                    "editor.headroom",
+                    (-20 * Math.log10(result.gainReduction)).toFixed(1),
+                  )
+                : t(result ? "editor.ready" : "editor.rendering")}
+          </span>
+        </div>
+      </div>
+      <div className="layers-heading">
+        <h2>
+          {t("editor.layers")} <span>{project.layers.length}</span>
+        </h2>
+        <div className="button-group">
+          <button
+            className="text-button"
+            disabled={project.layers.length >= 16}
+            onClick={addSynth}
+          >
+            <Plus size={15} />
+            {t("action.add")}
+          </button>
+          <button
+            className="text-button"
+            disabled={ioBusy || project.layers.length >= 16}
+            onClick={() => sampleInput.current?.click()}
+          >
+            <Upload size={15} />
+            {t("file.import")}
+          </button>
+        </div>
+      </div>
+      <div className="layer-list">
+        {project.layers.map((l, i) => (
+          <div
+            className={`layer-row ${selected === l.id ? "selected" : ""} ${l.muted ? "muted" : ""}`}
+            key={l.id}
+            data-layer-id={l.id}
+          >
+            <button
+              className="layer-identity"
+              onClick={() => setSelected(l.id)}
+            >
+              <span className="layer-index">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span>
+                <strong>{l.name}</strong>
+                <small>
+                  {t(l.type === "synth" ? "editor.synth" : "editor.sample")} ·{" "}
+                  {l.type === "synth"
+                    ? t(`wave.${l.wave}`)
+                    : project.assets[l.assetId!]?.name}
+                </small>
+              </span>
+            </button>
+            <button
+              className={`layer-preview icon-button ${playing === `layer-${l.id}` || pendingPlayback === `layer-${l.id}` ? "on" : ""}`}
+              disabled={!ready}
+              aria-pressed={
+                playing === `layer-${l.id}` ||
+                pendingPlayback === `layer-${l.id}`
+              }
+              aria-label={t(
+                playing === `layer-${l.id}` ||
+                  pendingPlayback === `layer-${l.id}`
+                  ? "editor.stopLayer"
+                  : "editor.playLayer",
+                l.name,
+              )}
+              title={t(
+                playing === `layer-${l.id}` ||
+                  pendingPlayback === `layer-${l.id}`
+                  ? "editor.stopLayer"
+                  : "editor.playLayer",
+                l.name,
+              )}
+              onClick={() =>
+                void play(
+                  () =>
+                    renderer.current!.render(
+                      createLayerPreviewProject(current.current, l.id),
+                    ),
+                  `layer-${l.id}`,
+                )
+              }
+            >
+              {pendingPlayback === `layer-${l.id}` ? (
+                <LoaderCircle size={14} className="preview-loading" />
+              ) : playing === `layer-${l.id}` ? (
+                <Square size={13} fill="currentColor" />
+              ) : (
+                <Play size={14} fill="currentColor" />
+              )}
+            </button>
+            <TimelineClip
+              layer={l}
+              projectDuration={project.duration}
+              data={result?.layers[l.id]}
+              onSelect={() => setSelected(l.id)}
+              onBegin={stop}
+              onCommit={(timing) =>
+                edit((p) => ({
+                  ...p,
+                  layers: p.layers.map((item) =>
+                    item.id === l.id ? { ...item, ...timing } : item,
+                  ),
+                }))
+              }
+            />
+            <div className="layer-controls">
+              <button
+                className={l.muted ? "toggle on" : "toggle"}
+                aria-pressed={l.muted}
+                aria-label={`${t("editor.muted")} ${l.name}`}
+                title={t("editor.muted")}
+                onClick={() =>
+                  edit((p) => ({
+                    ...p,
+                    layers: p.layers.map((a) =>
+                      a.id === l.id ? { ...a, muted: !a.muted } : a,
+                    ),
+                  }))
+                }
+              >
+                M
+              </button>
+              <button
+                className={l.solo ? "toggle on" : "toggle"}
+                aria-pressed={l.solo}
+                aria-label={`${t("editor.solo")} ${l.name}`}
+                title={t("editor.solo")}
+                onClick={() =>
+                  edit((p) => ({
+                    ...p,
+                    layers: p.layers.map((a) =>
+                      a.id === l.id ? { ...a, solo: !a.solo } : a,
+                    ),
+                  }))
+                }
+              >
+                S
+              </button>
+              <button
+                className={l.locked ? "toggle on" : "toggle"}
+                aria-pressed={l.locked}
+                aria-label={`${t("editor.lock")} ${l.name}`}
+                title={t("editor.lock")}
+                onClick={() =>
+                  edit((p) => ({
+                    ...p,
+                    layers: p.layers.map((a) =>
+                      a.id === l.id ? { ...a, locked: !a.locked } : a,
+                    ),
+                  }))
+                }
+              >
+                {l.locked ? (
+                  <LockKeyhole size={13} />
+                ) : (
+                  <LockKeyholeOpen size={13} />
+                )}
+              </button>
+            </div>
+          </div>
+        ))}
+        {!project.layers.length && (
+          <div className="empty-state">
+            <AudioLines size={26} />
+            <p>{t("editor.empty")}</p>
+            <button className="secondary" onClick={addSynth}>
+              <Plus size={15} />
+              {t("action.add")}
+            </button>
+          </div>
+        )}
+      </div>
+      {truncated && <p className="warning-line">{t("editor.clipped")}</p>}
+      <div className="master-controls">
+        <Range
+          label={t("editor.duration")}
+          value={project.duration}
+          min={0.1}
+          max={10}
+          step={0.01}
+          unit="s"
+          onChange={(v) => changeProject("duration", v)}
+        />
+        <Range
+          label={t("editor.master")}
+          value={project.master}
+          min={0}
+          max={1.5}
+          onChange={(v) => changeProject("master", v)}
+        />
+        <Range
+          label={t("editor.echo")}
+          value={project.echo}
+          min={0}
+          max={0.6}
+          onChange={(v) => changeProject("echo", v)}
+        />
+      </div>
+    </div>
+  );
+  const variants = (
+    <div className="variants-content">
+      <div className="variants-toolbar">
+        <div className="variant-controls">
+          <label className="seed-field">
+            {t("editor.seed")}
+            <input
+              aria-label={t("editor.seed")}
+              type="number"
+              min="0"
+              max="4294967295"
+              value={project.seed}
+              onChange={(e) => {
+                if (
+                  e.target.value !== "" &&
+                  Number.isFinite(e.target.valueAsNumber)
+                )
+                  changeProject(
+                    "seed",
+                    clamp(Math.round(e.target.valueAsNumber), 0, 4294967295),
+                  );
+              }}
+            />
+          </label>
+          <Range
+            label={t("variants.amount")}
+            value={amount}
+            min={0}
+            max={1}
+            onChange={setAmount}
+          />
+        </div>
+        <div className="button-group">
+          <button
+            className="secondary"
+            onClick={() => void generate()}
+            disabled={busy || !ready || !project.layers.length}
+          >
+            <Shuffle size={15} />
+            {t(busy ? "variants.busy" : "variants.generate")}
+          </button>
+          <button
+            className="icon-button"
+            disabled={!variations.length || ioBusy}
+            onClick={() => void exportPack()}
+            aria-label={t("variants.export")}
+            title={t("variants.export")}
+          >
+            <Download size={16} />
+          </button>
+        </div>
+      </div>
+      {!variations.length ? (
+        <p className="variant-empty">
+          {t("variants.empty")}
+          <span>{t("variants.hint")}</span>
+        </p>
+      ) : (
+        <>
+          <div className="variation-grid">
+            {variations.map((v, i) => (
+              <div
+                className={`variation ${playing === `var-${i}` ? "playing" : ""}`}
+                key={v.project.seed}
+              >
+                <div className="variation-top">
+                  <span>{t("variants.title", i + 1)}</span>
+                  <button
+                    className="icon-button"
+                    aria-pressed={playing === `var-${i}`}
+                    aria-label={`${t(playing === `var-${i}` ? "action.stop" : "action.listen")} ${i + 1}`}
+                    onClick={() => void play(v.result, `var-${i}`)}
+                  >
+                    {playing === `var-${i}` ? (
+                      <Square size={13} />
+                    ) : (
+                      <Play size={13} />
+                    )}
+                  </button>
+                </div>
+                <Waveform
+                  data={v.result.left}
+                  right={v.result.right}
+                  label={t("variants.title", i + 1)}
+                />
+                <div className="variation-bottom">
+                  <span>{v.project.seed}</span>
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      edit(() => v.project);
+                      setSelected(v.project.layers[0]?.id ?? "");
+                    }}
+                  >
+                    {t("action.apply")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {variationBase !== project && (
+            <p className="field-help">{t("variants.old")}</p>
+          )}
+        </>
+      )}
+    </div>
+  );
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="brand">
+          <AudioLines size={25} />
+          <span>
+            Momo<span className="brand-name">SoundForge</span>
+          </span>
+        </div>
+        <div className="header-actions">
+          <button
+            className="icon-button"
+            disabled={!history.past.length}
+            onClick={undo}
+            title={t("action.undo")}
+            aria-label={t("action.undo")}
+          >
+            <Undo2 size={17} />
+          </button>
+          <button
+            className="icon-button"
+            disabled={!history.future.length}
+            onClick={redo}
+            title={t("action.redo")}
+            aria-label={t("action.redo")}
+          >
+            <Redo2 size={17} />
+          </button>
+          <span className="header-divider" />
+          <button
+            className="text-button"
+            aria-label={t("file.open")}
+            title={t("file.open")}
+            disabled={ioBusy || !ready}
+            onClick={() => projectInput.current?.click()}
+          >
+            <FolderOpen size={16} />
+            <span>{t("file.open")}</span>
+          </button>
+          <button
+            className="text-button"
+            aria-label={t("file.save")}
+            title={t("file.save")}
+            disabled={!ready}
+            onClick={save}
+          >
+            <Save size={16} />
+            <span>{t("file.save")}</span>
+          </button>
+        </div>
+        <div className="header-right">
+          <div ref={menu} className="layout-menu" />
+          <select
+            aria-label={t("theme.label")}
+            className="theme-select"
+            value={theme}
+            onChange={(e) => changeTheme(e.target.value)}
+          >
+            <option value="original">{t("theme.original")}</option>
+            {PRESET_THEME_IDS.map((id) => (
+              <option key={id} value={id}>
+                {t(`theme.${id}`)}
+              </option>
+            ))}
+          </select>
+          <select
+            className="language-select"
+            aria-label="Language"
+            value={lang}
+            onChange={(e) => language.setLanguage(e.target.value)}
+          >
+            <option value="zh-CN">中文</option>
+            <option value="en">EN</option>
+          </select>
+          <button
+            className="icon-button"
+            aria-label={t("help.label")}
+            title={t("help.label")}
+            onClick={() => setHelp(true)}
+          >
+            <HelpCircle size={17} />
+          </button>
+          <button
+            className="secondary export-button"
+            disabled={!result || ioBusy}
+            onClick={() => {
+              if (result) {
+                download(
+                  encodeWav(result),
+                  `${safeFilename(project.name)}.wav`,
+                  "audio/wav",
+                );
+                flash("status.exported");
+              }
+            }}
+          >
+            <Download size={16} />
+            <span>{t("file.export")}</span>
+          </button>
+        </div>
+      </header>
+      <main className={!ready ? "restoring" : ""}>
+        <Workbench
+          contents={{
+            library,
+            editor,
+            inspector: (
+              <Inspector
+                layer={selectedLayer}
+                project={project}
+                onChange={changeLayer}
+                onDuplicate={duplicate}
+                onDelete={() =>
+                  edit((p) => ({
+                    ...p,
+                    layers: p.layers.filter((l) => l.id !== selected),
+                  }))
+                }
+              />
+            ),
+            variants,
+          }}
+          menuHost={menu}
+          managerRef={manager}
+          onMessage={(message) => flash(message)}
+        />
+      </main>
+      <footer className="statusbar">
+        <span
+          className={saveState === "status.unavailable" ? "error-status" : ""}
+        >
+          <Check size={12} />
+          {t(saveState)}
+        </span>
+        <span>{t("app.version")}</span>
+      </footer>
+      <input
+        type="file"
+        hidden
+        ref={projectInput}
+        accept=".soundforge,.json"
+        onChange={(e) => {
+          void openProject(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+      <input
+        type="file"
+        hidden
+        ref={sampleInput}
+        accept="audio/*,.wav,.mp3,.ogg,.flac"
+        onChange={(e) => {
+          void importSample(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+      {notice && (
+        <div className="toast" role="status">
+          {t(notice.key, ...notice.values)}
+          <button
+            className="icon-button"
+            aria-label={t("action.close")}
+            onClick={() => setNotice(null)}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+      {help && (
+        <div className="modal-backdrop" onClick={() => setHelp(false)}>
+          <section
+            className="help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="help-title"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setHelp(false);
+            }}
+          >
+            <button
+              autoFocus
+              className="icon-button close-help"
+              aria-label={t("action.close")}
+              onClick={() => setHelp(false)}
+            >
+              <X size={18} />
+            </button>
+            <AudioLines size={30} />
+            <h2 id="help-title">{t("help.title")}</h2>
+            <p>{t("help.body")}</p>
+            <p className="help-keys">{t("help.keys")}</p>
+            <p className="field-help">{t("help.scope")}</p>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
