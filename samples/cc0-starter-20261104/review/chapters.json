@@ -1,0 +1,322 @@
+[
+  {
+    "id": "01-wood-light",
+    "name": "木材轻碰",
+    "category": "impacts",
+    "startSeconds": 0.0,
+    "excerptSeconds": 0.2627,
+    "excerpted": false
+  },
+  {
+    "id": "02-wood-medium",
+    "name": "木材碰撞",
+    "category": "impacts",
+    "startSeconds": 0.7127,
+    "excerptSeconds": 0.3298,
+    "excerpted": false
+  },
+  {
+    "id": "03-plank-medium",
+    "name": "木板碰撞",
+    "category": "impacts",
+    "startSeconds": 1.4925,
+    "excerptSeconds": 0.779,
+    "excerpted": false
+  },
+  {
+    "id": "04-metal-light",
+    "name": "金属轻碰",
+    "category": "impacts",
+    "startSeconds": 2.7215,
+    "excerptSeconds": 0.373,
+    "excerpted": false
+  },
+  {
+    "id": "05-metal-medium",
+    "name": "金属碰撞",
+    "category": "impacts",
+    "startSeconds": 3.5445,
+    "excerptSeconds": 0.2689,
+    "excerpted": false
+  },
+  {
+    "id": "06-tin-medium",
+    "name": "薄铁碰撞",
+    "category": "impacts",
+    "startSeconds": 4.2634,
+    "excerptSeconds": 0.1558,
+    "excerpted": false
+  },
+  {
+    "id": "07-glass-light",
+    "name": "玻璃轻碰",
+    "category": "impacts",
+    "startSeconds": 4.8692,
+    "excerptSeconds": 0.2308,
+    "excerpted": false
+  },
+  {
+    "id": "08-glass-medium",
+    "name": "玻璃碰撞",
+    "category": "impacts",
+    "startSeconds": 5.5499,
+    "excerptSeconds": 0.5405,
+    "excerpted": false
+  },
+  {
+    "id": "09-plate-light",
+    "name": "板材轻碰",
+    "category": "impacts",
+    "startSeconds": 6.5404,
+    "excerptSeconds": 0.5424,
+    "excerpted": false
+  },
+  {
+    "id": "10-mining-hit",
+    "name": "采掘敲击",
+    "category": "impacts",
+    "startSeconds": 7.5328,
+    "excerptSeconds": 0.9375,
+    "excerpted": false
+  },
+  {
+    "id": "11-cloth-01",
+    "name": "布料动作 01",
+    "category": "motion",
+    "startSeconds": 8.9203,
+    "excerptSeconds": 1.7251,
+    "excerpted": false
+  },
+  {
+    "id": "12-cloth-04",
+    "name": "布料动作 04",
+    "category": "motion",
+    "startSeconds": 11.0954,
+    "excerptSeconds": 0.5736,
+    "excerpted": false
+  },
+  {
+    "id": "13-cloth-05",
+    "name": "布料动作 05",
+    "category": "motion",
+    "startSeconds": 12.119,
+    "excerptSeconds": 0.3966,
+    "excerpted": false
+  },
+  {
+    "id": "14-cloth-07",
+    "name": "布料动作 07",
+    "category": "motion",
+    "startSeconds": 12.9656,
+    "excerptSeconds": 1.0121,
+    "excerpted": false
+  },
+  {
+    "id": "15-paper-crush",
+    "name": "揉纸",
+    "category": "motion",
+    "startSeconds": 14.4277,
+    "excerptSeconds": 1.1494,
+    "excerpted": false
+  },
+  {
+    "id": "16-paper-rip",
+    "name": "撕纸",
+    "category": "motion",
+    "startSeconds": 16.0271,
+    "excerptSeconds": 0.4992,
+    "excerpted": false
+  },
+  {
+    "id": "17-paper-01",
+    "name": "纸张动作 01",
+    "category": "motion",
+    "startSeconds": 16.9763,
+    "excerptSeconds": 0.4876,
+    "excerpted": false
+  },
+  {
+    "id": "18-paper-02",
+    "name": "纸张动作 02",
+    "category": "motion",
+    "startSeconds": 17.914,
+    "excerptSeconds": 0.5457,
+    "excerpted": false
+  },
+  {
+    "id": "19-swish-01",
+    "name": "短挥动 01",
+    "category": "motion",
+    "startSeconds": 18.9096,
+    "excerptSeconds": 0.126,
+    "excerpted": false
+  },
+  {
+    "id": "20-swish-11",
+    "name": "短挥动 11",
+    "category": "motion",
+    "startSeconds": 19.4857,
+    "excerptSeconds": 0.1042,
+    "excerpted": false
+  },
+  {
+    "id": "21-bubble-01",
+    "name": "气泡 01",
+    "category": "liquid",
+    "startSeconds": 20.0399,
+    "excerptSeconds": 0.6965,
+    "excerpted": false
+  },
+  {
+    "id": "22-bubble-02",
+    "name": "气泡 02",
+    "category": "liquid",
+    "startSeconds": 21.1864,
+    "excerptSeconds": 0.3604,
+    "excerpted": false
+  },
+  {
+    "id": "23-bubble-03",
+    "name": "气泡 03",
+    "category": "liquid",
+    "startSeconds": 21.9967,
+    "excerptSeconds": 0.5471,
+    "excerpted": false
+  },
+  {
+    "id": "24-slime-01",
+    "name": "黏液 01",
+    "category": "liquid",
+    "startSeconds": 22.9938,
+    "excerptSeconds": 0.4731,
+    "excerpted": false
+  },
+  {
+    "id": "25-slime-05",
+    "name": "黏液 05",
+    "category": "liquid",
+    "startSeconds": 23.9169,
+    "excerptSeconds": 0.456,
+    "excerpted": false
+  },
+  {
+    "id": "26-slime-10",
+    "name": "黏液 10",
+    "category": "liquid",
+    "startSeconds": 24.8229,
+    "excerptSeconds": 0.5851,
+    "excerpted": false
+  },
+  {
+    "id": "27-slime-12",
+    "name": "黏液 12",
+    "category": "liquid",
+    "startSeconds": 25.8579,
+    "excerptSeconds": 0.2298,
+    "excerpted": false
+  },
+  {
+    "id": "28-splash-01",
+    "name": "飞溅 01",
+    "category": "liquid",
+    "startSeconds": 26.5377,
+    "excerptSeconds": 1.3811,
+    "excerpted": false
+  },
+  {
+    "id": "29-splash-02",
+    "name": "飞溅 02",
+    "category": "liquid",
+    "startSeconds": 28.3688,
+    "excerptSeconds": 0.7179,
+    "excerpted": false
+  },
+  {
+    "id": "30-splash-03",
+    "name": "飞溅 03",
+    "category": "liquid",
+    "startSeconds": 29.5367,
+    "excerptSeconds": 0.772,
+    "excerpted": false
+  },
+  {
+    "id": "31-bell-00",
+    "name": "钟铃 00",
+    "category": "details",
+    "startSeconds": 30.7587,
+    "excerptSeconds": 1.4802,
+    "excerpted": false
+  },
+  {
+    "id": "32-bell-01",
+    "name": "钟铃 01",
+    "category": "details",
+    "startSeconds": 32.6889,
+    "excerptSeconds": 1.7409,
+    "excerpted": false
+  },
+  {
+    "id": "33-camera-01",
+    "name": "相机机构 01",
+    "category": "details",
+    "startSeconds": 34.8797,
+    "excerptSeconds": 0.4777,
+    "excerpted": false
+  },
+  {
+    "id": "34-camera-02",
+    "name": "相机机构 02",
+    "category": "details",
+    "startSeconds": 35.8075,
+    "excerptSeconds": 0.3741,
+    "excerpted": false
+  },
+  {
+    "id": "35-lock-door-02",
+    "name": "钥匙门锁 02",
+    "category": "details",
+    "startSeconds": 36.6316,
+    "excerptSeconds": 0.9539,
+    "excerpted": false
+  },
+  {
+    "id": "36-lock-door-04",
+    "name": "钥匙门锁 04",
+    "category": "details",
+    "startSeconds": 38.0355,
+    "excerptSeconds": 0.6037,
+    "excerpted": false
+  },
+  {
+    "id": "37-money-01",
+    "name": "钱币纸钞 01",
+    "category": "details",
+    "startSeconds": 39.0892,
+    "excerptSeconds": 0.7849,
+    "excerpted": false
+  },
+  {
+    "id": "38-stationery-01",
+    "name": "文具机构 01",
+    "category": "details",
+    "startSeconds": 40.3241,
+    "excerptSeconds": 0.8224,
+    "excerpted": false
+  },
+  {
+    "id": "39-spray-pump",
+    "name": "喷雾泵",
+    "category": "details",
+    "startSeconds": 41.5965,
+    "excerptSeconds": 0.3571,
+    "excerpted": false
+  },
+  {
+    "id": "40-spinner-01",
+    "name": "指尖陀螺机构",
+    "category": "details",
+    "startSeconds": 42.4037,
+    "excerptSeconds": 2.5,
+    "excerpted": true
+  }
+]

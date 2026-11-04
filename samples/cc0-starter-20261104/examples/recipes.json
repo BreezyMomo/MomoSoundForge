@@ -1,0 +1,99 @@
+[
+  {
+    "id": "01-wood-hit",
+    "name": "木质命中",
+    "projectFile": "examples/01-wood-hit.soundforge",
+    "wavFile": "examples/01-wood-hit.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "02-wood-medium",
+      "03-plank-medium"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  },
+  {
+    "id": "02-metal-confirm",
+    "name": "金属确认",
+    "projectFile": "examples/02-metal-confirm.soundforge",
+    "wavFile": "examples/02-metal-confirm.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "04-metal-light",
+      "31-bell-00"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  },
+  {
+    "id": "03-glass-pickup",
+    "name": "玻璃拾取",
+    "projectFile": "examples/03-glass-pickup.soundforge",
+    "wavFile": "examples/03-glass-pickup.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "07-glass-light",
+      "32-bell-01"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  },
+  {
+    "id": "04-cloth-swish",
+    "name": "布料挥动",
+    "projectFile": "examples/04-cloth-swish.soundforge",
+    "wavFile": "examples/04-cloth-swish.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "12-cloth-04",
+      "19-swish-01"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  },
+  {
+    "id": "05-paper-open",
+    "name": "纸张展开",
+    "projectFile": "examples/05-paper-open.soundforge",
+    "wavFile": "examples/05-paper-open.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "17-paper-01",
+      "18-paper-02",
+      "20-swish-11"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  },
+  {
+    "id": "06-bubble-hop",
+    "name": "气泡弹跳",
+    "projectFile": "examples/06-bubble-hop.soundforge",
+    "wavFile": "examples/06-bubble-hop.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "22-bubble-02"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  },
+  {
+    "id": "07-slime-hit",
+    "name": "黏液命中",
+    "projectFile": "examples/07-slime-hit.soundforge",
+    "wavFile": "examples/07-slime-hit.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "26-slime-10",
+      "29-splash-02"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  },
+  {
+    "id": "08-mechanical-unlock",
+    "name": "机械解锁",
+    "projectFile": "examples/08-mechanical-unlock.soundforge",
+    "wavFile": "examples/08-mechanical-unlock.wav",
+    "seed": 2048,
+    "sampleIds": [
+      "35-lock-door-02",
+      "33-camera-01",
+      "04-metal-light"
+    ],
+    "note": "Editable layering demonstration; subjective audition and final mix approval pending."
+  }
+]

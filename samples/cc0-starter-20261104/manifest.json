@@ -1,0 +1,2209 @@
+{
+  "schema": "momo.sample-collection/v1",
+  "title": "CC0 Starter 2026-11-04",
+  "createdAtUtc": "2026-11-04T14:26:42.715800+00:00",
+  "sampleCount": 40,
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "technicalValidation": "Decoded successfully; duration and memory limits checked; SHA256 and decoded PCM de-duplication; finite samples; no full-scale working WAV samples.",
+  "subjectiveAudition": "pending",
+  "qualityNote": "WAV originals and OGG publisher files are retained unchanged. WAV working copies decoded from OGG are not lossless masters. No denoising or subjective audio-quality certification.",
+  "searchTool": {
+    "url": "https://github.com/vibe-motion/sound",
+    "scriptSha256": "b487b981fcabd0c35e6ce2c8894d732a64894909370c418d095377637b986ca4",
+    "use": "CC0 candidate research only; shipped samples downloaded from publisher packs listed in licenses/sources.json."
+  },
+  "decoder": "ffmpeg version 9.0.2-essentials_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+  "sources": [
+    {
+      "id": "kenney-impact",
+      "author": "Kenney",
+      "title": "Impact Sounds",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "downloadUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAtUtc": "2026-11-04T14:26:42.715800+00:00",
+      "pageSnapshotSha256": "80c72bae16c8af45bb5f98ecb2e5d922623ef6369caf99b9d06f3819c4c72a55",
+      "archiveSha256": "029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8",
+      "evidence": "Publisher source page lists this pack as CC0; exact selected archive members are recorded in manifest.json.",
+      "includedLicenseFile": "licenses/kenney-impact-License.txt"
+    },
+    {
+      "id": "more-sounds",
+      "author": "OwlishMedia",
+      "title": "202 More Sound Effects",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "downloadUrl": "https://opengameart.org/sites/default/files/MoreSounds.zip",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAtUtc": "2026-11-04T14:26:42.715800+00:00",
+      "pageSnapshotSha256": "ab4c404a2b1dab3b572badd44cc00a4bffd668e0ae4ba58dab5d3391bea0be39",
+      "archiveSha256": "9428c1437137d9ea06ba94e13da12488d4c57990a1c32d83db9e7707e69fb3af",
+      "evidence": "Publisher source page lists this pack as CC0; exact selected archive members are recorded in manifest.json."
+    },
+    {
+      "id": "paper",
+      "author": "Luckius",
+      "title": "Various Paper Sound Effects",
+      "sourceUrl": "https://opengameart.org/content/various-paper-sound-effects",
+      "downloadUrl": "https://opengameart.org/sites/default/files/sounds_6.zip",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAtUtc": "2026-11-04T14:26:42.715800+00:00",
+      "pageSnapshotSha256": "d6db1caf2fa660756022d7a8cc21ced7705ea7db43090173b73a5f7f86d9ae84",
+      "archiveSha256": "aa1889414310c7cfdd8dc291c19d4e4fc21ec987e9238b0d961fb72449c263a4",
+      "evidence": "Publisher source page lists this pack as CC0; exact selected archive members are recorded in manifest.json."
+    },
+    {
+      "id": "swishes",
+      "author": "artisticdude",
+      "title": "Swishes Sound Pack",
+      "sourceUrl": "https://opengameart.org/content/swishes-sound-pack",
+      "downloadUrl": "https://opengameart.org/sites/default/files/swishes.zip",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAtUtc": "2026-11-04T14:26:42.715800+00:00",
+      "pageSnapshotSha256": "e9e6fdd9544673c5ab097a185a956c4195a413fdd5ff87120128469e7c5b70fa",
+      "archiveSha256": "7980215241b739a787dcf26f660ce510bb237900968789395a86911619795693",
+      "evidence": "Publisher source page lists this pack as CC0; exact selected archive members are recorded in manifest.json."
+    },
+    {
+      "id": "water-splash-slime",
+      "author": "rubberduck",
+      "title": "40 CC0 Water / Splash / Slime SFX",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "downloadUrl": "https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "verifiedAtUtc": "2026-11-04T14:26:42.715800+00:00",
+      "pageSnapshotSha256": "af2ebf3239cfaeb07e2efd783aceb932226d38ac967cc3df2d4b6aeff19723ca",
+      "archiveSha256": "7cd39abb49d4362a37ba18dc0e454c7dc1d08029d4e5b683149046bc237b2eba",
+      "evidence": "Publisher source page lists this pack as CC0; exact selected archive members are recorded in manifest.json."
+    }
+  ],
+  "samples": [
+    {
+      "id": "01-wood-light",
+      "name": "木材轻碰",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactWood_light_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/01-wood-light.ogg",
+      "originalSha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+      "wavFile": "wav/impacts/01-wood-light.wav",
+      "wavSha256": "9a2e7fdbe25153c43ae16577dec413c9afef4555e4d8838637cbfc4864291656",
+      "pcmSha256": "d85fef2d6d00320389b3bb92781ae84ff3a6e51e2e2550e8959f5015eeff3cfa",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.262708,
+        "peak": 0.8799782991409302,
+        "rms": 0.07705893473611003,
+        "dcOffset": [
+          1.8473849195288494e-05,
+          1.8473849195288494e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.262708,
+        "peak": 0.87994384765625,
+        "rms": 0.07705652470044462,
+        "dcOffset": [
+          1.8252463632961735e-05,
+          1.8252463632961735e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/01-wood-light.soundforge"
+    },
+    {
+      "id": "02-wood-medium",
+      "name": "木材碰撞",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactWood_medium_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/02-wood-medium.ogg",
+      "originalSha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5",
+      "wavFile": "wav/impacts/02-wood-medium.wav",
+      "wavSha256": "1656003d3af92f4a010a6d79b74a2ec8ab067c59d27359772cca8f4b181ee6c6",
+      "pcmSha256": "a726c4f10d864fa52e224485b6c105ac5eb756fa73caf3d62b43e076df9479b8",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.329792,
+        "peak": 0.8884992599487305,
+        "rms": 0.07443120989120447,
+        "dcOffset": [
+          4.0709248423809186e-05,
+          4.0709248423809186e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.329792,
+        "peak": 0.888458251953125,
+        "rms": 0.07442890071545707,
+        "dcOffset": [
+          4.0711951442062855e-05,
+          4.0711951442062855e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/02-wood-medium.soundforge"
+    },
+    {
+      "id": "03-plank-medium",
+      "name": "木板碰撞",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactPlank_medium_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/03-plank-medium.ogg",
+      "originalSha256": "8403cd7a043f0391574c88c55dd205743725b5363d2407f6de145f201690b68f",
+      "wavFile": "wav/impacts/03-plank-medium.wav",
+      "wavSha256": "b17184fbe16e141c90a2202c76eefd57831ae5f35b5928de6248fdaf9fa8091c",
+      "pcmSha256": "2a9c4e44fedad9d98d4ddcfe98766d82803c50889bf6c3c26d86fd34ecadcb30",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.779021,
+        "peak": 0.8697024583816528,
+        "rms": 0.06398826264741136,
+        "dcOffset": [
+          3.2465661206515506e-05,
+          3.2465661206515506e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.779021,
+        "peak": 0.86968994140625,
+        "rms": 0.06398632517226935,
+        "dcOffset": [
+          3.231388109270483e-05,
+          3.231388109270483e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/03-plank-medium.soundforge"
+    },
+    {
+      "id": "04-metal-light",
+      "name": "金属轻碰",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactMetal_light_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/04-metal-light.ogg",
+      "originalSha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+      "wavFile": "wav/impacts/04-metal-light.wav",
+      "wavSha256": "56b20941c65d75e15fd4be24bd78a7ea2b8643e8d231a85a2338a5a26600f58d",
+      "pcmSha256": "25cdc5de431d6c66d8afa4ac05cd302018a75ee8c933644bde94789dced65994",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.372979,
+        "peak": 0.8882412314414978,
+        "rms": 0.08846862308587644,
+        "dcOffset": [
+          -1.1329740118526388e-05,
+          -1.1329740118526388e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.372979,
+        "peak": 0.888214111328125,
+        "rms": 0.08846585581876441,
+        "dcOffset": [
+          -1.1267451554886065e-05,
+          -1.1267451554886065e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/04-metal-light.soundforge"
+    },
+    {
+      "id": "05-metal-medium",
+      "name": "金属碰撞",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactMetal_medium_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/05-metal-medium.ogg",
+      "originalSha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+      "wavFile": "wav/impacts/05-metal-medium.wav",
+      "wavSha256": "1e86bdf2aa6d425ba85a183d4407b9c11a72a78e7463813dfdf2501ca16f6737",
+      "pcmSha256": "d4a1d0b435fd25175d4841e3395379aea23cdb6e2b87be21b8bba768e8ef4536",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.268875,
+        "peak": 0.871306300163269,
+        "rms": 0.08366259971447196,
+        "dcOffset": [
+          4.400847046781564e-06,
+          4.400847046781564e-06
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.268875,
+        "peak": 0.87127685546875,
+        "rms": 0.08366004691610433,
+        "dcOffset": [
+          4.362694198789541e-06,
+          4.362694198789541e-06
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/05-metal-medium.soundforge"
+    },
+    {
+      "id": "06-tin-medium",
+      "name": "薄铁碰撞",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactTin_medium_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/06-tin-medium.ogg",
+      "originalSha256": "f4bbee66ca191ec744b84fc07ac9ed2a6fda955d51cfed8360f12b62815d3cbd",
+      "wavFile": "wav/impacts/06-tin-medium.wav",
+      "wavSha256": "f53e6487eee488de3e2ad9f208932f163947abfa2e657dd716b53992aa69ae9f",
+      "pcmSha256": "0b313d2c59439ba6c82eb78d31cf50562847f86516d15b7a11acef091c0ebeed",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.9956841417371217,
+        "gainDb": -0.037568,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.155812,
+        "peak": 0.8951141238212585,
+        "rms": 0.0906143863620113,
+        "dcOffset": [
+          0.0003357255773153156,
+          0.0003357255773153156
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.155812,
+        "peak": 0.8912353515625,
+        "rms": 0.09022055937761672,
+        "dcOffset": [
+          0.0003344324941281229,
+          0.0003344324941281229
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/06-tin-medium.soundforge"
+    },
+    {
+      "id": "07-glass-light",
+      "name": "玻璃轻碰",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactGlass_light_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/07-glass-light.ogg",
+      "originalSha256": "d750cf88097d0c3e69920e6e14496e1444e1a9da01aa4cca8f5ec8cb44c57b4f",
+      "wavFile": "wav/impacts/07-glass-light.wav",
+      "wavSha256": "5f2391c65b1b72603a166833666f5dc849af4004a257749e27f7f2808f17ddbd",
+      "pcmSha256": "3d779479b763f96b269ef906cd46ab8c7f62cf0e39266590f318f3d234247b95",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.23075,
+        "peak": 0.8383600115776062,
+        "rms": 0.08150694014711928,
+        "dcOffset": [
+          -3.582609861041419e-05,
+          -3.582609861041419e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.23075,
+        "peak": 0.838348388671875,
+        "rms": 0.08150447826319444,
+        "dcOffset": [
+          -3.5441280488157645e-05,
+          -3.5441280488157645e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/07-glass-light.soundforge"
+    },
+    {
+      "id": "08-glass-medium",
+      "name": "玻璃碰撞",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactGlass_medium_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/08-glass-medium.ogg",
+      "originalSha256": "9252d50bfb85edb17d6073c4a7806e10cdb9de56d3dbfc93a4b9727146d2df6d",
+      "wavFile": "wav/impacts/08-glass-medium.wav",
+      "wavSha256": "1246b258890fdb30e94ab87bc5c06b4e4a202213c09ed0fddd6070a9943f75bb",
+      "pcmSha256": "6b5d5f968ea038a25801041d1751bff4d6984ee057b8a90af54b125272fc2e80",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.540458,
+        "peak": 0.8771857023239136,
+        "rms": 0.053528688911876995,
+        "dcOffset": [
+          -1.0505559657758567e-06,
+          -1.0505559657758567e-06
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.540458,
+        "peak": 0.877166748046875,
+        "rms": 0.05352706670855479,
+        "dcOffset": [
+          -1.0116843895957572e-06,
+          -1.0116843895957572e-06
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/08-glass-medium.soundforge"
+    },
+    {
+      "id": "09-plate-light",
+      "name": "板材轻碰",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactPlate_light_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/09-plate-light.ogg",
+      "originalSha256": "6e797cf8a5bfc52d7ed5eb47c227974c1cf2a674954fec5b539cea7d62c7282c",
+      "wavFile": "wav/impacts/09-plate-light.wav",
+      "wavSha256": "400bdadf5a1f004bb695c93b82427b1ecfdc4abb65eb31c34fb8fb2cd940fe65",
+      "pcmSha256": "45972a13454fa1d3127f2f9de760627b59c9bd8387f9ffbe7ed821fe6bc23a60",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.542438,
+        "peak": 0.8888636231422424,
+        "rms": 0.05331714059794473,
+        "dcOffset": [
+          3.213854870409705e-05,
+          3.213854870409705e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.542438,
+        "peak": 0.888824462890625,
+        "rms": 0.05331550913085424,
+        "dcOffset": [
+          3.203425512765534e-05,
+          3.203425512765534e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/09-plate-light.soundforge"
+    },
+    {
+      "id": "10-mining-hit",
+      "name": "采掘敲击",
+      "category": "impacts",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactMining_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/impacts/10-mining-hit.ogg",
+      "originalSha256": "36b4ea107222d073c67ca64dde26944975609202d5090b2f2021213c1a7e35cd",
+      "wavFile": "wav/impacts/10-mining-hit.wav",
+      "wavSha256": "df9a94ccd8219efeed97dee6f9934e8835a3bee2ead12fa30569c8d9585f6ace",
+      "pcmSha256": "3b0cd4381c3b8fbf9859741182d0ae77cb01c9fb6e9ed0ffe5c8953f3cf12262",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.937458,
+        "peak": 0.8859827518463135,
+        "rms": 0.09346749583814866,
+        "dcOffset": [
+          -3.9749244024278596e-05,
+          -3.9749244024278596e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.937458,
+        "peak": 0.885955810546875,
+        "rms": 0.09346465831568879,
+        "dcOffset": [
+          -3.981771442340687e-05,
+          -3.981771442340687e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/impacts/10-mining-hit.soundforge"
+    },
+    {
+      "id": "11-cloth-01",
+      "name": "布料动作 01",
+      "category": "motion",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Cloth/Cloth_01.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/11-cloth-01.wav",
+      "originalSha256": "7a2ca69337c8c0524dde4f34aeefbcdc63a8c7528f62fd3e3a6ed98f4c1ff75e",
+      "wavFile": "wav/motion/11-cloth-01.wav",
+      "wavSha256": "fb4e1f5dd7b4ae89a8e4b657e4e750e8437f48791c969cd78ba3fc126b2b50eb",
+      "pcmSha256": "fd97896ae2e17b41a1e0938c85698a2eb3d279a7ec84d7fa9ce17b42b03c3cab",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 1.725104,
+        "peak": 0.32629722356796265,
+        "rms": 0.039243111936393744,
+        "dcOffset": [
+          7.30863175704144e-05,
+          7.30863175704144e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 1.725104,
+        "peak": 0.3262939453125,
+        "rms": 0.03924197048349959,
+        "dcOffset": [
+          7.321417797356844e-05,
+          7.321417797356844e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/11-cloth-01.soundforge"
+    },
+    {
+      "id": "12-cloth-04",
+      "name": "布料动作 04",
+      "category": "motion",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Cloth/Cloth_04.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/12-cloth-04.wav",
+      "originalSha256": "23de90ec4e0ce509f03b8a24a7e855b99af1262827d601f8d11b601d9f343cf2",
+      "wavFile": "wav/motion/12-cloth-04.wav",
+      "wavSha256": "00ff488e46646098c40632c9f2486c9c9b0fde12c936da99adb8f45c757316fc",
+      "pcmSha256": "258d791a9ceddfccfa2c87b381b3f5cd428b31d24260ebe8e20ed539af51415f",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.573583,
+        "peak": 0.26767200231552124,
+        "rms": 0.030156016436815525,
+        "dcOffset": [
+          0.0006283110706135631,
+          0.0006283110706135631
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.573583,
+        "peak": 0.267669677734375,
+        "rms": 0.030155238400619726,
+        "dcOffset": [
+          0.0006284579285420477,
+          0.0006284579285420477
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/12-cloth-04.soundforge"
+    },
+    {
+      "id": "13-cloth-05",
+      "name": "布料动作 05",
+      "category": "motion",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Cloth/Cloth_05.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/13-cloth-05.wav",
+      "originalSha256": "01521e1895f50ec054db264a967b71f0b68f26b08a2952d8d57e69f2f3ebc1be",
+      "wavFile": "wav/motion/13-cloth-05.wav",
+      "wavSha256": "1be261bfc969431235cd0241ee5342bdc6e216583145e3b193c8f0cb2c905439",
+      "pcmSha256": "319e70ec74d86fa52eb277b23f40437c58b00a468357e847126c8c7644bb28cf",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.396646,
+        "peak": 0.243838831782341,
+        "rms": 0.04198708274188658,
+        "dcOffset": [
+          0.00033928800257854164,
+          0.00033928800257854164
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.396646,
+        "peak": 0.24383544921875,
+        "rms": 0.04198576055609804,
+        "dcOffset": [
+          0.000339176447596401,
+          0.000339176447596401
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/13-cloth-05.soundforge"
+    },
+    {
+      "id": "14-cloth-07",
+      "name": "布料动作 07",
+      "category": "motion",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Cloth/Cloth_07.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/14-cloth-07.wav",
+      "originalSha256": "1f3d0bd5368328b7a46c753caac30da10b9c8912c7eec51161b06732f062c6e2",
+      "wavFile": "wav/motion/14-cloth-07.wav",
+      "wavSha256": "71716d9ccb97a57fa8d46cf45625934c9089795d23c3f449558f8e3f3933460b",
+      "pcmSha256": "192123985afa73a2742ce6a18f2c180d08a472f219e6360a96409adff2d2dd07",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 1.012083,
+        "peak": 0.26394540071487427,
+        "rms": 0.031128649298708868,
+        "dcOffset": [
+          0.001137915183790028,
+          0.001137915183790028
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 1.012083,
+        "peak": 0.263946533203125,
+        "rms": 0.031127666150201395,
+        "dcOffset": [
+          0.0011377723421901464,
+          0.0011377723421901464
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/14-cloth-07.soundforge"
+    },
+    {
+      "id": "15-paper-crush",
+      "name": "揉纸",
+      "category": "motion",
+      "packId": "paper",
+      "author": "Luckius",
+      "sourceUrl": "https://opengameart.org/content/various-paper-sound-effects",
+      "sourceArchiveMember": "WAV/Paper Crushed - 1.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/15-paper-crush.wav",
+      "originalSha256": "744102e4ba8e178d55edcb9d5b4bff18d2480f282aa24abd4f0683dc24aa81d2",
+      "wavFile": "wav/motion/15-paper-crush.wav",
+      "wavSha256": "372971c1eb859280aef7df49b774a05d2a65ceda6954f8724614c1e006d979cb",
+      "pcmSha256": "62400fabdea45461e124f4f775ac90217e74bcc608affb893c182a4ced124972",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 1.149396,
+        "peak": 0.8871436715126038,
+        "rms": 0.03409061820540203,
+        "dcOffset": [
+          0.00782135222107172,
+          0.007821455597877502
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 1.149396,
+        "peak": 0.887115478515625,
+        "rms": 0.034089574837795455,
+        "dcOffset": [
+          0.00782108400017023,
+          0.00782119669020176
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/15-paper-crush.soundforge"
+    },
+    {
+      "id": "16-paper-rip",
+      "name": "撕纸",
+      "category": "motion",
+      "packId": "paper",
+      "author": "Luckius",
+      "sourceUrl": "https://opengameart.org/content/various-paper-sound-effects",
+      "sourceArchiveMember": "WAV/Paper Ripped - 1.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/16-paper-rip.wav",
+      "originalSha256": "79e862887ae205d2bfcf6ceea42faebae0115380c152b140b0427e36c845bc3e",
+      "wavFile": "wav/motion/16-paper-rip.wav",
+      "wavSha256": "6822bbc8f322d3c8bae868b6da80d873425a1b121198dde3754548ba0654e92d",
+      "pcmSha256": "95f106a43d694c8aafb804f6271d3f07902f632328c97de187f361c6948ff62d",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.499229,
+        "peak": 0.4178946912288666,
+        "rms": 0.04127335109091762,
+        "dcOffset": [
+          0.007717356085777283,
+          0.007717601489275694
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.499229,
+        "peak": 0.417877197265625,
+        "rms": 0.04127210726441338,
+        "dcOffset": [
+          0.00771707808598876,
+          0.0077174692414700985
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/16-paper-rip.soundforge"
+    },
+    {
+      "id": "17-paper-01",
+      "name": "纸张动作 01",
+      "category": "motion",
+      "packId": "paper",
+      "author": "Luckius",
+      "sourceUrl": "https://opengameart.org/content/various-paper-sound-effects",
+      "sourceArchiveMember": "WAV/Paper Sound - 1.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/17-paper-01.wav",
+      "originalSha256": "d04ac578637259182dc4c9e03664217d9c80c0da90d5784563dbe43bd6a264cc",
+      "wavFile": "wav/motion/17-paper-01.wav",
+      "wavSha256": "c947c0c6bd682ffd5ce1ef1aa6142f05a5e4c6d66dccd880f8793232da31738b",
+      "pcmSha256": "f92ae50642f682989ae882a12396bf073c7327540df67ecafb254310cd5852ad",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.487625,
+        "peak": 0.34686049818992615,
+        "rms": 0.02437817727221325,
+        "dcOffset": [
+          0.007846612483263016,
+          0.007846754975616932
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.487625,
+        "peak": 0.34686279296875,
+        "rms": 0.02437741644300696,
+        "dcOffset": [
+          0.007846484892070293,
+          0.007846531458199024
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/17-paper-01.soundforge"
+    },
+    {
+      "id": "18-paper-02",
+      "name": "纸张动作 02",
+      "category": "motion",
+      "packId": "paper",
+      "author": "Luckius",
+      "sourceUrl": "https://opengameart.org/content/various-paper-sound-effects",
+      "sourceArchiveMember": "WAV/Paper Sound - 2.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/18-paper-02.wav",
+      "originalSha256": "7b670c269c463c308c8808a7d3bad5116fbd7a55c7e26d0b9064627f4c576b03",
+      "wavFile": "wav/motion/18-paper-02.wav",
+      "wavSha256": "f597925245a330f711c26766a1b5d3678a383c656431577fdd9249a5c9514f9a",
+      "pcmSha256": "bffd4c1ef7ff018104a87f2d9f53f1dbec53c6cd50f80407a66431e71f661f5e",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.545687,
+        "peak": 0.23651455342769623,
+        "rms": 0.022067123562836556,
+        "dcOffset": [
+          0.0077355788089334965,
+          0.0077357119880616665
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.545687,
+        "peak": 0.23651123046875,
+        "rms": 0.022066435642651695,
+        "dcOffset": [
+          0.007735311985015869,
+          0.007735377177596092
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/18-paper-02.soundforge"
+    },
+    {
+      "id": "19-swish-01",
+      "name": "短挥动 01",
+      "category": "motion",
+      "packId": "swishes",
+      "author": "artisticdude",
+      "sourceUrl": "https://opengameart.org/content/swishes-sound-pack",
+      "sourceArchiveMember": "swishes/swish-1.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/19-swish-01.wav",
+      "originalSha256": "9a15c881345c1ce1c39cc31f52f081c8c4dc81fa41111e0079400f39d3ba0e45",
+      "wavFile": "wav/motion/19-swish-01.wav",
+      "wavSha256": "2605558c294e5c1b7b472fbec63e93d782afcecbf9dd40adfca43ea5650fd4ce",
+      "pcmSha256": "be42adfd92eafca0b409fa96095a794a1dc64813f9dab85c43d1d2c259e72558",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.9033890525264202,
+        "gainDb": -0.882504,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.126042,
+        "peak": 0.9865638017654419,
+        "rms": 0.17707425334705437,
+        "dcOffset": [
+          0.0004160544485785067,
+          0.00045427653822116554
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.126042,
+        "peak": 0.8912353515625,
+        "rms": 0.15996194720294818,
+        "dcOffset": [
+          0.0003758454113267362,
+          0.0004103227111045271
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/19-swish-01.soundforge"
+    },
+    {
+      "id": "20-swish-11",
+      "name": "短挥动 11",
+      "category": "motion",
+      "packId": "swishes",
+      "author": "artisticdude",
+      "sourceUrl": "https://opengameart.org/content/swishes-sound-pack",
+      "sourceArchiveMember": "swishes/swish-11.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/motion/20-swish-11.wav",
+      "originalSha256": "9e81d548d8215fbb36f7a41b5771d4b52c2fd02fbb9b5ff9a4c65118fd88ee4d",
+      "wavFile": "wav/motion/20-swish-11.wav",
+      "wavSha256": "6733c4c4a6b67dee6a60d302f27aac0bfccfed1b4be2c77f544276534f0a59bd",
+      "pcmSha256": "c5e6eca9af29fa8974eca5b19bbdc34058c5c0e094819b1a2e29062b6b58667d",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.9010742775671526,
+        "gainDb": -0.904788,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.104188,
+        "peak": 0.9890981912612915,
+        "rms": 0.2024304814149713,
+        "dcOffset": [
+          0.001425025169737637,
+          0.0015703447861596942
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.104188,
+        "peak": 0.8912353515625,
+        "rms": 0.18239930653744074,
+        "dcOffset": [
+          0.0012841669376939535,
+          0.0014148049522191286
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/motion/20-swish-11.soundforge"
+    },
+    {
+      "id": "21-bubble-01",
+      "name": "气泡 01",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "bubble_01.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/21-bubble-01.ogg",
+      "originalSha256": "1d03d72347019be889280efc6de5ca5ea439d0b24b235e6db87e5bf7583ecb2b",
+      "wavFile": "wav/liquid/21-bubble-01.wav",
+      "wavSha256": "1da99b5d51314d267456b86f86dcb3730fe141be692634a8176b67ee97c71613",
+      "pcmSha256": "5b4cc64cea19ba38879a60b4b67341573fd8b31d08ec67c8ad97f9d02e41fa5b",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.696479,
+        "peak": 0.6369284391403198,
+        "rms": 0.08610890903905004,
+        "dcOffset": [
+          -0.00011031907342839986,
+          -0.00011031907342839986
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.696479,
+        "peak": 0.63690185546875,
+        "rms": 0.0861061947038877,
+        "dcOffset": [
+          -0.00011029450979549438,
+          -0.00011029450979549438
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/21-bubble-01.soundforge"
+    },
+    {
+      "id": "22-bubble-02",
+      "name": "气泡 02",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "bubble_02.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/22-bubble-02.ogg",
+      "originalSha256": "7992a1a4637ea727b177b3edbc086ec280167d67a8fad010bb8fb58893b2e2f2",
+      "wavFile": "wav/liquid/22-bubble-02.wav",
+      "wavSha256": "7dfbfa08bb22f554a76a69c1871b2f6012d781800feb8106d3a6b5a3a9f09d5a",
+      "pcmSha256": "df289b2a859ef9a338facce1872942805e0f4e2667cf91ed3aaea4e07d2d92f7",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.360354,
+        "peak": 0.45628875494003296,
+        "rms": 0.08292717158248375,
+        "dcOffset": [
+          -0.00019324044114910066,
+          -0.00019324044114910066
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.360354,
+        "peak": 0.456268310546875,
+        "rms": 0.08292468814258117,
+        "dcOffset": [
+          -0.00019326094479765743,
+          -0.00019326094479765743
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/22-bubble-02.soundforge"
+    },
+    {
+      "id": "23-bubble-03",
+      "name": "气泡 03",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "bubble_03.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/23-bubble-03.ogg",
+      "originalSha256": "6189106305ab917f1a260b66a74380ed7d6e5be0fb4f5eba3ac93aeb89d9b7ca",
+      "wavFile": "wav/liquid/23-bubble-03.wav",
+      "wavSha256": "b34e2166e0cfe29a5b2d997aa896b6db21c99adf36ebed721b5dcecf4ab5c2c9",
+      "pcmSha256": "03005f21be64ddf828edc3e2ac073513dd35b8309f209784182584dcc25dba1f",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.8384990938713562,
+        "gainDb": -1.529948,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.547104,
+        "peak": 1.0629122257232666,
+        "rms": 0.05447942438787858,
+        "dcOffset": [
+          -0.00032068559085018933,
+          -0.00031983311055228114
+        ],
+        "samplesAtOrAboveFullScale": 2
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.547104,
+        "peak": 0.8912353515625,
+        "rms": 0.04567952348441571,
+        "dcOffset": [
+          -0.0002689372340682894,
+          -0.00026818885817192495
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [
+        "Decoded OGG exceeds full scale; working WAV attenuated before integer quantization. Original retained unchanged."
+      ],
+      "projectFile": "projects/liquid/23-bubble-03.soundforge"
+    },
+    {
+      "id": "24-slime-01",
+      "name": "黏液 01",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "slime_01.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/24-slime-01.ogg",
+      "originalSha256": "4273c9510b03c3cc6b2d901fbd20de62ff4f537e4077a368355039c3081099a1",
+      "wavFile": "wav/liquid/24-slime-01.wav",
+      "wavSha256": "e4f05b9a7905e5a4a4b7e04d889435d5056595548c1be7e2cdf1ca1e691c4cce",
+      "pcmSha256": "8647a457ee333247dc4a05304ac80723e9ff68ab781716bf8c7d4247c0e0d603",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.9479589102433845,
+        "gainDb": -0.46421,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.473104,
+        "peak": 0.9401788711547852,
+        "rms": 0.02531396741365795,
+        "dcOffset": [
+          -7.317397103179246e-05,
+          -7.317397103179246e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.473104,
+        "peak": 0.8912353515625,
+        "rms": 0.023995845106868797,
+        "dcOffset": [
+          -6.93925831001252e-05,
+          -6.93925831001252e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/24-slime-01.soundforge"
+    },
+    {
+      "id": "25-slime-05",
+      "name": "黏液 05",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "slime_05.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/25-slime-05.ogg",
+      "originalSha256": "6127939fac0319d821e13c54c14b6ccb16544f5ac1c5e4057ea6e75fc308f70f",
+      "wavFile": "wav/liquid/25-slime-05.wav",
+      "wavSha256": "26d3e3453c09822165c5c066b2bad653336120812d70cda15fb0635b9d4fae4e",
+      "pcmSha256": "854f425eb9f9f86b11e425174de2e1ebb5ea570b414ae496126bd76f1ea92211",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.455958,
+        "peak": 0.6076023578643799,
+        "rms": 0.029384085465211863,
+        "dcOffset": [
+          -0.00016652831982355565,
+          -0.00016652831982355565
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.455958,
+        "peak": 0.607574462890625,
+        "rms": 0.029383120817156105,
+        "dcOffset": [
+          -0.00016653037164360285,
+          -0.00016653037164360285
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/25-slime-05.soundforge"
+    },
+    {
+      "id": "26-slime-10",
+      "name": "黏液 10",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "slime_10.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/26-slime-10.ogg",
+      "originalSha256": "162ef7a48c3088c117bdd5c07d7eac76b790bd06412d85c1d5907ece86dafec1",
+      "wavFile": "wav/liquid/26-slime-10.wav",
+      "wavSha256": "9d9c6fb6a129be7433e29af64a48d662e4186339d8fa1a36f417046070281945",
+      "pcmSha256": "4af9a4ab9c3b90767b238486194465d426082edf83983b9e6b9d3b035c29c615",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.9743134435825515,
+        "gainDb": -0.226026,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.585063,
+        "peak": 0.9147476553916931,
+        "rms": 0.04349354808425997,
+        "dcOffset": [
+          -1.1681504474836402e-05,
+          -1.1681504474836402e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.585063,
+        "peak": 0.8912353515625,
+        "rms": 0.04237514573722157,
+        "dcOffset": [
+          -1.1352673936926294e-05,
+          -1.1352673936926294e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/26-slime-10.soundforge"
+    },
+    {
+      "id": "27-slime-12",
+      "name": "黏液 12",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "slime_12.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/27-slime-12.ogg",
+      "originalSha256": "de5437b5ad2af49f6914679011bb212934986c1e13e9a4c9cf45537490f66f6e",
+      "wavFile": "wav/liquid/27-slime-12.wav",
+      "wavSha256": "86c755b4dd26f424706ed2ab4640c6dacfda14627a925100c698acb3cdc9916f",
+      "pcmSha256": "c261dc2f7b0fd3254eb103b0897a91da63df3529eac46e031b6ea72e1c6c4961",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.229813,
+        "peak": 0.7474281191825867,
+        "rms": 0.03432525522782808,
+        "dcOffset": [
+          -0.00011104848090326414,
+          -0.00011104848090326414
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.229813,
+        "peak": 0.747406005859375,
+        "rms": 0.03432429485368736,
+        "dcOffset": [
+          -0.00011114805965917185,
+          -0.00011114805965917185
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/27-slime-12.soundforge"
+    },
+    {
+      "id": "28-splash-01",
+      "name": "飞溅 01",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "splash_01.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/28-splash-01.ogg",
+      "originalSha256": "156f4df0fa1a552d1c4e451284a55000417ea871954dc4b5e0d4302a49e228a8",
+      "wavFile": "wav/liquid/28-splash-01.wav",
+      "wavSha256": "81fb368a95e689bf7957538bd03b09fbf3aaa437d4e151b0c3ba41ebb9277ce1",
+      "pcmSha256": "bd270d4f9cd7f0f38a854d7f1d094b04a64c784ff19a06c1ba05cfb1fde94315",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.9230451054708931,
+        "gainDb": -0.695542,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 1.381083,
+        "peak": 0.9655551314353943,
+        "rms": 0.020185612091463856,
+        "dcOffset": [
+          -2.9015673135290854e-05,
+          -2.9015673135290854e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 1.381083,
+        "peak": 0.8912353515625,
+        "rms": 0.018631716536079628,
+        "dcOffset": [
+          -2.6819579943548888e-05,
+          -2.6819579943548888e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/28-splash-01.soundforge"
+    },
+    {
+      "id": "29-splash-02",
+      "name": "飞溅 02",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "splash_02.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/29-splash-02.ogg",
+      "originalSha256": "eab0bb4bc01386528ba1e6244c6fd8940ee8d3c91ddb9e9cfea186e8560e04de",
+      "wavFile": "wav/liquid/29-splash-02.wav",
+      "wavSha256": "62eaab582a0b7eaa51f5c8702d7e810c9c201b16c69ef583d3f0f8494cda209f",
+      "pcmSha256": "004a8af21fc64cbf57879ecf2695636868c6ca4623aebe85c6eb8aa8b0d5493a",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.717854,
+        "peak": 0.8013640642166138,
+        "rms": 0.0372262434368131,
+        "dcOffset": [
+          -5.333451190381311e-05,
+          -5.333451190381311e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.717854,
+        "peak": 0.80133056640625,
+        "rms": 0.037225120102362584,
+        "dcOffset": [
+          -5.331564534571953e-05,
+          -5.331564534571953e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/29-splash-02.soundforge"
+    },
+    {
+      "id": "30-splash-03",
+      "name": "飞溅 03",
+      "category": "liquid",
+      "packId": "water-splash-slime",
+      "author": "rubberduck",
+      "sourceUrl": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+      "sourceArchiveMember": "splash_03.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/liquid/30-splash-03.ogg",
+      "originalSha256": "ae2cff9a47934ece590dda45ff18acf89c5c98cb5497ce71c50b3a315b225a94",
+      "wavFile": "wav/liquid/30-splash-03.wav",
+      "wavSha256": "a16f121aef754a230e512bc4948b7dc9b292b2e20f5837eaeaa7c5e69ac04dcc",
+      "pcmSha256": "cdab4b503ddbb0f955ac474ce91041e91861f98db5555bab697dd956b28e5fcd",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 0.9823354547456328,
+        "gainDb": -0.154804,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.771979,
+        "peak": 0.9072775840759277,
+        "rms": 0.02747760169015616,
+        "dcOffset": [
+          -5.112600410939194e-05,
+          -5.112600410939194e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.771979,
+        "peak": 0.8912353515625,
+        "rms": 0.026991376699687066,
+        "dcOffset": [
+          -5.0262791774002835e-05,
+          -5.0262791774002835e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/liquid/30-splash-03.soundforge"
+    },
+    {
+      "id": "31-bell-00",
+      "name": "钟铃 00",
+      "category": "details",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactBell_heavy_000.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/31-bell-00.ogg",
+      "originalSha256": "94b8bb5f2d43ab65e4bcc32b28562416e9bc2c51d9fd4be1e333660ee52f977f",
+      "wavFile": "wav/details/31-bell-00.wav",
+      "wavSha256": "f11969be412088e769d80f7e08b6a42cf4ad65095070d74d913aa84d8bb9c17d",
+      "pcmSha256": "500082537f1d4213058a3484054df8ffa1dd2f60e4ad54924613442710ffb97e",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 1.480187,
+        "peak": 0.8767845630645752,
+        "rms": 0.048623744345666645,
+        "dcOffset": [
+          -1.9726934624486603e-05,
+          -1.9726934624486603e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 1.480187,
+        "peak": 0.87677001953125,
+        "rms": 0.048622271020742,
+        "dcOffset": [
+          -1.9745430108741857e-05,
+          -1.9745430108741857e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/31-bell-00.soundforge"
+    },
+    {
+      "id": "32-bell-01",
+      "name": "钟铃 01",
+      "category": "details",
+      "packId": "kenney-impact",
+      "author": "Kenney",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "sourceArchiveMember": "Audio/impactBell_heavy_001.ogg",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "OGG",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/32-bell-01.ogg",
+      "originalSha256": "9df61e3ae9a83dc65e5a1fd3ed19d480876f3b22b963a1b9ef6fa293592dcec4",
+      "wavFile": "wav/details/32-bell-01.wav",
+      "wavSha256": "996fdfe9ce60ac061d11d567d2a827964f835f4691ab48cfa7c0ba0419e14507",
+      "pcmSha256": "adf72d5c2e1257736b5b47972e851f5ae4761d49ee87ff016de8d4c3f8ba6c3b",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 1.740875,
+        "peak": 0.8736966252326965,
+        "rms": 0.05910476178615493,
+        "dcOffset": [
+          1.3923227925261017e-05,
+          1.3923227925261017e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 1.740875,
+        "peak": 0.8736572265625,
+        "rms": 0.05910300094899878,
+        "dcOffset": [
+          1.3945497812528629e-05,
+          1.3945497812528629e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/32-bell-01.soundforge"
+    },
+    {
+      "id": "33-camera-01",
+      "name": "相机机构 01",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Camera/Camera_01.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/33-camera-01.wav",
+      "originalSha256": "eaef1eb4e6bb310ef9cacec1afcc60214c1f6622c1f3a18633c260ad2db8ca0b",
+      "wavFile": "wav/details/33-camera-01.wav",
+      "wavSha256": "db28789a1f6c47426f1308ddbb6783d0b3bbd51209061da6f796205347e58f18",
+      "pcmSha256": "07cd8ac5ae97a496e476c7a71160e0c3d13c01bb9bcfee0a6892ef12135b6dca",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.477729,
+        "peak": 0.3535009026527405,
+        "rms": 0.01963656850936972,
+        "dcOffset": [
+          0.0002503779251128435,
+          0.0002503779251128435
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.477729,
+        "peak": 0.353485107421875,
+        "rms": 0.019635861296492873,
+        "dcOffset": [
+          0.00025033968267962337,
+          0.00025033968267962337
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/33-camera-01.soundforge"
+    },
+    {
+      "id": "34-camera-02",
+      "name": "相机机构 02",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Camera/Camera_02.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/34-camera-02.wav",
+      "originalSha256": "dd8167846ee3d99e633291e51c84cb0d94639b5372bbb9486fdc14b42977e5dd",
+      "wavFile": "wav/details/34-camera-02.wav",
+      "wavSha256": "1022ed98bbddc1706f94f854cbff1e2780933a6015472e1481f1a92fed98db2d",
+      "pcmSha256": "e0738a7dd7b90c4345c14889c9e4f952acf3590b824e1a2f1f325b4a3f31e540",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.374146,
+        "peak": 0.35598182678222656,
+        "rms": 0.017227991621400533,
+        "dcOffset": [
+          -0.00017428318096790463,
+          -0.00017428318096790463
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.374146,
+        "peak": 0.35595703125,
+        "rms": 0.017227481376715953,
+        "dcOffset": [
+          -0.0001743133325362578,
+          -0.0001743133325362578
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/34-camera-02.soundforge"
+    },
+    {
+      "id": "35-lock-door-02",
+      "name": "钥匙门锁 02",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Keys, Locks, Door/Key_Lock_Door_02.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/35-lock-door-02.wav",
+      "originalSha256": "cb98b72a1a6f139697d81d7e01b3f321d307594876d04e0496a79c68abb2c57c",
+      "wavFile": "wav/details/35-lock-door-02.wav",
+      "wavSha256": "f319e4a9f811fe9c47a485e3d98db2f22c80be97d7dde2c616a63f62b6900462",
+      "pcmSha256": "59775a1e9c249e69f1d005e4e49ee0e7cd23323b974889875b3d8f4771f8839d",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.953875,
+        "peak": 0.23533794283866882,
+        "rms": 0.04290072774109616,
+        "dcOffset": [
+          -0.0015946809435263276,
+          -0.0015946809435263276
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.953875,
+        "peak": 0.235321044921875,
+        "rms": 0.042899491224867976,
+        "dcOffset": [
+          -0.0015946998028084636,
+          -0.0015946998028084636
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/35-lock-door-02.soundforge"
+    },
+    {
+      "id": "36-lock-door-04",
+      "name": "钥匙门锁 04",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Keys, Locks, Door/Key_Lock_Door_04.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/36-lock-door-04.wav",
+      "originalSha256": "c6427538b2f1d52d6aa2a0d1b138edd32d23962a4faf605722923a07cba08db5",
+      "wavFile": "wav/details/36-lock-door-04.wav",
+      "wavSha256": "63e35121350537acecada1cbd886f5c2bb857246535b49bb9495c95355e65661",
+      "pcmSha256": "c9845ebe9295bcc9586e9e902e477b7ed40c53760093e46f2fff6c11dcd0eda5",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.603708,
+        "peak": 0.3389458954334259,
+        "rms": 0.01136614074671751,
+        "dcOffset": [
+          -0.0006380865233950317,
+          -0.0006380865233950317
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.603708,
+        "peak": 0.33892822265625,
+        "rms": 0.011365786156492808,
+        "dcOffset": [
+          -0.0006381141720339656,
+          -0.0006381141720339656
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/36-lock-door-04.soundforge"
+    },
+    {
+      "id": "37-money-01",
+      "name": "钱币纸钞 01",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Money/Money_01.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/37-money-01.wav",
+      "originalSha256": "37f0c09ba4baf7cdfabebf76ab56a8f78ac075e31e30ac4fc6ab7a2c41cc42ce",
+      "wavFile": "wav/details/37-money-01.wav",
+      "wavSha256": "c0128567f7798c621473bf0ac433a9c57a32c3f03daae663d89a86638ee43dde",
+      "pcmSha256": "4564861ee159ba6c6070cd85f99a7ba384b6c7d42b3374ebb569306f8c71c81b",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.784917,
+        "peak": 0.35679441690444946,
+        "rms": 0.024183498823538416,
+        "dcOffset": [
+          -0.00028903636848554015,
+          -0.00028903636848554015
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.784917,
+        "peak": 0.356781005859375,
+        "rms": 0.024182756449271644,
+        "dcOffset": [
+          -0.00028906972147524357,
+          -0.00028906972147524357
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/37-money-01.soundforge"
+    },
+    {
+      "id": "38-stationery-01",
+      "name": "文具机构 01",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Paper & Stationery/Stationery_01.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/38-stationery-01.wav",
+      "originalSha256": "c9665c85a609aa97400c6f938a82846bcb1b54aa759d860ed9846c2535f2edd7",
+      "wavFile": "wav/details/38-stationery-01.wav",
+      "wavSha256": "aa845d476a523a2b99bcc6c391b43a9f29e4fb0eaf647633d9f566add726e939",
+      "pcmSha256": "9a481c6f7e514bc2f4687dced2c1b4b3c6f0a722a183b322f4f9aa29fb985118",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.822438,
+        "peak": 0.35363858938217163,
+        "rms": 0.01274292071619623,
+        "dcOffset": [
+          -1.7819766071625054e-05,
+          -1.7819766071625054e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.822438,
+        "peak": 0.3536376953125,
+        "rms": 0.012742610738122835,
+        "dcOffset": [
+          -1.7805592506192625e-05,
+          -1.7805592506192625e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/38-stationery-01.soundforge"
+    },
+    {
+      "id": "39-spray-pump",
+      "name": "喷雾泵",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Misc/Nasal_Spray.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/39-spray-pump.wav",
+      "originalSha256": "66be5e8fd48a227c13fd1670e08d5e6bff46e49e6fa092c54c77de39478ba1e1",
+      "wavFile": "wav/details/39-spray-pump.wav",
+      "wavSha256": "0f6f1cac6149b63a737b89300e479ededafec0b762f5b2abe972be224423b4aa",
+      "pcmSha256": "a826df4245325fb453bbfb26528e442190c0ae8fc3da6bf0e729bc17a5c25fd1",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 0.357125,
+        "peak": 0.3502298593521118,
+        "rms": 0.05053967681591242,
+        "dcOffset": [
+          -9.023200254887342e-05,
+          -9.023200254887342e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 0.357125,
+        "peak": 0.3502197265625,
+        "rms": 0.05053822541023767,
+        "dcOffset": [
+          -9.015165414894e-05,
+          -9.015165414894e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/39-spray-pump.soundforge"
+    },
+    {
+      "id": "40-spinner-01",
+      "name": "指尖陀螺机构",
+      "category": "details",
+      "packId": "more-sounds",
+      "author": "OwlishMedia",
+      "sourceUrl": "https://opengameart.org/content/202-more-sound-effects",
+      "sourceArchiveMember": "Misc/Fidget_Spinner1.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceKind": "publisher-distributed-file",
+      "sourceFormat": "WAV",
+      "isFreesoundPreview": false,
+      "originalFile": "originals/details/40-spinner-01.wav",
+      "originalSha256": "0d4bafad9b02ab1a042d73b906977473d26dbdc0a291fd7e57eda2a928dea102",
+      "wavFile": "wav/details/40-spinner-01.wav",
+      "wavSha256": "edcc908945194278f884cdddeffcc992679032649abb9b927395332f857f46a9",
+      "pcmSha256": "28bc5098080f9ee92c3ee057d985fe8c8d9c3529036cdbb43ced425b74ba5eab",
+      "sampleRate": 48000,
+      "channels": 2,
+      "bitsPerSample": 16,
+      "conversion": {
+        "resample": "FFmpeg default resampler to 48000 Hz",
+        "gain": 1.0,
+        "gainDb": 0.0,
+        "trimmed": false,
+        "denoised": false,
+        "compressed": false
+      },
+      "sourceDecodedMetrics": {
+        "durationSeconds": 7.377146,
+        "peak": 0.18002843856811523,
+        "rms": 0.012158409183178183,
+        "dcOffset": [
+          -4.688154149334878e-05,
+          -4.688154149334878e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "workingMetrics": {
+        "durationSeconds": 7.377146,
+        "peak": 0.180023193359375,
+        "rms": 0.012158039618516553,
+        "dcOffset": [
+          -4.6860503061907366e-05,
+          -4.6860503061907366e-05
+        ],
+        "samplesAtOrAboveFullScale": 0
+      },
+      "subjectiveAudition": "pending",
+      "warnings": [],
+      "projectFile": "projects/details/40-spinner-01.soundforge"
+    }
+  ]
+}
