@@ -1,0 +1,222 @@
+{
+  "format": "melody-design/recipe-v1",
+  "name": "窗边午后 · 原创钢琴短句",
+  "originalComposition": true,
+  "tonicMidi": 60,
+  "scale": "major",
+  "bpm": 96,
+  "durationSeconds": 8,
+  "seed": 2048,
+  "notes": [
+    {
+      "midi": 64,
+      "startSeconds": 0,
+      "durationSeconds": 0.82,
+      "velocity": 78,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-2-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": 4,
+      "gain": 0.9984000000000001
+    },
+    {
+      "midi": 67,
+      "startSeconds": 0.3125,
+      "durationSeconds": 0.88,
+      "velocity": 82,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-3-C5-single-hit",
+      "sourceRootMidi": 72,
+      "semitones": -5,
+      "gain": 1.0496
+    },
+    {
+      "midi": 72,
+      "startSeconds": 0.625,
+      "durationSeconds": 1.15,
+      "velocity": 90,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-17-C5-single-hit",
+      "sourceRootMidi": 72,
+      "semitones": 0,
+      "gain": 1.1520000000000001
+    },
+    {
+      "midi": 71,
+      "startSeconds": 1.25,
+      "durationSeconds": 0.78,
+      "velocity": 78,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-3-C5-single-hit",
+      "sourceRootMidi": 72,
+      "semitones": -1,
+      "gain": 0.9984000000000001
+    },
+    {
+      "midi": 69,
+      "startSeconds": 1.5625,
+      "durationSeconds": 0.8,
+      "velocity": 74,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-17-C5-single-hit",
+      "sourceRootMidi": 72,
+      "semitones": -3,
+      "gain": 0.9472
+    },
+    {
+      "midi": 67,
+      "startSeconds": 1.875,
+      "durationSeconds": 1.1,
+      "velocity": 80,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-3-C5-single-hit",
+      "sourceRootMidi": 72,
+      "semitones": -5,
+      "gain": 1.024
+    },
+    {
+      "midi": 64,
+      "startSeconds": 2.5,
+      "durationSeconds": 1.15,
+      "velocity": 76,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-12-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": 4,
+      "gain": 0.9728
+    },
+    {
+      "midi": 62,
+      "startSeconds": 3.125,
+      "durationSeconds": 1.08,
+      "velocity": 69,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-2-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": 2,
+      "gain": 0.8832000000000001
+    },
+    {
+      "midi": 60,
+      "startSeconds": 3.75,
+      "durationSeconds": 3.8,
+      "velocity": 76,
+      "track": "右手旋律",
+      "sampleId": "16-upright-piano-12-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": 0,
+      "gain": 0.9728
+    },
+    {
+      "midi": 48,
+      "startSeconds": 0,
+      "durationSeconds": 1.8,
+      "velocity": 72,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-1-C3-single-hit",
+      "sourceRootMidi": 48,
+      "semitones": 0,
+      "gain": 0.48960000000000004
+    },
+    {
+      "midi": 55,
+      "startSeconds": 0.625,
+      "durationSeconds": 1.5,
+      "velocity": 64,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-2-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": -5,
+      "gain": 0.43520000000000003
+    },
+    {
+      "midi": 52,
+      "startSeconds": 1.25,
+      "durationSeconds": 1.4,
+      "velocity": 65,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-7-C3-single-hit",
+      "sourceRootMidi": 48,
+      "semitones": 4,
+      "gain": 0.442
+    },
+    {
+      "midi": 55,
+      "startSeconds": 1.875,
+      "durationSeconds": 1.25,
+      "velocity": 61,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-12-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": -5,
+      "gain": 0.41480000000000006
+    },
+    {
+      "midi": 53,
+      "startSeconds": 2.5,
+      "durationSeconds": 1.45,
+      "velocity": 66,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-1-C3-single-hit",
+      "sourceRootMidi": 48,
+      "semitones": 5,
+      "gain": 0.44880000000000003
+    },
+    {
+      "midi": 60,
+      "startSeconds": 3.125,
+      "durationSeconds": 1.2,
+      "velocity": 60,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-2-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": 0,
+      "gain": 0.40800000000000003
+    },
+    {
+      "midi": 55,
+      "startSeconds": 3.4375,
+      "durationSeconds": 1.05,
+      "velocity": 60,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-12-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": -5,
+      "gain": 0.40800000000000003
+    },
+    {
+      "midi": 48,
+      "startSeconds": 3.75,
+      "durationSeconds": 3.8,
+      "velocity": 70,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-7-C3-single-hit",
+      "sourceRootMidi": 48,
+      "semitones": 0,
+      "gain": 0.47600000000000003
+    },
+    {
+      "midi": 52,
+      "startSeconds": 3.765625,
+      "durationSeconds": 3.72,
+      "velocity": 60,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-1-C3-single-hit",
+      "sourceRootMidi": 48,
+      "semitones": 4,
+      "gain": 0.40800000000000003
+    },
+    {
+      "midi": 55,
+      "startSeconds": 3.78125,
+      "durationSeconds": 3.65,
+      "velocity": 58,
+      "track": "左手分解和弦",
+      "sampleId": "16-upright-piano-2-C4-single-hit",
+      "sourceRootMidi": 60,
+      "semitones": -5,
+      "gain": 0.39440000000000003
+    }
+  ],
+  "note": "Recorded medium-dynamic piano samples with explicit alternating takes; subtle velocity-dependent gain. Sample transposition also changes playback speed."
+}

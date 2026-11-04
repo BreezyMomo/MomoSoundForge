@@ -1,0 +1,638 @@
+[
+  {
+    "id": "01-violin-section-1-Fs4-sustain",
+    "name": "小提琴组 F#4 sustain",
+    "startSeconds": 0.0,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "01-violin-section-2-C5-sustain",
+    "name": "小提琴组 C5 sustain",
+    "startSeconds": 1.85,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "01-violin-section-3-A4-spiccato",
+    "name": "小提琴组 A4 spiccato",
+    "startSeconds": 3.7,
+    "excerptSeconds": 1.2079
+  },
+  {
+    "id": "02-solo-violin-1-C4-sustain",
+    "name": "独奏小提琴 C4 sustain",
+    "startSeconds": 5.2579,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "02-solo-violin-2-C5-sustain",
+    "name": "独奏小提琴 C5 sustain",
+    "startSeconds": 7.1079,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "02-solo-violin-3-G4-spiccato",
+    "name": "独奏小提琴 G4 spiccato",
+    "startSeconds": 8.9579,
+    "excerptSeconds": 1.1757
+  },
+  {
+    "id": "03-viola-section-1-G3-sustain",
+    "name": "中提琴组 G3 sustain",
+    "startSeconds": 10.4837,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "03-viola-section-2-F4-sustain",
+    "name": "中提琴组 F4 sustain",
+    "startSeconds": 12.3337,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "03-viola-section-3-B3-spiccato",
+    "name": "中提琴组 B3 spiccato",
+    "startSeconds": 14.1837,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "04-cello-section-1-G2-sustain",
+    "name": "大提琴组 G2 sustain",
+    "startSeconds": 16.0337,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "04-cello-section-2-A3-sustain",
+    "name": "大提琴组 A3 sustain",
+    "startSeconds": 17.8837,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "04-cello-section-3-B2-spiccato",
+    "name": "大提琴组 B2 spiccato",
+    "startSeconds": 19.7337,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "05-contrabass-1-G1-sustain",
+    "name": "低音提琴 G1 sustain",
+    "startSeconds": 21.5837,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "05-contrabass-2-Fs2-sustain",
+    "name": "低音提琴 F#2 sustain",
+    "startSeconds": 23.4337,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "05-contrabass-3-C2-spiccato",
+    "name": "低音提琴 C2 spiccato",
+    "startSeconds": 25.2837,
+    "excerptSeconds": 1.3555
+  },
+  {
+    "id": "06-harp-1-C3-single-hit",
+    "name": "竖琴 C3 single-hit",
+    "startSeconds": 26.9891,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "06-harp-2-B3-single-hit",
+    "name": "竖琴 B3 single-hit",
+    "startSeconds": 28.8391,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "06-harp-3-C5-single-hit",
+    "name": "竖琴 C5 single-hit",
+    "startSeconds": 30.6891,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "07-flute-1-C4-sustain",
+    "name": "长笛 C4 sustain",
+    "startSeconds": 32.5391,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "07-flute-2-C5-sustain",
+    "name": "长笛 C5 sustain",
+    "startSeconds": 34.3891,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "07-flute-3-A4-staccato",
+    "name": "长笛 A4 staccato",
+    "startSeconds": 36.2391,
+    "excerptSeconds": 0.7761
+  },
+  {
+    "id": "08-piccolo-1-C5-sustain",
+    "name": "短笛 C5 sustain",
+    "startSeconds": 37.3653,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "08-piccolo-2-C6-sustain",
+    "name": "短笛 C6 sustain",
+    "startSeconds": 39.2153,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "08-piccolo-3-G5-staccato",
+    "name": "短笛 G5 staccato",
+    "startSeconds": 41.0653,
+    "excerptSeconds": 0.4534
+  },
+  {
+    "id": "09-oboe-1-D4-sustain",
+    "name": "双簧管 D4 sustain",
+    "startSeconds": 41.8687,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "09-oboe-2-D5-sustain",
+    "name": "双簧管 D5 sustain",
+    "startSeconds": 43.7187,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "09-oboe-3-F4-staccato",
+    "name": "双簧管 F4 staccato",
+    "startSeconds": 45.5687,
+    "excerptSeconds": 0.832
+  },
+  {
+    "id": "10-clarinet-1-As3-sustain",
+    "name": "单簧管 A#3 sustain",
+    "startSeconds": 46.7507,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "10-clarinet-2-As4-sustain",
+    "name": "单簧管 A#4 sustain",
+    "startSeconds": 48.6007,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "10-clarinet-3-D4-staccato",
+    "name": "单簧管 D4 staccato",
+    "startSeconds": 50.4507,
+    "excerptSeconds": 0.5725
+  },
+  {
+    "id": "11-bassoon-1-F2-sustain",
+    "name": "巴松 F2 sustain",
+    "startSeconds": 51.3733,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "11-bassoon-2-G3-sustain",
+    "name": "巴松 G3 sustain",
+    "startSeconds": 53.2233,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "11-bassoon-3-C3-staccato",
+    "name": "巴松 C3 staccato",
+    "startSeconds": 55.0733,
+    "excerptSeconds": 0.7114
+  },
+  {
+    "id": "12-french-horn-1-As2-sustain",
+    "name": "圆号 A#2 sustain",
+    "startSeconds": 56.1346,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "12-french-horn-2-C4-sustain",
+    "name": "圆号 C4 sustain",
+    "startSeconds": 57.9846,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "12-french-horn-3-F3-staccato",
+    "name": "圆号 F3 staccato",
+    "startSeconds": 59.8346,
+    "excerptSeconds": 1.1556
+  },
+  {
+    "id": "13-trumpet-1-C4-sustain",
+    "name": "小号 C4 sustain",
+    "startSeconds": 61.3402,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "13-trumpet-2-As4-sustain",
+    "name": "小号 A#4 sustain",
+    "startSeconds": 63.1902,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "13-trumpet-3-G4-staccato",
+    "name": "小号 G4 staccato",
+    "startSeconds": 65.0402,
+    "excerptSeconds": 1.1919
+  },
+  {
+    "id": "14-trombone-1-F2-sustain",
+    "name": "长号 F2 sustain",
+    "startSeconds": 66.5821,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "14-trombone-2-F3-sustain",
+    "name": "长号 F3 sustain",
+    "startSeconds": 68.4321,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "14-trombone-3-As2-staccato",
+    "name": "长号 A#2 staccato",
+    "startSeconds": 70.2821,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "15-tuba-1-As1-sustain",
+    "name": "大号 A#1 sustain",
+    "startSeconds": 72.1321,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "15-tuba-2-As2-sustain",
+    "name": "大号 A#2 sustain",
+    "startSeconds": 73.9821,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "15-tuba-3-F2-staccato",
+    "name": "大号 F2 staccato",
+    "startSeconds": 75.8321,
+    "excerptSeconds": 0.963
+  },
+  {
+    "id": "16-upright-piano-1-C3-single-hit",
+    "name": "立式钢琴 C3 single-hit",
+    "startSeconds": 77.1451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-2-C4-single-hit",
+    "name": "立式钢琴 C4 single-hit",
+    "startSeconds": 78.9951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-3-C5-single-hit",
+    "name": "立式钢琴 C5 single-hit",
+    "startSeconds": 80.8451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "17-timpani-1-Fs2-single-hit",
+    "name": "定音鼓 F#2 single-hit",
+    "startSeconds": 82.6951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "17-timpani-2-Cs3-single-hit",
+    "name": "定音鼓 C#3 single-hit",
+    "startSeconds": 84.5451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "18-glockenspiel-1-C5-single-hit",
+    "name": "钟琴 C5 single-hit",
+    "startSeconds": 86.3951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "18-glockenspiel-2-C6-single-hit",
+    "name": "钟琴 C6 single-hit",
+    "startSeconds": 88.2451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "19-marimba-1-B3-single-hit",
+    "name": "马林巴 B3 single-hit",
+    "startSeconds": 90.0951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "19-marimba-2-C5-single-hit",
+    "name": "马林巴 C5 single-hit",
+    "startSeconds": 91.9451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "20-xylophone-1-C4-single-hit",
+    "name": "木琴 C4 single-hit",
+    "startSeconds": 93.7951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "20-xylophone-2-C5-single-hit",
+    "name": "木琴 C5 single-hit",
+    "startSeconds": 95.6451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "21-bass-drum-1-unpitched-single-hit",
+    "name": "大鼓 unpitched single-hit",
+    "startSeconds": 97.4951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "22-snare-drum-1-unpitched-single-hit",
+    "name": "小军鼓 unpitched single-hit",
+    "startSeconds": 99.3451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "23-crash-cymbal-1-unpitched-single-hit",
+    "name": "碰钹 unpitched single-hit",
+    "startSeconds": 101.1951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "24-triangle-1-unpitched-single-hit",
+    "name": "三角铁 unpitched single-hit",
+    "startSeconds": 103.0451,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "25-tambourine-1-unpitched-single-hit",
+    "name": "铃鼓 unpitched single-hit",
+    "startSeconds": 104.8951,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "01-violin-section-4-B3-spiccato",
+    "name": "小提琴组 B3 spiccato",
+    "startSeconds": 106.7451,
+    "excerptSeconds": 0.6548
+  },
+  {
+    "id": "01-violin-section-5-B3-spiccato",
+    "name": "小提琴组 B3 spiccato",
+    "startSeconds": 107.75,
+    "excerptSeconds": 0.9115
+  },
+  {
+    "id": "01-violin-section-6-B3-spiccato",
+    "name": "小提琴组 B3 spiccato",
+    "startSeconds": 109.0114,
+    "excerptSeconds": 0.7468
+  },
+  {
+    "id": "01-violin-section-7-B3-spiccato",
+    "name": "小提琴组 B3 spiccato",
+    "startSeconds": 110.1082,
+    "excerptSeconds": 0.977
+  },
+  {
+    "id": "01-violin-section-8-Fs4-spiccato",
+    "name": "小提琴组 F#4 spiccato",
+    "startSeconds": 111.4352,
+    "excerptSeconds": 0.7157
+  },
+  {
+    "id": "01-violin-section-9-Fs4-spiccato",
+    "name": "小提琴组 F#4 spiccato",
+    "startSeconds": 112.5009,
+    "excerptSeconds": 0.9457
+  },
+  {
+    "id": "01-violin-section-10-Fs4-spiccato",
+    "name": "小提琴组 F#4 spiccato",
+    "startSeconds": 113.7966,
+    "excerptSeconds": 0.6361
+  },
+  {
+    "id": "01-violin-section-11-Fs4-spiccato",
+    "name": "小提琴组 F#4 spiccato",
+    "startSeconds": 114.7827,
+    "excerptSeconds": 1.0907
+  },
+  {
+    "id": "01-violin-section-12-C5-spiccato",
+    "name": "小提琴组 C5 spiccato",
+    "startSeconds": 116.2234,
+    "excerptSeconds": 0.7389
+  },
+  {
+    "id": "01-violin-section-13-C5-spiccato",
+    "name": "小提琴组 C5 spiccato",
+    "startSeconds": 117.3124,
+    "excerptSeconds": 0.949
+  },
+  {
+    "id": "01-violin-section-14-C5-spiccato",
+    "name": "小提琴组 C5 spiccato",
+    "startSeconds": 118.6114,
+    "excerptSeconds": 0.6258
+  },
+  {
+    "id": "01-violin-section-15-C5-spiccato",
+    "name": "小提琴组 C5 spiccato",
+    "startSeconds": 119.5872,
+    "excerptSeconds": 0.7063
+  },
+  {
+    "id": "07-flute-4-A4-staccato",
+    "name": "长笛 A4 staccato",
+    "startSeconds": 120.6434,
+    "excerptSeconds": 0.6381
+  },
+  {
+    "id": "07-flute-5-A4-staccato",
+    "name": "长笛 A4 staccato",
+    "startSeconds": 121.6315,
+    "excerptSeconds": 0.8438
+  },
+  {
+    "id": "07-flute-6-A4-staccato",
+    "name": "长笛 A4 staccato",
+    "startSeconds": 122.8253,
+    "excerptSeconds": 1.035
+  },
+  {
+    "id": "07-flute-7-A4-staccato",
+    "name": "长笛 A4 staccato",
+    "startSeconds": 124.2103,
+    "excerptSeconds": 0.7091
+  },
+  {
+    "id": "07-flute-8-A4-staccato",
+    "name": "长笛 A4 staccato",
+    "startSeconds": 125.2694,
+    "excerptSeconds": 0.7176
+  },
+  {
+    "id": "07-flute-9-E5-staccato",
+    "name": "长笛 E5 staccato",
+    "startSeconds": 126.337,
+    "excerptSeconds": 0.6799
+  },
+  {
+    "id": "07-flute-10-E5-staccato",
+    "name": "长笛 E5 staccato",
+    "startSeconds": 127.3669,
+    "excerptSeconds": 0.9516
+  },
+  {
+    "id": "07-flute-11-E5-staccato",
+    "name": "长笛 E5 staccato",
+    "startSeconds": 128.6685,
+    "excerptSeconds": 0.8882
+  },
+  {
+    "id": "07-flute-12-E5-staccato",
+    "name": "长笛 E5 staccato",
+    "startSeconds": 129.9067,
+    "excerptSeconds": 0.6655
+  },
+  {
+    "id": "07-flute-13-E5-staccato",
+    "name": "长笛 E5 staccato",
+    "startSeconds": 130.9222,
+    "excerptSeconds": 0.9332
+  },
+  {
+    "id": "07-flute-14-E5-staccato",
+    "name": "长笛 E5 staccato",
+    "startSeconds": 132.2054,
+    "excerptSeconds": 0.9348
+  },
+  {
+    "id": "07-flute-15-C6-staccato",
+    "name": "长笛 C6 staccato",
+    "startSeconds": 133.4901,
+    "excerptSeconds": 0.6148
+  },
+  {
+    "id": "07-flute-16-C6-staccato",
+    "name": "长笛 C6 staccato",
+    "startSeconds": 134.4549,
+    "excerptSeconds": 0.6644
+  },
+  {
+    "id": "07-flute-17-C6-staccato",
+    "name": "长笛 C6 staccato",
+    "startSeconds": 135.4694,
+    "excerptSeconds": 0.7359
+  },
+  {
+    "id": "07-flute-18-C6-staccato",
+    "name": "长笛 C6 staccato",
+    "startSeconds": 136.5553,
+    "excerptSeconds": 0.729
+  },
+  {
+    "id": "07-flute-19-C6-staccato",
+    "name": "长笛 C6 staccato",
+    "startSeconds": 137.6343,
+    "excerptSeconds": 0.6897
+  },
+  {
+    "id": "07-flute-20-C6-staccato",
+    "name": "长笛 C6 staccato",
+    "startSeconds": 138.674,
+    "excerptSeconds": 0.6995
+  },
+  {
+    "id": "16-upright-piano-4-C3-single-hit",
+    "name": "立式钢琴 C3 single-hit",
+    "startSeconds": 139.7235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-5-C3-single-hit",
+    "name": "立式钢琴 C3 single-hit",
+    "startSeconds": 141.5735,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-6-C3-single-hit",
+    "name": "立式钢琴 C3 single-hit",
+    "startSeconds": 143.4235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-7-C3-single-hit",
+    "name": "立式钢琴 C3 single-hit",
+    "startSeconds": 145.2735,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-8-C3-single-hit",
+    "name": "立式钢琴 C3 single-hit",
+    "startSeconds": 147.1235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-9-C4-single-hit",
+    "name": "立式钢琴 C4 single-hit",
+    "startSeconds": 148.9735,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-10-C4-single-hit",
+    "name": "立式钢琴 C4 single-hit",
+    "startSeconds": 150.8235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-11-C4-single-hit",
+    "name": "立式钢琴 C4 single-hit",
+    "startSeconds": 152.6735,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-12-C4-single-hit",
+    "name": "立式钢琴 C4 single-hit",
+    "startSeconds": 154.5235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-13-C4-single-hit",
+    "name": "立式钢琴 C4 single-hit",
+    "startSeconds": 156.3735,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-14-C5-single-hit",
+    "name": "立式钢琴 C5 single-hit",
+    "startSeconds": 158.2235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-15-C5-single-hit",
+    "name": "立式钢琴 C5 single-hit",
+    "startSeconds": 160.0735,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-16-C5-single-hit",
+    "name": "立式钢琴 C5 single-hit",
+    "startSeconds": 161.9235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-17-C5-single-hit",
+    "name": "立式钢琴 C5 single-hit",
+    "startSeconds": 163.7735,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "16-upright-piano-18-C5-single-hit",
+    "name": "立式钢琴 C5 single-hit",
+    "startSeconds": 165.6235,
+    "excerptSeconds": 1.5
+  },
+  {
+    "id": "18-glockenspiel-3-G5-single-hit",
+    "name": "钟琴 G5 single-hit",
+    "startSeconds": 167.4735,
+    "excerptSeconds": 1.5
+  }
+]

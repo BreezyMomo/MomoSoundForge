@@ -3,3 +3,7 @@ dist/
 test-results/
 .taste-skill/
 *.log
+
+# Duplicate export archive; the complete source collection is versioned in samples/.
+/exports/orchestra-basics-20261104.zip
+/exports/orchestra-basics-20261104.zip.sha256

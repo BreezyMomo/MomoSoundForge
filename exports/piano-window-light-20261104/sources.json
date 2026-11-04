@@ -1,0 +1,69 @@
+{
+  "source": "https://versilian-studios.com/vsco-community/",
+  "license": "CC0-1.0",
+  "sourceCommit": "440300901dfe9275fd84e0b7763af1f8443ae62e",
+  "credits": "Versilian Studios / Sam Gossner; Simon Dalzell; sample cutting Elan Hickler / Soundemote",
+  "samples": [
+    {
+      "id": "16-upright-piano-2-C4-single-hit",
+      "rootMidi": 60,
+      "velocityLow": 61,
+      "velocityHigh": 110,
+      "sourceUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Nr1/UR1_C4_mf_RR1.wav",
+      "sourceGitBlobSha1": "99c511c4d2d3fd91b68cdf530fa043e2b03f076f",
+      "originalSha256": "9f3a820c2ccbfb60209ff21ab8e80082d6bb7f09f7ff29027380d6cc43c69997",
+      "wavSha256": "3e4a0abbf5f20dd02853bf18e79c7ecbb35fda3682ab6bedd70ff0548b1f257f"
+    },
+    {
+      "id": "16-upright-piano-3-C5-single-hit",
+      "rootMidi": 72,
+      "velocityLow": 61,
+      "velocityHigh": 110,
+      "sourceUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Nr1/UR1_C5_mf_RR1.wav",
+      "sourceGitBlobSha1": "b0079bd7ec568998e65df839d5387fb56e264b7d",
+      "originalSha256": "dacba2dd26c3fd581c093d8131321d2b46fb0f52d5031aad6f173aa7e357b0fb",
+      "wavSha256": "336278264562ec8df9c6de114a6b05c435a1f93950429c117fa8de8b869ab834"
+    },
+    {
+      "id": "16-upright-piano-17-C5-single-hit",
+      "rootMidi": 72,
+      "velocityLow": 61,
+      "velocityHigh": 110,
+      "sourceUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Nr1/UR1_C5_mf_RR2.wav",
+      "sourceGitBlobSha1": "6d052b5ff3f278fdc5763baa28e50e52bdb90533",
+      "originalSha256": "e2d78b204d7fdf52f88c6972a18ff620bf2ec3a5686f2d73a9af337cd46bdeae",
+      "wavSha256": "f49397bb42c3ec06683157a25da48c20fd69b8b2aa013c1eec5fbcc922c93e21"
+    },
+    {
+      "id": "16-upright-piano-12-C4-single-hit",
+      "rootMidi": 60,
+      "velocityLow": 61,
+      "velocityHigh": 110,
+      "sourceUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Nr1/UR1_C4_mf_RR2.wav",
+      "sourceGitBlobSha1": "53c637f052c5b4ddc5d975d494963fbb57b370fb",
+      "originalSha256": "ed31433a1b5639cfb8c4381f46c3dd41463f791fd743c5f40ed665750976cce5",
+      "wavSha256": "391b636d78b8eb19ecf95ac1f1b86632bced90037542d046fcbf8e7f5ebb9b01"
+    },
+    {
+      "id": "16-upright-piano-1-C3-single-hit",
+      "rootMidi": 48,
+      "velocityLow": 61,
+      "velocityHigh": 110,
+      "sourceUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Nr1/UR1_C3_mf_RR1.wav",
+      "sourceGitBlobSha1": "622047ce32400cd99c0193f245955e3572d85a1b",
+      "originalSha256": "4b14e4babc7acab16fb8cafe6c286e347a99437c217bed5e125fc56c316b1579",
+      "wavSha256": "89a78fccb93a7f57d49a8b9f3a3c061639db5ebc90d5bcb1fd6d25386eb7cdf3"
+    },
+    {
+      "id": "16-upright-piano-7-C3-single-hit",
+      "rootMidi": 48,
+      "velocityLow": 61,
+      "velocityHigh": 110,
+      "sourceUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Keys/Upright%20Nr1/UR1_C3_mf_RR2.wav",
+      "sourceGitBlobSha1": "32d8a3bcade4393952cb50bef37d8dc0eb09423e",
+      "originalSha256": "4a72f2f5a1f0d59a1927edc54f1b587175df53db7a774aecb54654a1598deb64",
+      "wavSha256": "94983be528681a0c1a38b533f61d725aa25190037154b5a75048a93b1704de23"
+    }
+  ],
+  "embeddedAssets": "Up to five seconds per used source are embedded, sufficient for every rendered note; full source files are in the instrument collection."
+}

@@ -1,0 +1,37 @@
+后续音源范围与来源线索 · 2026-11-04
+
+当前包已收集的是 VSCO 2 CE 的 25 类乐器原型，具体数量与覆盖以 manifest.json 为准。
+以下为尚未纳入本包的范围；不算已完成采集，不以合成音或其他乐器代替。
+
+优先补齐
+
+1. 已有乐器的更完整键域：按真实可用音域补根音，目标间隔小三度或更密；补齐原库实际提供的弱、中、强力度和重复演奏。
+2. 弦乐 pizzicato、tremolo 等适用演奏法，铜管 mute 等；真实 release 与 loop 必须有可验证映射。普通淡入淡出不称为真实连奏。
+3. 钢片琴、尼龙弦吉他、钢弦吉他，以及更完整的键盘与打击乐覆盖。
+4. 专项候选：古筝（拨弦、按滑）、尺八（气息长音、短音）、三味线、布鲁斯吉他（干净单音、推弦、滑音），以及乌德琴、卡侬琴。
+最后两件中东乐器是补充候选，没有核实任何参考视频使用了它们。专项候选目前没有经过本批的原始采样与再分发许可验收。
+
+已查到的官方来源线索
+
+VCSL / Versilian Studios
+https://versilian-studios.com/vcsl/
+https://github.com/sgossner/VCSL
+官方说明为 CC0，可用于软件和采样器。尚需按具体乐器、文件、原始映射与实际试听核对，不把库的总体介绍当成每件专项乐器都已存在。
+
+Meta Open Sound
+https://github.com/facebookincubator/Meta-open-sound
+仓库介绍钢琴、尼龙吉他和钢弦吉他集合为 CC0，原始 WAV 位于发行附件，OGG 为预览。后续应检查具体集合 LICENSE、manifest、SFZ、设计说明和校验值；不混入该仓库另按 CC BY 发布的音效集合。
+
+FreePats Spanish Classical Guitar
+https://github.com/freepats/spanish-classical-guitar
+官方仓库说明为 CC0，明确提及录音条件和已有降噪处理，需实际试听后决定是否采用。
+
+卡侬琴线索
+https://freesound.org/people/barisbozkurt/sounds/211133/
+第三方项目将其引用为 CC0 半音阶录音。本批尚未独立核实原始许可与下载、切分和音准，不收录第三方 AAC 切片，也不把它标为已可分发乐器。
+
+许可原则
+
+优先原始 WAV/FLAC 与允许随产品重新分发采样的许可。
+能用采样制作音乐，不代表能把原始采样或采样器打包发布；例如 Philharmonia 公开说明不允许把样本原样或作为 sampler instrument 提供，因此没有收进本库。
+CC BY 候选另行检查归属要求；不购买付费音源。保留来源、版本、作者、许可证、映射与校验值，未知元数据留空。

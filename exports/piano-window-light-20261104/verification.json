@@ -1,0 +1,17 @@
+{
+  "durationSeconds": 8,
+  "sampleRate": 48000,
+  "channels": 2,
+  "noteCount": 19,
+  "peakDbFS": -7.00617879076789,
+  "rms": 0.05820064521437977,
+  "clippedSamples": 0,
+  "tailPeakLast100ms": 2.0814396872737007e-9,
+  "largestAdjacentSampleStep": 0.05749891698360443,
+  "deterministic": true,
+  "exportPcmMatchesRender": true,
+  "projectParsed": true,
+  "projectSha256": "1e5fc9af621801ba40705fa4dc5c6ef4b269f82527443b761c0265500aedeb10",
+  "wavSha256": "96d76ef16aa091e1db0a4a29b8c932f9c2d12698f0a9ea7c2106324869204e9a",
+  "subjectiveAudition": "pending"
+}
