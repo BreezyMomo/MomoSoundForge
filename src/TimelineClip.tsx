@@ -8,8 +8,10 @@ import {
 import type { Layer } from "./model";
 import {
   adjustClipTiming,
+  adjustCrop,
+  stretchClip,
+  type CropEdit,
   timingChanged,
-  type ClipTiming,
   type ClipEdit,
 } from "./timeline";
 import { Waveform } from "./Waveform";
@@ -19,16 +21,18 @@ type Gesture = {
   pointerId: number;
   originX: number;
   width: number;
-  mode: ClipEdit;
+  mode: ClipEdit | CropEdit;
   layer: Layer;
   projectDuration: number;
   node: HTMLButtonElement;
-  timing: ClipTiming;
+  timing: Layer;
   moved: boolean;
 };
 export function TimelineClip({
   layer,
   projectDuration,
+  position,
+  cropMode,
   data,
   onSelect,
   onBegin,
@@ -36,15 +40,26 @@ export function TimelineClip({
 }: {
   layer: Layer;
   projectDuration: number;
+  position: number;
+  cropMode: boolean;
   data?: Float32Array;
   onSelect: () => void;
   onBegin: () => void;
-  onCommit: (timing: ClipTiming) => void;
+  onCommit: (timing: Partial<Layer>) => void;
 }) {
   const lane = useRef<HTMLDivElement>(null),
     gesture = useRef<Gesture | null>(null);
-  const [draft, setDraft] = useState<ClipTiming | null>(null);
+  const waveform = useRef(data);
+  if (data) waveform.current = data;
+  const [draft, setDraft] = useState<Layer | null>(null);
   const timing = draft ?? layer;
+  const changed = (a: Layer, b: Layer) => timingChanged(a, b) || a.cropStart !== b.cropStart || a.cropEnd !== b.cropEnd;
+  const adjust = (original: Layer, mode: ClipEdit | CropEdit, delta: number, duration: number, step: number): Layer => ({
+    ...original,
+    ...(mode === "cropStart" || mode === "cropEnd"
+      ? adjustCrop(original, mode, Math.round(delta / step) * step)
+      : stretchClip(original, adjustClipTiming(original, mode, delta, duration, step))),
+  });
   const finish = (commit: boolean) => {
     const active = gesture.current;
     if (!active) return;
@@ -52,7 +67,7 @@ export function TimelineClip({
     setDraft(null);
     if (active.node.hasPointerCapture(active.pointerId))
       active.node.releasePointerCapture(active.pointerId);
-    if (commit && active.moved && timingChanged(active.layer, active.timing))
+    if (commit && active.moved && changed(active.layer, active.timing))
       onCommit(active.timing);
   };
   useEffect(() => {
@@ -73,7 +88,7 @@ export function TimelineClip({
     },
     [],
   );
-  const begin = (event: PointerEvent<HTMLButtonElement>, mode: ClipEdit) => {
+  const begin = (event: PointerEvent<HTMLButtonElement>, mode: ClipEdit | CropEdit) => {
     if (event.button !== 0 || !event.isPrimary || gesture.current) return;
     const width = lane.current?.getBoundingClientRect().width ?? 0;
     if (!width) return;
@@ -88,7 +103,7 @@ export function TimelineClip({
       layer,
       projectDuration,
       node: event.currentTarget,
-      timing: { start: layer.start, duration: layer.duration },
+      timing: layer,
       moved: false,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -101,7 +116,7 @@ export function TimelineClip({
     const dx = event.clientX - active.originX;
     if (!active.moved && Math.abs(dx) < 3) return;
     active.moved = true;
-    active.timing = adjustClipTiming(
+    active.timing = adjust(
       active.layer,
       active.mode,
       (dx / active.width) * active.projectDuration,
@@ -117,7 +132,7 @@ export function TimelineClip({
   };
   const keyboard = (
     event: KeyboardEvent<HTMLButtonElement>,
-    mode: ClipEdit,
+    mode: ClipEdit | CropEdit,
   ) => {
     if (event.key === "Escape" && gesture.current) {
       event.preventDefault();
@@ -132,16 +147,16 @@ export function TimelineClip({
     onSelect();
     onBegin();
     const step = event.shiftKey ? 0.001 : 0.01,
-      next = adjustClipTiming(
+      next = adjust(
         layer,
         mode,
         event.key === "ArrowLeft" ? -step : step,
         projectDuration,
         step,
       );
-    if (timingChanged(layer, next)) onCommit(next);
+    if (changed(layer, next)) onCommit(next);
   };
-  const events = (mode: ClipEdit) => ({
+  const events = (mode: ClipEdit | CropEdit) => ({
     onPointerDown: (event: PointerEvent<HTMLButtonElement>) =>
       begin(event, mode),
     onPointerMove: move,
@@ -169,8 +184,9 @@ export function TimelineClip({
         >
           <span className="clip-label">
             {seconds(timing.start)} s · {seconds(timing.duration)} s
+            {timing.sourceDuration !== undefined && ` · ${(timing.sourceDuration / timing.duration).toFixed(2)}×`}
           </span>
-          <Waveform data={data} label={layer.name} />
+          <Waveform data={waveform.current} label={layer.name} />
         </button>
         <button
           className="clip-resize clip-resize-start"
@@ -184,7 +200,14 @@ export function TimelineClip({
           title={t("editor.resizeEnd", layer.name)}
           {...events("end")}
         />
+        <div className="clip-crop-mask clip-crop-before" style={{ width: `${(timing.cropStart ?? 0) * 100}%` }} />
+        <div className="clip-crop-mask clip-crop-after" style={{ width: `${(1 - (timing.cropEnd ?? 1)) * 100}%` }} />
+        {cropMode && <>
+          <button className="clip-crop-handle" style={{ left: `${(timing.cropStart ?? 0) * 100}%` }} aria-label={t("editor.cropStart", layer.name)} title={t("editor.cropStart", layer.name)} {...events("cropStart")} />
+          <button className="clip-crop-handle clip-crop-end" style={{ left: `${(timing.cropEnd ?? 1) * 100}%` }} aria-label={t("editor.cropEnd", layer.name)} title={t("editor.cropEnd", layer.name)} {...events("cropEnd")} />
+        </>}
       </div>
+      <div className="layer-playhead" aria-hidden="true" style={{ left: `clamp(0px, ${Math.max(0, Math.min(1, position / projectDuration)) * 100}%, calc(100% - 1px))` }} />
     </div>
   );
 }

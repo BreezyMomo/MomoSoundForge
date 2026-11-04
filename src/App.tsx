@@ -10,7 +10,6 @@ import {
   Download,
   Plus,
   Upload,
-  Search,
   LockKeyhole,
   LockKeyholeOpen,
   Volume2,
@@ -22,6 +21,10 @@ import {
   LoaderCircle,
   Pause,
   SkipBack,
+  Layers,
+  FilePlus2,
+  Scissors,
+  RotateCcw,
 } from "lucide-react";
 import JSZip from "jszip";
 import type { DockWorkspace } from "@momo/workbench/dock";
@@ -32,11 +35,12 @@ import {
   type ThemeId,
 } from "@momo/workbench/appearance";
 import { Workbench } from "./Workbench";
+import { SoundLibrary } from "./SoundLibrary";
 import { Inspector, Range, CommitText } from "./Inspector";
 import { Waveform } from "./Waveform";
 import { TimelineClip } from "./TimelineClip";
 import { PlayheadTimeline } from "./PlayheadTimeline";
-import { PRESETS, fromPreset } from "./presets";
+import { fromPreset } from "./presets";
 import {
   SAMPLE_RATE,
   MAX_ASSET_BYTES,
@@ -48,13 +52,24 @@ import {
   uid,
   varyProject,
   createLayerPreviewProject,
+  assertProjectLimits,
+  makeComposition,
+  wrapProject,
+  resolveProjectPath,
+  updateProjectAtPath,
   type Layer,
   type Project,
   type RenderResult,
 } from "./model";
-import { encodeWav, renderProject } from "./engine";
+import { encodeWav } from "./engine";
 import { AudioPlayer, createRenderer } from "./audio";
-import { download, readDraft, safeFilename, writeDraft } from "./storage";
+import {
+  download,
+  readDraft,
+  readSavedSound,
+  safeFilename,
+  writeDraft,
+} from "./storage";
 import { language, t, useLanguage } from "./i18n";
 type Variation = { project: Project; result: RenderResult };
 const defaultProject = () =>
@@ -62,23 +77,33 @@ const defaultProject = () =>
 const db = (v: number) => (v > 0 ? (20 * Math.log10(v)).toFixed(1) : "−∞");
 export default function App() {
   const lang = useLanguage();
+  const [librarySaveHost, setLibrarySaveHost] = useState<HTMLDivElement | null>(
+    null,
+  );
   const [history, setHistory] = useState<{
     past: Project[];
     project: Project;
     future: Project[];
   }>(() => ({ past: [], project: defaultProject(), future: [] }));
-  const project = history.project,
-    current = useRef(project);
+  const [editPath, setEditPath] = useState<string[]>([]);
+  const context = useMemo(
+    () => resolveProjectPath(history.project, editPath),
+    [history.project, editPath],
+  );
+  const project = context.project,
+    current = useRef(project),
+    rootCurrent = useRef(history.project),
+    pathRef = useRef(context.path);
   current.current = project;
+  rootCurrent.current = history.project;
+  pathRef.current = context.path;
   const [selected, setSelected] = useState("ice-0"),
     [ready, setReady] = useState(false),
     [saveState, setSaveState] = useState("status.loading"),
     [notice, setNotice] = useState<{ key: string; values: unknown[] } | null>(
       null,
     );
-  const [query, setQuery] = useState(""),
-    [category, setCategory] = useState("all"),
-    [rendered, setRendered] = useState<{
+  const [rendered, setRendered] = useState<{
       project: Project;
       result: RenderResult;
     } | null>(null),
@@ -89,6 +114,7 @@ export default function App() {
     [monitor, setMonitor] = useState(0.7),
     [progress, setProgress] = useState(0);
   const [cue, setCue] = useState(0);
+  const [cropMode, setCropMode] = useState(false);
   const [variations, setVariations] = useState<Variation[]>([]),
     [variationBase, setVariationBase] = useState<Project | null>(null),
     [amount, setAmount] = useState(0.35),
@@ -100,6 +126,7 @@ export default function App() {
     manager = useRef<DockWorkspace | null>(null),
     projectInput = useRef<HTMLInputElement>(null),
     sampleInput = useRef<HTMLInputElement>(null),
+    compositionInput = useRef<HTMLInputElement>(null),
     appearance = useRef<AppearanceController | null>(null);
   const renderer = useRef<ReturnType<typeof createRenderer> | null>(null),
     player = useRef<AudioPlayer | null>(null),
@@ -109,6 +136,7 @@ export default function App() {
     cueRef = useRef(0),
     activePlaybackRef = useRef<string | null>(null),
     resumeSeekRef = useRef(false),
+    scopeEpoch = useRef(0),
     editGroup = useRef({ key: "", time: 0 }),
     alive = useRef(true);
   const flash = useCallback(
@@ -137,7 +165,7 @@ export default function App() {
     setPlaying(null);
     setProgress(0);
   }, [updateCue]);
-  const edit = useCallback(
+  const editRoot = useCallback(
     (change: (p: Project) => Project, key = "") => {
       stop();
       const now = Date.now(),
@@ -146,13 +174,40 @@ export default function App() {
           editGroup.current.key === key &&
           now - editGroup.current.time < 700;
       editGroup.current = { key, time: now };
-      setHistory((h) => ({
-        past: coalesce ? h.past : [...h.past, h.project].slice(-50),
-        project: change(h.project),
-        future: [],
-      }));
+      setHistory((h) => {
+        let next: Project;
+        try {
+          next = change(h.project);
+          assertProjectLimits(next);
+        } catch (error) {
+          queueMicrotask(() =>
+            flash(
+              error instanceof Error && error.message.startsWith("error.")
+                ? error.message
+                : "error.project",
+            ),
+          );
+          return h;
+        }
+        if (next === h.project) return h;
+        return {
+          past: coalesce ? h.past : [...h.past, h.project].slice(-50),
+          project: next,
+          future: [],
+        };
+      });
     },
-    [stop],
+    [stop, flash],
+  );
+  const edit = useCallback(
+    (change: (p: Project) => Project, key = "") => {
+      const path = [...pathRef.current];
+      editRoot(
+        (root) => updateProjectAtPath(root, path, change),
+        key ? `${JSON.stringify(path)}:${key}` : "",
+      );
+    },
+    [editRoot],
   );
   const undo = useCallback(() => {
     stop();
@@ -182,8 +237,8 @@ export default function App() {
   }, [stop]);
   const save = useCallback(() => {
     download(
-      JSON.stringify(projectForSave(current.current)),
-      `${safeFilename(current.current.name)}.soundforge`,
+      JSON.stringify(projectForSave(rootCurrent.current)),
+      `${safeFilename(rootCurrent.current.name)}.soundforge`,
       "application/json",
     );
     flash("status.saved");
@@ -234,6 +289,14 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
   useEffect(() => {
+    if (context.path.length === editPath.length) return;
+    stop();
+    scopeEpoch.current++;
+    setEditPath(context.path);
+    updateCue(0);
+    setVariations([]);
+  }, [context, editPath.length, stop, updateCue]);
+  useEffect(() => {
     updateCue(cueRef.current);
   }, [project.duration, updateCue]);
   useEffect(() => {
@@ -241,7 +304,7 @@ export default function App() {
     setSaveState("status.saving");
     let cancelled = false;
     const timer = setTimeout(() => {
-      writeDraft(project)
+      writeDraft(history.project)
         .then(() => {
           if (!cancelled) setSaveState("status.local");
         })
@@ -253,7 +316,7 @@ export default function App() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [project, ready]);
+  }, [history.project, ready]);
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
@@ -393,6 +456,7 @@ export default function App() {
           target instanceof HTMLTextAreaElement ||
           target instanceof HTMLSelectElement ||
           target.isContentEditable;
+      if (target.closest('[role="dialog"], dialog')) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         save();
@@ -400,6 +464,7 @@ export default function App() {
       }
       if (typing || help) return;
       if (e.code === "Space") {
+        if (target.closest('button, [role="button"], summary')) return;
         e.preventDefault();
         if (playing || pendingPlayback) stop();
         else if (result) void play(result, "main");
@@ -413,12 +478,96 @@ export default function App() {
     return () => window.removeEventListener("keydown", listener);
   }, [save, help, result, play, playing, pendingPlayback, stop, undo, redo]);
   const selectedLayer = project.layers.find((l) => l.id === selected);
+  const navigate = (path: string[]) => {
+    stop();
+    scopeEpoch.current++;
+    const target = resolveProjectPath(rootCurrent.current, path);
+    const returnSelection = pathRef.current[path.length];
+    setEditPath(target.path);
+    setSelected(returnSelection ?? target.project.layers[0]?.id ?? "");
+    updateCue(0);
+    setVariations([]);
+    manager.current?.show("editor");
+  };
+  const enterComposition = (id: string) => {
+    const layer = current.current.layers.find((l) => l.id === id);
+    if (layer?.type !== "composition" || !layer.project) return;
+    stop();
+    scopeEpoch.current++;
+    setEditPath([...pathRef.current, id]);
+    setSelected(layer.project.layers[0]?.id ?? "");
+    updateCue(0);
+    setVariations([]);
+    manager.current?.show("editor");
+  };
+  const wrapCurrent = () => {
+    try {
+      const next = wrapProject(current.current);
+      const root = updateProjectAtPath(
+        rootCurrent.current,
+        pathRef.current,
+        () => next,
+      );
+      assertProjectLimits(root);
+      edit(() => next);
+      setSelected(next.layers[0].id);
+      flash("status.grouped");
+    } catch (error) {
+      flash(
+        error instanceof Error && error.message.startsWith("error.")
+          ? error.message
+          : "error.project",
+      );
+    }
+  };
+  const saveCurrentSound = () => {
+    download(
+      JSON.stringify(projectForSave(current.current)),
+      `${safeFilename(current.current.name)}.soundforge`,
+      "application/json",
+    );
+    flash("status.componentSaved");
+  };
+  async function openLibrarySound(id: string) {
+    const next = await readSavedSound(id);
+    editRoot(() => next);
+    scopeEpoch.current++;
+    setEditPath([]);
+    setSelected(next.layers[0]?.id ?? "");
+    updateCue(0);
+    setVariations([]);
+    manager.current?.show("editor");
+  }
+  async function insertLibrarySound(id: string) {
+    const target = current.current,
+      epoch = scopeEpoch.current,
+      child = await readSavedSound(id);
+    if (target !== current.current || epoch !== scopeEpoch.current)
+      throw Error("error.scopeChanged");
+    insertSound(child);
+  }
+  function insertSound(child: Project) {
+    if (current.current.layers.length >= 16) throw Error("error.layers");
+    const layer = makeComposition(child),
+      append = (p: Project) => ({
+        ...p,
+        duration: Math.max(p.duration, layer.duration),
+        layers: [...p.layers, layer],
+      });
+    assertProjectLimits(
+      updateProjectAtPath(rootCurrent.current, pathRef.current, append),
+    );
+    edit(append);
+    setSelected(layer.id);
+    manager.current?.show("editor");
+    flash("status.compositionImported", child.name);
+  }
   const changeLayer = (key: keyof Layer, value: Layer[keyof Layer]) =>
     edit(
       (p) => ({
         ...p,
         layers: p.layers.map((l) =>
-          l.id === selected ? { ...l, [key]: value } : l,
+          l.id === selected ? { ...l, ...(key === "duration" ? { sourceDuration: l.sourceDuration ?? l.duration } : {}), [key]: value } : l,
         ),
       }),
       `${selected}:${key}`,
@@ -429,7 +578,10 @@ export default function App() {
   ) => edit((p) => ({ ...p, [key]: value }), key);
   const setPreset = (id: string) => {
     const next = fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`));
-    edit(() => next);
+    editRoot(() => next);
+    scopeEpoch.current++;
+    setEditPath([]);
+    setVariations([]);
     updateCue(0);
     setSelected(next.layers[0].id);
     manager.current?.show("editor");
@@ -460,7 +612,9 @@ export default function App() {
     try {
       if (file.size > 36 * 1024 * 1024) throw Error("error.fileSize");
       const next = parseProject(JSON.parse(await file.text()));
-      edit(() => next);
+      editRoot(() => next);
+      scopeEpoch.current++;
+      setEditPath([]);
       updateCue(0);
       setSelected(next.layers[0]?.id ?? "");
       setVariations([]);
@@ -476,6 +630,39 @@ export default function App() {
       setIoBusy(false);
     }
   }
+  async function importComposition(file?: File) {
+    if (!file) return;
+    setIoBusy(true);
+    const path = [...pathRef.current];
+    try {
+      if (file.size > 36 * 1024 * 1024) throw Error("error.fileSize");
+      const child = parseProject(JSON.parse(await file.text()));
+      if (JSON.stringify(path) !== JSON.stringify(pathRef.current))
+        throw Error("error.scopeChanged");
+      if (current.current.layers.length >= 16) throw Error("error.layers");
+      const layer = makeComposition(child);
+      const append = (p: Project) => ({
+        ...p,
+        duration: Math.max(p.duration, layer.duration),
+        layers: [...p.layers, layer],
+      });
+      assertProjectLimits(
+        updateProjectAtPath(rootCurrent.current, path, append),
+      );
+      edit(append);
+      setSelected(layer.id);
+      manager.current?.show("editor");
+      flash("status.compositionImported", child.name);
+    } catch (error) {
+      flash(
+        error instanceof Error && error.message.startsWith("error.")
+          ? error.message
+          : "error.project",
+      );
+    } finally {
+      setIoBusy(false);
+    }
+  }
   async function importSample(file?: File) {
     if (!file) return;
     if (current.current.layers.length >= 16) {
@@ -483,11 +670,14 @@ export default function App() {
       return;
     }
     setIoBusy(true);
+    const importPath = [...pathRef.current];
     try {
       if (file.size > 24 * 1024 * 1024) throw Error("error.fileSize");
-      const context = await player.current!.prepare(),
-        buffer = await context.decodeAudioData(await file.arrayBuffer());
+      const data = await file.arrayBuffer(),
+        buffer = await player.current!.decode(data);
       if (buffer.duration > 30) throw Error("error.budget");
+      if (JSON.stringify(importPath) !== JSON.stringify(pathRef.current))
+        throw Error("error.scopeChanged");
       const id = uid(),
         channels = Array.from(
           { length: Math.min(2, buffer.numberOfChannels) },
@@ -521,12 +711,16 @@ export default function App() {
         release: 0.02,
         attack: 0.002,
       });
-      edit((p) => ({
+      const append = (p: Project) => ({
         ...p,
         duration: Math.max(p.duration, Math.min(10, buffer.duration + 0.05)),
         assets: { ...projectForSave(p).assets, [id]: asset },
         layers: [...p.layers, layer],
-      }));
+      });
+      assertProjectLimits(
+        updateProjectAtPath(rootCurrent.current, importPath, append),
+      );
+      edit(append);
       setSelected(layer.id);
       manager.current?.show("editor");
       flash("status.imported", file.name);
@@ -546,6 +740,7 @@ export default function App() {
     setBusy(true);
     const base = current.current,
       items: Variation[] = [];
+    const epoch = scopeEpoch.current;
     try {
       for (let i = 0; i < 5; i++) {
         const next = varyProject(
@@ -559,7 +754,7 @@ export default function App() {
           result: await renderer.current.render(next),
         });
       }
-      if (alive.current) {
+      if (alive.current && epoch === scopeEpoch.current) {
         setVariations(items);
         setVariationBase(base);
       }
@@ -664,94 +859,74 @@ export default function App() {
       }
     }
   }
-  const thumbnails = useMemo(
-    () =>
-      Object.fromEntries(
-        PRESETS.map((p) => [
-          p.id,
-          renderProject(
-            fromPreset(p.id, p.id, (key) => key),
-            6000,
-          ).left,
-        ]),
-      ),
-    [],
-  );
-  const filtered = PRESETS.filter(
-    (p) =>
-      (category === "all" || p.category === category) &&
-      `${t(`preset.${p.id}`)} ${t(`preset.${p.id}.desc`)}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
-  );
   const truncated = project.layers.some(
     (l) => !l.muted && l.start + l.duration > project.duration + 0.005,
   );
   const library = (
-    <div className="library-content">
-      <div className="library-intro">
-        <h2>{t("panel.library")}</h2>
-        <p>{t("library.hint")}</p>
-      </div>
-      <label className="search-field">
-        <Search size={15} />
-        <input
-          aria-label={t("library.search")}
-          placeholder={t("library.search")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </label>
-      <div className="category-tabs">
-        {["all", "interface", "magic", "motion"].map((c) => (
-          <button
-            key={c}
-            className={category === c ? "active" : ""}
-            onClick={() => setCategory(c)}
-          >
-            {t(`library.${c}`)}
-          </button>
-        ))}
-      </div>
-      <div className="preset-list">
-        {filtered.map((p) => (
-          <button
-            className="preset"
-            key={p.id}
-            onClick={() => setPreset(p.id)}
-            data-preset={p.id}
-          >
-            <span className="preset-label">
-              {t(`preset.${p.id}`)}
-              <ChevronRight size={14} />
-            </span>
-            <span className="preset-description">
-              {t(`preset.${p.id}.desc`)}
-            </span>
-            <Waveform data={thumbnails[p.id]} label={t(`preset.${p.id}`)} />
-            <span className="preset-meta">
-              {t(`library.${p.category}`)}
-              <span>{p.duration.toFixed(2)} s</span>
-            </span>
-          </button>
-        ))}
-        {!filtered.length && <p className="empty-copy">{t("library.none")}</p>}
-      </div>
-      <div className="library-import">
-        <p>{t("library.sampleHint")}</p>
-        <button
-          className="secondary wide"
-          disabled={ioBusy}
-          onClick={() => sampleInput.current?.click()}
-        >
-          <Upload size={15} />
-          {t("file.import")}
-        </button>
-      </div>
-    </div>
+    <SoundLibrary
+      project={project}
+      ready={ready && !ioBusy}
+      playback={playing ?? pendingPlayback}
+      onPreset={setPreset}
+      saveHost={librarySaveHost}
+      onPresetInsert={(id) =>
+        insertSound(
+          fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`)),
+        )
+      }
+      onPresetPlay={(id) =>
+        void play(
+          () =>
+            renderer.current!.render(
+              fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`)),
+            ),
+          `preset-${id}`,
+        )
+      }
+      onOpen={openLibrarySound}
+      onInsert={insertLibrarySound}
+      onPlay={(id) =>
+        void play(
+          async () => renderer.current!.render(await readSavedSound(id)),
+          `library-${id}`,
+        )
+      }
+      onRender={(p) => renderer.current!.render(p)}
+      onMessage={flash}
+    />
   );
   const editor = (
     <div className="editor-content">
+      {context.path.length > 0 && (
+        <div className="composition-navigation">
+          <nav aria-label={t("composition.breadcrumbs")}>
+            {context.breadcrumbs.map((item, index) => (
+              <span key={index}>
+                {index > 0 && <ChevronRight size={13} />}{" "}
+                {index === context.breadcrumbs.length - 1 ? (
+                  <span aria-current="page">{item.name}</span>
+                ) : (
+                  <button
+                    className="text-button"
+                    aria-label={
+                      index === 0
+                        ? t("composition.backRoot")
+                        : t("composition.backTo", item.name)
+                    }
+                    onClick={() => navigate(item.path)}
+                  >
+                    {item.name}
+                  </button>
+                )}
+              </span>
+            ))}
+          </nav>
+          <button className="text-button" onClick={saveCurrentSound}>
+            <Save size={14} />
+            {t("composition.saveCurrent")}
+          </button>
+        </div>
+      )}
       <div className="project-heading">
         <div>
           <span className="eyebrow">
@@ -766,7 +941,10 @@ export default function App() {
             />
           </h1>
         </div>
-        <span className="format-label">{t("editor.format")}</span>
+        <div className="project-actions">
+          <span className="format-label">{t("editor.format")}</span>
+          <div ref={setLibrarySaveHost} />
+        </div>
       </div>
       <div className="transport">
         <button
@@ -871,6 +1049,22 @@ export default function App() {
         <div className="button-group">
           <button
             className="text-button"
+            onClick={wrapCurrent}
+            disabled={!project.layers.length || !ready}
+          >
+            <Layers size={15} />
+            {t("composition.groupAll")}
+          </button>
+          <button
+            className="text-button"
+            onClick={() => compositionInput.current?.click()}
+            disabled={ioBusy || project.layers.length >= 16}
+          >
+            <FilePlus2 size={15} />
+            {t("composition.import")}
+          </button>
+          <button
+            className="text-button"
             disabled={project.layers.length >= 16}
             onClick={addSynth}
           >
@@ -887,7 +1081,24 @@ export default function App() {
           </button>
         </div>
       </div>
+      <div className="clip-edit-toolbar">
+        <button className="secondary clip-tool-button" aria-pressed={cropMode} onClick={() => setCropMode(v => !v)}><Scissors size={15} />{t(cropMode ? "editor.cropEnabled" : "editor.cropMode")}</button>
+        <button className="secondary clip-tool-button" disabled={!project.layers.some(l => l.id === selected && ((l.cropStart ?? 0) > 0 || (l.cropEnd ?? 1) < 1))} onClick={() => edit(p => ({ ...p, layers: p.layers.map(l => l.id === selected ? { ...l, cropStart: 0, cropEnd: 1 } : l) }))}><RotateCcw size={15} />{t("editor.resetCrop")}</button>
+        <span>{t(cropMode ? "editor.cropHelp" : "editor.stretchHelp")}</span>
+      </div>
       <div className="layer-list">
+        <div className="layer-row timeline-ruler-row">
+          <PlayheadTimeline
+            compact
+            duration={project.duration}
+            position={cue}
+            disabled={!result}
+            version={project}
+            onSeekStart={beginSeek}
+            onSeek={updateCue}
+            onSeekEnd={endSeek}
+          />
+        </div>
         {project.layers.map((l, i) => (
           <div
             className={`layer-row ${selected === l.id ? "selected" : ""} ${l.muted ? "muted" : ""}`}
@@ -897,6 +1108,14 @@ export default function App() {
             <button
               className="layer-identity"
               onClick={() => setSelected(l.id)}
+              onDoubleClick={() =>
+                l.type === "composition" && enterComposition(l.id)
+              }
+              title={
+                l.type === "composition"
+                  ? t("composition.enterHint")
+                  : undefined
+              }
             >
               <span className="layer-index">
                 {String(i + 1).padStart(2, "0")}
@@ -904,10 +1123,22 @@ export default function App() {
               <span>
                 <strong>{l.name}</strong>
                 <small>
-                  {t(l.type === "synth" ? "editor.synth" : "editor.sample")} ·{" "}
+                  {t(
+                    l.type === "synth"
+                      ? "editor.synth"
+                      : l.type === "composition"
+                        ? "editor.composition"
+                        : "editor.sample",
+                  )}{" "}
+                  ·{" "}
                   {l.type === "synth"
                     ? t(`wave.${l.wave}`)
-                    : project.assets[l.assetId!]?.name}
+                    : l.type === "composition"
+                      ? t(
+                          "composition.layerCount",
+                          l.project?.layers.length ?? 0,
+                        )
+                      : project.assets[l.assetId!]?.name}
                 </small>
               </span>
             </button>
@@ -953,6 +1184,8 @@ export default function App() {
             <TimelineClip
               layer={l}
               projectDuration={project.duration}
+              position={cue}
+              cropMode={cropMode && selected === l.id}
               data={result?.layers[l.id]}
               onSelect={() => setSelected(l.id)}
               onBegin={stop}
@@ -1285,6 +1518,9 @@ export default function App() {
                     layers: p.layers.filter((l) => l.id !== selected),
                   }))
                 }
+                onEnter={() =>
+                  selectedLayer && enterComposition(selectedLayer.id)
+                }
               />
             ),
             variants,
@@ -1309,8 +1545,22 @@ export default function App() {
         ref={projectInput}
         accept=".soundforge,.json"
         onChange={(e) => {
-          void openProject(e.target.files?.[0]);
-          e.target.value = "";
+          const input = e.currentTarget;
+          void openProject(input.files?.[0]).finally(() => {
+            input.value = "";
+          });
+        }}
+      />
+      <input
+        type="file"
+        hidden
+        ref={compositionInput}
+        accept=".soundforge,.json"
+        onChange={(e) => {
+          const input = e.currentTarget;
+          void importComposition(input.files?.[0]).finally(() => {
+            input.value = "";
+          });
         }}
       />
       <input
@@ -1319,8 +1569,10 @@ export default function App() {
         ref={sampleInput}
         accept="audio/*,.wav,.mp3,.ogg,.flac"
         onChange={(e) => {
-          void importSample(e.target.files?.[0]);
-          e.target.value = "";
+          const input = e.currentTarget;
+          void importSample(input.files?.[0]).finally(() => {
+            input.value = "";
+          });
         }}
       />
       {notice && (

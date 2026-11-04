@@ -98,12 +98,14 @@ export function Inspector({
   onChange,
   onDuplicate,
   onDelete,
+  onEnter,
 }: {
   layer?: Layer;
   project: Project;
   onChange: (key: keyof Layer, value: Layer[keyof Layer]) => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onEnter: () => void;
 }) {
   if (!layer)
     return (
@@ -136,7 +138,13 @@ export function Inspector({
       <div className="inspector-title">
         <div>
           <span className="eyebrow">
-            {t(layer.type === "sample" ? "editor.sample" : "editor.synth")}
+            {t(
+              layer.type === "sample"
+                ? "editor.sample"
+                : layer.type === "composition"
+                  ? "editor.composition"
+                  : "editor.synth",
+            )}
           </span>
           <h2>{layer.name}</h2>
         </div>
@@ -187,8 +195,24 @@ export function Inspector({
         ) : (
           <>
             <div className="asset-name">
-              {project.assets[layer.assetId!]?.name}
+              {layer.type === "composition"
+                ? layer.project?.name
+                : project.assets[layer.assetId!]?.name}
             </div>
+            {layer.type === "composition" && (
+              <>
+                <p className="field-help">
+                  {t(
+                    "composition.sourceInfo",
+                    layer.project?.layers.length ?? 0,
+                    layer.project?.duration.toFixed(2) ?? "0",
+                  )}
+                </p>
+                <button className="secondary wide" onClick={onEnter}>
+                  {t("composition.enter")}
+                </button>
+              </>
+            )}
             <Range
               label={t("prop.rate")}
               min={0.1}

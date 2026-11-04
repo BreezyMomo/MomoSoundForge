@@ -38,10 +38,20 @@ try {
       `Variation ${entry.file} differs from its project`,
     );
   }
+  let totalLayers = 0,
+    embeddedSamples = 0;
+  const count = (p) => {
+    totalLayers += p.layers.length;
+    embeddedSamples += Object.keys(p.assets).length;
+    for (const layer of p.layers)
+      if (layer.type === "composition" && layer.project) count(layer.project);
+  };
+  count(project);
   console.log(
     JSON.stringify({
       layers: project.layers.length,
-      embeddedSamples: Object.keys(project.assets).length,
+      totalLayers,
+      embeddedSamples,
       mixBytes: actual.length,
       variations: manifest.variations.length,
       allWavsExactlyMatchSavedProjects: true,

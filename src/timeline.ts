@@ -1,4 +1,16 @@
-import { clamp } from "./model";
+import { clamp, type Layer } from "./model";
+export type CropEdit = "cropStart" | "cropEnd";
+export function adjustCrop(layer: Layer, mode: CropEdit, delta: number) {
+  const start = layer.cropStart ?? 0, end = layer.cropEnd ?? 1;
+  const gap = Math.min(1, 0.001 / layer.duration);
+  return mode === "cropStart"
+    ? { cropStart: clamp(start + delta / layer.duration, 0, end - gap), cropEnd: end }
+    : { cropStart: start, cropEnd: clamp(end + delta / layer.duration, start + gap, 1) };
+}
+export function stretchClip(layer: Layer, timing: ClipTiming): Partial<Layer> {
+  return { ...timing, ...(Math.abs(layer.duration - timing.duration) > 1e-6
+    ? { sourceDuration: layer.sourceDuration ?? layer.duration } : {}) };
+}
 export type ClipTiming = { start: number; duration: number };
 export type ClipEdit = "move" | "start" | "end";
 export const MIN_CLIP_DURATION = 0.01;

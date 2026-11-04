@@ -19,6 +19,7 @@ export function PlayheadTimeline({
   onSeekStart,
   onSeek,
   onSeekEnd,
+  compact = false,
 }: {
   duration: number;
   position: number;
@@ -29,6 +30,7 @@ export function PlayheadTimeline({
   onSeekStart: () => void;
   onSeek: (time: number) => void;
   onSeekEnd: (time: number) => void;
+  compact?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null),
     gesture = useRef<{
@@ -94,10 +96,10 @@ export function PlayheadTimeline({
   return (
     <div
       ref={host}
-      className={`mix-timeline ${disabled ? "disabled" : ""}`}
+      className={`mix-timeline ${compact ? "layer-time-ruler" : ""} ${disabled ? "disabled" : ""}`}
       role="slider"
       tabIndex={disabled ? -1 : 0}
-      aria-label={t("editor.playhead")}
+      aria-label={t(compact ? "editor.layerPlayhead" : "editor.playhead")}
       aria-valuemin={0}
       aria-valuemax={duration}
       aria-valuenow={Number(position.toFixed(3))}
@@ -145,9 +147,9 @@ export function PlayheadTimeline({
       onLostPointerCapture={() => finish(true)}
       onKeyDown={keyboard}
     >
-      <div className="mix-wave">
+      {!compact && <div className="mix-wave">
         <Waveform data={left} right={right} label={t("editor.mix")} />
-      </div>
+      </div>}
       <div className="time-ruler">
         {Array.from({ length: 5 }, (_, i) => (
           <span key={i}>

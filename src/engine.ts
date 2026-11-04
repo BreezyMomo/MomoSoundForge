@@ -7,35 +7,45 @@ import {
   type Project,
   type RenderResult,
   type SampleAsset,
+  MAX_COMPOSITION_DEPTH,
+  MAX_TOTAL_LAYERS,
 } from "./model";
-const sampleCache = new Map<
-  string,
-  { source: SampleAsset; data: Float32Array[] }
->();
+const sampleCache = new WeakMap<SampleAsset, Float32Array[]>();
 function samples(asset: SampleAsset) {
-  const cached = sampleCache.get(asset.id);
-  if (cached?.source === asset) return cached.data;
+  const cached = sampleCache.get(asset);
+  if (cached) return cached;
   const data = asset.channels.map(decodeSamples);
-  sampleCache.set(asset.id, { source: asset, data });
+  sampleCache.set(asset, data);
   return data;
 }
 export function renderProject(
   project: Project,
   sampleRate = SAMPLE_RATE,
 ): RenderResult {
-  for (const id of sampleCache.keys())
-    if (!Object.hasOwn(project.assets, id)) sampleCache.delete(id);
+  return renderNested(project, sampleRate, 0, { layers: 0, stack: new Set() });
+}
+function renderNested(
+  project: Project,
+  sampleRate: number,
+  depth: number,
+  context: { layers: number; stack: Set<Project> },
+): RenderResult {
+  if (depth > MAX_COMPOSITION_DEPTH || context.stack.has(project))
+    throw Error("Invalid nested audio");
+  context.stack.add(project);
   const length = Math.round(project.duration * sampleRate),
     left = new Float32Array(length),
     right = new Float32Array(length),
     layers: Record<string, Float32Array> = Object.create(null);
   const solo = project.layers.some((l) => l.solo && !l.muted);
-  for (const layer of project.layers) {
-    const n = Math.min(
-        Math.round(layer.duration * sampleRate),
-        Math.max(0, length - Math.round(layer.start * sampleRate)),
-      ),
-      audio = new Float32Array(n);
+  for (const clip of project.layers) {
+    const layer = { ...clip, duration: clip.sourceDuration ?? clip.duration };
+    if (++context.layers > MAX_TOTAL_LAYERS)
+      throw Error("Too many sound layers");
+    if (layer.type === "composition" && !layer.project)
+      throw Error("Missing nested audio");
+    const n = Math.round(layer.duration * sampleRate),
+      sourceLeft = new Float32Array(n), sourceRight = new Float32Array(n);
     const noise = rng(layer.noiseSeed ^ stableHash(layer.id));
     let phase = 0;
     const filters = [0, 0],
@@ -46,12 +56,31 @@ export function renderProject(
       Math.exp(
         (-2 * Math.PI * Math.min(layer.cutoff, sampleRate * 0.45)) / sampleRate,
       );
-    const asset = layer.assetId ? project.assets[layer.assetId] : null,
-      channels = asset ? samples(asset) : null;
+    const asset = layer.assetId ? project.assets[layer.assetId] : null;
+    const child =
+      layer.type === "composition" && layer.project
+        ? renderNested(layer.project, sampleRate, depth + 1, context)
+        : null;
+    const channels = child
+      ? [child.left, child.right]
+      : asset
+        ? samples(asset)
+        : null;
+    const sourceRate = child ? sampleRate : (asset?.sampleRate ?? sampleRate);
     const offset = Math.round(layer.start * sampleRate),
       pan = ((layer.pan + 1) * Math.PI) / 4,
-      pl = Math.cos(pan),
-      pr = Math.sin(pan);
+      pl =
+        layer.type === "composition"
+          ? layer.pan <= 0
+            ? 1
+            : Math.cos((layer.pan * Math.PI) / 2)
+          : Math.cos(pan),
+      pr =
+        layer.type === "composition"
+          ? layer.pan >= 0
+            ? 1
+            : Math.cos((-layer.pan * Math.PI) / 2)
+          : Math.sin(pan);
     for (let i = 0; i < n; i++) {
       const t = i / sampleRate,
         u = t / layer.duration,
@@ -60,11 +89,10 @@ export function renderProject(
       phase = (phase + Math.min(frequency, sampleRate * 0.45) / sampleRate) % 1;
       let value = 0,
         stereo = 0;
-      if (layer.type === "sample" && asset && channels) {
+      if (layer.type !== "synth" && channels) {
         // frequency is the playback-rate control for samples; 440 Hz means original pitch.
         const rate = layer.frequency / 440,
-          position =
-            layer.trim * asset.sampleRate + t * asset.sampleRate * rate;
+          position = layer.trim * sourceRate + t * sourceRate * rate;
         const pos = layer.reverse
           ? channels[0].length - 1 - position
           : position;
@@ -100,11 +128,18 @@ export function renderProject(
       const tail =
         release > 0
           ? clamp((layer.duration - t) / release, 0, 1)
-          : clamp(((layer.duration - t) * sampleRate) / 32, 0, 1);
+          : layer.type === "composition"
+            ? 1
+            : clamp(((layer.duration - t) * sampleRate) / 32, 0, 1);
       const envelope = attack * tail * Math.exp(-layer.decay * u) * layer.gain;
       const process = (input: number, c: number) => {
         filters[c] += alpha * (input - filters[c]);
-        const dc = filters[c] - previousInputs[c] + 0.995 * previousOutputs[c];
+        const dc =
+          layer.type === "composition"
+            ? layer.cutoff >= 22000
+              ? input
+              : filters[c]
+            : filters[c] - previousInputs[c] + 0.995 * previousOutputs[c];
         previousInputs[c] = filters[c];
         previousOutputs[c] = dc;
         return (
@@ -115,9 +150,23 @@ export function renderProject(
       };
       const vl = process(value, 0),
         vr = layer.type === "synth" ? vl : process(stereo, 1);
-      // A thumbnail must still show right-only and phase-inverted stereo samples.
+      sourceLeft[i] = vl;
+      sourceRight[i] = vr;
+    }
+    const outputLength = Math.round(clip.duration * sampleRate);
+    const audio = new Float32Array(outputLength);
+    const read = (channel: Float32Array, pos: number) => {
+      const j = Math.floor(pos), f = pos - j;
+      return channel[j] * (1 - f) + channel[Math.min(j + 1, channel.length - 1)] * f;
+    };
+    for (let i = 0; i < outputLength; i++) {
+      const pos = i * n / outputLength;
+      const vl = read(sourceLeft, pos), vr = read(sourceRight, pos);
+      // Preserve the complete waveform beneath the non-destructive crop mask.
       audio[i] = Math.abs(vl) >= Math.abs(vr) ? vl : vr;
-      if (!layer.muted && (!solo || layer.solo)) {
+      const u = i / outputLength;
+      if (u >= (clip.cropStart ?? 0) && u < (clip.cropEnd ?? 1) &&
+          offset + i < length && !layer.muted && (!solo || layer.solo)) {
         left[offset + i] += vl * pl;
         right[offset + i] += vr * pr;
       }
@@ -148,6 +197,7 @@ export function renderProject(
     sum += left[i] ** 2 + right[i] ** 2;
     peak = Math.max(peak, Math.abs(left[i]), Math.abs(right[i]));
   }
+  context.stack.delete(project);
   return {
     left,
     right,

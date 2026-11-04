@@ -26,18 +26,20 @@ npm run preview
 ## Included in v0.1
 
 - Eight editable presets: crystal impact, UI confirm, UI deny, sparkle pickup, laser shot, energy charge, air whoosh and deep explosion.
-- Up to 16 synth or sample layers, with mute, solo, duplicate, delete and variation locks.
+- Up to 16 direct layers per sound, using synthesis, samples or editable nested sounds, with mute, solo, duplicate, delete and variation locks.
+- Group a tuned sound into one layer, or embed another saved project. Up to six nesting levels and 128 layers across the entire project.
 - Sine, triangle, sawtooth, square and white noise; exponential frequency sweeps, fades, decay, low-pass filtering, saturation, gain and pan.
 - Browser-supported audio import, source offset, speed/pitch adjustment, reverse and envelopes. The first two channels are retained. Maximum 30 seconds per sample and 24 MiB of decoded sample data per project.
 - 0.1–10 second projects, layered timing, master gain, echo, loop playback and a separate monitor level.
 - Five seeded variations with audition and apply controls. ZIP exports include five WAVs, five editable projects and a seed manifest.
 - 48 kHz, 16-bit stereo PCM WAV. Playback, final waveform and export use the same render.
-- `.soundforge` projects with embedded used samples, IndexedDB drafts, undo and redo.
+- `.soundforge` projects with all nested sounds and used samples embedded, legacy project import, IndexedDB drafts, undo and redo.
+- A local library of editable sounds with waveform previews, search, audition, opening, insertion as composition layers, updates and separate copies. Removed sounds can be restored.
 - Shared MomoWorkbench docking, saved layouts, themes and Chinese/English UI. Narrow screens use workspace tabs.
 
 ## Workflow
 
-1. Choose a preset and press Play or Space.
+1. Find a sound in the library. Use Open to edit for a standalone project, Add to current for a composition layer, or its play button to audition it.
 2. Select a layer and adjust its source, pitch, timing, envelope and processing. The play button between its name and waveform auditions that layer from its own start for its own duration, skipping the timeline lead-in. Click again to stop; loop mode repeats only that layer. Auditioning leaves project timing, mute and solo settings unchanged.
 3. Add synth layers or import samples.
 4. Set variation seed and amount, then generate five variations. Locked layers preserve their parameters and noise seeds. A zero amount produces identical audio.
@@ -55,6 +57,26 @@ The mix waveform has a persistent playhead. Click the waveform or ruler, or drag
 
 Shortcuts: Space to play/pause; Ctrl/Cmd+Z to undo; Ctrl/Cmd+Shift+Z to redo; Ctrl/Cmd+S to save. Text fields retain normal editing shortcuts.
 
+## Use the sound library
+
+After tuning a sound, choose **Save to library** beside the editor title, name it and save. Its card appears in the unified sound list, retaining the current sound's layers, nested sounds, parameters and samples. Saving while inside a composition stores just that child sound.
+
+Use the card's play button to audition it, **Open to edit** to open it as a full project, or **Add to current** to insert it as a composition layer in the sound you are editing. Saving the same name offers **Update saved sound** or **Save a copy**. Library originals, opened projects and inserted compositions are independent. Save back to the library to update an original.
+
+The card's additional actions include Rename, Export project and Remove sound. Removed sounds remain in **Recently removed** and can be restored. The library persists across reloads in the current browser and origin. Use **Export project** for backup or transfer; open the project on another device and save it to that device's library.
+
+## Compose and reuse sounds
+
+Use **Group all** above the layers to place the current sound's layers, relative timing, master level, echo and samples inside one composition layer. Move, resize, adjust gain or pan, change speed, trim, reverse or audition the composition as a whole.
+
+Use **Embed sound** to select a saved `.soundforge` project and add it as a component of the current sound. This embeds an editable copy, including its nested sounds and samples, without depending on the original file path. Duplicated compositions can also be edited independently.
+
+Double-click a composition's name or choose **Edit composition** in its properties to edit the layers inside. Use the breadcrumb above the editor to return to a parent or the root sound. Child edits share the full project's undo history. Untrimmed composition windows follow changes to their child sound's duration.
+
+The header's **Save project** action and Ctrl/Cmd+S always save the full root project. Inside a child, **Save this sound** exports just the current child project for reuse. Playback, WAV export and variations use the sound currently being edited. New files use `momo.soundforge/v2`; existing v1 files are upgraded when saved.
+
+Each sound remains 0.1–10 seconds long. Each scope has at most 16 direct layers, with six nesting levels, 128 total layers and 24 MiB of decoded sample data across the full project. A composition's duration controls its playback window; speed also changes pitch.
+
 ## Current boundaries
 
 This version focuses on short sound effects. It does not include music sequencing, speech generation, online AI models, MCP, video synchronization, plugin hosting or game engine runtime integration.
@@ -68,4 +90,12 @@ The synth is a lightweight procedural implementation. Sawtooth and square waves 
 - `src/render.worker.ts`: background audio rendering.
 - `src/App.tsx`: editing, playback, files and variation delivery.
 - `src/Workbench.tsx`: shared workbench integration.
+- `src/SoundLibrary.tsx`: presets, saved sounds and library interactions.
+- `src/storage.ts`: persistent local drafts and sound library.
 - `tests/engine.test.ts`: presets, reproducibility, mixing, sample round-trips and WAV checks.
+- `tests/compositions.test.ts`: nesting, independent edits, legacy migration, sample round-trips and recursive resource limits.
+- `tests/storage.test.ts`: draft migration, library snapshots, updates, restoration and failed-transaction rollback.
+
+The unified sound list supports search, All / Favorites / Recent filters, collapsible categories, and list / waveform-grid views. Favorites and the latest 24 played, added or opened sounds are local preferences outside project history. Choose a category when saving or renaming; older saved sounds start uncategorized.
+
+Outer clip edges stretch the complete waveform with a corresponding pitch change. Enable Crop above the layers to reveal two internal handles on the selected clip. Cropped regions remain visible in gray and contribute no audio; the clip frame and later layers stay in place. Drag the handles back or choose Restore full clip to recover the content. Stretching preserves crop proportions. Both operations support undo and are saved with projects and library snapshots.

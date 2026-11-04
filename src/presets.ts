@@ -282,7 +282,7 @@ export function fromPreset(
 ): Project {
   const p = PRESETS.find((p) => p.id === id) ?? PRESETS[0];
   return {
-    schema: "momo.soundforge/v1",
+    schema: "momo.soundforge/v2",
     name,
     seed: 2048,
     duration: p.duration,

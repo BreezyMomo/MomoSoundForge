@@ -41,6 +41,11 @@ export class AudioPlayer {
   startTime = 0;
   startOffset = 0;
   duration = 0;
+  // Decoding a file does not require starting the playback clock.
+  decode(data: ArrayBuffer) {
+    this.context ??= new AudioContext();
+    return this.context.decodeAudioData(data);
+  }
   async prepare() {
     this.context ??= new AudioContext();
     if (this.context.state === "suspended") await this.context.resume();
