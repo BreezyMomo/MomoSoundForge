@@ -18,6 +18,18 @@ import { secondsToBeats, type NoteEvent } from "./instruments";
 import { editNote, noteSpan, pitchName, noteGridTicks } from "./noteEditing";
 import { t } from "./i18n";
 import "./note-roll.css";
+import {
+  noteCoverageIssue,
+  playablePitches,
+  velocityPercent,
+  percentVelocity,
+  constrainNotePitch,
+} from "./noteCoverage";
+import {
+  articulationName,
+  coverageLabel,
+  NoteCoverageNotice,
+} from "./NoteCoverageNotice";
 
 type Drag = {
   id: number;
@@ -58,6 +70,7 @@ export function NoteRoll({
   const [snap, setSnap] = useState(0.25);
   const [draft, setDraft] = useState<NoteEvent | null>(null);
   const grid = useRef<HTMLDivElement>(null);
+  const scroll = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const minimum = Math.min(
     ...(score.notes.length ? score.notes.map((n) => n.midi) : [60]),
@@ -161,13 +174,17 @@ export function NoteRoll({
       dy = e.clientY - active.y;
     if (!active.moved && Math.hypot(dx, dy) < 3) return;
     active.moved = true;
-    active.next = editNote(
-      active.note,
-      active.mode,
-      (dx / active.width) * active.beatSpan,
-      -dy / active.rowHeight,
-      score.bpm,
-      e.shiftKey ? 0 : snap,
+    active.next = constrainNotePitch(
+      score.instruments.find((i) => i.id === active.note.instrumentId),
+      editNote(
+        active.note,
+        active.mode,
+        (dx / active.width) * active.beatSpan,
+        -dy / active.rowHeight,
+        score.bpm,
+        e.shiftKey ? 0 : snap,
+      ),
+      active.next,
     );
     setDraft(active.next);
   };
@@ -201,9 +218,9 @@ export function NoteRoll({
       e.preventDefault();
       e.stopPropagation();
       onSelect();
-      onBegin();
       const step = e.shiftKey ? 0.01 : snap || 0.01;
-      onChange(
+      const next = constrainNotePitch(
+        score.instruments.find((i) => i.id === note.instrumentId),
         editNote(
           note,
           mode,
@@ -212,7 +229,16 @@ export function NoteRoll({
           score.bpm,
           0,
         ),
+        note,
       );
+      if (
+        next.midi !== note.midi ||
+        next.start !== note.start ||
+        next.duration !== note.duration
+      ) {
+        onBegin();
+        onChange(next);
+      }
     } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       e.stopPropagation();
@@ -221,6 +247,7 @@ export function NoteRoll({
   };
   const events = (note: NoteEvent, mode: Drag["mode"]) => ({
     onPointerDown: (e: PointerEvent<HTMLButtonElement>) => begin(e, note, mode),
+    onFocus: () => setSelected(note.id),
     onPointerMove: move,
     onPointerUp: end,
     onPointerCancel: cancel,
@@ -232,7 +259,23 @@ export function NoteRoll({
       onExpand?.();
     },
   });
-  const current = draft ?? score.notes.find((n) => n.id === selected);
+  const current =
+    draft ?? score.notes.find((n) => n.id === selected) ?? score.notes[0];
+  const currentInstrument = score.instruments.find(
+    (i) => i.id === current?.instrumentId,
+  );
+  const covered = new Set(
+    !compact && current ? playablePitches(currentInstrument, current) : [],
+  );
+  const currentPitch = current?.midi;
+  useEffect(() => {
+    const viewport = scroll.current;
+    if (compact || !viewport || currentPitch === undefined || drag.current)
+      return;
+    const top = (high - currentPitch) * 18;
+    // Center the edited note and nearby pitches, including on first opening.
+    viewport.scrollTop = Math.max(0, top + 24 - viewport.clientHeight / 2);
+  }, [compact, currentPitch, high]);
   const outsideCount = compact
     ? score.notes.filter((n) => {
         const span = noteSpan(layer, n);
@@ -278,18 +321,21 @@ export function NoteRoll({
               {current && (
                 <Field orientation="horizontal" className="wb:w-auto">
                   <FieldLabel>
-                    {pitchName(current.midi)} · {t("score.velocity")}
+                    {pitchName(current.midi)} · {t("note.basic.strength")}
                   </FieldLabel>
                   <WorkbenchNumberInput
                     className="sound-note-velocity"
-                    label={t("roll.velocity")}
+                    label={t("note.basic.strength")}
                     min={1}
-                    max={127}
+                    max={100}
                     step={1}
-                    value={current.velocity}
+                    value={velocityPercent(current.velocity)}
                     onValueCommit={(velocity) => {
                       onBegin();
-                      onChange({ ...current, velocity: Math.round(velocity) });
+                      onChange({
+                        ...current,
+                        velocity: percentVelocity(velocity),
+                      });
                     }}
                   />
                 </Field>
@@ -303,9 +349,32 @@ export function NoteRoll({
           </div>
           <p className="field-help">{t("roll.help")}</p>
           <p className="field-help">{t("roll.sourceHint")}</p>
+          {current && (
+            <>
+              <p className="field-help">
+                {t(
+                  "roll.coverage",
+                  score.notes.findIndex((n) => n.id === current.id) + 1,
+                  currentInstrument?.name ?? t("note.coverage.missing"),
+                  articulationName(current.articulation),
+                  velocityPercent(current.velocity),
+                  coverageLabel(currentInstrument, current),
+                )}
+              </p>
+              <p className="field-help">{t("roll.coverageHint")}</p>
+              <NoteCoverageNotice
+                instrument={currentInstrument}
+                note={current}
+                onApply={(note) => {
+                  onBegin();
+                  onChange(note);
+                }}
+              />
+            </>
+          )}
         </>
       )}
-      <div className="roll-scroll">
+      <div className="roll-scroll" ref={scroll}>
         <div
           className="roll-surface"
           style={
@@ -329,9 +398,7 @@ export function NoteRoll({
                 {rows.map((midi) => (
                   <span
                     key={midi}
-                    className={
-                      [1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""
-                    }
+                    className={`${[1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""} ${current ? covered.has(midi) ? "roll-covered-key" : "roll-uncovered-key" : ""}`}
                   >
                     {pitchName(midi)}
                   </span>
@@ -348,8 +415,13 @@ export function NoteRoll({
                   {rows.map((midi, i) => (
                     <div
                       key={midi}
-                      className={`roll-row ${[1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""}`}
+                      className={`roll-row ${[1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""} ${current ? covered.has(midi) ? "roll-covered-row" : "roll-uncovered-row" : ""}`}
                       style={{ top: i * 18 }}
+                      title={
+                        current && !covered.has(midi)
+                          ? t("roll.unavailable")
+                          : undefined
+                      }
                     />
                   ))}
                   {ticks.map((i) => (
@@ -384,31 +456,37 @@ export function NoteRoll({
                   return null;
                 // The overview is a thumbnail: dragging it moves the whole clip.
                 // Keep individual note hit targets in the expanded editor.
-                if (compact) return (
-                  <span
-                    key={n.id}
-                    className="roll-note-preview"
-                    aria-hidden="true"
-                    style={{
-                      left: `${span.start * 100}%`,
-                      width: `${span.width * 100}%`,
-                      top: `${((high - n.midi) / count) * 100}%`,
-                      opacity: 0.45 + n.velocity / 127 * 0.55,
-                    }}
-                  />
+                if (compact)
+                  return (
+                    <span
+                      key={n.id}
+                      className="roll-note-preview"
+                      aria-hidden="true"
+                      style={{
+                        left: `${span.start * 100}%`,
+                        width: `${span.width * 100}%`,
+                        top: `${((high - n.midi) / count) * 100}%`,
+                        opacity: 0.45 + (n.velocity / 127) * 0.55,
+                      }}
+                    />
+                  );
+                const issue = noteCoverageIssue(
+                  score.instruments.find((i) => i.id === n.instrumentId),
+                  n,
                 );
-                const label = t(
-                  "roll.note",
-                  index + 1,
-                  pitchName(n.midi),
-                  n.start.toFixed(3),
-                  n.duration.toFixed(3),
-                  n.velocity,
-                );
+                const label =
+                  t(
+                    "roll.note",
+                    index + 1,
+                    pitchName(n.midi),
+                    n.start.toFixed(3),
+                    n.duration.toFixed(3),
+                    n.velocity,
+                  ) + (issue ? ` · ${t(`note.coverage.${issue}`)}` : "");
                 return (
                   <div
                     key={n.id}
-                    className={`roll-note ${selected === n.id ? "selected" : ""}`}
+                    className={`roll-note ${selected === n.id ? "selected" : ""} ${issue ? "roll-note-uncovered" : ""}`}
                     style={{
                       left: `${span.start * 100}%`,
                       width: `${span.width * 100}%`,
@@ -422,7 +500,8 @@ export function NoteRoll({
                       title={label}
                       {...events(original, "move")}
                     >
-                      {!compact && pitchName(n.midi)}
+                      {issue ? "! " : ""}
+                      {pitchName(n.midi)}
                       <span
                         className="roll-velocity"
                         style={{ width: `${(n.velocity / 127) * 100}%` }}

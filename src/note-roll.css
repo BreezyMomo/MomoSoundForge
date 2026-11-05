@@ -4,9 +4,9 @@
 .note-roll.compact { position: absolute; inset: 20px 0 9px; z-index: 2; pointer-events: none; }
 .roll-note-preview { position: absolute; height: 2px; min-width: 2px; background: var(--wave, #87b7c5); pointer-events: none; }
 .compact .roll-scroll, .compact .roll-surface, .compact .roll-body, .compact .roll-grid { height: 100%; }
-.roll-grid { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+.roll-grid { isolation: isolate; position: relative; flex: 1; min-width: 0; overflow: hidden; }
 .roll-body { display: flex; }
-.roll-note { position: absolute; min-width: 7px; min-height: 5px; padding: 1px 0; pointer-events: auto; }
+.roll-note { position: absolute; z-index: 2; min-width: 7px; min-height: 5px; padding: 1px 0; pointer-events: auto; }
 .roll-note button { min-height: 0; border-radius: 2px; padding: 0; touch-action: none; }
 .roll-note-move { position: absolute; inset: 1px 0; width: 100%; overflow: hidden; background: var(--wave, #87b7c5); color: var(--ui-bg); border: 1px solid var(--wave, #87b7c5); cursor: move; font-size: 11px; text-align: left; text-indent: 3px; }
 .roll-note.selected .roll-note-move, .roll-note-move:focus-visible { outline: 2px solid var(--ui-text); outline-offset: -2px; }
@@ -30,3 +30,12 @@
 .tree-view-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
 .tree-view-tools .field-help { margin: 0; }
 .tree-view-tools button { flex-shrink: 0; }
+
+.roll-keys .roll-uncovered-key { background: var(--ui-bg); color: color-mix(in srgb, var(--ui-muted) 35%, var(--ui-bg)); border-bottom-color: color-mix(in srgb, var(--ui-line) 25%, var(--ui-bg)); cursor: not-allowed; }
+.roll-keys .roll-covered-key { border-left: 2px solid color-mix(in srgb, var(--wave) 65%, var(--ui-panel)); padding-left: 3px; }
+.roll-covered-row { background: var(--ui-surface); }
+.roll-covered-row.black-key { background: var(--ui-panel); }
+.roll-uncovered-row { z-index: 1; background: color-mix(in srgb, var(--ui-bg) 84%, transparent); border-bottom-color: color-mix(in srgb, var(--ui-line) 25%, var(--ui-bg)); pointer-events: auto; cursor: not-allowed; }
+.roll-uncovered-row + .roll-covered-row { border-top: 1px solid color-mix(in srgb, var(--ui-muted) 40%, var(--ui-panel)); }
+.roll-covered-row:has(+ .roll-uncovered-row) { border-bottom-color: color-mix(in srgb, var(--ui-muted) 40%, var(--ui-panel)); }
+.roll-note-uncovered .roll-note-move { background: var(--ui-panel); color: var(--ui-text); border: 1px dashed var(--ui-text); }

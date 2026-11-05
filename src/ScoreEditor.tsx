@@ -36,6 +36,7 @@ import {
   type NoteEvent,
 } from "./instruments";
 import "./score.css";
+import { BasicScoreEditor } from "./BasicScoreEditor";
 function NumberField({
   label,
   value,
@@ -96,10 +97,12 @@ export function ScoreEditor({
   project,
   layer,
   onChange,
+  onAudition,
 }: {
   project: Project;
   layer: Layer;
   onChange: (p: Project) => void;
+  onAudition: (note: NoteEvent) => void;
 }) {
   const latestProject = useRef(project);
   latestProject.current = project;
@@ -249,8 +252,77 @@ export function ScoreEditor({
     project.seed ^ layer.noiseSeed,
   );
   const quantize = (n: number) => (snap ? Math.round(n / snap) * snap : n);
+  const addNote = () => {
+    if (!inst) return;
+    const r = inst.regions[0],
+      start = quantize(
+        score.notes.reduce((m, n) => Math.max(m, n.start + n.duration), 0),
+      );
+    commit({
+      ...score,
+      notes: [
+        ...score.notes,
+        {
+          id: uid(),
+          instrumentId: inst.id,
+          midi: r.rootMidi,
+          start,
+          duration: 0.5,
+          velocity: Math.round((r.velocityLow + r.velocityHigh) / 2),
+          articulation: r.articulation,
+        },
+      ],
+    });
+  };
+  const fitNotes = () => {
+    const duration = Math.max(
+      0.1,
+      ...score.notes.map((n) =>
+        noteEndSeconds(n, choices.get(n.id), project.assets, score.bpm),
+      ),
+    );
+    onChange({
+      ...project,
+      duration: Math.max(project.duration, layer.start + duration),
+      layers: project.layers.map((l) =>
+        l.id === layer.id ? { ...l, duration, sourceDuration: undefined } : l,
+      ),
+    });
+  };
   return (
     <section className="score-editor">
+      <BasicScoreEditor
+        score={score}
+        canAdd={!!inst && score.notes.length < 256}
+        onAdd={addNote}
+        onFit={fitNotes}
+        onUpdate={updateNote}
+        onRemove={(id) =>
+          commit({ ...score, notes: score.notes.filter((n) => n.id !== id) })
+        }
+        onAudition={onAudition}
+      />
+      {error && (
+        <p role="alert" className="warning-line">
+          {error}
+        </p>
+      )}
+      {issues
+        .filter(
+          (issue) =>
+            !["score.noRegion", "score.missingInstrument"].includes(issue.key),
+        )
+        .map((issue, index) => (
+          <p className="field-help" key={index}>
+            {t(
+              "note.basic.number",
+              score.notes.findIndex((n) => n.id === issue.noteId) + 1,
+            )}
+            : {t(issue.key)}
+          </p>
+        ))}
+      <details className="score-advanced">
+        <summary>{t("note.basic.advanced")}</summary>
       <Tabs
         value={tab}
         onValueChange={(value) => setTab(String(value))}
@@ -266,11 +338,7 @@ export function ScoreEditor({
             <TabsTrigger value="mapping">{t("score.mapping")}</TabsTrigger>
           </TabsList>
         </header>
-        {error && (
-          <p role="alert" className="warning-line">
-            {error}
-          </p>
-        )}
+
         <FieldGroup className="sound-score-toolbar">
           <Field className="wb:min-w-0">
             <FieldLabel>{t("score.instrument")}</FieldLabel>
@@ -341,33 +409,7 @@ export function ScoreEditor({
                 variant="outline"
                 className="secondary"
                 disabled={!inst || score.notes.length >= 256}
-                onClick={() => {
-                  if (!inst) return;
-                  const r = inst.regions[0],
-                    start = quantize(
-                      score.notes.reduce(
-                        (m, n) => Math.max(m, n.start + n.duration),
-                        0,
-                      ),
-                    );
-                  commit({
-                    ...score,
-                    notes: [
-                      ...score.notes,
-                      {
-                        id: uid(),
-                        instrumentId: inst.id,
-                        midi: r.rootMidi,
-                        start,
-                        duration: 0.5,
-                        velocity: Math.round(
-                          (r.velocityLow + r.velocityHigh) / 2,
-                        ),
-                        articulation: r.articulation,
-                      },
-                    ],
-                  });
-                }}
+                onClick={addNote}
               >
                 {t("score.addNote")}
               </Button>
@@ -411,31 +453,7 @@ export function ScoreEditor({
                 variant="outline"
                 className="secondary"
                 disabled={!score.notes.length}
-                onClick={() => {
-                  const duration = Math.max(
-                    0.1,
-                    ...score.notes.map((n) =>
-                      noteEndSeconds(
-                        n,
-                        choices.get(n.id),
-                        project.assets,
-                        score.bpm,
-                      ),
-                    ),
-                  );
-                  onChange({
-                    ...project,
-                    duration: Math.max(
-                      project.duration,
-                      layer.start + duration,
-                    ),
-                    layers: project.layers.map((l) =>
-                      l.id === layer.id
-                        ? { ...l, duration, sourceDuration: undefined }
-                        : l,
-                    ),
-                  });
-                }}
+                onClick={fitNotes}
               >
                 {t("score.fit")}
               </Button>
@@ -522,7 +540,8 @@ export function ScoreEditor({
                             }
                           />
                           <small>
-                            {beatsToSeconds(n.duration, score.bpm).toFixed(3)} s
+                            {beatsToSeconds(n.duration, score.bpm).toFixed(3)}{" "}
+                            s
                           </small>
                         </td>
                         <td data-label={t("score.velocity")}>
@@ -593,7 +612,9 @@ export function ScoreEditor({
                             onClick={() =>
                               commit({
                                 ...score,
-                                notes: score.notes.filter((x) => x.id !== n.id),
+                                notes: score.notes.filter(
+                                  (x) => x.id !== n.id,
+                                ),
                               })
                             }
                           >
@@ -837,7 +858,9 @@ export function ScoreEditor({
                       )}
                       <p className="field-help">{t("score.loopHint")}</p>
                       <div className="button-group">
-                        <Button type="submit">{t("score.applyRegion")}</Button>
+                        <Button type="submit">
+                          {t("score.applyRegion")}
+                        </Button>
                         <Button
                           variant="outline"
                           type="button"
@@ -863,6 +886,7 @@ export function ScoreEditor({
           </TabsContent>
         )}
       </Tabs>
+      </details>
     </section>
   );
 }

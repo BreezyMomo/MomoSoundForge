@@ -2105,6 +2105,7 @@ export default function App() {
                       project={project}
                       layer={selectedLayer}
                       onChange={(next) => edit(() => next)}
+                      onAudition={(note) => previewNote({ path: context.path, id: selectedLayer.id }, note)}
                     />
                   ) : undefined
                 }

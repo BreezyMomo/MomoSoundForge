@@ -89,3 +89,12 @@
   margin-bottom: 6px;
   color: var(--ui-muted);
 }
+
+.basic-note { border-top: 1px solid var(--ui-line); padding: 12px 0; }
+.basic-note-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100px, 100%), 1fr)); gap: 12px; }
+.basic-note-fields > * { min-width: 0; }
+.basic-note-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+.basic-note .field-help { overflow-wrap: anywhere; }
+.score-advanced { margin-top: 16px; border-top: 1px solid var(--ui-line); padding-top: 12px; }
+.score-advanced > summary { cursor: pointer; font-size: 13px; padding: 4px 0; }
+.score-advanced[open] > summary { margin-bottom: 16px; }

@@ -1,0 +1,3 @@
+.note-coverage-notice { border-left: 3px solid var(--ui-muted); padding: 8px 10px; margin: 8px 0; background: var(--ui-inset); font-size: 12px; overflow-wrap: anywhere; }
+.note-coverage-notice p { margin: 0 0 6px; }
+.note-coverage-notice p:last-child { margin-bottom: 0; }
