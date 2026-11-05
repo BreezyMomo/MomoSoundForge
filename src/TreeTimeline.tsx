@@ -15,6 +15,8 @@ import { nodeKey, type NodeAddress } from "./nodeTree";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { boundedSelection } from "./timeline";
 import { TimelineClip } from "./TimelineClip";
+import { NoteRoll } from "./NoteRoll";
+import type { NoteEvent } from "./instruments";
 import { t } from "./i18n";
 import "./node-tree.css";
 export function TreeTimeline({
@@ -32,6 +34,7 @@ export function TreeTimeline({
   onPatch,
   onMove,
   onPreview,
+  onNoteAudition,
   onBegin,
   onTiming,
   snap,
@@ -66,9 +69,11 @@ export function TreeTimeline({
   onSeek: (time: number) => void;
   onSeekEnd: (time: number) => void;
   onPreview: (address: NodeAddress) => void;
+  onNoteAudition: (address: NodeAddress, note: NoteEvent) => void;
   onBegin: () => void;
 }) {
   const [closed, setClosed] = useState<Set<string>>(new Set());
+  const [openScore, setOpenScore] = useState<string | null>(null);
   const reorder = useNodeReorder(
     root,
     (path, moving, target, before) => {
@@ -212,8 +217,10 @@ export function TreeTimeline({
             const key = nodeKey(address),
               group = layer.type === "composition";
             const chosen = selectionAt(address.path) && ids.includes(layer.id);
-            const globalLayer = { ...layer, start: layer.start + offset };
             const tail = result?.tails?.[key] ?? 0;
+            const changeNote = (note: NoteEvent) => onPatch(address, {
+              score: { ...layer.score!, notes: layer.score!.notes.map(n => n.id === note.id ? note : n) },
+            });
             return (
               <div
                 key={key}
@@ -315,6 +322,11 @@ export function TreeTimeline({
                       )}
                     </small>
                   </button>
+                  {layer.type === "instrument" && <button className="tree-note-toggle"
+                    aria-label={t("roll.toggle", layer.name)} aria-expanded={openScore === key}
+                    onClick={() => { onSelect(address); setOpenScore(openScore === key ? null : key); }}>
+                    {t("roll.notes")}
+                  </button>}
                 </div>
                 <button
                   className="icon-button"
@@ -329,7 +341,8 @@ export function TreeTimeline({
                   )}
                 </button>
                 <TimelineClip
-                  layer={globalLayer}
+                  layer={layer}
+                  offset={offset}
                   projectDuration={duration}
                   position={cue}
                   cropMode={!group && cropMode && chosen}
@@ -342,6 +355,9 @@ export function TreeTimeline({
                   moveOnly={group}
                   onSelect={() => onSelect(address)}
                   onBegin={onBegin}
+                  onNoteChange={changeNote}
+                  onNoteAudition={note => onNoteAudition(address, note)}
+                  onExpandNotes={() => { onSelect(address); setOpenScore(key); }}
                   disabledParameters={(parent.controls ?? []).flatMap((c) =>
                     c.mappings
                       .filter((m) => m.layerId === layer.id)
@@ -439,6 +455,10 @@ export function TreeTimeline({
                     {layer.locked ? <Lock size={12} /> : <Unlock size={12} />}
                   </button>
                 </div>
+                {layer.type === "instrument" && layer.score && openScore === key && <div className="tree-note-editor">
+                  <NoteRoll layer={layer} onChange={changeNote} onSelect={() => onSelect(address)}
+                    onBegin={onBegin} onAudition={note => onNoteAudition(address, note)} />
+                </div>}
               </div>
             );
           })}

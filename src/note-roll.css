@@ -1,0 +1,31 @@
+.layer-lane.instrument-lane { min-height: 150px; }
+.instrument-lane .clip-move .waveform { position: absolute; left: 10px; right: 10px; bottom: 2px; top: auto; width: calc(100% - 20px); opacity: .35; margin: 0; height: 17px; }
+.note-roll { color: var(--ui-text); min-width: 0; }
+.note-roll.compact { position: absolute; inset: 25px 0 20px; z-index: 2; pointer-events: none; }
+.compact .roll-scroll, .compact .roll-surface, .compact .roll-body, .compact .roll-grid { height: 100%; }
+.roll-grid { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+.roll-body { display: flex; }
+.roll-note { position: absolute; min-width: 7px; min-height: 5px; padding: 1px 0; pointer-events: auto; }
+.roll-note button { min-height: 0; border-radius: 2px; padding: 0; touch-action: none; }
+.roll-note-move { position: absolute; inset: 1px 0; width: 100%; overflow: hidden; background: var(--wave, #87b7c5); color: var(--ui-bg); border: 1px solid var(--wave, #87b7c5); cursor: move; font-size: 11px; text-align: left; text-indent: 3px; }
+.roll-note.selected .roll-note-move, .roll-note-move:focus-visible { outline: 2px solid var(--ui-text); outline-offset: -2px; }
+.roll-note-resize { position: absolute; right: 0; top: 1px; bottom: 1px; width: 6px; min-width: 0; border: 0; border-right: 2px solid var(--ui-text); background: transparent; cursor: ew-resize; }
+.roll-note-resize.reverse { left: 0; right: auto; border-left: 2px solid var(--ui-text); border-right: 0; }
+.roll-velocity { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--ui-text); opacity: .65; pointer-events: none; }
+.roll-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 12px; }
+.roll-toolbar label { display: flex; align-items: center; gap: 5px; }
+.roll-toolbar input { width: 58px; }
+.roll-toolbar input, .roll-toolbar select { background: var(--ui-inset); color: inherit; border: 1px solid var(--ui-line-strong); border-radius: 3px; padding: 4px; }
+.expanded .roll-scroll { max-height: 300px; overflow: auto; border: 1px solid var(--ui-line-strong); margin-top: 8px; }
+.roll-ruler { position: sticky; top: 0; height: 24px; margin-left: 44px; background: var(--ui-panel); z-index: 3; font-size: 11px; }
+.roll-ruler span { position: absolute; top: 4px; padding-left: 3px; }
+.roll-keys { position: sticky; left: 0; width: 44px; flex: 0 0 44px; z-index: 2; background: var(--ui-surface); }
+.roll-keys span { display: block; height: 18px; line-height: 17px; font-size: 11px; padding-left: 5px; border-bottom: 1px solid var(--ui-line); }
+.roll-row { position: absolute; width: 100%; height: 18px; border-bottom: 1px solid var(--ui-line); pointer-events: none; }
+.black-key { background: var(--ui-inset); }
+.roll-beat { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--ui-line-strong); pointer-events: none; }
+.roll-outside { position: absolute; top: 0; bottom: 0; right: 0; background: color-mix(in srgb, var(--ui-muted) 15%, transparent); border-left: 1px dashed var(--ui-muted); pointer-events: none; }
+.roll-empty { display: block; padding: 8px; font-size: 11px; color: var(--ui-muted); }
+.roll-overflow { position: absolute; right: 8px; bottom: 0; z-index: 2; pointer-events: auto; max-width: 100%; font-size: 11px; padding: 3px; background: var(--ui-inset); color: var(--ui-text); }
+.tree-note-editor { grid-column: 1 / -1; min-width: 0; padding: 10px; border-top: 1px solid var(--ui-line); }
+.tree-note-toggle { font-size: 11px; padding: 3px 5px; margin-left: auto; }

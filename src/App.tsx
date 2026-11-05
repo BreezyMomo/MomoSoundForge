@@ -17,6 +17,7 @@ import {
 import { bypassEffects } from "./nodeEffects";
 import { beforeSoundPolish, padAudition } from "./polishAudition";
 import { ScoreEditor } from "./ScoreEditor";
+import { noteEndSeconds, orderedNotes, selectRegion, type NoteEvent } from "./instruments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
@@ -754,6 +755,28 @@ export default function App() {
       () => renderer.current!.render(isolated),
       `node-${nodeKey(address)}`,
     );
+  };
+  const previewNote = (address: NodeAddress, note: NoteEvent) => {
+    const isolated = isolatedNode(rootCurrent.current, address);
+    const layer = isolated.layers[0], score = layer.score;
+    if (!score) return;
+    // Resolve with the original ordering so round-robin audition matches the score.
+    const counters = new Map<string, number>();
+    let region;
+    for (const n of orderedNotes(score)) {
+      const chosen = selectRegion(score.instruments.find(i => i.id === n.instrumentId), n,
+        isolated.seed ^ layer.noiseSeed, counters);
+      if (n.id === note.id) { region = chosen; break; }
+    }
+    const instrument = score.instruments.find(i => i.id === note.instrumentId);
+    if (!region || !instrument) { flash("roll.unmapped"); return; }
+    const single = { ...note, start: 0 };
+    const duration = Math.max(0.1, noteEndSeconds(single, region, isolated.assets, score.bpm));
+    isolated.duration = duration;
+    isolated.layers = [{ ...layer, duration, sourceDuration: undefined, trim: 0, reverse: false,
+      cropStart: 0, cropEnd: 1, attack: 0, release: 0,
+      score: { ...score, instruments: [{ ...instrument, regions: [region] }], notes: [single] } }];
+    void play(() => renderer.current!.render(isolated), `note-${nodeKey(address)}-${note.id}`);
   };
   const saveCurrentSound = () => {
     download(
@@ -1632,6 +1655,7 @@ export default function App() {
         onSeekEnd={endSeek}
         onMove={treeMove}
         onPreview={previewNode}
+        onNoteAudition={previewNote}
         onBegin={stop}
       />
       <div className="master-controls">

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type PointerEvent,
@@ -17,6 +18,8 @@ import {
 } from "./timeline";
 import { Waveform } from "./Waveform";
 import { t } from "./i18n";
+import { NoteRoll } from "./NoteRoll";
+import type { NoteEvent } from "./instruments";
 
 type Gesture = {
   pointerId: number;
@@ -30,7 +33,8 @@ type Gesture = {
   moved: boolean;
 };
 export function TimelineClip({
-  layer,
+  layer: sourceLayer,
+  offset = 0,
   tail = 0,
   moveOnly = false,
   projectDuration,
@@ -45,8 +49,12 @@ export function TimelineClip({
   onSelect,
   onBegin,
   onCommit,
+  onNoteChange,
+  onNoteAudition,
+  onExpandNotes,
 }: {
   layer: Layer;
+  offset?: number;
   tail?: number;
   moveOnly?: boolean;
   projectDuration: number;
@@ -61,7 +69,16 @@ export function TimelineClip({
   onSelect: () => void;
   onBegin: () => void;
   onCommit: (timing: Partial<Layer>) => void;
+  onNoteChange?: (note: NoteEvent) => void;
+  onNoteAudition?: (note: NoteEvent) => void;
+  onExpandNotes?: () => void;
 }) {
+  // Keep the source identity stable during selection and drag-preview renders.
+  // Only a real source edit or parent-group move should invalidate a gesture.
+  const layer = useMemo(
+    () => ({ ...sourceLayer, start: sourceLayer.start + offset }),
+    [sourceLayer, offset],
+  );
   const lane = useRef<HTMLDivElement>(null),
     gesture = useRef<Gesture | null>(null);
   const waveform = useRef(data);
@@ -263,7 +280,7 @@ export function TimelineClip({
   });
   const seconds = (value: number) => value.toFixed(draft ? 3 : 2);
   return (
-    <div className="layer-lane" ref={lane} onClick={onSelect}>
+    <div className={`layer-lane ${layer.type === "instrument" ? "instrument-lane" : ""}`} ref={lane} onClick={onSelect}>
       {tail > 0 && (
         <div
           className="clip-effect-tail"
@@ -285,16 +302,22 @@ export function TimelineClip({
         <button
           className="clip-move"
           aria-label={t("editor.moveLayer", layer.name)}
-          title={t("editor.clipDragHint")}
+          title={t(layer.type === "instrument" ? "roll.clipHelp" : "editor.clipDragHint")}
           {...events("move")}
+          onDoubleClick={onExpandNotes}
         >
           <span className="clip-label">
             {seconds(timing.start)} s · {seconds(timing.duration)} s
+            {layer.type === "instrument" && layer.score && ` · ${t("roll.count", layer.score.notes.length)}`}
             {timing.sourceDuration !== undefined &&
               ` · ${(timing.sourceDuration / timing.duration).toFixed(2)}×`}
           </span>
           <Waveform data={waveform.current} label={layer.name} />
         </button>
+        {sourceLayer.type === "instrument" && sourceLayer.score && onNoteChange && onNoteAudition && (
+          <NoteRoll layer={sourceLayer} compact onChange={onNoteChange} onAudition={onNoteAudition}
+            onSelect={onSelect} onBegin={onBegin} onExpand={onExpandNotes} />
+        )}
         {!moveOnly && (
           <>
             <button
