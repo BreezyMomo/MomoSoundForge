@@ -1,5 +1,6 @@
 import type { Project, RenderResult } from "./model";
-import type { LoopRegion } from "./advanced";
+import { resolveControls, type LoopRegion } from "./advanced";
+import { effectTail, MAX_EFFECT_TAIL, MAX_RENDER_SAMPLES } from "./nodeEffects";
 export const EXPORT_FORMATS = ["wav", "ogg", "mp3", "flac"] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export type ExportSettings = {
@@ -9,6 +10,8 @@ export type ExportSettings = {
   normalize: boolean;
   targetRms: number;
   trimSilence: boolean;
+  preserveTail: boolean;
+  /** Pure silence appended after trimming, resampling and normalization. */
   tail: number;
   loopOnly: boolean;
   prefix: string;
@@ -20,6 +23,7 @@ export const DEFAULT_EXPORT: ExportSettings = {
   normalize: false,
   targetRms: -18,
   trimSilence: false,
+  preserveTail: false,
   tail: 0,
   loopOnly: false,
   prefix: "",
@@ -32,7 +36,13 @@ export function parseExportSettings(raw: unknown): ExportSettings {
     result.format = value.format!;
   if ([22050, 44100, 48000].includes(value.sampleRate ?? 0))
     result.sampleRate = value.sampleRate!;
-  for (const key of ["mono", "normalize", "trimSilence", "loopOnly"] as const)
+  for (const key of [
+    "mono",
+    "normalize",
+    "trimSilence",
+    "loopOnly",
+    "preserveTail",
+  ] as const)
     if (typeof value[key] === "boolean") result[key] = value[key]!;
   if (typeof value.targetRms === "number" && Number.isFinite(value.targetRms))
     result.targetRms = Math.max(-36, Math.min(-6, value.targetRms));
@@ -108,20 +118,88 @@ export async function renderExport(
   project: Project,
   settings: ExportSettings,
   render: (project: Project) => Promise<RenderResult>,
-): Promise<RenderResult> {
+): Promise<ExportResult> {
+  settings = parseExportSettings(settings);
   const loopOnly = settings.loopOnly && !!project.loopRegion;
-  const input = await render(
-    loopOnly
-      ? project
-      : { ...project, duration: project.duration + settings.tail },
-  );
+  let input = await render(project);
+  if (settings.preserveTail && !loopOnly) {
+    const resolved = resolveControls(project);
+    const hasSolo = (p: Project): boolean =>
+      p.layers.some(
+        (l) => !l.muted && (l.solo || (!!l.project && hasSolo(l.project))),
+      );
+    const solo = hasSolo(resolved);
+    const audible = resolved.layers.filter(
+      (l) =>
+        !l.muted && (!solo || l.solo || (!!l.project && hasSolo(l.project))),
+    );
+    const contentEnd = Math.max(0, ...audible.map((l) => l.start + l.duration));
+    const layerEnd = Math.max(
+      0,
+      ...audible.map(
+        (l) =>
+          l.start + l.duration + (input.tails?.[l.id] ?? effectTail(l.effects)),
+      ),
+    );
+    const echoTail =
+      resolved.echo > 0
+        ? Math.min(
+            MAX_EFFECT_TAIL,
+            0.135 * (1 + Math.ceil(Math.log(0.0001) / Math.log(resolved.echo))),
+          )
+        : 0;
+    const duration = Math.max(
+      project.duration,
+      layerEnd + (audible.length ? effectTail(resolved.effects) + echoTail : 0),
+    );
+    if (duration > project.duration) {
+      input = await render({ ...project, duration });
+      // Remove unused extension, without shortening authored content or the work range.
+      const minimum = Math.min(
+        input.left.length,
+        Math.round(Math.max(project.duration, contentEnd) * input.sampleRate),
+      );
+      let end = input.left.length;
+      while (
+        end > minimum &&
+        Math.max(
+          Math.abs(input.left[end - 1]),
+          Math.abs(input.right[end - 1]),
+        ) < 0.001
+      )
+        end--;
+      if (end > minimum)
+        end = Math.min(
+          input.left.length,
+          end + Math.round(0.01 * input.sampleRate),
+        );
+      input = {
+        ...input,
+        ...audioResult(
+          input.left.slice(0, end),
+          input.right.slice(0, end),
+          input.sampleRate,
+        ),
+        sourcePeak: input.sourcePeak,
+        gainReduction: input.gainReduction,
+      };
+    }
+  }
   return prepareExport(input, settings, project.loopRegion);
 }
+export type ExportResult = RenderResult & {
+  exportInfo?: {
+    audioSeconds: number;
+    silenceSeconds: number;
+    rangeSeconds: number;
+  };
+};
 export function prepareExport(
   input: RenderResult,
   settings: ExportSettings,
   region?: LoopRegion,
-): RenderResult {
+): ExportResult {
+  settings = parseExportSettings(settings);
   const loopOnly = settings.loopOnly && !!region;
   let result = loopOnly && region ? makeLoop(input, region) : input;
   let first = 0,
@@ -150,6 +228,14 @@ export function prepareExport(
     1,
     Math.round(((last - first) * settings.sampleRate) / result.sampleRate),
   );
+  const silenceFrames = loopOnly
+    ? 0
+    : Math.round(settings.tail * settings.sampleRate);
+  if (
+    !Number.isFinite(length + silenceFrames) ||
+    (length + silenceFrames) * 4 > MAX_RENDER_SAMPLES
+  )
+    throw Error("error.renderBudget");
   // Windowed sinc low-pass prevents high frequencies folding into the game-rate output.
   const ratio = settings.sampleRate / result.sampleRate,
     radius = 24,
@@ -208,9 +294,25 @@ export function prepareExport(
     left[i] *= gain;
     right[i] *= gain;
   }
-  const output = audioResult(left, right, settings.sampleRate);
+  const pad = (channel: Float32Array) => {
+    if (!silenceFrames) return channel;
+    const padded = new Float32Array(length + silenceFrames);
+    padded.set(channel);
+    return padded;
+  };
+  const output: ExportResult = audioResult(
+    pad(left),
+    pad(right),
+    settings.sampleRate,
+  );
   output.gainReduction = wanted > 0 ? gain / wanted : 1;
   output.sourcePeak = input.sourcePeak;
+  output.tailLimited = input.tailLimited;
+  output.exportInfo = {
+    audioSeconds: length / settings.sampleRate,
+    silenceSeconds: silenceFrames / settings.sampleRate,
+    rangeSeconds: input.left.length / input.sampleRate,
+  };
   return output;
 }
 export function exportWav(result: RenderResult, mono: boolean): ArrayBuffer {

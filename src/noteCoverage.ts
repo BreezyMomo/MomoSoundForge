@@ -34,6 +34,29 @@ export function playablePitches(
   );
 }
 
+export function playableVelocities(
+  instrument: Instrument | undefined,
+  note: NoteEvent,
+): number[] {
+  return Array.from({ length: 127 }, (_, i) => i + 1).filter(
+    (velocity) => !noteCoverageIssue(instrument, { ...note, velocity }),
+  );
+}
+
+export function nearestPlayableVelocity(
+  instrument: Instrument | undefined,
+  note: NoteEvent,
+  requested: number,
+): number {
+  const values = playableVelocities(instrument, note);
+  if (!values.length || !Number.isFinite(requested)) return note.velocity;
+  return values.reduce((best, velocity) =>
+    Math.abs(velocity - requested) < Math.abs(best - requested)
+      ? velocity
+      : best,
+  );
+}
+
 /** Reject only a new unmapped pitch; preserve timing and existing invalid notes. */
 export function constrainNotePitch(
   instrument: Instrument | undefined,

@@ -14,11 +14,13 @@ import {
 } from "@momo/workbench/react";
 import { Range } from "./Inspector";
 import { t } from "./i18n";
-import type { Project, RenderResult } from "./model";
+import type { Project } from "./model";
+import { Waveform } from "./Waveform";
 import {
   EXPORT_FORMATS,
   type ExportSettings,
   type ExportFormat,
+  type ExportResult,
 } from "./exportAudio";
 
 export function ExportDialog({
@@ -33,6 +35,8 @@ export function ExportDialog({
   variationCount,
   busy,
   output,
+  preparing,
+  preparationError,
   onClose,
 }: {
   open: boolean;
@@ -45,10 +49,13 @@ export function ExportDialog({
   onExportPack: () => void;
   variationCount: number;
   busy: boolean;
-  output: RenderResult | null;
+  output: ExportResult | null;
+  preparing: boolean;
+  preparationError: string;
   onClose: () => void;
 }) {
   const region = project.loopRegion;
+  const loopOnly = settings.loopOnly && !!region;
   return (
     <Dialog
       open={open}
@@ -132,17 +139,29 @@ export function ExportDialog({
               max={2}
               step={0.01}
               unit="s"
-              disabled={busy}
+              disabled={busy || loopOnly}
               onChange={(tail) => onSettings({ ...settings, tail })}
             />
           </FieldGroup>
           <FieldGroup className="sound-option-fields">
-            {(["normalize", "trimSilence", "loopOnly"] as const).map((key) => (
+            {(
+              ["preserveTail", "trimSilence", "normalize", "loopOnly"] as const
+            ).map((key) => (
               <Field key={key} orientation="horizontal" className="wb:w-auto">
                 <Checkbox
                   id={"export-" + key}
-                  checked={settings[key] && (key !== "loopOnly" || !!region)}
-                  disabled={busy || (key === "loopOnly" && !region)}
+                  checked={
+                    settings[key] &&
+                    (key !== "loopOnly" || !!region) &&
+                    (!(key === "trimSilence" || key === "preserveTail") ||
+                      !loopOnly)
+                  }
+                  disabled={
+                    busy ||
+                    (key === "loopOnly" && !region) ||
+                    (loopOnly &&
+                      (key === "trimSilence" || key === "preserveTail"))
+                  }
                   onCheckedChange={(checked) =>
                     onSettings({ ...settings, [key]: checked })
                   }
@@ -167,20 +186,59 @@ export function ExportDialog({
           )}
         </fieldset>
         <p className="wb:text-muted-foreground">
+          {t(loopOnly ? "export.loopRangeHint" : "export.rangeHint")}
+        </p>
+        {preparing && <p role="status">{t("export.preparing")}</p>}
+        {preparationError && <p role="alert">{t(preparationError)}</p>}
+        {output && !preparing && (
+          <section className="export-preview" aria-label={t("export.result")}>
+            <strong>
+              {t(
+                "export.duration",
+                (output.left.length / output.sampleRate).toFixed(3),
+              )}
+            </strong>
+            <Waveform
+              data={output.left}
+              right={output.right}
+              label={t("export.result")}
+            />
+            {output.exportInfo && (
+              <p className="wb:text-muted-foreground">
+                {t(
+                  "export.durationParts",
+                  output.exportInfo.audioSeconds.toFixed(3),
+                  output.exportInfo.silenceSeconds.toFixed(3),
+                )}
+              </p>
+            )}
+            {output.tailLimited && <p>{t("tree.tailLimited")}</p>}
+          </section>
+        )}
+        <p className="wb:text-muted-foreground">
           {t("export.hint." + settings.format)}
         </p>
         <p className="wb:text-muted-foreground">{t("pro.exportHelp")}</p>
         {encodingStatus && <p role="status">{t(encodingStatus)}</p>}
         <div className="wb:flex wb:flex-wrap wb:gap-2">
-          <Button variant="outline" disabled={busy} onClick={onPreview}>
+          <Button
+            variant="outline"
+            disabled={busy || preparing || !!preparationError || !output}
+            onClick={onPreview}
+          >
             {t("pro.previewExport")}
           </Button>
-          <Button disabled={busy} onClick={onExport}>
+          <Button
+            disabled={busy || preparing || !!preparationError || !output}
+            onClick={onExport}
+          >
             {t("export.downloadFormat", settings.format.toUpperCase())}
           </Button>
           <Button
             variant="outline"
-            disabled={busy || !variationCount}
+            disabled={
+              busy || preparing || !!preparationError || !variationCount
+            }
             onClick={onExportPack}
           >
             {t("export.pack", variationCount)}

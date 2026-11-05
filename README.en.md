@@ -134,7 +134,7 @@ Open Video reference in the header and import a local video. Select a start and 
 
 ### Work duration and resources
 
-New project creates an empty 10-second work. Enter its duration below the timeline; Enter or blur applies the value. Clips, groups and notes can exceed 10 seconds. Zoom and horizontal scrolling support long timelines. Extend to content end includes rendered effect tails. Shortening the work preserves clips and notes outside the range and shows a notice. Preview, waveform and default export use the same work range; extra export tail time extends rendering explicitly.
+New project creates an empty 10-second work. Enter its duration below the timeline; Enter or blur applies the value. Clips, groups and notes can exceed 10 seconds. Zoom and horizontal scrolling support long timelines. Extend to content end includes rendered effect tails. Shortening the work preserves clips and notes outside the range and shows a notice. Preview, waveform and default export use the same work range; the export dialog can include full content and natural tails explicitly, while appended silence never renders more source audio.
 
 There is no fixed creative duration cap. Layer counts, nesting, decoded assets and rendering allocations remain budgeted; exceeding a resource budget reports an error instead of silently truncating content. Rendering still uses complete buffers, not unlimited streaming. Superseded previews are cancelled; identical audio uses a bounded cache, including when only video markers or names change.
 
@@ -143,3 +143,9 @@ There is no fixed creative duration cap. Layer counts, nesting, decoded assets a
 The Layout menu provides Sound design, Video sound design and Note editing layouts. Video sound design places the reference picture and sound timeline in the center. Note editing gives the piano roll its own main workspace, with instrument-track selection and project playback. Double-click a note in a track to open the note workspace; return to arrangement through its tab. Layouts, docking, panel visibility, language and appearance are browser preferences and do not change the project, notes or undo history.
 
 Help and export use shared dialogs with contained Tab focus, Escape dismissal and focus restoration. Video and note toolbars use Workbench controls. Numeric fields allow incomplete text while editing and commit on Enter or blur; Escape cancels an uncommitted edit.
+
+### Safe strength editing and export duration
+
+The simple note editor and piano roll show supported strength percentages for the current instrument, pitch and articulation. Requests in a coverage gap snap to the closest supported velocity. Notes with no eligible recordings keep their repair actions; advanced MIDI velocity editing remains available.
+
+Export defaults to the work range. **Include full content and natural tails** extends through complete audible clips and their effect tails, honoring mute/solo; it does not restore samples or notes already cropped within a clip. Processing order is range/tails, silence trimming, resampling and level adjustment, then up to two seconds of pure silence. Padding does not change normalization and cannot be removed by the trim option. Loop export skips tail extension, trimming and padding. The dialog calculates the output waveform and pre-encoding duration automatically; compressed previews play the decoded encoded file.

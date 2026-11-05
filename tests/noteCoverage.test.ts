@@ -13,6 +13,8 @@ import {
   velocityPercent,
   percentVelocity,
   constrainNotePitch,
+  playableVelocities,
+  nearestPlayableVelocity,
 } from "../src/noteCoverage";
 
 const region = (patch: Partial<SampleRegion> = {}): SampleRegion => ({
@@ -67,6 +69,36 @@ const note: NoteEvent = {
 };
 
 describe("recorded note coverage", () => {
+  it("exposes strength gaps for the selected pitch and style", () => {
+    expect(pitchRanges(playableVelocities(instrument, note))).toEqual([
+      [1, 20],
+      [61, 110],
+    ]);
+    expect(
+      pitchRanges(
+        playableVelocities(instrument, { ...note, articulation: "staccato" }),
+      ),
+    ).toEqual([[61, 110]]);
+    expect(playableVelocities(instrument, { ...note, midi: 65 })).toEqual([]);
+  });
+  it("maps any requested strength to an eligible sample without changing other note properties", () => {
+    for (let requested = 1; requested <= 127; requested++) {
+      const velocity = nearestPlayableVelocity(instrument, note, requested);
+      expect(
+        selectRegion(instrument, { ...note, velocity }, 42, new Map()),
+      ).toBeDefined();
+    }
+    expect(nearestPlayableVelocity(instrument, note, 40)).toBe(20);
+    expect(nearestPlayableVelocity(instrument, note, 41)).toBe(61);
+    expect(nearestPlayableVelocity(instrument, note, 127)).toBe(110);
+    expect(note.velocity).toBe(80);
+  });
+  it("does not replace missing instruments, pitch or style when adjusting strength", () => {
+    expect(nearestPlayableVelocity(undefined, note, 100)).toBe(note.velocity);
+    const missing = { ...note, articulation: "unknown", velocity: 17 };
+    expect(nearestPlayableVelocity(instrument, missing, 100)).toBe(17);
+    expect(nearestPlayableVelocity(instrument, note, NaN)).toBe(note.velocity);
+  });
   it("blocks unmapped pitch moves while retaining horizontal edits and the last valid pitch", () => {
     const previous = { ...note, midi: 63 };
     const proposed = { ...note, midi: 65, start: 2 };

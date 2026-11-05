@@ -12,12 +12,9 @@ import {
   type Score,
 } from "./instruments";
 import { t } from "./i18n";
+import { NoteStrength } from "./NoteStrength";
 import { pitchName } from "./noteEditing";
-import {
-  playablePitches,
-  velocityPercent,
-  percentVelocity,
-} from "./noteCoverage";
+import { playablePitches } from "./noteCoverage";
 import {
   articulationName,
   coverageLabel,
@@ -111,15 +108,11 @@ export function BasicScoreEditor({
               </Field>
               <Field>
                 <FieldLabel>{t("note.basic.strength")}</FieldLabel>
-                <WorkbenchNumberInput
+                <NoteStrength
+                  instrument={instrument}
+                  note={note}
                   label={label("note.basic.strength")}
-                  value={velocityPercent(note.velocity)}
-                  min={1}
-                  max={100}
-                  step={1}
-                  onValueCommit={(value) =>
-                    onUpdate(note.id, { velocity: percentVelocity(value) })
-                  }
+                  onChange={(velocity) => onUpdate(note.id, { velocity })}
                 />
               </Field>
               <Field>

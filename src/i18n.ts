@@ -6,6 +6,9 @@ import {
 import { WORKBENCH_CATALOGS } from "@momo/workbench/locales";
 import { BUILTIN_MESSAGES } from "./builtinMessages";
 const words: Record<string, [string, string]> = {
+  "note.strength.range": ["可用：{0}；缺口取最近可用值。", "Available: {0}. Gaps snap to the nearest supported value."],
+  "note.strength.unavailable": ["请先修正音高、乐器或演奏方式。", "Correct the pitch, instrument or playing style first."],
+  "note.strength.adjusted": ["{0}% 无对应录音，已使用 {1}%。", "No recording at {0}%; using {1}%."],
   "note.basic.title": ["编辑音符", "Edit notes"],
   "note.basic.number": ["音符 {0}", "Note {0}"],
   "note.basic.pitch": ["音高", "Pitch"],
@@ -370,14 +373,21 @@ const words: Record<string, [string, string]> = {
   "pro.channels": ["声道", "Channels"],
   "pro.mono": ["单声道", "Mono"],
   "pro.stereo": ["立体声", "Stereo"],
-  "pro.tail": ["末尾补充留白", "Trailing silence"],
+  "pro.tail": ["末尾追加静音", "Append silence"],
+  "pro.preserveTail": ["保留完整内容与自然尾音", "Include full content and natural tails"],
+  "export.rangeHint": ["默认使用作品范围。勾选保留尾音时，延长到完整片段及效果尾音结束；不恢复已裁切的素材或音符。先裁首尾静音，再追加纯静音；追加静音不改变声音响度。", "By default, export uses the work range. Include tails to extend through complete clips and effect tails; this does not restore cropped samples or notes. Silence trimming happens before pure silence is appended. Padding does not change the sound's level."],
+  "export.loopRangeHint": ["循环导出只使用循环区域并处理接缝，不延长尾音、不裁静音，也不追加静音。", "Loop export uses the loop region with its seam crossfade. Tail extension, silence trimming and padding are skipped."],
+  "export.preparing": ["正在计算成品时长与波形…", "Preparing output duration and waveform…"],
+  "export.result": ["导出成品波形", "Export output waveform"],
+  "export.duration": ["成品时长 {0} 秒", "Output duration: {0} seconds"],
+  "export.durationParts": ["处理后音频 {0} 秒 + 追加静音 {1} 秒（编码前）", "Processed audio {0} s + appended silence {1} s (before encoding)"],
   "pro.normalize": ["统一 RMS 响度", "Normalize RMS level"],
   "pro.trimSilence": ["裁除首尾静音", "Trim leading/trailing silence"],
   "pro.loopOnly": ["仅导出循环区域", "Export loop only"],
   "pro.targetRms": ["目标 RMS（不是 LUFS）", "Target RMS (not LUFS)"],
   "pro.exportHelp": [
-    "批量变体使用相同设置。静音阈值 −60 dBFS；循环导出不裁静音、不加尾音。先试听成品，再导出。",
-    "The variation pack uses these settings. Silence threshold: −60 dBFS. Loop export skips trimming and tail extension. Preview the processed output before export.",
+    "批量变体使用相同设置。静音阈值 −60 dBFS；循环导出不裁静音、不延长尾音、不追加静音。先试听成品，再导出。",
+    "The variation pack uses these settings. Silence threshold: −60 dBFS. Loop export skips trimming, tail extension and silence padding. Preview the processed output before export.",
   ],
   "pro.previewExport": ["试听导出成品 / 停止", "Preview export / Stop"],
   "pro.outputInfo": [

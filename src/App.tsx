@@ -95,6 +95,7 @@ import { boundedSelection } from "./timeline";
 import {
   readExportSettings,
   renderExport,
+  type ExportResult,
   audioResult,
   makeLoop,
   seamPreview,
@@ -164,7 +165,7 @@ export default function App() {
   const encodedCache = useRef<{
     project: Project;
     settings: string;
-    promise: Promise<{ output: RenderResult; bytes: Uint8Array<ArrayBuffer> }>;
+    promise: Promise<{ output: ExportResult; bytes: Uint8Array<ArrayBuffer> }>;
   } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [cropMode, setCropMode] = useState(false);
@@ -178,7 +179,10 @@ export default function App() {
     : project.layers.some((layer) => layer.id === selected) ? [selected] : [];
   const [exportSettings, setExportSettings] =
     useState<ExportSettings>(readExportSettings);
-  const [exportOutput, setExportOutput] = useState<RenderResult | null>(null);
+  const [exportOutput, setExportOutput] = useState<ExportResult | null>(null);
+  const [exportPreparing, setExportPreparing] = useState(false);
+  const [exportPreparationError, setExportPreparationError] = useState("");
+  const exportRenderCache = useRef<{ project: Project; settings: string; signal?: AbortSignal; promise: Promise<ExportResult> } | null>(null);
   const outputVersion = useRef(0);
   useEffect(() => {
     try {
@@ -999,11 +1003,27 @@ export default function App() {
     setSelection(copies.map((l) => l.id));
     setSelected(copies[0].id);
   };
-  async function finalOutput(p: Project, settings = exportSettings) {
-    return renderExport(p, settings, (project) =>
-      renderer.current!.render(project),
-    );
+  function finalOutput(p: Project, settings = exportSettings, signal?: AbortSignal): Promise<ExportResult> {
+    const key = JSON.stringify(settings), cached = exportRenderCache.current;
+    if (cached?.project === p && cached.settings === key && !cached.signal?.aborted) return cached.promise;
+    const promise = renderExport(p, settings, project => renderer.current!.render(project, signal));
+    exportRenderCache.current = { project: p, settings: key, signal, promise };
+    promise.catch(() => { if (exportRenderCache.current?.promise === promise) exportRenderCache.current = null; });
+    return promise;
   }
+  useEffect(() => {
+    if (!exportOpen) return;
+    const controller = new AbortController();
+    setExportPreparing(true);
+    setExportPreparationError("");
+    setExportOutput(null);
+    void finalOutput(history.project, exportSettings, controller.signal).then(output => {
+      if (!controller.signal.aborted) setExportOutput(output);
+    }).catch(error => {
+      if (!controller.signal.aborted) setExportPreparationError(error instanceof Error && error.message === "error.renderBudget" ? error.message : "error.render");
+    }).finally(() => { if (!controller.signal.aborted) setExportPreparing(false); });
+    return () => controller.abort();
+  }, [exportOpen, history.project, exportSettings]);
   async function encodedOutput(p: Project, settings = exportSettings) {
     const key = JSON.stringify(settings),
       cached = encodedCache.current;
@@ -1046,7 +1066,7 @@ export default function App() {
     const version = outputVersion.current;
     void play(async () => {
       const { output, bytes } = await encodedOutput(history.project);
-      let preview = output;
+      let preview: ExportResult = output;
       if (exportSettings.format !== "wav") {
         const decoded = await player.current!.decode(
           new Uint8Array(bytes).buffer,
@@ -1058,6 +1078,8 @@ export default function App() {
           ),
           decoded.sampleRate,
         );
+        preview.exportInfo = output.exportInfo;
+        preview.tailLimited = output.tailLimited;
         preview.sourcePeak = output.sourcePeak;
         preview.gainReduction = output.gainReduction;
       }
@@ -2218,6 +2240,8 @@ export default function App() {
         variationCount={variations.length}
         busy={!result || ioBusy || !!encodingStatus}
         output={exportOutput}
+        preparing={exportPreparing}
+        preparationError={exportPreparationError}
         onClose={() => {
           if (
             activePlaybackRef.current === "export-preview" ||

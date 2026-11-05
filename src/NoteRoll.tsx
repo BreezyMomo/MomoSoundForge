@@ -11,18 +11,17 @@ import {
   FieldGroup,
   FieldLabel,
   WorkbenchChoice,
-  WorkbenchNumberInput,
 } from "@momo/workbench/react";
 import type { Layer } from "./model";
 import { secondsToBeats, type NoteEvent } from "./instruments";
 import { editNote, noteSpan, pitchName, noteGridTicks } from "./noteEditing";
 import { t } from "./i18n";
 import "./note-roll.css";
+import { NoteStrength } from "./NoteStrength";
 import {
   noteCoverageIssue,
   playablePitches,
   velocityPercent,
-  percentVelocity,
   constrainNotePitch,
 } from "./noteCoverage";
 import {
@@ -323,19 +322,14 @@ export function NoteRoll({
                   <FieldLabel>
                     {pitchName(current.midi)} · {t("note.basic.strength")}
                   </FieldLabel>
-                  <WorkbenchNumberInput
-                    className="sound-note-velocity"
+                  <NoteStrength
+                    key={current.id}
+                    instrument={currentInstrument}
+                    note={current}
                     label={t("note.basic.strength")}
-                    min={1}
-                    max={100}
-                    step={1}
-                    value={velocityPercent(current.velocity)}
-                    onValueCommit={(velocity) => {
+                    onChange={(velocity) => {
                       onBegin();
-                      onChange({
-                        ...current,
-                        velocity: percentVelocity(velocity),
-                      });
+                      onChange({ ...current, velocity });
                     }}
                   />
                 </Field>
@@ -398,7 +392,7 @@ export function NoteRoll({
                 {rows.map((midi) => (
                   <span
                     key={midi}
-                    className={`${[1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""} ${current ? covered.has(midi) ? "roll-covered-key" : "roll-uncovered-key" : ""}`}
+                    className={`${[1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""} ${current ? (covered.has(midi) ? "roll-covered-key" : "roll-uncovered-key") : ""}`}
                   >
                     {pitchName(midi)}
                   </span>
@@ -415,7 +409,7 @@ export function NoteRoll({
                   {rows.map((midi, i) => (
                     <div
                       key={midi}
-                      className={`roll-row ${[1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""} ${current ? covered.has(midi) ? "roll-covered-row" : "roll-uncovered-row" : ""}`}
+                      className={`roll-row ${[1, 3, 6, 8, 10].includes(midi % 12) ? "black-key" : ""} ${current ? (covered.has(midi) ? "roll-covered-row" : "roll-uncovered-row") : ""}`}
                       style={{ top: i * 18 }}
                       title={
                         current && !covered.has(midi)

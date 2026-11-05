@@ -98,3 +98,6 @@
 .score-advanced { margin-top: 16px; border-top: 1px solid var(--ui-line); padding-top: 12px; }
 .score-advanced > summary { cursor: pointer; font-size: 13px; padding: 4px 0; }
 .score-advanced[open] > summary { margin-bottom: 16px; }
+
+.note-strength { min-width: 0; max-width: 230px; }
+.note-strength small { display: block; line-height: 1.5; margin-top: 4px; }
