@@ -22,6 +22,7 @@ export function TreeTimeline({
   selected,
   ids,
   result,
+  ready,
   cue,
   duration,
   zoom,
@@ -42,6 +43,7 @@ export function TreeTimeline({
   selected: NodeAddress;
   ids: string[];
   result: RenderResult | null;
+  ready: boolean;
   cue: number;
   duration: number;
   zoom: number;
@@ -193,7 +195,7 @@ export function TreeTimeline({
               compact
               duration={duration}
               position={cue}
-              disabled={!result}
+              disabled={!ready}
               version={root}
               onSeekStart={onSeekStart}
               onSeek={onSeek}

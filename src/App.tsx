@@ -538,9 +538,22 @@ export default function App() {
     rendered?.target === nodeKey({ path: context.path, id: selected });
   const auditionResult =
     originalAudition && comparisonReady ? rendered.original : result;
+  // Keep the last waveform during edits, but never use it for playback/export.
+  // Unrelated documents have new node IDs and must not inherit this preview.
+  const sharesNode = (nodes: Layer[], previous: Set<string>): boolean =>
+    nodes.some((node) => previous.has(node.id) ||
+      (node.project && sharesNode(node.project.layers, previous)));
+  const previousIds = new Set<string>();
+  const collectIds = (nodes: Layer[]) => nodes.forEach((node) => {
+    previousIds.add(node.id);
+    if (node.project) collectIds(node.project.layers);
+  });
+  if (rendered) collectIds(rendered.project.layers);
+  const displayResult = auditionResult ??
+    (sharesNode(history.project.layers, previousIds) ? rendered?.result : null);
   const timelineDuration = Math.max(
     history.project.duration,
-    (result?.left.length ?? 0) / (result?.sampleRate ?? 48000),
+    (displayResult?.left.length ?? 0) / (displayResult?.sampleRate ?? 48000),
     comparisonReady
       ? rendered.original.left.length / rendered.original.sampleRate
       : 0,
@@ -1361,8 +1374,8 @@ export default function App() {
           duration={timelineDuration}
           loopRegion={history.project.loopRegion}
           position={cue}
-          left={auditionResult?.left}
-          right={auditionResult?.right}
+          left={displayResult?.left}
+          right={displayResult?.right}
           disabled={!auditionResult}
           version={project}
           onSeekStart={beginSeek}
@@ -1606,7 +1619,8 @@ export default function App() {
         root={history.project}
         selected={{ path: context.path, id: selected }}
         ids={selectedIds}
-        result={auditionResult}
+        result={displayResult ?? null}
+        ready={!!auditionResult}
         cue={cue}
         duration={timelineDuration}
         zoom={zoom}
