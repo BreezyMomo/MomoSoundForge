@@ -10,6 +10,7 @@ import { flushSync } from 'react-dom';
 import { VideoReferencePanel } from "./VideoReferencePanel";
 import { appendInstrumentNode } from "./instrumentNode";
 import { TreeTimeline } from "./TreeTimeline";
+import { LayerToolbar } from "./LayerToolbar";
 import { SoundPolish } from "./SoundPolish";
 import {
   groupNodes,
@@ -52,10 +53,7 @@ import {
   LoaderCircle,
   Pause,
   SkipBack,
-  Layers,
   FilePlus2,
-  Scissors,
-  RotateCcw,
 } from "lucide-react";
 import JSZip from "jszip";
 import type { DockWorkspace } from "@momo/workbench/dock";
@@ -1032,6 +1030,33 @@ export default function App() {
     setSelection(copies.map((l) => l.id));
     setSelected(copies[0].id);
   };
+  const removeLayers = (ids: string[]) => {
+    if (!project.layers.some(layer => ids.includes(layer.id))) return;
+    edit(p => ({ ...p, layers: p.layers.filter(layer => !ids.includes(layer.id)) }));
+    setSelection([]);
+    setSelected("");
+    selectionAnchor.current = null;
+  };
+  const removeNode = (address: NodeAddress) => {
+    editRoot(root => {
+      const next = structuredClone(root), parent = nodeParent(next, address.path);
+      parent.layers = parent.layers.filter(layer => layer.id !== address.id);
+      return next;
+    });
+    const removesContext = [...address.path, address.id].every((id, index) => context.path[index] === id);
+    if (removesContext) {
+      scopeEpoch.current++;
+      setEditPath(address.path);
+      setSelection([]);
+      setSelected("");
+      selectionAnchor.current = null;
+    } else if (JSON.stringify(address.path) === JSON.stringify(context.path)) {
+      const remaining = selectedIds.filter(id => id !== address.id);
+      setSelection(remaining);
+      if (selected === address.id) setSelected(remaining[0] ?? "");
+      if (selectionAnchor.current === address.id) selectionAnchor.current = null;
+    }
+  };
   function finalOutput(p: Project, settings = exportSettings, signal?: AbortSignal): Promise<ExportResult> {
     const key = JSON.stringify(settings), cached = exportRenderCache.current;
     if (cached?.project === p && cached.settings === key && !cached.signal?.aborted) return cached.promise;
@@ -1568,16 +1593,13 @@ export default function App() {
           onChange={next => editRoot(() => next)} onLoop={() => auditionLoop()} onSeam={() => auditionLoop(true)} />
       </div>
       <div className="layers-heading">
-        <h2>{t("tree.title")}</h2>
+        <div className="layer-title-status"><h2>{t("tree.title")}</h2>
+          <span className="field-help" role="status" title={!auditionResult ? t("tree.waveUpdating") : originalAudition && comparisonReady
+            ? t("tree.waveBefore", compareName) : t("tree.waveAfter")}>
+            {!auditionResult ? t("tree.waveUpdating") : t(originalAudition && comparisonReady ? "tree.waveBeforeShort" : "tree.waveAfterShort")}
+          </span>
+        </div>
         <div className="button-group">
-          <button
-            className="text-button"
-            onClick={wrapCurrent}
-            disabled={!selectedIds.length || !ready}
-          >
-            <Layers size={15} />
-            {t("tree.groupSelected")}
-          </button>
           <button
             className="text-button"
             onClick={() => compositionInput.current?.click()}
@@ -1604,25 +1626,11 @@ export default function App() {
           </button>
         </div>
       </div>
-      <div className="clip-edit-toolbar">
-        <button
-          className="secondary clip-tool-button"
-          aria-pressed={cropMode}
-          onClick={() => setCropMode((v) => !v)}
-        >
-          <Scissors size={15} />
-          {t(cropMode ? "editor.cropEnabled" : "editor.cropMode")}
-        </button>
-        <button
-          className="secondary clip-tool-button"
-          disabled={
-            !project.layers.some(
-              (l) =>
-                l.id === selected &&
-                ((l.cropStart ?? 0) > 0 || (l.cropEnd ?? 1) < 1),
-            )
-          }
-          onClick={() =>
+      <TreeTimeline
+        renderToolbar={tools => <LayerToolbar {...tools}
+          path={context.path} ids={selectedIds} cropMode={cropMode} onCrop={() => setCropMode(value => !value)}
+          canResetCrop={!!selectedLayer && ((selectedLayer.cropStart ?? 0) > 0 || (selectedLayer.cropEnd ?? 1) < 1)}
+          onResetCrop={() =>
             edit((p) => ({
               ...p,
               layers: p.layers.map((l) =>
@@ -1630,47 +1638,15 @@ export default function App() {
               ),
             }))
           }
-        >
-          <RotateCcw size={15} />
-          {t("editor.resetCrop")}
-        </button>
-        <span>{t(cropMode ? "editor.cropHelp" : "editor.stretchHelp")}</span>
-      </div>
-      <div className="timeline-tools">
-        <label>
-          <input
-            type="checkbox"
-            checked={snap}
-            onChange={(e) => setSnap(e.target.checked)}
-          />
-          {t("pro.snap")}
-        </label>
-        <label>
-          {t("pro.zoom")}
-          <input
-            aria-label={t("pro.zoom")}
-            type="range"
-            min={1}
-            max={Math.max(8, Math.ceil(timelineDuration / 2))}
-            step={0.25}
-            value={zoom}
-            onChange={(e) => setZoom(+e.target.value)}
-          />
-        </label>
-        <button className="secondary" onClick={() => setZoom(1)}>
-          {t("pro.fit")}
-        </button>
-        <span>{t("pro.selection", selectedIds.length)}</span>
-        <button
-          className="secondary"
-          onClick={duplicate}
-          disabled={!selectedLayer}
-        >
-          {t("pro.copySelection")}
-        </button>
-        <details className="selection-tools">
-          <summary>{t("pro.selectionActions")}</summary>
-          <div>
+
+          snap={snap} onSnap={setSnap} zoom={zoom} onZoom={setZoom} duration={timelineDuration}
+          canDuplicate={!!selectedLayer} onDuplicate={duplicate} canGroup={!!selectedIds.length && ready} onGroup={wrapCurrent}
+          onDelete={() => removeLayers(selectedIds)}
+          onMove={target => treeMove(context.path, selectedIds, target)}
+          waveformHelp={!auditionResult ? t("tree.waveUpdating") : originalAudition && comparisonReady
+            ? t("tree.waveBefore", compareName) : t("tree.waveAfter")}
+          tailLimited={!!result?.tailLimited}>
+
             <button
               className="secondary"
               disabled={!selectedLayer}
@@ -1759,15 +1735,8 @@ export default function App() {
             >
               {t("action.apply")}
             </button>
-          </div>
-        </details>
-        <span className="field-help">{t("pro.selectHelp")}</span>
-      </div>
-      <p className="tree-waveform-status field-help" role="status">
-        {!auditionResult ? t("tree.waveUpdating") : originalAudition && comparisonReady
-          ? t("tree.waveBefore", compareName) : t("tree.waveAfter")}
-      </p>
-      <TreeTimeline
+
+        </LayerToolbar>}
         root={history.project}
         selected={{ path: context.path, id: selected }}
         ids={selectedIds}
@@ -1786,6 +1755,8 @@ export default function App() {
           setSelected("");
           selectionAnchor.current = null;
         }}
+        onDeleteSelection={() => removeLayers(selectedIds)}
+        onDeleteNode={removeNode}
         onPatch={(address, patch) =>
           editRoot((root) => editNode(root, address, patch))
         }
@@ -1826,10 +1797,6 @@ export default function App() {
         }}
         onBegin={stop}
       />
-      <p className="field-help">
-        {t("tree.tailHelp")}
-        {result?.tailLimited && ` ${t("tree.tailLimited")}`}
-      </p>
       <MacroEditor
         project={project}
         onChange={(next) => edit(() => next, "controls")}
@@ -2159,12 +2126,7 @@ export default function App() {
                   edit((p) => exposeParameter(p, selectedLayer, key))
                 }
                 onDuplicate={duplicate}
-                onDelete={() =>
-                  edit((p) => ({
-                    ...p,
-                    layers: p.layers.filter((l) => l.id !== selected),
-                  }))
-                }
+                onDelete={() => removeLayers([selected])}
                 onEnter={() =>
                   selectedLayer && enterComposition(selectedLayer.id)
                 }

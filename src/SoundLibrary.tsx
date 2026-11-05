@@ -90,7 +90,7 @@ export function SoundLibrary({
     [query, setQuery] = useState(""),
     [section, setSection] = useState<"basic" | "examples" | "mine">("basic"),
     [toneChoices, setToneChoices] = useState<Record<string, string>>({}),
-    [category, setCategory] = useState("all"),
+    [categories, setCategories] = useState<SoundCategory[]>([]),
     [entries, setEntries] = useState<SavedSound[]>([]),
     [loadState, setLoadState] = useState("loading"),
     [busy, setBusy] = useState(false),
@@ -142,7 +142,7 @@ export function SoundLibrary({
     recordingCount = new Set(BUILTIN_SOUNDS.filter(s => s.kind === "instrument").flatMap(s => s.recordingIds ?? [])).size,
     visible = inSection.filter(e =>
       (trash || preferences.filter === "all" || (preferences.filter === "favorites" ? preferences.favorites : preferences.recent).includes(e.key)) &&
-      (trash || category === "all" || category === e.category) &&
+      (trash || !categories.length || categories.includes(e.category)) &&
       `${e.name} ${e.description} ${e.keywords ?? ""} ${e.builtin ? builtinToneName(e.builtin) : ""} ${t(`library.${e.category}`)}`.toLowerCase().includes(query.trim().toLowerCase())
     ).sort((a,b) => !trash && preferences.filter === "recent" ? preferences.recent.indexOf(a.key) - preferences.recent.indexOf(b.key) : 0),
     groups = trash || preferences.filter === "recent" ? ["results"] : SOUND_CATEGORIES;
@@ -212,7 +212,7 @@ export function SoundLibrary({
         savedName = entry.name;
       }
       setPreferences(p => ({ ...p, filter: "all" }));
-      setCategory("all");
+      setCategories([]);
       setSection("mine");
       setTrash(false);
       setQuery("");
@@ -263,12 +263,20 @@ export function SoundLibrary({
           <summary>{t("library.display")}</summary>
           <div className="library-display-menu">
             {(["list", "grid"] as const).map(view => <button key={view} aria-pressed={preferences.view === view} onClick={() => setPreferences(p => ({ ...p, view }))}>{t(`library.${view}`)}</button>)}
+            <div className="library-variant-display" role="group" aria-label={t("library.variantDisplay")}>
+              <span>{t("library.variantDisplay")}</span>
+              <div>
+                <button aria-pressed={!preferences.expandVariants} onClick={() => setPreferences(p => ({ ...p, expandVariants: false }))}>{t("library.collapseVariants")}</button>
+                <button aria-pressed={preferences.expandVariants} onClick={() => setPreferences(p => ({ ...p, expandVariants: true }))}>{t("library.expandVariants")}</button>
+              </div>
+              <p>{t("library.variantDisplayHint")}</p>
+            </div>
           </div>
         </details>
       </div>
       <div className="library-sections" role="group" aria-label={t("library.section")}>
         {(["basic", "examples", "mine"] as const).map(value => <button key={value} aria-pressed={!trash && section === value} onClick={() => {
-          setSection(value); setTrash(false); setCategory("all"); setQuery("");
+          setSection(value); setTrash(false); setCategories([]); setQuery("");
           setPreferences(p => ({ ...p, filter: "all" }));
         }}>{t(`library.${value}`)}</button>)}
       </div>
@@ -276,12 +284,14 @@ export function SoundLibrary({
       <div className="library-sources" role="group" aria-label={t("library.filter")}>
         {(["all", "favorites", "recent"] as const).map(filter => <button key={filter} aria-pressed={!trash && preferences.filter === filter} onClick={() => { setTrash(false); setPreferences(p => ({ ...p, filter })); }}>{t(`library.${filter}`)}{filter === "favorites" ? ` (${favoriteCount})` : ""}</button>)}
       </div>
-      {!trash && <label className="library-category-select">
-        <span>{t("library.category")}</span>
-        <select aria-label={t("library.category")} value={category} onChange={event => setCategory(event.target.value)}>
-          {["all", ...SOUND_CATEGORIES.filter(c => inSection.some(e => e.category === c))].map(c => <option key={c} value={c}>{t(`library.${c}`)}</option>)}
-        </select>
-      </label>}
+      {!trash && <details className="library-categories" open>
+        <summary>{t("library.category")} · {categories.length ? categories.map(c => t(`library.${c}`)).join(" / ") : t("library.all")} <span className="library-category-hint">{t("library.multiSelect")}</span></summary>
+        <div className="library-category-chips" role="group" aria-label={t("library.category")} title={t("library.multiFilterHint")}
+          onKeyDown={event => { if (event.key === " " || event.key === "Enter") event.stopPropagation(); }}>
+          <button type="button" aria-pressed={!categories.length} onClick={() => setCategories([])}>{t("library.all")}</button>
+          {SOUND_CATEGORIES.filter(c => inSection.some(e => e.category === c)).map(c => <button key={c} type="button" aria-pressed={categories.includes(c)} onClick={() => setCategories(previous => previous.includes(c) ? previous.filter(value => value !== c) : [...previous, c])}>{t(`library.${c}`)}</button>)}
+        </div>
+      </details>}
       {!trash && <p className="library-builtin-count">{section === "basic" ? t("library.basicCount", basicCount, recordingCount) : section === "examples" ? t("library.exampleCount", BUILTIN_SOUNDS.filter(s => s.kind === "example").length) : t("library.mineCount", mine.length)}</p>}
       {busy && <p role="status" className="library-builtin-count">{t("library.processingSound")}</p>}
       {loadState === "error" && <div className="library-error" role="status"><p>{t("library.loadError")}</p><button className="text-button" onClick={() => void refresh()}>{t("library.retry")}</button></div>}
@@ -291,7 +301,7 @@ export function SoundLibrary({
         const candidates = visible.filter(item => group === "results" || item.category === group);
         const buckets = new Map<string, CatalogEntry[]>();
         for (const item of candidates) {
-          const key = item.builtin ? builtinToneKey(item.builtin) : item.key;
+          const key = item.builtin && !preferences.expandVariants ? builtinToneKey(item.builtin) : item.key;
           buckets.set(key, [...(buckets.get(key) ?? []), item]);
         }
         if (!buckets.size) return null;
@@ -299,9 +309,9 @@ export function SoundLibrary({
           <summary>{t(`library.${group === "results" ? (trash ? "trash" : "recent") : group}`)} <span>{buckets.size}</span></summary>
           <div className={`saved-sound-list library-view-${preferences.view}`}>
             {[...buckets].map(([key, choices]) => {
-              const item = choices.find(e => e.key === toneChoices[key]) ?? (preferences.filter === "recent" ? choices[0] : preferredBuiltin(choices));
+              const item = choices.find(e => e.key === playback || e.key === pendingPlayback) ?? choices.find(e => e.key === toneChoices[key]) ?? (preferences.filter === "recent" ? choices[0] : preferredBuiltin(choices));
               const entry = item.saved;
-              const title = item.builtin && (item.builtin.kind === "instrument" || item.builtin.recordingGroup) ? builtinToneName(item.builtin) : item.name;
+              const title = !preferences.expandVariants && item.builtin && (item.builtin.kind === "instrument" || item.builtin.recordingGroup) ? builtinToneName(item.builtin) : item.name;
               return <article className="saved-sound" key={key} aria-label={title}>
                 <div className="saved-sound-title">
                   <strong title={item.name}>{title}</strong>
@@ -310,7 +320,7 @@ export function SoundLibrary({
                     <button className="icon-button" disabled={!ready || busy} aria-label={t("library.listen", item.name)} aria-pressed={playback === item.key} aria-busy={pendingPlayback === item.key} onClick={() => { if (playback !== item.key) remember(item.key); if (entry) onPlay(item.id); else if (item.builtin) onBuiltinPlay(item.id); else onPresetPlay(item.id); }}>{pendingPlayback === item.key ? <LoaderCircle size={14} className="spin"/> : playback === item.key ? <Square size={14} fill="currentColor"/> : <Play size={14} fill="currentColor"/>}</button>
                   </div>}
                 </div>
-                {item.builtin && (item.builtin.kind === "instrument" || (item.builtin.recordingGroup && choices.length > 1)) && <label className="library-tone-choice">
+                {!preferences.expandVariants && item.builtin && (item.builtin.kind === "instrument" || (item.builtin.recordingGroup && choices.length > 1)) && <label className="library-tone-choice">
                   <span>{t(item.builtin.recordingGroup ? "library.recording" : item.builtin.tone ? "library.range" : "library.take")}</span>
                   <select aria-label={t(item.builtin.recordingGroup ? "library.recording" : item.builtin.tone ? "library.range" : "library.take")} value={item.key} disabled={busy} onChange={event => {
                     if (playback === item.key) onBuiltinPlay(item.id);
@@ -386,7 +396,7 @@ export function SoundLibrary({
           </div>
         </details>;
       })}
-      {!visible.length && <p className="empty-copy">{t(trash ? "library.trashEmpty" : query.trim() || category !== "all" ? "library.noSavedMatch" : preferences.filter === "favorites" ? "library.favoritesEmpty" : preferences.filter === "recent" ? "library.recentEmpty" : "library.noSavedMatch")}</p>}
+      {!visible.length && <p className="empty-copy">{t(trash ? "library.trashEmpty" : query.trim() || categories.length ? "library.noSavedMatch" : preferences.filter === "favorites" ? "library.favoritesEmpty" : preferences.filter === "recent" ? "library.recentEmpty" : "library.noSavedMatch")}</p>}
       {!trash && removed.length > 0 && <button className="text-button library-trash" onClick={() => setTrash(true)}>{t("library.trash")} ({removed.length})</button>}
       {dialog && (
         <dialog

@@ -6,6 +6,7 @@ export type LibraryPreferences = {
   recent: string[];
   filter: "all" | "favorites" | "recent";
   view: "list" | "grid";
+  expandVariants: boolean;
 };
 export const LIBRARY_PREFERENCES_KEY = "momo-sound-forge-library";
 export function parseLibraryPreferences(value: unknown): LibraryPreferences {
@@ -14,7 +15,8 @@ export function parseLibraryPreferences(value: unknown): LibraryPreferences {
     ? [...new Set(v.filter((id): id is string => typeof id === "string" && id.length < 200))].slice(0, limit) : [];
   return { layoutVersion: 2, favorites: ids(p.favorites, 10000), recent: ids(p.recent, 24),
     filter: p.filter === "favorites" || p.filter === "recent" ? p.filter : "all",
-    view: p.layoutVersion === 2 && p.view === "list" ? "list" : "grid" };
+    view: p.layoutVersion === 2 && p.view === "list" ? "list" : "grid",
+    expandVariants: p.expandVariants === true };
 }
 export function rememberSound(recent: string[], id: string) {
   return [id, ...recent.filter((item) => item !== id)].slice(0, 24);

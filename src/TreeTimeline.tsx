@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import type { TimelineTools } from "./LayerToolbar";
 import {
   ChevronDown,
   ChevronRight,
@@ -8,6 +9,7 @@ import {
   GripVertical,
   Lock,
   Unlock,
+  Trash2,
 } from "lucide-react";
 import type { Layer, Project, RenderResult } from "./model";
 import { useNodeReorder } from "./useNodeReorder";
@@ -35,6 +37,8 @@ export function TreeTimeline({
   previewTime,
   onSelect,
   onClearSelection,
+  onDeleteSelection,
+  onDeleteNode,
   onPatch,
   onMove,
   onPreview,
@@ -46,6 +50,7 @@ export function TreeTimeline({
   onSeekStart,
   onSeek,
   onSeekEnd,
+  renderToolbar,
 }: {
   root: Project;
   selected: NodeAddress;
@@ -65,6 +70,8 @@ export function TreeTimeline({
   ) => void;
   onPatch: (address: NodeAddress, patch: Partial<Layer>) => void;
   onClearSelection: () => void;
+  onDeleteSelection: () => void;
+  onDeleteNode: (address: NodeAddress) => void;
   onMove: (
     path: string[],
     ids: string[],
@@ -80,6 +87,7 @@ export function TreeTimeline({
   onNoteAudition: (address: NodeAddress, note: NoteEvent) => void;
   onOpenNotes: (address: NodeAddress) => void;
   onBegin: () => void;
+  renderToolbar: (tools: TimelineTools) => ReactNode;
 }) {
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const [openScore, setOpenScore] = useState<string | null>(null);
@@ -101,7 +109,6 @@ export function TreeTimeline({
     path: string[];
     layers: Layer[];
   } | null>(null);
-  const [destination, setDestination] = useState("[]");
   const rows: {
     layer: Layer;
     address: NodeAddress;
@@ -143,8 +150,16 @@ export function TreeTimeline({
     JSON.stringify(path) === JSON.stringify(selected.path);
   return (
     <div className="node-tree" onKeyDown={(event) => {
+      if (event.key === "Delete" && !event.defaultPrevented && !event.repeat && !event.nativeEvent.isComposing &&
+          !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && !reorder.active && ids.length &&
+          !(event.target as HTMLElement).closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="combobox"], [role="listbox"], [role="dialog"], .note-roll')) {
+        event.preventDefault();
+        event.stopPropagation();
+        onDeleteSelection();
+        return;
+      }
       if (event.key === "Escape" && !event.defaultPrevented && !reorder.active &&
-          !(event.target as HTMLElement).closest('input, textarea, select, [role="combobox"], .tree-note-editor')) {
+          !(event.target as HTMLElement).closest('input, textarea, select, [role="combobox"], [role="dialog"], .tree-note-editor')) {
         event.preventDefault();
         onClearSelection();
       }
@@ -161,59 +176,7 @@ export function TreeTimeline({
           </div>,
           document.body,
         )}
-      {rows.some(({ layer }) => layer.type === "instrument") && (
-        <div className="tree-view-tools">
-          <span className="field-help">{t("roll.overviewHint")}</span>
-          <button
-            className="secondary"
-            disabled={openScore === null}
-            onClick={() => setOpenScore(null)}
-          >
-            {t("roll.collapseAll")}
-          </button>
-        </div>
-      )}
-      <div className="tree-move-tools">
-        <label>
-          {t("tree.destination")}
-          <select
-            aria-label={t("tree.destination")}
-            value={
-              groups.some((g) => JSON.stringify(g.path) === destination)
-                ? destination
-                : "[]"
-            }
-            onChange={(e) => setDestination(e.target.value)}
-          >
-            {groups.map((g) => (
-              <option
-                key={JSON.stringify(g.path)}
-                value={JSON.stringify(g.path)}
-              >
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="secondary"
-          disabled={!ids.length}
-          onClick={() =>
-            onMove(
-              selected.path,
-              ids,
-              JSON.parse(
-                groups.some((g) => JSON.stringify(g.path) === destination)
-                  ? destination
-                  : "[]",
-              ),
-            )
-          }
-        >
-          {t("tree.move")}
-        </button>
-        <span className="field-help">{t("tree.dragHelp")}</span>
-      </div>
+      {renderToolbar({ groups, canCollapseNotes: openScore !== null, onCollapseNotes: () => setOpenScore(null) })}
       <div className="timeline-scroll">
         <div
           className="layer-list"
@@ -490,6 +453,11 @@ export function TreeTimeline({
                     onClick={() => onPatch(address, { locked: !layer.locked })}
                   >
                     {layer.locked ? <Lock size={12} /> : <Unlock size={12} />}
+                  </button>
+                  <button className="icon-button layer-delete"
+                    aria-label={t("tree.deleteNode", layer.name)} title={t("tree.deleteNodeHelp")}
+                    onClick={() => onDeleteNode(address)}>
+                    <Trash2 size={13} />
                   </button>
                 </div>
                 {layer.type === "instrument" && layer.score && openScore === key && <div className="tree-note-editor">

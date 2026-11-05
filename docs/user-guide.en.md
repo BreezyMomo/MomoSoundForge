@@ -95,7 +95,7 @@ The card's additional actions include Rename, Export project and Remove sound. R
 
 ## Compose and reuse sounds
 
-The layer area is an expandable node tree. Select siblings with Ctrl / Shift and choose **Group selected nodes**. Drag the six-dot grip on the left: row edges reorder and group centers nest. An insertion line or group highlight shows the destination. Esc cancels, Alt + arrows on a focused grip reorder, and the destination selector remains available. Moving across groups preserves absolute timing. Unbind macro mappings before moving or grouping affected nodes.
+The layer area is an expandable node tree. Select siblings with Ctrl / Shift and open **Selection** and choose **Group selected**. Drag the six-dot grip on the left: row edges reorder and group centers nest. An insertion line or group highlight shows the destination. Esc cancels, Alt + arrows on a focused grip reorder, and **Selection** also offers a destination selector with **Move to group**. Moving across groups preserves absolute timing. Unbind macro mappings before moving or grouping affected nodes.
 
 Each sound and group has **Post-processing**. Children are processed first, mixed, then processed by their group. Group all nodes when you want a shared effect. The document root is neutral; final peak protection runs once. Before/after audition bypasses only the selected node, retaining child effects and leaving exports unchanged.
 
@@ -126,7 +126,9 @@ The synth is a lightweight procedural implementation. Sawtooth and square waves 
 - `tests/compositions.test.ts`: nesting, independent edits, legacy migration, sample round-trips and recursive resource limits.
 - `tests/storage.test.ts`: draft migration, library snapshots, updates, restoration and failed-transaction rollback.
 
-The unified sound list supports search, All / Favorites / Recent filters, collapsible categories, and list / waveform-grid views. Favorites and the latest 24 played, added or opened sounds are local preferences outside project history. Choose a category when saving or renaming; older saved sounds start uncategorized.
+The unified sound list supports search, All / Favorites / Recent filters, collapsible categories, and list / waveform-grid views. Category buttons support multiple selections, showing sounds from any selected category. Click again to deselect; All clears the category filter. Collapse the category controls to save space; the heading still shows the selected categories. Favorites and the latest 24 played, added or opened sounds are local preferences outside project history. Choose a category when saving or renaming; older saved sounds start uncategorized.
+
+Use **Display → Sound variants** to choose **Grouped** or **Expanded**. Grouped mode puts ranges or recordings of the same sound in one card; Expanded mode gives each option its own card for playback, favorites and insertion. This setting is saved in the current browser, outside the project and undo history.
 
 Outer clip edges stretch the complete waveform with a corresponding pitch change. Enable Crop above the layers to reveal two internal handles on the selected clip. Cropped regions remain visible in gray and contribute no audio; the clip frame and later layers stay in place. Drag the handles back or choose Restore full clip to recover the content. Stretching preserves crop proportions. Both operations support undo and are saved with projects and library snapshots.
 
@@ -155,3 +157,9 @@ The Layout menu provides Sound design, Video sound design and Note editing layou
 Help and export use shared dialogs with contained Tab focus, Escape dismissal and focus restoration. Video and note toolbars use Workbench controls. Numeric fields allow incomplete text while editing and commit on Enter or blur; Escape cancels an uncommitted edit.
 
 The Work duration and Loop range buttons below the mix waveform open compact settings popovers. Work duration displays milliseconds and offers Keep full sound; a truncation notice stays visible beside the buttons. Loop range contains start/end values and cursor shortcuts, with crossfade and audition under Seam processing. Drag waveform range edges to preview a change and release to commit one undo step; Escape or pointer cancellation discards it. Arrow keys adjust by 0.01 seconds, or 0.001 with Shift. Popover visibility is a UI preference and does not enter project data or undo history.
+
+The Sound layers section has one compact toolbar for Crop, Snap, Duplicate selection, Delete selected, Selection, View and Editing help. Restore full clip appears only when the active layer is cropped; crop mode keeps a short instruction visible. Selection contains grouping, destination selection, alignment and numeric scaling. View contains timeline zoom, Fit width and Collapse all note editors. Shortcut and waveform explanations live in Editing help, while the processing state remains beside the heading with a tooltip. Opening these panels or changing view/snap preferences does not alter the project or undo history.
+
+Selection (N layers) shows the selected count. Delete selected removes the selected sibling layers in one undo step, including nested contents of selected groups. Selection clears afterward. Delete is scoped to the sound layers area and ignores text fields, popovers and note editors. The inspector delete button still removes only the active layer.
+
+Each layer row also has a trash icon that deletes only that row, independently of the current multi-selection. Nested child layers can be deleted individually, and Undo restores them.

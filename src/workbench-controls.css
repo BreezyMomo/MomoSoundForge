@@ -3,6 +3,12 @@
 /* Product layout rules live in a named layer so shared control isolation preserves them.
    Colors, control dimensions and interaction styling remain owned by Workbench. */
 @layer utilities {
+  .layer-tool-popover[data-slot="popover-content"] {
+    width: min(360px, calc(100vw - 24px)); max-height: min(420px, var(--available-height));
+    overflow-y: auto; padding: 12px; gap: 12px;
+  }
+  .layer-tool-heading [data-slot="popover-title"] { font-size: 14px; }
+  .layer-move-settings [data-slot="select-trigger"] { flex: 1; min-width: 0; }
   .waveform-tool-popover[data-slot="popover-content"] {
     width: min(360px, calc(100vw - 24px)); overflow-y: auto; padding: 12px; gap: 12px;
   }

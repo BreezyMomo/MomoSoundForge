@@ -39,7 +39,7 @@
   max-width: 220px;
 }
 .node-tree .tree-row {
-  grid-template-columns: minmax(120px, 160px) 28px minmax(150px, 1fr) 84px;
+  grid-template-columns: minmax(120px, 160px) 28px minmax(150px, 1fr) 116px;
   gap: 8px;
   padding: 5px;
   border: 1px solid transparent;
@@ -70,7 +70,7 @@
   align-items: center;
 }
 .node-tree .layer-list {
-  min-width: 494px;
+  min-width: 526px;
 }
 .node-tree .layer-controls > button {
   flex: 0 0 27px;
