@@ -1,10 +1,13 @@
 import { makeLayer, makeProject, makeComposition, parseProject, projectForSave, assertProjectLimits, type Project, type Layer } from './model';
 import { groupNodes, moveNodes, nodeParent, normalizeGroups, nodeDocument } from './nodeTree';
-import { DEFAULT_EFFECTS, PARAMS, reconcileAdvanced } from './advanced';
+import { DEFAULT_EFFECTS, PARAMS, reconcileAdvanced, validateAdvanced } from './advanced';
+import { editPolish, POLISH_SCHEMA, type PolishEdit } from './polishControls';
+import { EXPORT_SCHEMA } from './aiCapabilities';
 import { scoreIssues } from './instruments';
 
 export type EditOperation =
-  | { op: 'project'; patch: Partial<Project> }
+  | { op: 'project'; path?: string[]; patch: Partial<Project> }
+  | ({ op: 'polish'; path?: string[]; id: string } & PolishEdit)
   | { op: 'add'; path?: string[]; layer: Partial<Layer> }
   | { op: 'patch'; path?: string[]; id: string; patch: Partial<Layer> }
   | { op: 'remove'; path?: string[]; id: string }
@@ -20,13 +23,26 @@ function keys(value: object, allowed: string[]) {
 export function applyEdits(project: Project, operations: EditOperation[]): Project {
   if (!Array.isArray(operations) || !operations.length || operations.length > 64) throw Error('ai.invalidEdit');
   let next = structuredClone(project);
+  const validatePaths = new Map<string, string[]>();
+  const validateValues: { path: string[]; id?: string }[] = [];
   for (const action of operations) {
     if (!action || typeof action !== 'object') throw Error('ai.invalidEdit');
     const path = 'path' in action ? action.path ?? [] : [];
     if (!Array.isArray(path) || path.length > 6 || path.some(p => typeof p !== 'string')) throw Error('ai.invalidEdit');
     const parent = nodeParent(next, path);
     switch (action.op) {
-      case 'project': keys(action.patch, projectKeys); Object.assign(next, action.patch); break;
+      case 'project':
+        keys(action.patch, path.length ? projectKeys.filter(k => !['duration', 'videoReference'].includes(k)) : projectKeys);
+        Object.assign(parent, action.patch);
+        if (action.patch.controls !== undefined) validatePaths.set(JSON.stringify(path), path);
+        if (action.patch.controlValues !== undefined) validateValues.push({ path });
+        break;
+      case 'polish': {
+        keys(action, ['op', 'path', 'id', 'action', 'group', 'enabled', 'values']);
+        const layer = parent.layers.find(l => l.id === action.id);
+        if (!layer) throw Error('ai.missingNode');
+        layer.effects = editPolish(layer.effects, action); break;
+      }
       case 'add':
         keys(action.layer, layerKeys);
         if (action.layer.type && action.layer.type !== 'synth') throw Error('ai.useInsert');
@@ -35,7 +51,9 @@ export function applyEdits(project: Project, operations: EditOperation[]): Proje
         keys(action.patch, layerKeys.filter(k => !['id', 'type', 'assetId'].includes(k)));
         const layer = parent.layers.find(l => l.id === action.id);
         if (!layer) throw Error('ai.missingNode');
-        Object.assign(layer, action.patch); break;
+        Object.assign(layer, action.patch);
+        if (action.patch.controlValues !== undefined) validateValues.push({ path, id: action.id });
+        break;
       }
       case 'remove': {
         if (!parent.layers.some(l => l.id === action.id)) throw Error('ai.missingNode');
@@ -50,6 +68,18 @@ export function applyEdits(project: Project, operations: EditOperation[]): Proje
       }
       default: throw Error('ai.invalidEdit');
     }
+  }
+  // Validate newly authored definitions/values before reconciliation. Existing values
+  // and ancestor bindings still follow the editor's range-change reconciliation.
+  for (const path of validatePaths.values()) {
+    const p = nodeParent(next, path);
+    validateAdvanced({ ...p, controlValues: undefined, layers: p.layers.map(l => ({ ...l, controlValues: undefined })) });
+  }
+  for (const { path, id } of validateValues) {
+    const p = nodeParent(next, path), layer = id ? p.layers.find(l => l.id === id) : undefined;
+    if (id && !layer) throw Error('ai.missingNode');
+    const controls = id ? layer!.project?.controls : p.controls, controlValues = id ? layer!.controlValues : p.controlValues;
+    validateAdvanced({ ...makeProject('Validation'), controls: controls?.map(c => ({ ...c, mappings: [] })), controlValues });
   }
   next = parseProject(projectForSave(reconcileAdvanced(normalizeGroups(next))));
   assertProjectLimits(next);
@@ -77,14 +107,19 @@ export const AUTHORING_SCHEMA = {
   layerDefaults: { ...makeLayer(), id: '<unique id>' }, effectsDefaults: DEFAULT_EFFECTS,
   parameterRanges: PARAMS,
   operations: {
-    project: { patch: projectKeys },
+    project: { path: [], patch: projectKeys, nested: 'path addresses a child document; duration is derived, videoReference belongs to root' },
+    polish: { path: [], id: 'node ID', action: 'adjust | reset | toggle', group: 'optional tone | delay | space', values: POLISH_SCHEMA.values, enabled: 'boolean for toggle' },
     add: { path: [], layer: 'Partial synth layer; missing fields use layerDefaults' },
     patch: { path: [], id: 'layer id', patch: layerKeys.filter(k => !['id', 'type', 'assetId'].includes(k)) },
     remove: { path: [], id: 'layer id' }, group: { path: [], ids: ['layer id'], name: 'Group' },
     move: { path: [], ids: ['layer id'], targetPath: [], beforeId: 'optional layer id' },
     insert: { path: [], soundId: 'catalog ID OR project field with complete native project', start: 0 },
   },
-  time: 'Layer start/duration, crop and automation use seconds relative to parent. Score notes use beats, with score.bpm. Patch score by preserving instruments and replacing notes. Groups have content-derived duration. Root duration remains explicit.',
+  time: 'Layer start/duration and crop use seconds relative to parent. Automation time is normalized [0,1] across the source duration, NOT seconds. Score notes use beats, with score.bpm. Patch score by preserving instruments and replacing notes. Groups have content-derived duration. Root duration remains explicit.',
+  waves: ['sine', 'triangle', 'saw', 'square', 'noise'],
+  polish: POLISH_SCHEMA, export: EXPORT_SCHEMA,
+  automation: { keys: ['gain', 'pan', 'cutoff'], time: [0, 1], point: { time: 0, value: 'native parameter value' }, maxPoints: 32, ordering: 'strictly increasing time; cannot target a parameter already controlled by a macro' },
+  controls: { scope: 'project patch with path; definitions may exist at every document level', maxPerDocument: 16, maxMappings: 32, definition: { id: 'unique', name: 'Weight', min: 0, max: 1, defaultValue: 0.5, mappings: [{ layerId: 'child node ID', parameter: 'gain', low: 0.1, high: 0.8 }] }, childBinding: { layerId: 'group ID', parameter: 'control', controlId: 'existing child control ID', low: 'within child range', high: 'within child range' }, values: 'project.controlValues or group node controlValues; values must be in declared ranges' },
   notes: { schema: 'momo.score/v1', bpm: [20, 300], maxNotesPerScore: 256, event: { id: 'unique', instrumentId: 'existing instrument ID', midi: 60, start: 0, duration: 0.5, velocity: 80, articulation: 'existing region articulation' } },
   constraints: 'Query catalog and capture; use actual instrument regions. A patch replaces nested fields in full. Every edit is atomic, version-checked, validated and undoable. Imported sounds become editable groups. All layers have effects. No arbitrary scripts.',
 };

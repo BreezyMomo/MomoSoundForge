@@ -18,6 +18,9 @@ describe('AI bridge', () => {
       const invalid = await client.callTool({ name: 'sound_edit', arguments: { pageId: page.pageId, mode: 'typo', operations: [] } });
       expect(invalid.isError).toBe(true);
       expect(invalid.content[0].text).toContain('Invalid arguments');
+      const emptySet = await client.callTool({ name: 'sound_export', arguments: { pageId: page.pageId, snapshotId: 's', variantSetId: '' } });
+      expect(emptySet.isError).toBe(true);
+      expect(emptySet.content[0].text).toContain('Invalid arguments');
       const list = await client.callTool({ name: 'sound_pages' });
       expect(JSON.parse(list.content[0].text).pages[0].pageId).toBe(page.pageId);
       const call = client.callTool({ name: 'sound_capture', arguments: { pageId: page.pageId } });

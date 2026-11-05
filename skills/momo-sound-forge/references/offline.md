@@ -12,7 +12,7 @@ node scripts/cli.mjs validate --input pickup-v2.soundforge
 node scripts/cli.mjs render --input pickup-v2.soundforge --out pickup-v2.wav
 ```
 
-先查询 catalog 再使用实际 preset ID，上方名称仅用于说明。`edits.json` 是 schema 描述的 operations 数组。支持 add、patch、project、group、move、remove、insert；离线 insert 使用完整 project。validate 检查工程合法性并列出乐器音符问题。render 返回峰值、RMS、增益压低量、尾音状态和 WAV 哈希；不是主观听感认证。
+先查询 catalog 再使用实际 preset ID，上方名称仅用于说明。`edits.json` 是 schema 描述的 operations 数组。支持 add、patch、project、polish、group、move、remove、insert；project 可带 path 编辑子工程的组合控件，离线 insert 使用完整 project。validate 检查工程合法性并列出乐器音符问题。render 返回峰值、RMS、增益压低量、尾音状态和 WAV 哈希；不是主观听感认证。在线 MCP 的候选管理、多格式导出与导出设置不属于离线 render 命令，离线目前只输出原生 WAV。
 
 安装包不重复携带整套音源。可从用户明确给出的编辑器站点下载指定内置声音；下载校验目录中的大小和 SHA256，再解压解析：
 

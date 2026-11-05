@@ -4,6 +4,8 @@
 
 Use **AI tools** in the toolbar to download or install the bundled `momo-sound-forge` skill, start its portable local service, connect this page, and copy the MCP configuration into your AI client. Requires Node.js 22+ and a client supporting Streamable HTTP with headers. No model key is entered in the editor.
 
+MCP supports seeded variant candidates in the existing workspace, audition/apply/undo, intuitive polish controls and before/after rendering, nested macro definitions and bindings, and WAV/OGG/MP3/FLAC export with the same settings and batch ZIP pipeline as the export panel. Per-call export settings preserve user preferences. Manual edits invalidate old candidate writes. Offline CLI rendering remains native WAV only.
+
 The skill covers native editable sound design, melody-design knowledge and 31 original A/B lesson pairs, real instrument mappings, and sample discovery. AI edits are atomic and undoable; stale snapshots cannot overwrite manual edits. Native CLI and editor rendering use the same engine. Freesound search currently supports CC0 metadata and explicitly requested MP3 **previews**; originals are imported separately. Provenance and quality remain in the project and appear in sample properties. Other source providers are documented workflows, not automated adapters.
 
 Run `npm run ai:build` to build the portable skill ZIP, or `npm run ai:serve -- --allow-origin http://127.0.0.1:5180` for development. Development and production builds generate the ZIP automatically. Full setup, boundaries and privacy details: [AI authoring guide (Chinese)](docs/ai-authoring.md).

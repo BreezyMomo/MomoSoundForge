@@ -3,6 +3,8 @@ import { Button } from "@momo/workbench/react";
 import { HelpDialog } from "./HelpDialog";
 import { AITools } from './AITools';
 import { useAIEditor } from './useAIEditor';
+import { generateVariants } from './aiCapabilities';
+import { renderExport } from './exportPipeline';
 import { flushSync } from 'react-dom';
 import { VideoReferencePanel } from "./VideoReferencePanel";
 import { appendInstrumentNode } from "./instrumentNode";
@@ -80,7 +82,6 @@ import {
   parseProject,
   projectForSave,
   uid,
-  varyProject,
   assertProjectLimits,
   makeComposition,
   resolveProjectPath,
@@ -97,7 +98,6 @@ import { reconcileAdvanced, boundControl, resolveControls } from "./advanced";
 import { boundedSelection } from "./timeline";
 import {
   readExportSettings,
-  prepareExport,
   audioResult,
   makeLoop,
   seamPreview,
@@ -362,7 +362,13 @@ export default function App() {
     );
   }, [stop]);
   const ai = useAIEditor({
-    project: history.project, ready,
+    project: history.project, ready, exportSettings,
+    publishVariants: (base, items, path) => {
+      stop(); scopeEpoch.current++;
+      setEditPath(path); setSelection([]); setSelected('');
+      setVariations(items); setVariationBase(base);
+      manager.current?.show('variants');
+    },
     commit: (expected, next) => {
       if (rootCurrent.current !== expected) throw Error('ai.stale');
       stop(); editGroup.current = { key: '', time: 0 };
@@ -1012,19 +1018,7 @@ export default function App() {
     setSelected(copies[0].id);
   };
   async function finalOutput(p: Project, settings = exportSettings) {
-    const input = await renderer.current!.render(
-      settings.loopOnly
-        ? p
-        : {
-            ...p,
-            duration: p.duration + settings.tail,
-          },
-    );
-    return prepareExport(
-      input,
-      { ...settings, loopOnly: settings.loopOnly && !!p.loopRegion },
-      p.loopRegion,
-    );
+    return renderExport(p, settings, p => renderer.current!.render(p));
   }
   async function encodedOutput(p: Project, settings = exportSettings) {
     const key = JSON.stringify(settings),
@@ -1230,25 +1224,21 @@ export default function App() {
   }
   async function generate() {
     if (!renderer.current || busy) return;
+    ai.invalidateVariants();
     stop();
     setBusy(true);
     const base = current.current,
       items: Variation[] = [];
     const epoch = scopeEpoch.current;
     try {
-      for (let i = 0; i < 5; i++) {
-        const next = varyProject(
-          base,
-          (base.seed + 1 + i * 7919) >>> 0,
-          amount,
-        );
-        next.name = `${base.name.slice(0, 110)} ${String(i + 1).padStart(2, "0")}`;
+      for (const next of generateVariants(base, { amount })) {
         items.push({
           project: next,
           result: await renderer.current.render(next),
         });
       }
       if (alive.current && epoch === scopeEpoch.current) {
+        ai.invalidateVariants();
         setVariations(items);
         setVariationBase(base);
       }

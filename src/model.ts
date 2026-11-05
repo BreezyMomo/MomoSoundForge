@@ -362,13 +362,18 @@ export function varyProject(
 ): Project {
   const random = rng(seed),
     jitter = (value: number, scale: number) =>
-      value * Math.pow(2, (random() - 0.5) * amount * scale);
+      value * Math.pow(2, (random() - 0.5) * amount * scale),
+    // Instrument round-robin selection uses project.seed ^ layer.noiseSeed.
+    // Compensate for the new project seed when this voice must stay identical.
+    preservedSeed = (l: Layer) => l.type === "instrument"
+      ? (l.noiseSeed ^ project.seed ^ seed) >>> 0
+      : l.noiseSeed;
   return {
     ...project,
     seed: seed >>> 0,
     layers: project.layers.map((l) =>
       l.locked
-        ? { ...l }
+        ? { ...l, noiseSeed: preservedSeed(l) }
         : l.type === "composition" && l.project
           ? (() => {
               const child = varyProject(
@@ -396,7 +401,7 @@ export function varyProject(
           : {
               ...l,
               noiseSeed:
-                amount === 0 ? l.noiseSeed : Math.floor(random() * 4294967296),
+                amount === 0 ? preservedSeed(l) : Math.floor(random() * 4294967296),
               frequency: clamp(jitter(l.frequency, 0.8), 20, 20000),
               endFrequency: clamp(jitter(l.endFrequency, 0.8), 20, 20000),
               duration: Math.max(0.01, jitter(l.duration, 0.35)),
