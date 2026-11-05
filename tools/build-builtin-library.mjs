@@ -45,7 +45,7 @@ for (const [id, source] of [
 ]) jobs.push({ id: `example-${id}`, kind: "example", nameKey: `builtin.example.${id}`, category: "music", source, keywords: id });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "src/engine.ts", "src/model.ts", "src/advanced.ts",
+  "tools/build-builtin-library.mjs", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts",
   `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   ...jobs.map((job) => job.source),
@@ -70,6 +70,7 @@ const server = await createServer({ server: { middlewareMode: true, hmr: false, 
 try {
   const { makeLayer, encodeSamples, parseProject, projectForSave } = await server.ssrLoadModule("/src/model.ts");
   const { renderProject } = await server.ssrLoadModule("/src/engine.ts");
+  const { instrumentPlaybackRange } = await server.ssrLoadModule("/src/sampleTail.ts");
   const sounds = [];
   for (const job of jobs) {
     let source;
@@ -83,12 +84,12 @@ try {
         throw Error(`Source WAV exceeds the sample budget: ${job.id}`);
       const channels = [new Float32Array(length), new Float32Array(length)];
       for (let i = 0; i < length; i++) for (let c = 0; c < 2; c++) channels[c][i] = wav.readInt16LE(44 + i * 4 + c * 2) / 32768;
-      const duration = Math.min(10, Math.max(.1, length / 48000));
+      const { duration, release } = instrumentPlaybackRange(channels, 48000, job.sample.instrumentId);
       source = {
         schema: "momo.soundforge/v2", name: job.id, seed: 2048, duration, master: 1.25, echo: 0,
         assets: { [job.sample.id]: { id: job.sample.id, name: path.basename(job.source), sampleRate: 48000, channels: channels.map(encodeSamples) } },
         layers: [makeLayer({ id: `layer-${job.sample.id}`, name: job.sample.id, type: "sample", assetId: job.sample.id,
-          duration, frequency: 440, endFrequency: 440, gain: 1.3, attack: .002, release: .08, decay: 0, cutoff: 22000, noiseSeed: 2048 })],
+          duration, frequency: 440, endFrequency: 440, gain: 1.3, attack: .002, release, decay: 0, cutoff: 22000, noiseSeed: 2048 })],
       };
     } else source = JSON.parse(await readFile(path.join(root, job.source), "utf8"));
     const project = parseProject(projectForSave(source));
