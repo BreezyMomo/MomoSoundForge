@@ -12,6 +12,7 @@ const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const readJson = async (name) => JSON.parse(await readFile(path.join(root, name), "utf8"));
 const fxRoot = "samples/cc0-starter-20261104";
 const orchestraRoot = "samples/orchestra-basics-20261104";
+const expandedRoot = "samples/orchestra-expanded-20261105";
 const fx = await readJson(`${fxRoot}/manifest.json`);
 const orchestra = await readJson(`${orchestraRoot}/manifest.json`);
 const fxExamples = await readJson(`${fxRoot}/examples/recipes.json`);
@@ -43,6 +44,11 @@ for (const [id, source] of [
   ["forest-departure", `${orchestraRoot}/examples/forest-departure-8s.soundforge`],
   ["piano-window-light", "exports/piano-window-light-20261104/piano-window-light.soundforge"],
 ]) jobs.push({ id: `example-${id}`, kind: "example", nameKey: `builtin.example.${id}`, category: "music", source, keywords: id });
+for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.push({
+  id: `example-expanded-${id}`, kind: "example", nameKey: `builtin.example.expanded-${id}`,
+  category: "music", source: `${expandedRoot}/demos/expanded-${id}.soundforge`,
+  keywords: `expanded ${id} multisample dynamics articulation 连续音域 力度 演奏法`,
+});
 
 const sourceFiles = [...new Set([
   "tools/build-builtin-library.mjs", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",

@@ -1,0 +1,96 @@
+{
+  "schema": "momo.note-events/v1",
+  "bpm": 120,
+  "notes": [
+    {
+      "id": "piano-001",
+      "instrumentId": "upright-piano",
+      "midi": 60,
+      "start": 0.23999999999999996,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-002",
+      "instrumentId": "upright-piano",
+      "midi": 62,
+      "start": 1.0800000000000003,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-003",
+      "instrumentId": "upright-piano",
+      "midi": 64,
+      "start": 1.9199999999999997,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-004",
+      "instrumentId": "upright-piano",
+      "midi": 65,
+      "start": 2.76,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-005",
+      "instrumentId": "upright-piano",
+      "midi": 67,
+      "start": 3.5999999999999996,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-006",
+      "instrumentId": "upright-piano",
+      "midi": 69,
+      "start": 4.44,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-007",
+      "instrumentId": "upright-piano",
+      "midi": 71,
+      "start": 5.28,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-008",
+      "instrumentId": "upright-piano",
+      "midi": 72,
+      "start": 6.12,
+      "duration": 0.4799999999999999,
+      "velocity": 35,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-009",
+      "instrumentId": "upright-piano",
+      "midi": 72,
+      "start": 6.96,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "single-hit"
+    },
+    {
+      "id": "piano-010",
+      "instrumentId": "upright-piano",
+      "midi": 72,
+      "start": 7.8,
+      "duration": 0.4799999999999999,
+      "velocity": 115,
+      "articulation": "single-hit"
+    }
+  ]
+}

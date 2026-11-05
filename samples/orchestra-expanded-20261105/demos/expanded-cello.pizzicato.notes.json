@@ -1,0 +1,24 @@
+{
+  "schema": "momo.note-events/v1",
+  "bpm": 120,
+  "notes": [
+    {
+      "id": "pizzicato-001",
+      "instrumentId": "cello-section",
+      "midi": 52,
+      "start": 2.2,
+      "duration": 0.4,
+      "velocity": 40,
+      "articulation": "pizzicato"
+    },
+    {
+      "id": "pizzicato-002",
+      "instrumentId": "cello-section",
+      "midi": 53,
+      "start": 2.96,
+      "duration": 0.4,
+      "velocity": 100,
+      "articulation": "pizzicato"
+    }
+  ]
+}

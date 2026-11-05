@@ -1,0 +1,52 @@
+MomoSoundForge 六种乐器音源扩充 · 2026-11-05
+
+本轮补齐已有乐器的音域、力度与演奏法。六种乐器是立式钢琴、长笛、小提琴组、大提琴组、圆号、小号。
+收集 686 个不同的原始录音（约 695 MiB），其中 682 个通过技术筛查，可由 skill 自动选用；相对旧库新增 620 个可用录音。manifest.json 中 686 个可用映射区域会复用部分录音，不能当成 686 个独立录音。
+
+使用方法
+1. 在 MomoSoundForge 声音库中搜索“连续音域”或“expanded”，可看到六个新的编配示例；点“打开编辑”，再选中乐器层，可编辑音高、力度、节奏、演奏法与采样映射。
+2. demos/ 下每个 .wav 可直接试听；同名 .soundforge 通过“打开工程”载入。工程内嵌所需采样，不依赖本机绝对路径。
+3. instruments/ 下六个 .sfinstrument 可从乐器属性中的“导入乐器包”导入。它们只含示例所需区域，最长取原录音前 4 秒，并非全音域完整乐器包。完整录音始终保存在 originals/ 和 wav/。
+4. melody-design 已增加本库选样规则。例如：“用 melody-design，制作 1 秒温柔的钢琴拾取音，优先使用扩充音源库，提供 WAV 和可编辑工程。”skill 按作品需要选择完整库的区域，不限于六个示例包；仍须遵守工程资源预算。
+
+六个 6.5 秒示例与串联试听顺序
+expanded-piano：连续音阶，然后比较同音轻、中、重演奏。
+expanded-flute：普通长音、断奏、带颤音长音。
+expanded-violin：跳弓、拨弦、长音、震音。
+expanded-cello：跳弓、拨弦、长音、震音。
+expanded-horn：长音、断奏、弱音器长音。
+expanded-trumpet：长音、断奏、颤音长音、Harmon 弱音器、直筒弱音器。
+showcase.wav 按上述顺序串联，片段之间留白 0.6 秒。试听由 MomoSoundForge 原生引擎渲染。
+
+覆盖与限制（C4 = MIDI 60）
+钢琴：MIDI 24–103；长笛长音 60–96，断奏 65–96；小提琴组 55–86；大提琴组 36–77；圆号长音与断奏 33–77、弱音 46–77；小号普通演奏法 52–84、弱音 58–84。
+这些是作者映射可演奏范围，邻近录音之间通过移调覆盖，不代表每个半音单独录制，也不代表每种演奏法都有相同力度层数。
+隔离后，大提琴震音中高力度的 MIDI 49–51，以及圆号断奏高力度的 MIDI 76–77 仍有缺口。精确范围见 coverage.json 的 after，authorReference 表示未隔离前的作者映射。
+没有启用未经验证的循环点，没有补造真实连奏、滑奏或松键录音。长音按实际录音长度播放。作者随机轮替窗口作为来源信息保留，当前引擎采用可复现的轮替选择。
+682 个录音通过的是技术筛查，尚未逐个完成主观听感与音准认证。不能据此保证达到参考视频或商业音源的品质。
+
+质量与增益
+4 个原始录音出现满幅样本，已从自动选样列表隔离；详情见 quarantine.json。隔离并不抹除来源，原文件仍保留。
+工作 WAV 统一为 48 kHz、立体声、PCM16，保留完整时长。全库统一衰减 6 dB，给重采样留出余量；不逐条归一化，不降噪，保留轻重演奏关系。
+创建区域时使用 conversion.recommendedRegionGainDb；它已计算统一衰减补偿及必要的整件乐器增益偏移。不要再额外补偿 6 dB，也不要用逐条归一化覆盖原有力度关系。
+
+来源与许可
+VSCO 2 Community Edition，CC0-1.0。
+官网：https://versilian-studios.com/vsco-community/
+仓库：https://github.com/sgossner/VSCO-2-CE
+录音固定版本：440300901dfe9275fd84e0b7763af1f8443ae62e
+SFZ 映射固定版本：6dd651d55dde97fd4028699be9d4481f26917891
+licenses/ 保留原始许可与说明；mappings/ 保留 20 个作者映射；manifest.json 逐区域记录出处、作者、许可、原文件 Git blob ID 与 SHA-256。
+
+验证与复现
+validation.json：逐文件来源/工作 WAV 校验、95,856 个音高×力度×演奏法覆盖组合的原生选择验证，以及六个可导入乐器包。
+demos/verification.json：六个示例的渲染、尾音、峰值、资源预算和保存后重开音频一致性检查。
+browser-validation.json：真实浏览器打开六个示例、试听、独立乐器包导入、钢琴导出字节一致性记录。
+仓库 npm test（146 项）与 npm run build 已通过。没有提交或推送。
+
+维护入口（在仓库根目录执行）
+tools/collect-orchestra-expansion.py：采集和校验固定来源；依赖 numpy 2.4.6、scipy 1.17.1、soundfile 0.14.0。--audit-only 只刷新 author-coverage.json，不覆盖筛查后的 coverage.json。
+tools/plan-orchestra-expansion.mjs：生成 demo-plan.json。
+melody-design/scripts/render-performance.mjs：按 demo-plan.json 使用产品原生引擎渲染。
+tools/verify-orchestra-expansion.mjs：验证文件、映射覆盖并生成示例区域乐器包。
+tools/build-builtin-library.mjs：随 npm run build 将六个工程接入内置示例库，资源按需加载。

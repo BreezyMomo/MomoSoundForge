@@ -1,0 +1,42 @@
+{
+  "schema": "momo.note-events/v1",
+  "bpm": 120,
+  "notes": [
+    {
+      "id": "staccato-001",
+      "instrumentId": "flute",
+      "midi": 69,
+      "start": 3.3,
+      "duration": 0.32,
+      "velocity": 35,
+      "articulation": "staccato"
+    },
+    {
+      "id": "staccato-002",
+      "instrumentId": "flute",
+      "midi": 71,
+      "start": 3.98,
+      "duration": 0.32,
+      "velocity": 75,
+      "articulation": "staccato"
+    },
+    {
+      "id": "staccato-003",
+      "instrumentId": "flute",
+      "midi": 72,
+      "start": 4.66,
+      "duration": 0.32,
+      "velocity": 110,
+      "articulation": "staccato"
+    },
+    {
+      "id": "staccato-004",
+      "instrumentId": "flute",
+      "midi": 74,
+      "start": 5.34,
+      "duration": 0.32,
+      "velocity": 35,
+      "articulation": "staccato"
+    }
+  ]
+}

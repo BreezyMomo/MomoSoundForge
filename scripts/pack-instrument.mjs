@@ -132,7 +132,7 @@ try {
         sample.roundRobin?.index ??
         Math.round((sample.roundRobin?.randomLow ?? 0) * 100),
       tuneCents: Number(sample.sourceEffectiveOpcodes?.tune ?? 0),
-      gainDb: sample.conversion?.suggestedAuthorRegionVolumeDb ?? 0,
+      gainDb: sample.conversion?.recommendedRegionGainDb ?? sample.conversion?.suggestedAuthorRegionVolumeDb ?? 0,
       releaseSeconds: Math.max(
         0.005,
         Math.min(3, sample.release?.envelopeSeconds ?? 0.15),

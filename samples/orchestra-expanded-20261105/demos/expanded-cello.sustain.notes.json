@@ -1,0 +1,24 @@
+{
+  "schema": "momo.note-events/v1",
+  "bpm": 120,
+  "notes": [
+    {
+      "id": "sustain-001",
+      "instrumentId": "cello-section",
+      "midi": 55,
+      "start": 4.4,
+      "duration": 0.9,
+      "velocity": 75,
+      "articulation": "sustain"
+    },
+    {
+      "id": "sustain-002",
+      "instrumentId": "cello-section",
+      "midi": 57,
+      "start": 5.640000000000001,
+      "duration": 0.9,
+      "velocity": 75,
+      "articulation": "sustain"
+    }
+  ]
+}

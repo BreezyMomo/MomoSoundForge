@@ -1,0 +1,24 @@
+{
+  "schema": "momo.note-events/v1",
+  "bpm": 120,
+  "notes": [
+    {
+      "id": "harmon-001",
+      "instrumentId": "trumpet",
+      "midi": 67,
+      "start": 6.1,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "harmon-muted-sustain"
+    },
+    {
+      "id": "harmon-002",
+      "instrumentId": "trumpet",
+      "midi": 69,
+      "start": 6.8999999999999995,
+      "duration": 0.4799999999999999,
+      "velocity": 75,
+      "articulation": "harmon-muted-sustain"
+    }
+  ]
+}

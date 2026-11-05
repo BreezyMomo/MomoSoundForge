@@ -19,11 +19,11 @@ function resource(raw: unknown = fixture()) {
   return { bytes, sound, response: () => new Response(Uint8Array.from(bytes).buffer) };
 }
 it("indexes all collected samples and examples with matching categories, semantic names and final-render thumbnails", () => {
-  expect(BUILTIN_SOUNDS).toHaveLength(156);
-  expect(new Set(BUILTIN_SOUNDS.map(x => x.id)).size).toBe(156);
+  expect(BUILTIN_SOUNDS).toHaveLength(162);
+  expect(new Set(BUILTIN_SOUNDS.map(x => x.id)).size).toBe(162);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "instrument")).toHaveLength(106);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "sample")).toHaveLength(40);
-  expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(10);
+  expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(16);
   for (const sound of BUILTIN_SOUNDS) {
     expect(SOUND_CATEGORIES).toContain(sound.category);
     expect(sound.duration).toBeGreaterThanOrEqual(.1);

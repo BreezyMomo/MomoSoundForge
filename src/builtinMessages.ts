@@ -102,4 +102,10 @@ export const BUILTIN_MESSAGES: Record<string, [string, string]> = {
   "builtin.example.mechanical-unlock": ["机械解锁", "Mechanical unlock"],
   "builtin.example.forest-departure": ["林间启程 · 管弦乐", "Forest departure · Orchestra"],
   "builtin.example.piano-window-light": ["窗边午后 · 钢琴", "Window light · Piano"],
+  "builtin.example.expanded-piano": ["钢琴 · 连续音阶与轻重", "Piano · Scale and dynamics"],
+  "builtin.example.expanded-flute": ["长笛 · 长音与断奏", "Flute · Sustains and staccato"],
+  "builtin.example.expanded-violin": ["小提琴组 · 弓与拨弦", "Violin section · Bowed and plucked"],
+  "builtin.example.expanded-cello": ["大提琴组 · 弓与拨弦", "Cello section · Bowed and plucked"],
+  "builtin.example.expanded-horn": ["圆号 · 长短与弱音", "Horn · Sustained, short and muted"],
+  "builtin.example.expanded-trumpet": ["小号 · 五种演奏法", "Trumpet · Five articulations"],
 };

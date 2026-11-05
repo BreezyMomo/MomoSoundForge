@@ -1,0 +1,24 @@
+{
+  "schema": "momo.note-events/v1",
+  "bpm": 120,
+  "notes": [
+    {
+      "id": "sustain-001",
+      "instrumentId": "flute",
+      "midi": 69,
+      "start": 0.23999999999999996,
+      "duration": 0.9,
+      "velocity": 45,
+      "articulation": "sustain"
+    },
+    {
+      "id": "sustain-002",
+      "instrumentId": "flute",
+      "midi": 71,
+      "start": 1.54,
+      "duration": 0.9,
+      "velocity": 90,
+      "articulation": "sustain"
+    }
+  ]
+}

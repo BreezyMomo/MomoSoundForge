@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-05",
+  "browser": "Codex in-app browser",
+  "testedBuild": "Vite production preview on localhost:5196",
+  "allSixBuiltInExamplesOpened": true,
+  "pianoPlayPauseVerified": true,
+  "pianoFirstNoteVelocityEditAndUndo": [
+    75,
+    80,
+    75
+  ],
+  "violinDemoRegionBundleImportedIntoFluteProject": true,
+  "pianoBrowserExportMatchesNativeWavByteForByte": true,
+  "pianoWavSha256": "28764ebc5a5d6c971808d7b53995bfb04e952b285e89c2ee51f3744070b095d9",
+  "screenshot": "browser-proof.png",
+  "consoleObservations": [
+    "One asynchronous listener message-channel-closed error was logged; no source attribution was available. The verified operations succeeded."
+  ],
+  "subjectiveListening": "Playback control was exercised; no claim of full subjective listening or reference-video quality."
+}

@@ -1,0 +1,80 @@
+{
+  "sourceRecordings": 686,
+  "usableRecordings": 682,
+  "usableRegions": 686,
+  "quarantinedRegions": 4,
+  "allSourceBlobIdsAndWavHashesMatch": true,
+  "selectorCoveredCells": 95856,
+  "selectorUncoveredCells": 229264,
+  "bundles": [
+    {
+      "file": "instruments/piano-demo-region.sfinstrument",
+      "regions": 10,
+      "articulations": [
+        "single-hit"
+      ],
+      "scope": "Only the demo regions and at most the first four seconds; the full collection is in manifest.json.",
+      "sha256": "478ff6511e535dd0c461ddf6d57dc05ef8bbe65b7beba545025b3cbc55188f4f"
+    },
+    {
+      "file": "instruments/flute-demo-region.sfinstrument",
+      "regions": 12,
+      "articulations": [
+        "sustain",
+        "staccato",
+        "sustain-vibrato"
+      ],
+      "scope": "Only the demo regions and at most the first four seconds; the full collection is in manifest.json.",
+      "sha256": "d4d499b1805554295d85bce715734f88cb5317e214cda61c9ee89b272536c8e9"
+    },
+    {
+      "file": "instruments/violin-demo-region.sfinstrument",
+      "regions": 11,
+      "articulations": [
+        "spiccato",
+        "pizzicato",
+        "sustain",
+        "tremolo"
+      ],
+      "scope": "Only the demo regions and at most the first four seconds; the full collection is in manifest.json.",
+      "sha256": "e82bb556465ee4b8b5a8ba6d209068f10d343fb228092fffe8065a4bbbdd009a"
+    },
+    {
+      "file": "instruments/cello-demo-region.sfinstrument",
+      "regions": 11,
+      "articulations": [
+        "spiccato",
+        "pizzicato",
+        "sustain",
+        "tremolo"
+      ],
+      "scope": "Only the demo regions and at most the first four seconds; the full collection is in manifest.json.",
+      "sha256": "2a32bc7f06ff1c332f6799f64832d82f562ad43a3571ecdbd68a84eb66ce54ca"
+    },
+    {
+      "file": "instruments/horn-demo-region.sfinstrument",
+      "regions": 9,
+      "articulations": [
+        "sustain",
+        "staccato",
+        "muted-sustain"
+      ],
+      "scope": "Only the demo regions and at most the first four seconds; the full collection is in manifest.json.",
+      "sha256": "1e5b2578a6e19d68abd18eb1a884799ab90d68edd3192fb0fcec91e73e648fc1"
+    },
+    {
+      "file": "instruments/trumpet-demo-region.sfinstrument",
+      "regions": 12,
+      "articulations": [
+        "sustain",
+        "staccato",
+        "sustain-vibrato",
+        "harmon-muted-sustain",
+        "straight-muted-sustain"
+      ],
+      "scope": "Only the demo regions and at most the first four seconds; the full collection is in manifest.json.",
+      "sha256": "b6f4c4dd0403d4491bda9cf705e64502524d5f7fd2ffb8d4a0fcdfc91e875818"
+    }
+  ],
+  "subjectiveAudition": "pending"
+}
