@@ -93,7 +93,7 @@ export const BUILTIN_MESSAGES: Record<string, [string, string]> = {
   "library.basic": ["基础声音", "Basic sounds"],
   "library.examples": ["组合示例", "Combinations"],
   "library.section": ["声音来源", "Sound source"],
-  "library.basicHint": ["同一种声音的不同录音在卡片内选择；动作、材质或轻重不同的声音单独展示。", "Choose alternate recordings within a card. Different actions, materials or impact strengths have separate cards."],
+  "library.basicHint": ["同一种声音的不同录音可在“显示”中选择折叠或展开；动作、材质或轻重不同的声音单独展示。", "Use Display to group or expand alternate recordings. Different actions, materials or impact strengths have separate cards."],
   "library.examplesHint": ["搭配好的组合，可整体添加或打开拆解。", "Ready-made combinations to add together or open and explore."],
   "library.mineHint": ["保存自己的声音，随时复用。", "Save your sounds here to reuse them."],
   "library.basicCount": ["{0} 种基础音色 · {1} 个乐器录音", "{0} basic sounds · {1} instrument recordings"],
