@@ -6,6 +6,7 @@ import {
   parseProject,
   projectForSave,
   wrapProject,
+  varyProject,
   type Project,
   type SampleAsset,
 } from "../src/model";
@@ -96,6 +97,33 @@ const energy = (a: Float32Array, start: number, end: number) =>
   a
     .slice(Math.round(start * sr), Math.round(end * sr))
     .reduce((s, v) => s + v * v, 0);
+it.each([
+  { locked: true, amount: 0.35 },
+  { locked: true, amount: 0 },
+  { locked: false, amount: 0 },
+])("preserves round-robin audio when locked=$locked, amount=$amount", ({ locked, amount }) => {
+  const p = fixture();
+  p.layers[0].locked = locked;
+  p.layers[0].score!.instruments[0].regions = [
+    region({ id: "a", assetId: "soft", roundRobin: 0 }),
+    region({ id: "b", assetId: "hard", roundRobin: 1 }),
+  ];
+  const original = structuredClone(p);
+  const expected = renderProject(p, sr);
+  for (const seed of [124, 0xfffffff0]) {
+    const varied = varyProject(p, seed, amount);
+    expect(varied.seed).toBe(seed);
+    expect(varyProject(p, seed, amount)).toEqual(varied);
+    const actual = renderProject(parseProject(projectForSave(varied)), sr);
+    expect(actual.left).toEqual(expected.left);
+    expect(actual.right).toEqual(expected.right);
+  }
+  const nested = varyProject(wrapProject(p), 124, amount).layers[0].project!;
+  expect(renderProject(nested, sr).left).toEqual(expected.left);
+  expect(renderProject(nested, sr).right).toEqual(expected.right);
+  expect(p).toEqual(original);
+});
+
 it("selects actual velocity and articulation recordings, and rejects uncovered notes", () => {
   const i = score().instruments[0];
   i.regions = [

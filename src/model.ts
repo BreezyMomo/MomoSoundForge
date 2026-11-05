@@ -364,24 +364,26 @@ export function varyProject(
     ...project,
     seed: seed >>> 0,
     layers: project.layers.map((l) =>
-      l.locked
-        ? { ...l }
+      l.locked || amount === 0
+        ? {
+            ...l,
+            // Instruments choose recordings using project.seed ^ noiseSeed.
+            // Preserve that effective seed when the sound must stay unchanged.
+            ...(l.type === "instrument"
+              ? { noiseSeed: (l.noiseSeed ^ project.seed ^ seed) >>> 0 }
+              : {}),
+          }
         : l.type === "composition" && l.project
           ? (() => {
               const child = varyProject(
                 l.project,
-                amount === 0
-                  ? l.project.seed
-                  : Math.floor(random() * 4294967296),
+                Math.floor(random() * 4294967296),
                 amount,
               );
-              const duration =
-                amount === 0
-                  ? l.duration
-                  : Math.max(
-                      0.1,
-                      ...child.layers.map((n) => n.start + n.duration),
-                    );
+              const duration = Math.max(
+                0.1,
+                ...child.layers.map((n) => n.start + n.duration),
+              );
               return {
                 ...l,
                 project: { ...child, duration },
@@ -392,8 +394,7 @@ export function varyProject(
             })()
           : {
               ...l,
-              noiseSeed:
-                amount === 0 ? l.noiseSeed : Math.floor(random() * 4294967296),
+              noiseSeed: Math.floor(random() * 4294967296),
               frequency: clamp(jitter(l.frequency, 0.8), 20, 20000),
               endFrequency: clamp(jitter(l.endFrequency, 0.8), 20, 20000),
               duration: Math.max(0.01, jitter(l.duration, 0.35)),

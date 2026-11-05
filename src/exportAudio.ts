@@ -1,4 +1,4 @@
-import type { RenderResult } from "./model";
+import type { Project, RenderResult } from "./model";
 import type { LoopRegion } from "./advanced";
 export const EXPORT_FORMATS = ["wav", "ogg", "mp3", "flac"] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
@@ -104,15 +104,29 @@ export function makeLoop(
     result.sampleRate,
   );
 }
+export async function renderExport(
+  project: Project,
+  settings: ExportSettings,
+  render: (project: Project) => Promise<RenderResult>,
+): Promise<RenderResult> {
+  const loopOnly = settings.loopOnly && !!project.loopRegion;
+  const input = await render(
+    loopOnly
+      ? project
+      : { ...project, duration: project.duration + settings.tail },
+  );
+  return prepareExport(input, settings, project.loopRegion);
+}
 export function prepareExport(
   input: RenderResult,
   settings: ExportSettings,
   region?: LoopRegion,
 ): RenderResult {
-  let result = settings.loopOnly && region ? makeLoop(input, region) : input;
+  const loopOnly = settings.loopOnly && !!region;
+  let result = loopOnly && region ? makeLoop(input, region) : input;
   let first = 0,
     last = result.left.length;
-  if (settings.trimSilence && !settings.loopOnly) {
+  if (settings.trimSilence && !loopOnly) {
     while (
       first < last &&
       Math.max(Math.abs(result.left[first]), Math.abs(result.right[first])) <

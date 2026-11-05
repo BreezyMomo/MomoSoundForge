@@ -94,7 +94,7 @@ import { reconcileAdvanced, boundControl, resolveControls } from "./advanced";
 import { boundedSelection } from "./timeline";
 import {
   readExportSettings,
-  prepareExport,
+  renderExport,
   audioResult,
   makeLoop,
   seamPreview,
@@ -1000,18 +1000,8 @@ export default function App() {
     setSelected(copies[0].id);
   };
   async function finalOutput(p: Project, settings = exportSettings) {
-    const input = await renderer.current!.render(
-      settings.loopOnly
-        ? p
-        : {
-            ...p,
-            duration: p.duration + settings.tail,
-          },
-    );
-    return prepareExport(
-      input,
-      { ...settings, loopOnly: settings.loopOnly && !!p.loopRegion },
-      p.loopRegion,
+    return renderExport(p, settings, (project) =>
+      renderer.current!.render(project),
     );
   }
   async function encodedOutput(p: Project, settings = exportSettings) {

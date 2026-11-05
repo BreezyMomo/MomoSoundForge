@@ -20,6 +20,7 @@ import {
   audioResult,
   makeLoop,
   prepareExport,
+  renderExport,
   exportWav,
   DEFAULT_EXPORT,
   parseExportSettings,
@@ -56,6 +57,46 @@ const macro = (): Macro => ({
   defaultValue: 50,
   mappings: [{ layerId: "a", parameter: "gain", low: 0, high: 1 }],
 });
+it("applies trailing silence after a loop region is removed with loop-only preferences retained", async () => {
+  const project = fixture();
+  project.duration = 1.65;
+  project.loopRegion = { start: 0.2, end: 0.8, crossfade: 0.02 };
+  const settings = { ...DEFAULT_EXPORT, loopOnly: true, tail: 1 };
+  const render = async (p: Project) => renderProject(p);
+  const loop = await renderExport(project, settings, render);
+  expect(loop.left.length).toBe(Math.round(0.58 * settings.sampleRate));
+
+  const withoutLoop = { ...project, loopRegion: undefined };
+  const output = await renderExport(withoutLoop, settings, render);
+  const regular = await renderExport(
+    withoutLoop,
+    { ...settings, loopOnly: false },
+    render,
+  );
+  expect(output.left.length).toBe(Math.round(2.65 * settings.sampleRate));
+  expect(output.left).toEqual(regular.left);
+  expect(output.right).toEqual(regular.right);
+  expect(withoutLoop.duration).toBe(1.65);
+  expect(settings.loopOnly).toBe(true);
+});
+
+it("trims silence without a loop region even when loop-only was previously selected", () => {
+  const input = audioResult(
+    new Float32Array([0, 0.5, 0.5, 0]),
+    new Float32Array([0, 0.5, 0.5, 0]),
+    48000,
+  );
+  const settings = { ...DEFAULT_EXPORT, loopOnly: true, trimSilence: true };
+  const output = prepareExport(input, settings);
+  expect(Array.from(output.left)).toEqual([0.5, 0.5]);
+  const loop = prepareExport(input, settings, {
+    start: 0,
+    end: 4 / 48000,
+    crossfade: 0,
+  });
+  expect(loop.left).toEqual(input.left);
+});
+
 describe("composition controls", () => {
   it("maps linear, reversed and logarithmic targets without mutating the source", () => {
     const p = fixture();

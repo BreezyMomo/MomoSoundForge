@@ -141,7 +141,7 @@ export function ExportDialog({
               <Field key={key} orientation="horizontal" className="wb:w-auto">
                 <Checkbox
                   id={"export-" + key}
-                  checked={settings[key]}
+                  checked={settings[key] && (key !== "loopOnly" || !!region)}
                   disabled={busy || (key === "loopOnly" && !region)}
                   onCheckedChange={(checked) =>
                     onSettings({ ...settings, [key]: checked })
