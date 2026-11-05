@@ -12,6 +12,7 @@
     "prebuild": "node tools/build-builtin-library.mjs && node tools/build-ai-skill.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4180",
+    "pretest": "node tools/build-builtin-library.mjs",
     "test": "vitest run",
     "ai:build": "node tools/build-ai-skill.mjs",
     "ai:serve": "node tools/ai-server.mjs"

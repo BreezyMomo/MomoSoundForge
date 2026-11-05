@@ -1,4 +1,4 @@
-export const SOUND_CATEGORIES = ["keys", "strings", "woodwinds", "brass", "percussion", "music", "interface", "magic", "motion", "impacts", "foley", "liquid", "uncategorized"] as const;
+export const SOUND_CATEGORIES = ["footsteps", "mechanisms", "keys", "strings", "woodwinds", "brass", "percussion", "music", "interface", "magic", "motion", "impacts", "foley", "liquid", "uncategorized"] as const;
 export type SoundCategory = (typeof SOUND_CATEGORIES)[number];
 export type LibraryPreferences = {
   layoutVersion: 2;

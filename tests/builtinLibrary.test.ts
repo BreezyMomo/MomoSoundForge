@@ -24,8 +24,8 @@ function resource(raw: unknown = fixture()) {
 it("indexes all collected samples and examples with matching categories, semantic names and final-render thumbnails", () => {
   expect(new Set(BUILTIN_SOUNDS.map(x => x.id)).size).toBe(BUILTIN_SOUNDS.length);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "instrument" && !x.tone)).toHaveLength(43);
-  expect(BUILTIN_SOUNDS.filter(x => x.kind === "sample")).toHaveLength(40);
-  expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(16);
+  expect(BUILTIN_SOUNDS.filter(x => x.kind === "sample")).toHaveLength(106);
+  expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(24);
   for (const sound of BUILTIN_SOUNDS) {
     expect(SOUND_CATEGORIES).toContain(sound.category);
     expect(sound.duration).toBeGreaterThanOrEqual(.1);
