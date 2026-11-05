@@ -1,6 +1,7 @@
 import { NotesWorkspace } from "./NotesWorkspace";
 import { Button } from "@momo/workbench/react";
 import { HelpDialog } from "./HelpDialog";
+import { SupportDialog } from "./SupportDialog";
 import { AITools } from './AITools';
 import { useAIEditor } from './useAIEditor';
 import { generateVariants } from './aiCapabilities';
@@ -1989,6 +1990,15 @@ export default function App() {
             <Save size={16} />
             <span>{t("file.save")}</span>
           </button>
+          <button
+            className="secondary export-button"
+            disabled={!result || ioBusy}
+            onClick={() => setExportOpen(true)}
+            aria-haspopup="dialog"
+          >
+            <Download size={16} />
+            <span>{t("export.open")}</span>
+          </button>
         </div>
         <div className="header-right">
           <Button
@@ -2005,17 +2015,10 @@ export default function App() {
           <div ref={menu} className="layout-menu" />
           <AppearancePreferences />
           <LanguagePreferences />
-          <HelpDialog />
           <AITools project={history.project} {...ai} />
-          <button
-            className="secondary export-button"
-            disabled={!result || ioBusy}
-            onClick={() => setExportOpen(true)}
-            aria-haspopup="dialog"
-          >
-            <Download size={16} />
-            <span>{t("export.open")}</span>
-          </button>
+          <SupportDialog />
+          <HelpDialog />
+
         </div>
       </header>
       <main className={!ready ? "restoring" : ""}>

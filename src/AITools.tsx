@@ -50,7 +50,7 @@ export function AITools({ project, status, connect, disconnect }: { project: Pro
     walk(project); download(JSON.stringify({ project: project.name, sources }, null, 2), 'sound-credits.json', 'application/json');
   };
   return <Dialog>
-    <DialogTrigger render={<Button variant="outline" />}>{t('ai.title')}</DialogTrigger>
+    <DialogTrigger render={<Button variant="ghost" />}>{t('ai.title')}</DialogTrigger>
     <DialogContent showCloseButton={false} className="sound-ai-dialog">
       <DialogHeader><DialogTitle>{t('ai.title')}</DialogTitle><DialogDescription>{t('ai.intro')}</DialogDescription></DialogHeader>
       <section><h3>{t('ai.skill')}</h3><p>{t('ai.skillHelp')}</p>
