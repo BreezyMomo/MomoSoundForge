@@ -27,8 +27,24 @@ const excludedStandalone = new Set(quality.excludedStandaloneSamples.map(entry =
 const fxExamples = await readJson(`${fxRoot}/examples/recipes.json`);
 const jobs = [];
 jobs.push(...gameSfxJobs(game, gameRoot));
+// Group alternate recordings of the same action explicitly. Material, strength
+// and different actions stay separate; publisher file numbers are not categories.
+const fxRecordingGroups = [
+  ["cloth", ["11-cloth-01", "12-cloth-04", "13-cloth-05", "14-cloth-07"]],
+  ["paper", ["17-paper-01", "18-paper-02"]],
+  ["swish", ["19-swish-01", "20-swish-11"]],
+  ["bubble", ["21-bubble-01", "22-bubble-02", "23-bubble-03"]],
+  ["slime", ["24-slime-01", "25-slime-05", "26-slime-10", "27-slime-12"]],
+  ["splash", ["28-splash-01", "29-splash-02", "30-splash-03"]],
+  ["bell", ["31-bell-00", "32-bell-01"]],
+  ["camera", ["33-camera-01", "34-camera-02"]],
+  ["lock-door", ["35-lock-door-02", "36-lock-door-04"]],
+];
+const fxChoices = new Map(fxRecordingGroups.flatMap(([group, ids]) => ids.map((id, index) =>
+  [id, { nameKey: `builtin.effect.${group}`, recordingGroup: `fx-${group}`, recording: index + 1 }])));
 for (const sample of fx.samples) jobs.push({
   id: `fx-${sample.id}`, kind: "sample", nameKey: `builtin.effect.${sample.id.slice(3)}`,
+  ...fxChoices.get(sample.id),
   category: sample.category === "details" ? "foley" : sample.category,
   source: `${fxRoot}/${sample.projectFile}`, sample,
   keywords: `${sample.id} ${sample.sourceArchiveMember} ${sample.author}`,

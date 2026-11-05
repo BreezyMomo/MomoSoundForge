@@ -50,6 +50,29 @@ it("makes every usable expanded recording available in articulation/range choice
     expect(tone.keyLow).toBeLessThanOrEqual(tone.keyHigh!);
   }
 });
+it("organizes old and new effects by action while retaining every selectable recording", () => {
+  const effects = BUILTIN_SOUNDS.filter(s => s.kind === "sample");
+  const starter = JSON.parse(readFileSync("samples/cc0-starter-20261104/manifest.json", "utf8"));
+  const legacy = effects.filter(s => s.id.startsWith("fx-"));
+  expect(new Set(legacy.map(s => s.id))).toEqual(new Set(starter.samples.map((s: {id: string}) => `fx-${s.id}`)));
+  expect(new Set(effects.map(builtinToneKey)).size).toBe(44);
+  for (const [key, count] of Object.entries({ cloth: 4, paper: 2, swish: 2, bubble: 3, slime: 4, splash: 3, bell: 2, camera: 2, "lock-door": 2 })) {
+    const choices = legacy.filter(s => builtinToneKey(s) === `fx-${key}`);
+    expect(choices, key).toHaveLength(count);
+    expect(new Set(choices.map(s => s.nameKey)).size).toBe(1);
+    expect(new Set(choices.map(s => s.category)).size).toBe(1);
+    expect(choices.map(s => s.recording)).toEqual(Array.from({ length: count }, (_, i) => i + 1));
+    expect(new Set(choices.map(s => builtinChoiceName(s))).size).toBe(count);
+  }
+  for (const sound of effects) {
+    for (const language of ["zh-CN", "en"] as const)
+      expect(builtinToneName(sound, key => catalogs[language][key])).not.toMatch(/\s\d+$/);
+  }
+  const keys = (ids: string[]) => new Set(ids.map(id => builtinToneKey(effects.find(s => s.id === id)!)));
+  expect(keys(["fx-15-paper-crush", "fx-16-paper-rip", "fx-17-paper-01"]).size).toBe(3);
+  expect(keys(["fx-01-wood-light", "fx-02-wood-medium", "game-wood-heavy-01"]).size).toBe(3);
+  expect(keys(["game-door-open-01", "game-door-close-01"]).size).toBe(2);
+});
 it("ships audible defaults for timpani, harp and low flute", () => {
   for (const id of ["instrument-17-timpani-2-Cs3-single-hit", "instrument-06-harp-1-C3-single-hit", "tone-flute-sustain-60-70"]) {
     const sound = BUILTIN_SOUNDS.find(s => s.id === id)!;
