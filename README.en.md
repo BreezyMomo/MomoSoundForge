@@ -63,6 +63,8 @@ The library includes 164 sounds: 8 synthesized presets, 40 CC0 sound-effect samp
 
 Before development and production builds, the bundled resources are generated from the versioned sample collection. They ship with the build and load one sound at a time. `public/sound-library/` is generated; source and CC0 notices ship with it. The instruments provide prototype coverage, not a full-range automatic MIDI instrument player; project duration and sample budgets still apply.
 
+Instrument entries use a trimmed default playback range with a fade at the end. Piano entries detect a continuous quiet interval after the note decays, excluding long noise beds and isolated late recording sounds; other instruments retain sustained playing and natural resonance. Complete samples remain embedded. Source WAVs and existing projects are preserved.
+
 After tuning a sound, choose **Save to library** beside the editor title, name it and save. Its card appears in the unified sound list, retaining the current sound's layers, nested sounds, parameters and samples. Saving while inside a composition stores just that child sound.
 
 Use the card's play button to audition it, **Open to edit** to open it as a full project, or **Add to current** to insert it as a composition layer in the sound you are editing. Saving the same name offers **Update saved sound** or **Save a copy**. Library originals, opened projects and inserted compositions are independent. Save back to the library to update an original.
