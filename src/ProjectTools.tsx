@@ -1,7 +1,7 @@
 import { Range } from "./Inspector";
 import { t } from "./i18n";
 import type { Project } from "./model";
-import { DEFAULT_EFFECTS, type Effects } from "./advanced";
+import { SoundPolish } from "./SoundPolish";
 export function ProjectTools({
   project,
   cue,
@@ -9,6 +9,9 @@ export function ProjectTools({
   onLoop,
   onSeam,
   busy,
+  original,
+  onCompare,
+  compareBusy,
 }: {
   project: Project;
   cue: number;
@@ -16,29 +19,11 @@ export function ProjectTools({
   onLoop: () => void;
   onSeam: () => void;
   busy: boolean;
+  original: boolean;
+  onCompare: (original: boolean) => void;
+  compareBusy: boolean;
 }) {
-  const effects = project.effects ?? DEFAULT_EFFECTS,
-    region = project.loopRegion;
-  const effect = (
-    key: keyof Effects,
-    min: number,
-    max: number,
-    step = 0.01,
-    unit = "",
-  ) => (
-    <Range
-      key={key}
-      label={t(`pro.fx.${key}`)}
-      value={effects[key]}
-      min={min}
-      max={max}
-      step={step}
-      unit={unit}
-      onChange={(v) =>
-        onChange({ ...project, effects: { ...effects, [key]: v } })
-      }
-    />
-  );
+  const region = project.loopRegion;
   const updateRegion = (
     start: number,
     end: number,
@@ -54,25 +39,7 @@ export function ProjectTools({
     });
   return (
     <>
-      <details className="pro-section">
-        <summary>{t("pro.effects")}</summary>
-        <div className="pro-grid">
-          {effect("low", -24, 24, 0.1, "dB")}
-          {effect("mid", -24, 24, 0.1, "dB")}
-          {effect("high", -24, 24, 0.1, "dB")}
-          {effect("delayTime", 0.01, 1, 0.001, "s")}
-          {effect("delayFeedback", 0, 0.85)}
-          {effect("delayWet", 0, 1)}
-          {effect("reverb", 0, 1)}
-          {effect("ceiling", -12, 0, 0.1, "dBFS")}
-        </div>
-        <button
-          className="secondary"
-          onClick={() => onChange({ ...project, effects: undefined })}
-        >
-          {t("pro.resetEffects")}
-        </button>
-      </details>
+      <SoundPolish project={project} onChange={onChange} original={original} onCompare={onCompare} busy={compareBusy} />
       <details className="pro-section">
         <summary>{t("pro.loop")}</summary>
         <label>

@@ -1,3 +1,4 @@
+import { beforeSoundPolish } from "./polishAudition";
 import { ScoreEditor } from "./ScoreEditor";
 import { emptyScore } from "./instruments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -123,6 +124,7 @@ export default function App() {
   const [rendered, setRendered] = useState<{
       project: Project;
       result: RenderResult;
+      original: RenderResult;
     } | null>(null),
     [renderFailed, setRenderFailed] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null),
@@ -131,6 +133,8 @@ export default function App() {
     [monitor, setMonitor] = useState(0.7),
     [progress, setProgress] = useState(0);
   const [cue, setCue] = useState(0);
+  const [originalAudition, setOriginalAudition] = useState(false);
+  useEffect(() => setOriginalAudition(false), [project]);
   const [encodingStatus, setEncodingStatus] = useState("");
   const encodedCache = useRef<{
     project: Project;
@@ -396,8 +400,10 @@ export default function App() {
     const timer = setTimeout(() => {
       renderer
         .current!.render(project)
-        .then((result) => {
-          if (!cancelled) setRendered({ project, result });
+        .then(async (result) => {
+          if (cancelled) return;
+          const original = project.effects ? await renderer.current!.render(beforeSoundPolish(project)) : result;
+          if (!cancelled) setRendered({ project, result, original });
         })
         .catch(() => {
           if (!cancelled) {
@@ -416,10 +422,10 @@ export default function App() {
       setSelected(project.layers[0]?.id ?? "");
   }, [project, selected]);
   const play = useCallback(
-    async (input: RenderResult | (() => Promise<RenderResult>), id: string) => {
+    async (input: RenderResult | (() => Promise<RenderResult>), id: string, replace = false) => {
       if (
-        activePlaybackRef.current === id ||
-        pendingPlaybackRef.current === id
+        !replace && (activePlaybackRef.current === id ||
+        pendingPlaybackRef.current === id)
       ) {
         stop();
         return;
@@ -479,6 +485,14 @@ export default function App() {
     [playing, stop, loop, monitor, flash, updateCue],
   );
   const result = rendered?.project === project ? rendered.result : null;
+  const auditionResult = originalAudition && rendered?.project === project ? rendered.original : result;
+  const comparePolish = (original: boolean) => {
+    if (!result || !rendered || original === originalAudition) return;
+    setOriginalAudition(original);
+    // Both buffers are ready: replace playback at the current cursor, without changing the project.
+    if (activePlaybackRef.current === "main" || pendingPlaybackRef.current === "main")
+      void play(original ? rendered.original : result, "main", true);
+  };
   const beginSeek = () => {
     const resume =
       activePlaybackRef.current === "main" ||
@@ -490,7 +504,7 @@ export default function App() {
     updateCue(time);
     const resume = resumeSeekRef.current;
     resumeSeekRef.current = false;
-    if (resume && result && time < project.duration) void play(result, "main");
+    if (resume && result && time < project.duration) void play(auditionResult!, "main");
   };
   const rewind = () => {
     beginSeek();
@@ -542,7 +556,7 @@ export default function App() {
         if (target.closest('button, [role="button"], summary')) return;
         e.preventDefault();
         if (playing || pendingPlayback) stop();
-        else if (result) void play(result, "main");
+        else if (result) void play(auditionResult!, "main");
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -551,7 +565,7 @@ export default function App() {
     };
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
-  }, [save, help, result, play, playing, pendingPlayback, stop, undo, redo]);
+  }, [save, help, result, auditionResult, play, playing, pendingPlayback, stop, undo, redo]);
   const selectedLayer = project.layers.find((l) => l.id === selected);
   const navigate = (path: string[]) => {
     stop();
@@ -1121,7 +1135,7 @@ export default function App() {
           onClick={() =>
             playing || pendingPlayback
               ? stop()
-              : result && void play(result, "main")
+              : result && void play(auditionResult!, "main")
           }
         >
           {playing === "main" ? (
@@ -1178,10 +1192,10 @@ export default function App() {
       </div>
       <div className="mix-area">
         <div className="section-line">
-          <span>{t("editor.mix")}</span>
+          <span>{t("editor.mix")}{originalAudition && ` · ${t("polish.original")}`}</span>
           <span>
-            {result
-              ? `${t("editor.peak")} ${db(result.peak)} dBFS`
+            {auditionResult
+              ? `${t("editor.peak")} ${db(auditionResult.peak)} dBFS`
               : t(renderFailed ? "error.render" : "editor.rendering")}
           </span>
         </div>
@@ -1189,9 +1203,9 @@ export default function App() {
           duration={project.duration}
           loopRegion={project.loopRegion}
           position={cue}
-          left={result?.left}
-          right={result?.right}
-          disabled={!result}
+          left={auditionResult?.left}
+          right={auditionResult?.right}
+          disabled={!auditionResult}
           version={project}
           onSeekStart={beginSeek}
           onSeek={updateCue}
@@ -1202,12 +1216,12 @@ export default function App() {
           <span>
             {previewLayer
               ? t("editor.previewing", previewLayer.name)
-              : result && result.gainReduction < 0.999
+              : auditionResult && auditionResult.gainReduction < 0.999
                 ? t(
                     "editor.headroom",
-                    (-20 * Math.log10(result.gainReduction)).toFixed(1),
+                    (-20 * Math.log10(auditionResult.gainReduction)).toFixed(1),
                   )
-                : t(result ? "editor.ready" : "editor.rendering")}
+                : t(auditionResult ? "editor.ready" : "editor.rendering")}
           </span>
         </div>
       </div>
@@ -1678,6 +1692,9 @@ export default function App() {
         onChange={(next) => edit(() => next, "controls")}
       />
       <ProjectTools
+        original={originalAudition}
+        onCompare={comparePolish}
+        compareBusy={!result || ioBusy}
         project={project}
         cue={cue}
         onChange={(next) => edit(() => next, "processing")}

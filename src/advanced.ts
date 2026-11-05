@@ -32,7 +32,9 @@ export type Macro = {
   hidden?: boolean;
   mappings: Mapping[];
 };
-export type Effects = {
+export type EffectGroup = "toneEnabled" | "delayEnabled" | "spaceEnabled";
+export type EffectParameter = "low" | "mid" | "high" | "delayTime" | "delayFeedback" | "delayWet" | "reverb" | "ceiling";
+export type Effects = Partial<Record<EffectGroup, boolean>> & {
   low: number;
   mid: number;
   high: number;
@@ -121,7 +123,9 @@ export function validateAdvanced(project: Project) {
   const number = (v: unknown, a: number, b: number) =>
     typeof v === "number" && Number.isFinite(v) && v >= a && v <= b;
   if (project.effects) {
-    const ranges: Record<keyof Effects, number[]> = {
+    for (const key of ["toneEnabled", "delayEnabled", "spaceEnabled"] as const)
+      if (project.effects[key] !== undefined && typeof project.effects[key] !== "boolean") fail();
+    const ranges: Record<EffectParameter, number[]> = {
       low: [-24, 24],
       mid: [-24, 24],
       high: [-24, 24],
@@ -132,7 +136,7 @@ export function validateAdvanced(project: Project) {
       ceiling: [-12, 0],
     };
     for (const [k, [a, b]] of Object.entries(ranges))
-      if (!number(project.effects[k as keyof Effects], a, b)) fail();
+      if (!number(project.effects[k as EffectParameter], a, b)) fail();
   }
   if (project.loopRegion) {
     const r = project.loopRegion;
@@ -322,7 +326,7 @@ export function processEffects(
   for (const channel of [left, right]) {
     let low = 0,
       upper = 0;
-    if (e.low || e.mid || e.high)
+    if (e.toneEnabled !== false && (e.low || e.mid || e.high))
       for (let i = 0; i < channel.length; i++) {
         const x = channel[i];
         low += a * (x - low);
@@ -330,7 +334,7 @@ export function processEffects(
         channel[i] =
           low * lowGain + (upper - low) * midGain + (x - upper) * highGain;
       }
-    if (e.delayWet > 0) {
+    if (e.delayEnabled !== false && e.delayWet > 0) {
       const n = Math.max(1, Math.round(e.delayTime * rate)),
         ring = new Float32Array(n);
       for (let i = 0; i < channel.length; i++) {
@@ -340,7 +344,7 @@ export function processEffects(
         channel[i] += delayed * e.delayWet;
       }
     }
-    if (e.reverb > 0) {
+    if (e.spaceEnabled !== false && e.reverb > 0) {
       const delays = [0.0297, 0.0371, 0.0411, 0.0437].map(
         (t) => new Float32Array(Math.max(1, Math.round(t * rate))),
       );
