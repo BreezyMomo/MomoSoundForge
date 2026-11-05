@@ -399,7 +399,7 @@ export function Inspector({
           range("drive", "prop.drive", 0, 10, 0.1)}
       </section>
       <AutomationEditor
-        key={layer.id}
+        key={`automation-${layer.id}`}
         layer={layer}
         project={project}
         onChange={(v) => onChange("automation", v)}

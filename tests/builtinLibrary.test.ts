@@ -1,10 +1,13 @@
 import { createHash } from "node:crypto";
-import { gzipSync } from "node:zlib";
+import { gzipSync, gunzipSync } from "node:zlib";
+import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
-import { BUILTIN_SOUNDS, builtinSoundName, builtinSoundDescription, createBuiltinLoader, type BuiltinSound } from "../src/builtinLibrary";
+import { BUILTIN_SOUNDS, builtinSoundName, builtinSoundDescription, builtinToneKey, builtinToneName, builtinChoiceName, createBuiltinLoader, type BuiltinSound } from "../src/builtinLibrary";
 import { catalogs } from "../src/i18n";
 import { SOUND_CATEGORIES } from "../src/libraryPreferences";
-import { encodeSamples, makeLayer, type Project } from "../src/model";
+import { encodeSamples, makeLayer, parseProject, projectForSave, type Project } from "../src/model";
+import { selectRegion, scoreIssues } from "../src/instruments";
+import { appendInstrumentNode } from "../src/instrumentNode";
 import { renderProject } from "../src/engine";
 
 const fixture = (): Project => ({
@@ -19,9 +22,8 @@ function resource(raw: unknown = fixture()) {
   return { bytes, sound, response: () => new Response(Uint8Array.from(bytes).buffer) };
 }
 it("indexes all collected samples and examples with matching categories, semantic names and final-render thumbnails", () => {
-  expect(BUILTIN_SOUNDS).toHaveLength(162);
-  expect(new Set(BUILTIN_SOUNDS.map(x => x.id)).size).toBe(162);
-  expect(BUILTIN_SOUNDS.filter(x => x.kind === "instrument")).toHaveLength(106);
+  expect(new Set(BUILTIN_SOUNDS.map(x => x.id)).size).toBe(BUILTIN_SOUNDS.length);
+  expect(BUILTIN_SOUNDS.filter(x => x.kind === "instrument" && !x.tone)).toHaveLength(44);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "sample")).toHaveLength(40);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(16);
   for (const sound of BUILTIN_SOUNDS) {
@@ -35,6 +37,58 @@ it("indexes all collected samples and examples with matching categories, semanti
     expect(catalogs.en).toHaveProperty(sound.nameKey);
   }
 });
+it("makes every usable expanded recording available in articulation/range choices", () => {
+  const manifest = JSON.parse(readFileSync("samples/orchestra-expanded-20261105/manifest.json", "utf8"));
+  const tones = BUILTIN_SOUNDS.filter(s => s.tone);
+  const expected = new Set(manifest.samples.map((s: {sourcePath: string}) => createHash("sha256").update(s.sourcePath).digest("hex")));
+  expect(new Set(tones.flatMap(s => s.recordingIds ?? []))).toEqual(expected);
+  expect(expected.size).toBe(682);
+  expect(new Set(tones.map(builtinToneKey)).size).toBe(20);
+  for (const tone of tones) {
+    expect(builtinToneName(tone, key => catalogs.en[key])).not.toContain("undefined");
+    expect(builtinChoiceName(tone)).toContain("–");
+    expect(tone.keyLow).toBeLessThanOrEqual(tone.keyHigh!);
+  }
+});
+it("inserts two playable ranges as independent editable instruments and reopens portably", () => {
+  const read = (id: string) => {
+    const sound = BUILTIN_SOUNDS.find(s => s.tone && s.nameKey === id && s.keyLow! <= 60 && s.keyHigh! >= 60)!;
+    return parseProject(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${sound.file}`)).toString()));
+  };
+  const piano = read("builtin.instrument.upright-piano"), flute = read("builtin.instrument.flute");
+  const instrument = piano.layers[0].score!.instruments[0];
+  const note = piano.layers[0].score!.notes[0];
+  const soft = selectRegion(instrument, { ...note, velocity: 35 }, piano.seed, new Map());
+  const loud = selectRegion(instrument, { ...note, velocity: 115 }, piano.seed, new Map());
+  expect(soft).toBeTruthy(); expect(loud).toBeTruthy();
+  expect(soft!.assetId).not.toBe(loud!.assetId);
+  const appended = parseProject(appendInstrumentNode(piano, flute, "added-flute"));
+  expect(appended.layers).toHaveLength(2);
+  const reopened = parseProject(JSON.parse(JSON.stringify(projectForSave(appended))));
+  expect(renderProject(reopened).left).toEqual(renderProject(appended).left);
+  expect(renderProject(reopened).peak).toBeGreaterThan(0);
+}, 20000);
+it("ships the original mapped regions in every range without including quarantined takes", () => {
+  const manifest = JSON.parse(readFileSync("samples/orchestra-expanded-20261105/manifest.json", "utf8"));
+  const sources = new Map<string, {rootMidi: number; keyLow: number; keyHigh: number; velocityLow: number; velocityHigh: number}>(manifest.samples.map((s: {id: string}) => [s.id, s]));
+  const shipped = new Set<string>();
+  for (const tone of BUILTIN_SOUNDS.filter(s => s.tone)) {
+    const project: Project = JSON.parse(gunzipSync(readFileSync(`public/sound-library/${tone.file}`)).toString());
+    const bytes = Object.values(project.assets).reduce((n, a) => n + a.channels.reduce((sum, c) => sum + Buffer.from(c, "base64").length, 0), 0);
+    expect(bytes).toBeLessThanOrEqual(10 * 1024 * 1024);
+    const score = project.layers[0].score!;
+    expect(scoreIssues(score, project.assets, project.duration, project.seed), tone.id).toEqual([]);
+    for (const region of score.instruments[0].regions) {
+      const source = sources.get(region.id);
+      expect(source).toBeTruthy();
+      expect(region).toMatchObject({ rootMidi: source!.rootMidi, keyLow: source!.keyLow, keyHigh: source!.keyHigh,
+        velocityLow: Math.max(1, source!.velocityLow), velocityHigh: source!.velocityHigh });
+      expect(region.loop).toBeUndefined();
+      shipped.add(region.id);
+    }
+  }
+  expect(shipped).toEqual(new Set(sources.keys()));
+}, 60000);
 it("uses translated built-in labels while names of opened independent projects remain document data", async () => {
   const { sound, response } = resource();
   const fetcher = vi.fn(async () => response());

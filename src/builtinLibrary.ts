@@ -19,19 +19,39 @@ export type BuiltinSound = {
   velocity?: string;
   variant?: number;
   articulation?: string;
+  tone?: boolean;
+  keyLow?: number;
+  keyHigh?: number;
+  maxSourceSeconds?: number;
+  recordingIds?: string[];
 };
 export const BUILTIN_SOUNDS = catalog.sounds as BuiltinSound[];
 type Translate = (key: string, ...values: unknown[]) => string;
 
+export const midiLabel = (midi: number) => `${["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"][midi % 12]}${Math.floor(midi / 12) - 1}`;
+export const builtinToneKey = (sound: BuiltinSound) => sound.kind === "instrument" ? `${sound.nameKey}:${sound.articulation}` : sound.id;
+export function builtinToneName(sound: BuiltinSound, translate: Translate = t) {
+  return sound.kind === "instrument" ? `${translate(sound.nameKey)} · ${translate(`builtin.articulation.${sound.articulation}`)}` : translate(sound.nameKey);
+}
+export function builtinChoiceName(sound: BuiltinSound, translate: Translate = t) {
+  return sound.tone ? `${midiLabel(sound.keyLow!)}–${midiLabel(sound.keyHigh!)}`
+    : translate("builtin.takeChoice", sound.rootNote ?? translate("builtin.unpitched"), sound.velocity, sound.variant);
+}
+export function preferredBuiltin<T extends { builtin?: BuiltinSound }>(items: T[]): T {
+  return items.find(item => item.builtin?.tone && item.builtin.keyLow! <= 60 && item.builtin.keyHigh! >= 60) ?? items[0];
+}
+
 export function builtinSoundName(sound: BuiltinSound, translate: Translate = t, short = false) {
   const name = translate(sound.nameKey);
   if (sound.kind !== "instrument") return name;
+  if (sound.tone) return `${builtinToneName(sound, translate)} · ${builtinChoiceName(sound, translate)}`;
   if (short) return sound.rootNote ? translate("builtin.instrumentShort", name, sound.rootNote) : name;
   return sound.rootNote
     ? translate("builtin.instrumentVariant", name, sound.rootNote, sound.velocity, sound.variant)
     : translate("builtin.unpitchedVariant", name, sound.velocity, sound.variant);
 }
 export function builtinSoundDescription(sound: BuiltinSound, translate: Translate = t) {
+  if (sound.tone) return translate("builtin.toneDetails", sound.recordingIds?.length ?? 0, sound.maxSourceSeconds);
   return sound.kind === "instrument"
     ? translate("builtin.instrumentDetails", translate(`builtin.articulation.${sound.articulation}`), sound.velocity, sound.variant)
     : translate(sound.kind === "sample" ? "builtin.sampleDetails" : "builtin.exampleDetails");
