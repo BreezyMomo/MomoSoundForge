@@ -1,3 +1,4 @@
+import { effectTail, MAX_RENDER_SECONDS } from "./nodeEffects";
 import { renderScore } from "./instruments";
 import { resolveControls, curveValue, processEffects } from "./advanced";
 import {
@@ -24,23 +25,141 @@ export function renderProject(
   project: Project,
   sampleRate = SAMPLE_RATE,
 ): RenderResult {
-  return renderNested(project, sampleRate, 0, { layers: 0, stack: new Set() });
+  if (!Number.isFinite(sampleRate) || sampleRate < 100 || sampleRate > 192000)
+    throw Error("error.renderBudget");
+  const solos: string[][] = [];
+  const visit = (p: Project, path: string[] = [], depth = 0) => {
+    if (depth > MAX_COMPOSITION_DEPTH) throw Error("error.renderBudget");
+    for (const l of p.layers)
+      if (!l.muted) {
+        const own = [...path, l.id];
+        if (l.solo) solos.push(own);
+        if (l.project) visit(l.project, own, depth + 1);
+      }
+  };
+  visit(project);
+  return renderNested(project, sampleRate, 0, {
+    layers: 0,
+    frames: 0,
+    stack: new Set(),
+    solos,
+  });
 }
 function renderNested(
   project: Project,
   sampleRate: number,
   depth: number,
-  context: { layers: number; stack: Set<Project> },
+  context: {
+    layers: number;
+    frames: number;
+    solos: string[][];
+    stack: Set<Project>;
+  },
+  path: string[] = [],
+  absoluteStart = 0,
 ): RenderResult {
   if (depth > MAX_COMPOSITION_DEPTH || context.stack.has(project))
     throw Error("Invalid nested audio");
   context.stack.add(project);
   const resolved = resolveControls(project);
-  const length = Math.round(project.duration * sampleRate),
-    left = new Float32Array(length),
+  const estimate = (p: Project, level = 0): number => {
+    if (level > MAX_COMPOSITION_DEPTH) throw Error("error.renderBudget");
+    const seconds =
+      Math.max(
+        p.duration,
+        ...p.layers.map(
+          (l) =>
+            l.start +
+            (l.type === "composition" && l.project
+              ? estimate(l.project, level + 1)
+              : l.duration) +
+            effectTail(l.effects),
+        ),
+      ) + effectTail(p.effects);
+    if (seconds > MAX_RENDER_SECONDS) throw Error("error.renderBudget");
+    return seconds;
+  };
+  const length = Math.max(1, Math.ceil(estimate(resolved) * sampleRate));
+  context.frames += length * 2;
+  if (context.frames > 24_000_000) throw Error("error.renderBudget");
+  const left = new Float32Array(length),
     right = new Float32Array(length),
-    layers: Record<string, Float32Array> = Object.create(null);
-  const solo = resolved.layers.some((l) => l.solo && !l.muted);
+    layers: Record<string, Float32Array> = Object.create(null),
+    tails: Record<string, number> = Object.create(null),
+    processedLayers: Record<string, Float32Array> = Object.create(null);
+  let tailLimited = false;
+  let usedLength = Math.round(project.duration * sampleRate);
+  const append = (
+    clip: (typeof project.layers)[number],
+    inputL: Float32Array,
+    inputR: Float32Array,
+    raw: Float32Array,
+  ) => {
+    const base = inputL.length;
+    const extra = Math.ceil(effectTail(clip.effects) * sampleRate);
+    context.frames += (base + extra) * 3;
+    if (context.frames > 24_000_000) throw Error("error.renderBudget");
+    const l = new Float32Array(base + extra),
+      r = new Float32Array(base + extra);
+    l.set(inputL);
+    r.set(inputR);
+    if (clip.effects) processEffects(l, r, sampleRate, clip.effects);
+    // Trim only the generated tail, never authored content. -60 dBFS, with a 10 ms release margin.
+    let end = l.length;
+    while (
+      end > Math.max(base, Math.round(clip.duration * sampleRate)) &&
+      Math.max(Math.abs(l[end - 1]), Math.abs(r[end - 1])) < 0.001
+    )
+      end--;
+    end = Math.min(
+      l.length,
+      end + (end > base && end < l.length ? Math.round(0.01 * sampleRate) : 0),
+    );
+    if (
+      extra &&
+      end === l.length &&
+      Math.max(Math.abs(l[end - 1]), Math.abs(r[end - 1])) >= 0.001
+    ) {
+      tailLimited = true;
+      for (
+        let i = Math.max(base, end - Math.round(0.01 * sampleRate));
+        i < end;
+        i++
+      ) {
+        const fade =
+          (end - 1 - i) /
+          Math.max(1, Math.min(extra, Math.round(0.01 * sampleRate)));
+        l[i] *= fade;
+        r[i] *= fade;
+      }
+    }
+    const key = JSON.stringify([...path, clip.id]);
+    layers[key] = raw;
+    processedLayers[key] = Float32Array.from({ length: raw.length }, (_, i) =>
+      Math.abs(l[i] ?? 0) >= Math.abs(r[i] ?? 0) ? (l[i] ?? 0) : (r[i] ?? 0),
+    );
+    if (!path.length) layers[clip.id] = raw;
+    tails[key] = Math.max(0, end / sampleRate - clip.duration);
+    if (!path.length) tails[clip.id] = tails[key];
+    const offset =
+      Math.round((absoluteStart + clip.start) * sampleRate) -
+      Math.round(absoluteStart * sampleRate);
+    const own = [...path, clip.id];
+    const audible =
+      !context.solos.length ||
+      context.solos.some(
+        (s) =>
+          s.every((id, i) => own[i] === id) ||
+          own.every((id, i) => s[i] === id),
+      );
+    if (!clip.muted && audible)
+      usedLength = Math.max(usedLength, Math.min(length, offset + end));
+    if (!clip.muted && audible)
+      for (let i = 0; i < end && i + offset < length; i++) {
+        left[i + offset] += l[i];
+        right[i + offset] += r[i];
+      }
+  };
   for (const clip of resolved.layers) {
     const layer = { ...clip, duration: clip.sourceDuration ?? clip.duration };
     if (++context.layers > MAX_TOTAL_LAYERS)
@@ -68,8 +187,34 @@ function renderNested(
             sampleRate,
             depth + 1,
             context,
+            [...path, layer.id],
+            absoluteStart + layer.start,
           )
         : null;
+    if (child) {
+      Object.assign(layers, child.layers);
+      Object.assign(tails, child.tails);
+      Object.assign(processedLayers, child.processedLayers);
+      tailLimited ||= !!child.tailLimited;
+      const l = new Float32Array(child.left.length),
+        r = new Float32Array(child.right.length);
+      const raw = new Float32Array(Math.round(clip.duration * sampleRate));
+      for (let i = 0; i < l.length; i++) {
+        const u = Math.min(1, i / Math.max(1, clip.duration * sampleRate));
+        const gain = curveValue(layer.automation?.gain, u, layer.gain);
+        const pan = curveValue(layer.automation?.pan, u, layer.pan);
+        l[i] =
+          child.left[i] * gain * (pan <= 0 ? 1 : Math.cos((pan * Math.PI) / 2));
+        r[i] =
+          child.right[i] *
+          gain *
+          (pan >= 0 ? 1 : Math.cos((-pan * Math.PI) / 2));
+        if (i < raw.length)
+          raw[i] = Math.abs(l[i]) >= Math.abs(r[i]) ? l[i] : r[i];
+      }
+      append(clip, l, r, raw);
+      continue;
+    }
     const performance =
       layer.type === "instrument" && layer.score
         ? renderScore(
@@ -82,11 +227,9 @@ function renderNested(
         : null;
     const channels = performance
       ? [performance.left, performance.right]
-      : child
-        ? [child.left, child.right]
-        : asset
-          ? samples(asset)
-          : null;
+      : asset
+        ? samples(asset)
+        : null;
     const sourceRate =
       child || performance ? sampleRate : (asset?.sampleRate ?? sampleRate);
     const offset = Math.round(layer.start * sampleRate),
@@ -193,6 +336,8 @@ function renderNested(
     }
     const outputLength = Math.round(clip.duration * sampleRate);
     const audio = new Float32Array(outputLength);
+    const clipLeft = new Float32Array(outputLength),
+      clipRight = new Float32Array(outputLength);
     const read = (channel: Float32Array, pos: number) => {
       const j = Math.floor(pos),
         f = pos - j;
@@ -207,13 +352,7 @@ function renderNested(
       // Preserve the complete waveform beneath the non-destructive crop mask.
       audio[i] = Math.abs(vl) >= Math.abs(vr) ? vl : vr;
       const u = i / outputLength;
-      if (
-        u >= (clip.cropStart ?? 0) &&
-        u < (clip.cropEnd ?? 1) &&
-        offset + i < length &&
-        !layer.muted &&
-        (!solo || layer.solo)
-      ) {
+      if (u >= (clip.cropStart ?? 0) && u < (clip.cropEnd ?? 1)) {
         const panValue = curveValue(layer.automation?.pan, u, layer.pan);
         const angle = ((panValue + 1) * Math.PI) / 4;
         const lpan = layer.automation?.pan?.length
@@ -230,11 +369,11 @@ function renderNested(
               : Math.cos((-panValue * Math.PI) / 2)
             : Math.sin(angle)
           : pr;
-        left[offset + i] += vl * lpan;
-        right[offset + i] += vr * rpan;
+        clipLeft[i] = vl * lpan;
+        clipRight[i] = vr * rpan;
       }
     }
-    layers[layer.id] = audio;
+    append(clip, clipLeft, clipRight, audio);
   }
   if (project.echo > 0) {
     const delay = Math.round(0.135 * sampleRate);
@@ -244,19 +383,24 @@ function renderNested(
     }
   }
   if (project.effects) processEffects(left, right, sampleRate, project.effects);
+  const finalLength = Math.min(
+    length,
+    usedLength + Math.ceil(effectTail(project.effects) * sampleRate),
+  );
   let sourcePeak = 0;
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < finalLength; i++) {
     left[i] *= project.master;
     right[i] *= project.master;
     sourcePeak = Math.max(sourcePeak, Math.abs(left[i]), Math.abs(right[i]));
   }
   // A single linked gain preserves transients and stereo balance while keeping WAV below full scale.
   const ceiling = project.effects ? 10 ** (project.effects.ceiling / 20) : 0.98;
-  const reduction = sourcePeak > ceiling ? ceiling / sourcePeak : 1;
+  const reduction =
+    depth === 0 && sourcePeak > ceiling ? ceiling / sourcePeak : 1;
   let sum = 0,
     peak = 0;
-  for (let i = 0; i < length; i++) {
-    const fade = Math.min(1, i / 32, (length - 1 - i) / 64);
+  for (let i = 0; i < finalLength; i++) {
+    const fade = depth === 0 && i === finalLength - 1 ? 0 : 1;
     left[i] *= reduction * fade;
     right[i] *= reduction * fade;
     sum += left[i] ** 2 + right[i] ** 2;
@@ -264,14 +408,17 @@ function renderNested(
   }
   context.stack.delete(project);
   return {
-    left,
-    right,
+    left: left.slice(0, finalLength),
+    right: right.slice(0, finalLength),
     sampleRate,
     peak,
     sourcePeak,
     gainReduction: reduction,
-    rms: Math.sqrt(sum / Math.max(1, 2 * length)),
+    rms: Math.sqrt(sum / Math.max(1, 2 * finalLength)),
     layers,
+    tails,
+    processedLayers,
+    tailLimited,
   };
 }
 export function encodeWav(

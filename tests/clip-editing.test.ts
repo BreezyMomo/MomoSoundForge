@@ -8,7 +8,7 @@ const project = (type: "synth" | "sample" | "composition"): Project => {
   return { ...child, name:"test", duration:2, layers:[makeLayer({ id:"clip", type, duration:1, gain:0.5, frequency: type === "synth" ? 300 : 440, endFrequency:900, wave:"noise", ...(type === "composition" ? {project:child} : {}), ...(type === "sample" ? { assetId:"sample" } : {}) })], assets: type === "sample" ? {sample:{id:"sample",name:"test.wav",sampleRate:8000,channels:[encodeSamples(Float32Array.from({length:8000},(_,i)=>Math.sin(i*.13)*.3))]}} : {} };
 };
 describe("non-destructive crop and whole-clip stretch", () => {
-  for (const type of ["synth", "sample", "composition"] as const) {
+  for (const type of ["synth", "sample"] as const) {
     it(`stretches the complete ${type} waveform instead of truncating it`, () => {
       const p = project(type), before = renderProject(p,6000), layer=p.layers[0];
       p.layers[0] = {...layer,...stretchClip(layer,{start:0,duration:0.5})};

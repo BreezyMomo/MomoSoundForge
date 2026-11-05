@@ -365,7 +365,12 @@ export function MacroEditor({
               {project.layers.map((l) => (
                 <optgroup key={l.id} label={l.name}>
                   {(Object.keys(PARAMS) as Parameter[])
-                    .filter((k) => !l.automation?.[k as AutomationKey]?.length)
+                    .filter(
+                      (k) =>
+                        !l.automation?.[k as AutomationKey]?.length &&
+                        (l.type !== "composition" ||
+                          ["start", "gain", "pan"].includes(k)),
+                    )
                     .map((k) => (
                       <option
                         key={k}
@@ -434,11 +439,13 @@ export function AutomationEditor({
           setSelected(0);
         }}
       >
-        {(["gain", "pan", "cutoff"] as const).map((k) => (
-          <option key={k} value={k}>
-            {t(`pro.param.${k}`)}
-          </option>
-        ))}
+        {(["gain", "pan", "cutoff"] as const)
+          .filter((k) => layer.type !== "composition" || k !== "cutoff")
+          .map((k) => (
+            <option key={k} value={k}>
+              {t(`pro.param.${k}`)}
+            </option>
+          ))}
       </select>
       <label>
         <input
@@ -467,7 +474,7 @@ export function AutomationEditor({
           <svg
             className="automation-plot"
             viewBox="0 0 300 120"
-          preserveAspectRatio="none"
+            preserveAspectRatio="none"
             role="img"
             aria-label={t("pro.curveParameter")}
             onPointerDown={(e) => {

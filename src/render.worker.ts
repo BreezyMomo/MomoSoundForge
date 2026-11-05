@@ -8,9 +8,12 @@ self.onmessage = (event: MessageEvent<{ id: number; project: Project }>) => {
       { id, result },
       {
         transfer: [
-          result.left.buffer,
-          result.right.buffer,
-          ...Object.values(result.layers).map((x) => x.buffer),
+          ...new Set([
+            result.left.buffer,
+            result.right.buffer,
+            ...Object.values(result.layers).map((x) => x.buffer),
+            ...Object.values(result.processedLayers ?? {}).map((x) => x.buffer),
+          ]),
         ],
       },
     );

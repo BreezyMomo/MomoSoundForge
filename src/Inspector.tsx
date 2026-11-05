@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Copy, Trash2, SlidersHorizontal } from "lucide-react";
 import type { Layer, Project } from "./model";
@@ -112,7 +113,9 @@ export function Inspector({
   onDelete,
   onEnter,
   onExpose,
+  postProcessing,
 }: {
+  postProcessing?: ReactNode;
   layer?: Layer;
   project: Project;
   onChange: (key: keyof Layer, value: Layer[keyof Layer]) => void;
@@ -213,6 +216,7 @@ export function Inspector({
           onCommit={(v) => onChange("name", v)}
         />
       </label>
+      {postProcessing}
       <section className="property-section">
         <h3>{t("prop.source")}</h3>
         {layer.type === "synth" ? (
@@ -289,34 +293,38 @@ export function Inspector({
                 </button>
               </>
             )}
-            <Range
-              label={t("prop.rate")}
-              min={0.1}
-              max={4}
-              step={0.01}
-              value={effective.frequency / 440}
-              disabled={!!boundControl(project, layer.id, "frequency")}
-              unit="×"
-              onChange={(v) => onChange("frequency", v * 440)}
-            />
-            {!boundControl(project, layer.id, "frequency") && (
-              <button
-                className="expose-button"
-                onClick={() => onExpose("frequency")}
-              >
-                {t("pro.expose")}
-              </button>
+            {layer.type !== "composition" && (
+              <>
+                <Range
+                  label={t("prop.rate")}
+                  min={0.1}
+                  max={4}
+                  step={0.01}
+                  value={effective.frequency / 440}
+                  disabled={!!boundControl(project, layer.id, "frequency")}
+                  unit="×"
+                  onChange={(v) => onChange("frequency", v * 440)}
+                />
+                {!boundControl(project, layer.id, "frequency") && (
+                  <button
+                    className="expose-button"
+                    onClick={() => onExpose("frequency")}
+                  >
+                    {t("pro.expose")}
+                  </button>
+                )}
+                <p className="field-help">{t("prop.speedHint")}</p>
+                {range("trim", "prop.trim", 0, 30, 0.01, "s")}
+                <label className="check-field">
+                  <input
+                    type="checkbox"
+                    checked={layer.reverse}
+                    onChange={(e) => onChange("reverse", e.target.checked)}
+                  />
+                  {t("prop.reverse")}
+                </label>
+              </>
             )}
-            <p className="field-help">{t("prop.speedHint")}</p>
-            {range("trim", "prop.trim", 0, 30, 0.01, "s")}
-            <label className="check-field">
-              <input
-                type="checkbox"
-                checked={layer.reverse}
-                onChange={(e) => onChange("reverse", e.target.checked)}
-              />
-              {t("prop.reverse")}
-            </label>
           </>
         )}
         {layer.type === "synth" && layer.wave !== "noise" && (
@@ -329,57 +337,63 @@ export function Inspector({
       <section className="property-section">
         <h3>{t("prop.timing")}</h3>
         {range("start", "prop.start", 0, project.duration, 0.01, "s")}
-        {range("duration", "prop.duration", 0.01, 10, 0.01, "s")}
-        {range(
-          "attack",
-          "prop.attack",
-          0,
-          Math.min(3, layer.duration),
-          0.001,
-          "s",
+        {layer.type !== "composition" && (
+          <>
+            {range("duration", "prop.duration", 0.01, 10, 0.01, "s")}
+            {range(
+              "attack",
+              "prop.attack",
+              0,
+              Math.min(3, layer.duration),
+              0.001,
+              "s",
+            )}
+            {range(
+              "release",
+              "prop.release",
+              0,
+              Math.min(5, layer.duration),
+              0.001,
+              "s",
+            )}
+            {range("decay", "prop.decay", 0, 10, 0.1)}
+            <Range
+              label={t("pro.cropStart")}
+              min={0}
+              max={Math.max(0, (layer.cropEnd ?? 1) * layer.duration - 0.001)}
+              step={0.001}
+              unit="s"
+              value={(layer.cropStart ?? 0) * layer.duration}
+              onChange={(v) => onChange("cropStart", v / layer.duration)}
+            />
+            <Range
+              label={t("pro.cropEnd")}
+              min={(layer.cropStart ?? 0) * layer.duration + 0.001}
+              max={layer.duration}
+              step={0.001}
+              unit="s"
+              value={(layer.cropEnd ?? 1) * layer.duration}
+              onChange={(v) => onChange("cropEnd", v / layer.duration)}
+            />
+            <p className="field-help">
+              {t(
+                "pro.speed",
+                (
+                  (layer.sourceDuration ?? layer.duration) / layer.duration
+                ).toFixed(3),
+              )}
+            </p>
+          </>
         )}
-        {range(
-          "release",
-          "prop.release",
-          0,
-          Math.min(5, layer.duration),
-          0.001,
-          "s",
-        )}
-        {range("decay", "prop.decay", 0, 10, 0.1)}
-        <Range
-          label={t("pro.cropStart")}
-          min={0}
-          max={Math.max(0, (layer.cropEnd ?? 1) * layer.duration - 0.001)}
-          step={0.001}
-          unit="s"
-          value={(layer.cropStart ?? 0) * layer.duration}
-          onChange={(v) => onChange("cropStart", v / layer.duration)}
-        />
-        <Range
-          label={t("pro.cropEnd")}
-          min={(layer.cropStart ?? 0) * layer.duration + 0.001}
-          max={layer.duration}
-          step={0.001}
-          unit="s"
-          value={(layer.cropEnd ?? 1) * layer.duration}
-          onChange={(v) => onChange("cropEnd", v / layer.duration)}
-        />
-        <p className="field-help">
-          {t(
-            "pro.speed",
-            ((layer.sourceDuration ?? layer.duration) / layer.duration).toFixed(
-              3,
-            ),
-          )}
-        </p>
       </section>
       <section className="property-section">
         <h3>{t("prop.timbre")}</h3>
         {range("gain", "prop.volume", 0, 1.5, 0.01)}
         {range("pan", "prop.pan", -1, 1, 0.01)}
-        {range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
-        {range("drive", "prop.drive", 0, 10, 0.1)}
+        {layer.type !== "composition" &&
+          range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
+        {layer.type !== "composition" &&
+          range("drive", "prop.drive", 0, 10, 0.1)}
       </section>
       <AutomationEditor
         key={layer.id}

@@ -28,8 +28,8 @@ describe("individual layer audition", () => {
       true,
     );
     expect(preview.layers[0].noiseSeed).toBe(layer.noiseSeed);
-    expect(preview.master).toBe(project.master);
-    expect(preview.echo).toBe(project.echo);
+    expect(preview.master).toBe(1);
+    expect(preview.echo).toBe(0);
     expect(JSON.stringify(project)).toBe(before);
   });
   it("auditions a muted layer independently of other solo layers, even outside the project window", () => {

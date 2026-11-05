@@ -31,6 +31,8 @@ type Gesture = {
 };
 export function TimelineClip({
   layer,
+  tail = 0,
+  moveOnly = false,
   projectDuration,
   position,
   cropMode,
@@ -45,6 +47,8 @@ export function TimelineClip({
   onCommit,
 }: {
   layer: Layer;
+  tail?: number;
+  moveOnly?: boolean;
   projectDuration: number;
   position: number;
   cropMode: boolean;
@@ -260,6 +264,17 @@ export function TimelineClip({
   const seconds = (value: number) => value.toFixed(draft ? 3 : 2);
   return (
     <div className="layer-lane" ref={lane} onClick={onSelect}>
+      {tail > 0 && (
+        <div
+          className="clip-effect-tail"
+          title={t("tree.tail", tail.toFixed(2))}
+          aria-label={t("tree.tail", tail.toFixed(2))}
+          style={{
+            left: `${((timing.start + timing.duration) / projectDuration) * 100}%`,
+            width: `${(Math.max(0, Math.min(tail, projectDuration - timing.start - timing.duration)) / projectDuration) * 100}%`,
+          }}
+        />
+      )}
       <div
         className={`layer-clip ${draft ? "is-dragging" : ""}`}
         style={{
@@ -280,36 +295,40 @@ export function TimelineClip({
           </span>
           <Waveform data={waveform.current} label={layer.name} />
         </button>
-        <button
-          className="clip-resize clip-resize-start"
-          aria-label={t("editor.resizeStart", layer.name)}
-          title={t("editor.resizeStart", layer.name)}
-          {...events("start")}
-        />
-        <button
-          className="clip-resize clip-resize-end"
-          aria-label={t("editor.resizeEnd", layer.name)}
-          title={t("editor.resizeEnd", layer.name)}
-          {...events("end")}
-        />
-        <button
-          className="clip-fade-handle"
-          style={{
-            left: `${Math.min(1, timing.attack / (timing.sourceDuration ?? timing.duration)) * 100}%`,
-          }}
-          aria-label={t("pro.fadeIn", layer.name)}
-          title={t("pro.fadeIn", layer.name)}
-          {...events("attack")}
-        />
-        <button
-          className="clip-fade-handle clip-fade-end"
-          style={{
-            left: `${(1 - Math.min(1, timing.release / (timing.sourceDuration ?? timing.duration))) * 100}%`,
-          }}
-          aria-label={t("pro.fadeOut", layer.name)}
-          title={t("pro.fadeOut", layer.name)}
-          {...events("release")}
-        />
+        {!moveOnly && (
+          <>
+            <button
+              className="clip-resize clip-resize-start"
+              aria-label={t("editor.resizeStart", layer.name)}
+              title={t("editor.resizeStart", layer.name)}
+              {...events("start")}
+            />
+            <button
+              className="clip-resize clip-resize-end"
+              aria-label={t("editor.resizeEnd", layer.name)}
+              title={t("editor.resizeEnd", layer.name)}
+              {...events("end")}
+            />
+            <button
+              className="clip-fade-handle"
+              style={{
+                left: `${Math.min(1, timing.attack / (timing.sourceDuration ?? timing.duration)) * 100}%`,
+              }}
+              aria-label={t("pro.fadeIn", layer.name)}
+              title={t("pro.fadeIn", layer.name)}
+              {...events("attack")}
+            />
+            <button
+              className="clip-fade-handle clip-fade-end"
+              style={{
+                left: `${(1 - Math.min(1, timing.release / (timing.sourceDuration ?? timing.duration))) * 100}%`,
+              }}
+              aria-label={t("pro.fadeOut", layer.name)}
+              title={t("pro.fadeOut", layer.name)}
+              {...events("release")}
+            />
+          </>
+        )}
         <div
           className="clip-crop-mask clip-crop-before"
           style={{ width: `${(timing.cropStart ?? 0) * 100}%` }}
@@ -318,7 +337,7 @@ export function TimelineClip({
           className="clip-crop-mask clip-crop-after"
           style={{ width: `${(1 - (timing.cropEnd ?? 1)) * 100}%` }}
         />
-        {cropMode && (
+        {cropMode && !moveOnly && (
           <>
             <button
               className="clip-crop-handle"

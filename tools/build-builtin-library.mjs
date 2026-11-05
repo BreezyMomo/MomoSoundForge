@@ -45,7 +45,7 @@ for (const [id, source] of [
 ]) jobs.push({ id: `example-${id}`, kind: "example", nameKey: `builtin.example.${id}`, category: "music", source, keywords: id });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts",
+  "tools/build-builtin-library.mjs", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
   `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   ...jobs.map((job) => job.source),
