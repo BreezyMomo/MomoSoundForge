@@ -29,6 +29,10 @@ npm run preview
 
 `dist/` is a static site. Serve it over HTTP/HTTPS rather than opening its HTML directly.
 
+After building, run `node tools/audit-builtin-library.mjs` to write `test-results/builtin-audit.json`. It checks each entry's engine output, file checksum and embedded recordings. Outputs below −36 dBFS peak or −42 dBFS in their loudest 100 ms RMS window are flagged. Standalone notes additionally target −20 dBFS active RMS when boosting, with a −6 dBFS peak ceiling, so merely avoiding near-silence is insufficient. Quiet raw velocity layers are reported separately, never individually normalized. Level checks do not replace listening review.
+
+Legacy standalone notes restore authored gain, then receive an audible default level per independent library entry. Performance character and note velocity control remain, but separate standalone entries no longer preserve the original soft/loud level differences. Original WAV files are unchanged. Multisample velocity layers and mappings remain intact; an unusually quiet default note is replaced with an audible nearby root in the same range. Library generation rejects quiet defaults. Updates affect newly opened or added factory resources, not independent copies already saved in user projects.
+
 ## Included in v0.1
 
 - Eight editable presets: crystal impact, UI confirm, UI deny, sparkle pickup, laser shot, energy charge, air whoosh and deep explosion.
@@ -65,7 +69,9 @@ Shortcuts: Space to play/pause; Ctrl/Cmd+Z to undo; Ctrl/Cmd+Shift+Z to redo; Ct
 
 ## Use the sound library
 
-The library separates **Basic sounds**, **Combinations** and **My sounds**. Basic sounds contains 96 tone choices: 48 instrument/articulation combinations, 40 CC0 sound effects and 8 synthesis presets. The instruments use 726 distinct recordings; choose ranges or takes inside each card. Browse the 16 editable combinations separately. Categories, bilingual search, favorites and recent items work within each section.
+Rejected takes are deleted from the library and source files. `tools/builtin-quality.json` retains only the rejection reason to prevent reintroduction. The amplified F♯2 timpani lacked a clear drum attack; its original and working copies have been deleted. The timpani card and bundled examples now use C♯3, and the audition reel and distribution archive are cleaned as well. Review records distinguish listening feedback from signal measurements: passing level checks is not a sound-quality certification.
+
+The library separates **Basic sounds**, **Combinations** and **My sounds**. Basic sounds contains 96 tone choices: 48 instrument/articulation combinations, 40 CC0 sound effects and 8 synthesis presets. The instruments use 725 distinct recordings; choose ranges or takes inside each card. Browse the 16 editable combinations separately. Categories, bilingual search, favorites and recent items work within each section.
 
 The 682 usable recordings for piano, flute, violin section, cello section, horn and trumpet are available as 20 articulations across 88 selectable ranges. Each range retains its velocity layers and alternate takes, selected automatically when editing notes. Author mappings and remaining coverage gaps are preserved; see `samples/orchestra-expanded-20261105/coverage.json`.
 

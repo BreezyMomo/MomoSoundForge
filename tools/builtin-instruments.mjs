@@ -38,7 +38,7 @@ export function instrumentJobs(manifest, base) {
   return jobs;
 }
 
-export async function instrumentProject(job, root, { makeLayer, encodeSamples }) {
+export async function instrumentProject(job, root, { makeLayer, encodeSamples }, preferredMidi = 60) {
   const assets = {}, regions = [];
   for (const s of job.samples) {
     const id = recordingId(s), wav = await readFile(path.join(root, job.base, s.wavFile));
@@ -56,7 +56,7 @@ export async function instrumentProject(job, root, { makeLayer, encodeSamples })
       tuneCents: Number(s.sourceEffectiveOpcodes?.tune ?? 0), gainDb: s.conversion.recommendedRegionGainDb,
       releaseSeconds: Math.max(.005, Math.min(3, s.release.envelopeSeconds, Math.min(s.durationSeconds, TONE_SECONDS) - .03)) });
   }
-  const candidates = [...regions].sort((a, b) => Math.abs(a.rootMidi - 60) - Math.abs(b.rootMidi - 60));
+  const candidates = [...regions].sort((a, b) => Math.abs(a.rootMidi - preferredMidi) - Math.abs(b.rootMidi - preferredMidi));
   const chosen = candidates.find(r => r.velocityLow <= 80 && r.velocityHigh >= 80) ?? candidates[0];
   const sample = job.samples.find(s => s.id === chosen.id);
   const playable = regions.filter(r => chosen.rootMidi >= r.keyLow && chosen.rootMidi <= r.keyHigh);

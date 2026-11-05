@@ -1,0 +1,17 @@
+{
+  "schema": "momo.builtin-quality/v1",
+  "excludedStandaloneSamples": [
+    {
+      "id": "17-timpani-1-Fs2-single-hit",
+      "disposition": "source-files-and-generated-copies-deleted",
+      "reason": "User listening review: amplified take sounds like electrical hum rather than a useful drum hit. Original recording is extremely quiet and dominated by low resonance; gain correction does not restore attack detail.",
+      "evidence": {
+        "sourcePeakDbfs": -58.27,
+        "dominantFrequencyHz": 89.8,
+        "leftChannelEnergy60To200HzFraction": 0.9923,
+        "electricalInterferenceConfirmed": false
+      },
+      "replacementSampleId": "17-timpani-2-Cs3-single-hit"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schema": "momo.instrument-verification/v1",
   "checkedAtUtc": "2026-11-04T14:51:14.403Z",
-  "samples": 106,
+  "samples": 105,
   "instruments": 25,
   "projects": 36,
   "passed": true,
@@ -180,13 +180,14 @@
     },
     {
       "file": "projects/17-timpani.soundforge",
-      "projectSha256": "65b8fe6fd37988ad11255c611eade9748a956fe43aadb4b34eede80bd4bb1f83",
+      "projectSha256": "9c46420edc9e73d76a752186325f7485948700a2cb6bc51bdd5c5feba7d9ecd9",
       "wavSha256": null,
       "peak": 0.21540994942188263,
-      "rms": 0.012660221188235208,
-      "durationSeconds": 6.2,
       "deterministic": true,
-      "pcmSha256": "95bebe66c8bd5ad38bb34ba8db28f3b6cd7abd2b64ca6d160b5cb9eb7138bffa"
+      "rms": 0.01761999214271594,
+      "durationSeconds": 3.1999999999999997,
+      "pcmSha256": "66e18b14a428ef0109c643ceb3b81bf7e287ca3fbcbf9ffb55463825f893cff3",
+      "pcmHashEncoding": "float32 little-endian, left channel followed by right channel"
     },
     {
       "file": "projects/18-glockenspiel.soundforge",
@@ -360,13 +361,14 @@
     },
     {
       "file": "examples/forest-departure-8s.soundforge",
-      "projectSha256": "fc2af32d52869984861afe30fd2176612adff608cbce60183bb1582a297495c5",
-      "wavSha256": "12843d72e54d342481d1d7dc248e7f4f5b7429d21515900d5c7471c1f5f5b452",
+      "projectSha256": "9661c8d431b447269cc59e8dc22f2a2ec190cef4bd00e84e2e93a8e2003548a9",
+      "wavSha256": "dee038dd05e2aa84d1bf0265f4afc2304a1fd803bfb1f5855e909fa1b46f2b65",
       "peak": 0.5271908044815063,
-      "rms": 0.07831385541110741,
-      "durationSeconds": 8,
       "deterministic": true,
-      "pcmSha256": "8b83359c42c37dadd81dc837a09bc8dc2ea9e9dc61ffd1c36fe8dad36d3d2ecd"
+      "rms": 0.07898582809056791,
+      "durationSeconds": 8,
+      "pcmSha256": "214ee442af9574ded243f46aeb28b9ba75d8f90ac920f3df321e5a9df40461cc",
+      "pcmHashEncoding": "float32 little-endian, left channel followed by right channel"
     },
     {
       "file": "validation/violin-overlap-and-short-notes.soundforge",
@@ -389,6 +391,37 @@
       "passed": true
     }
   },
-  "sourceFilesVerifiedAgainstPinnedGitBlobs": 106,
-  "projectEmbeddedSourceNote": "All portable audition project assets are complete up to four-second excerpts; original and working WAVs are full length."
+  "sourceFilesVerifiedAgainstPinnedGitBlobs": 105,
+  "projectEmbeddedSourceNote": "All portable audition project assets are complete up to four-second excerpts; original and working WAVs are full length.",
+  "amendedAtUtc": "2026-11-05T08:37:25.983Z",
+  "removalVerification": {
+    "removedSample": "17-timpani-1-Fs2-single-hit",
+    "replacementSample": "17-timpani-2-Cs3-single-hit",
+    "scope": "These two projects were revalidated and the forest WAV regenerated. Other projectChecks retain their original validation date.",
+    "checks": [
+      {
+        "file": "projects/17-timpani.soundforge",
+        "projectSha256": "9c46420edc9e73d76a752186325f7485948700a2cb6bc51bdd5c5feba7d9ecd9",
+        "wavSha256": null,
+        "peak": 0.21540994942188263,
+        "deterministic": true,
+        "rms": 0.01761999214271594,
+        "durationSeconds": 3.1999999999999997,
+        "pcmSha256": "66e18b14a428ef0109c643ceb3b81bf7e287ca3fbcbf9ffb55463825f893cff3",
+        "pcmHashEncoding": "float32 little-endian, left channel followed by right channel"
+      },
+      {
+        "file": "examples/forest-departure-8s.soundforge",
+        "projectSha256": "9661c8d431b447269cc59e8dc22f2a2ec190cef4bd00e84e2e93a8e2003548a9",
+        "wavSha256": "dee038dd05e2aa84d1bf0265f4afc2304a1fd803bfb1f5855e909fa1b46f2b65",
+        "peak": 0.5271908044815063,
+        "deterministic": true,
+        "rms": 0.07898582809056791,
+        "durationSeconds": 8,
+        "pcmSha256": "214ee442af9574ded243f46aeb28b9ba75d8f90ac920f3df321e5a9df40461cc",
+        "pcmHashEncoding": "float32 little-endian, left channel followed by right channel"
+      }
+    ],
+    "remainingSourceHashesVerified": 105
+  }
 }

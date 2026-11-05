@@ -180,7 +180,6 @@
     "projectFile": "projects/17-timpani.soundforge",
     "instrument": "timpani",
     "sampleIds": [
-      "17-timpani-1-Fs2-single-hit",
       "17-timpani-2-Cs3-single-hit"
     ],
     "note": "Timed manual sample audition, embedding up to four seconds per source. Full natural tails are in originals/ and wav/. No automatic playable-instrument mapping."

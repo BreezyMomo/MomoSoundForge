@@ -3,7 +3,7 @@
   "title": "Orchestra Basics 2026-11-04",
   "createdAtUtc": "2026-11-04T14:44:57.752986+00:00",
   "instrumentCount": 25,
-  "sampleCount": 106,
+  "sampleCount": 105,
   "source": "https://versilian-studios.com/vsco-community/",
   "repository": "https://github.com/sgossner/VSCO-2-CE",
   "sourceCommit": "440300901dfe9275fd84e0b7763af1f8443ae62e",
@@ -306,19 +306,14 @@
       ]
     },
     "timpani": {
-      "sampleCount": 2,
+      "sampleCount": 1,
       "rootMidi": [
-        42,
         49
       ],
       "articulations": [
         "single-hit"
       ],
       "dynamicVelocityBands": [
-        [
-          0,
-          80
-        ],
         [
           61,
           110
@@ -5727,117 +5722,6 @@
       },
       "subjectiveAudition": "pending",
       "sourceGitBlobSha1": "b0079bd7ec568998e65df839d5387fb56e264b7d",
-      "qualityReview": {
-        "subjectiveAudition": "pending",
-        "noise": "unreviewed",
-        "residualRoomSound": "unreviewed",
-        "tuning": "author-mapping-only-not-measured",
-        "toneContinuity": "unreviewed",
-        "sourcePeakAboveFullScale": false
-      }
-    },
-    {
-      "id": "17-timpani-1-Fs2-single-hit",
-      "name": "定音鼓 F#2 single-hit",
-      "family": "percussion",
-      "instrumentId": "timpani",
-      "instrumentName": "定音鼓",
-      "instrumentNumber": 17,
-      "slot": 1,
-      "pitched": true,
-      "rootMidi": 42,
-      "rootNote": "F#2",
-      "rootFrequencyHz": 92.4986056779086,
-      "triggerMidi": null,
-      "pitchEvidence": "Author SFZ pitch_keycenter; note naming normalized to C4=MIDI60. Not inferred from source filename; not a measured tuning certification.",
-      "tuningReferenceHz": 440,
-      "measuredTuningHz": null,
-      "performanceGroup": "unspecified",
-      "keyLow": 36,
-      "keyHigh": 43,
-      "roundRobin": {
-        "mode": "sequence",
-        "group": "gr_1",
-        "sequenceLength": 2,
-        "index": 1,
-        "randomLow": null,
-        "randomHigh": null
-      },
-      "loop": {
-        "mode": null,
-        "startFrame": null,
-        "endFrame": null,
-        "frameSampleRate": 44100,
-        "evidence": "Author SFZ opcode only; null means unverified, not loopable."
-      },
-      "release": {
-        "envelopeSeconds": 12.0,
-        "recordedReleaseSampleId": null
-      },
-      "articulation": "single-hit",
-      "velocityLow": 0,
-      "velocityHigh": 80,
-      "sourceRegion": {
-        "sample": "Timpani1_Hit_v1_rr1_Sum.wav",
-        "lokey": "36",
-        "hikey": "43",
-        "pitch_keycenter": "42",
-        "lovel": "0",
-        "hivel": "80",
-        "volume": "27"
-      },
-      "sourceEffectiveOpcodes": {
-        "ampeg_attack": "0.005",
-        "ampeg_release": "12",
-        "ampeg_dynamic": "1",
-        "volume": "27",
-        "seq_length": "2",
-        "seq_position": "1",
-        "group_label": "gr_1",
-        "sample": "Timpani1_Hit_v1_rr1_Sum.wav",
-        "lokey": "36",
-        "hikey": "43",
-        "pitch_keycenter": "42",
-        "lovel": "0",
-        "hivel": "80"
-      },
-      "mappingFile": "Timpani.sfz",
-      "mappingCommit": "6dd651d55dde97fd4028699be9d4481f26917891",
-      "mappingSha256": "8debc0fa6da4344abb48b625cbaaa85ffcf3a7d0a946fe57ddbb16a49aab9fa5",
-      "mappingUrl": "https://github.com/sgossner/VSCO-2-CE/blob/6dd651d55dde97fd4028699be9d4481f26917891/Timpani.sfz",
-      "sourcePath": "Percussion/Timpani/Timpani1_Hit_v1_rr1_Sum.wav",
-      "sourceUrl": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Timpani/Timpani1_Hit_v1_rr1_Sum.wav",
-      "sourceCommit": "440300901dfe9275fd84e0b7763af1f8443ae62e",
-      "author": "Versilian Studios / Sam Gossner; Simon Dalzell; sample cutting Elan Hickler / Soundemote",
-      "license": "CC0-1.0",
-      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-      "originalFile": "originals/percussion/17-timpani-1-Fs2-single-hit.wav",
-      "originalSha256": "a43d60795e9eab808866c22b6b6b42a64d3a13f6754838f0100a0a1e9a3029cd",
-      "sourceSampleRate": 44100,
-      "sourceChannels": 2,
-      "sourceBitsPerSample": 16,
-      "sourceDurationSeconds": 3.173896,
-      "sourceDecodedPeak": 0.0012286131968721747,
-      "wavFile": "wav/percussion/17-timpani-1-Fs2-single-hit.wav",
-      "wavSha256": "e398ef5e3d959e360205caff86636c65bd1b48ff62cbf6fa05a6a7956e863f95",
-      "pcmSha256": "d4249e71490afeadf6b37cb5ffe43f17000c7cfec3250d2d100f941197a629c1",
-      "sampleRate": 48000,
-      "channels": 2,
-      "bitsPerSample": 16,
-      "durationSeconds": 3.173896,
-      "peak": 0.001220703125,
-      "rms": 0.00011938301214945137,
-      "conversion": {
-        "suggestedAuthorRegionVolumeDb": 27.0,
-        "appliedGainDb": 0,
-        "resampledToHz": 48000,
-        "truncatedToEditorWindow": false,
-        "endFadeSeconds": 0,
-        "denoised": false,
-        "preservesDynamicRelationships": true
-      },
-      "subjectiveAudition": "pending",
-      "sourceGitBlobSha1": "77c36162c32a539649022e5917e0aa764a9c081b",
       "qualityReview": {
         "subjectiveAudition": "pending",
         "noise": "unreviewed",

@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir, stat, copyFile, readdir, realpath, unlink } from "node:fs/promises";
 import path from "node:path";
 import { instrumentJobs, instrumentProject, recordingId } from "./builtin-instruments.mjs";
+import { legacyInstrumentLevels, standaloneBoostDb } from "./builtin-levels.mjs";
+import { levels } from "./audit-builtin-library.mjs";
 
 const root = process.cwd();
 const output = path.join(root, "public/sound-library");
@@ -17,6 +19,8 @@ const expandedRoot = "samples/orchestra-expanded-20261105";
 const fx = await readJson(`${fxRoot}/manifest.json`);
 const orchestra = await readJson(`${orchestraRoot}/manifest.json`);
 const expanded = await readJson(`${expandedRoot}/manifest.json`);
+const quality = await readJson("tools/builtin-quality.json");
+const excludedStandalone = new Set(quality.excludedStandaloneSamples.map(entry => entry.id));
 const fxExamples = await readJson(`${fxRoot}/examples/recipes.json`);
 const jobs = [];
 for (const sample of fx.samples) jobs.push({
@@ -28,6 +32,7 @@ for (const sample of fx.samples) jobs.push({
 const variants = new Map();
 const expandedInstruments = new Set(expanded.samples.map(s => s.instrumentId));
 for (const sample of orchestra.samples) {
+  if (excludedStandalone.has(sample.id)) continue;
   if (expandedInstruments.has(sample.instrumentId)) continue;
   const group = [sample.instrumentId, sample.rootMidi, sample.articulation, sample.velocityLow, sample.velocityHigh].join(":");
   const variant = (variants.get(group) ?? 0) + 1; variants.set(group, variant);
@@ -40,6 +45,7 @@ for (const sample of orchestra.samples) {
   });
 }
 jobs.push(...instrumentJobs(expanded, expandedRoot));
+const legacyLevels = legacyInstrumentLevels(jobs.filter(job => job.kind === "instrument" && !job.tone).map(job => job.sample));
 const effectCategories = ["impacts", "interface", "magic", "motion", "motion", "liquid", "liquid", "foley"];
 for (const [index, entry] of fxExamples.entries()) jobs.push({
   id: `example-${entry.id}`, kind: "example", nameKey: `builtin.example.${entry.id.slice(3)}`,
@@ -56,7 +62,7 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "tools/builtin-instruments.mjs", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
+  "tools/build-builtin-library.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
   `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   `${expandedRoot}/manifest.json`,
@@ -80,7 +86,7 @@ await mkdir(output, { recursive: true });
 await mkdir(path.dirname(catalogFile), { recursive: true });
 const server = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom" });
 try {
-  const { makeLayer, encodeSamples, parseProject, projectForSave } = await server.ssrLoadModule("/src/model.ts");
+  const { makeLayer, encodeSamples, decodeSamples, parseProject, projectForSave } = await server.ssrLoadModule("/src/model.ts");
   const { renderProject } = await server.ssrLoadModule("/src/engine.ts");
   const { instrumentPlaybackRange } = await server.ssrLoadModule("/src/sampleTail.ts");
   const sounds = [];
@@ -88,7 +94,21 @@ try {
     let source;
     if (job.tone) {
       source = await instrumentProject(job, root, { makeLayer, encodeSamples });
-      const raw = renderProject(parseProject(source));
+      let raw = renderProject(parseProject(source));
+      // A naturally weak low-register note need not be the first sound a novice
+      // hears. Pick a nearby audible root without changing sample/velocity gains.
+      if (levels([raw.left, raw.right], raw.sampleRate).status !== "ok") {
+        const originalMidi = source.layers[0].score.notes[0].midi;
+        const roots = [...new Set(job.samples.map(s => s.rootMidi))]
+          .filter(midi => midi !== originalMidi).sort((a, b) => Math.abs(a - originalMidi) - Math.abs(b - originalMidi));
+        for (const midi of roots) {
+          const candidate = await instrumentProject(job, root, { makeLayer, encodeSamples }, midi);
+          const audio = renderProject(parseProject(candidate));
+          if (levels([audio.left, audio.right], audio.sampleRate).status === "ok") {
+            source = candidate; raw = audio; break;
+          }
+        }
+      }
       // One gain for the entire range keeps the relative velocity dynamics intact.
       if (raw.sourcePeak > .8) source.master = .8 / raw.sourcePeak;
     } else if (job.kind === "instrument") {
@@ -100,7 +120,9 @@ try {
       if (!Number.isInteger(length) || length < 1 || length > 30 * 48000 || wav.length !== 44 + length * 4)
         throw Error(`Source WAV exceeds the sample budget: ${job.id}`);
       const channels = [new Float32Array(length), new Float32Array(length)];
-      for (let i = 0; i < length; i++) for (let c = 0; c < 2; c++) channels[c][i] = wav.readInt16LE(44 + i * 4 + c * 2) / 32768;
+      const level = legacyLevels.get(job.sample.id);
+      const assetGain = 10 ** (level.assetGainDb / 20);
+      for (let i = 0; i < length; i++) for (let c = 0; c < 2; c++) channels[c][i] = wav.readInt16LE(44 + i * 4 + c * 2) / 32768 * assetGain;
       const { duration, release } = instrumentPlaybackRange(channels, 48000, job.sample.instrumentId);
       source = {
         schema: "momo.soundforge/v2", name: job.id, seed: 2048, duration, master: 1, echo: 0,
@@ -110,15 +132,33 @@ try {
             instruments: [{ id: job.sample.instrumentId, name: job.sample.instrumentId, license: "CC0-1.0",
               regions: [{ id: job.sample.id, assetId: job.sample.id, rootMidi: job.sample.rootMidi ?? 60,
                 keyLow: 0, keyHigh: 127, velocityLow: 1, velocityHigh: 127,
-                articulation: job.sample.articulation, roundRobin: 0, tuneCents: 0, gainDb: 0, releaseSeconds: release }] }],
+                articulation: job.sample.articulation, roundRobin: 0, tuneCents: 0, gainDb: level.regionGainDb, releaseSeconds: release }] }],
             notes: [{ id: `note-${job.sample.id}`, instrumentId: job.sample.instrumentId,
               midi: job.sample.rootMidi ?? 60, start: 0, duration: Math.max(.05, duration - release) * 2,
               velocity: 100, articulation: job.sample.articulation }] },
           duration, frequency: 440, endFrequency: 440, gain: 1.3, attack: .002, release, decay: 0, cutoff: 22000, noiseSeed: 2048 })],
       };
     } else source = JSON.parse(await readFile(path.join(root, job.source), "utf8"));
-    const project = parseProject(projectForSave(source));
-    const audio = renderProject(project);
+    let project = parseProject(projectForSave(source));
+    let audio = renderProject(project);
+    if (job.kind === "instrument" && !job.tone) {
+      const boostDb = standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate));
+      if (boostDb > 0) {
+        const region = project.layers[0].score.instruments[0].regions[0];
+        const extraDb = Math.max(0, region.gainDb + boostDb - 24);
+        region.gainDb = Math.min(24, region.gainDb + boostDb);
+        if (extraDb > 0) {
+          const asset = project.assets[region.assetId], gain = 10 ** (extraDb / 20);
+          asset.channels = asset.channels.map(channel => encodeSamples(Float32Array.from(decodeSamples(channel), x => x * gain)));
+        }
+        project = parseProject(projectForSave(project));
+        audio = renderProject(project);
+      }
+    }
+    if (levels([audio.left, audio.right], audio.sampleRate).status !== "ok")
+      throw Error(`Built-in default is silent or too quiet; review its source/mapping: ${job.id}`);
+    if (job.kind === "instrument" && !job.tone && standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate)) > .1)
+      throw Error(`Standalone default lacks usable loudness: ${job.id}`);
     const waveform = Array.from({ length: 160 }, (_, bin) => {
       const start = Math.floor(bin * audio.left.length / 160), end = Math.floor((bin + 1) * audio.left.length / 160);
       let peak = 0;

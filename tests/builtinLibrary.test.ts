@@ -23,7 +23,7 @@ function resource(raw: unknown = fixture()) {
 }
 it("indexes all collected samples and examples with matching categories, semantic names and final-render thumbnails", () => {
   expect(new Set(BUILTIN_SOUNDS.map(x => x.id)).size).toBe(BUILTIN_SOUNDS.length);
-  expect(BUILTIN_SOUNDS.filter(x => x.kind === "instrument" && !x.tone)).toHaveLength(44);
+  expect(BUILTIN_SOUNDS.filter(x => x.kind === "instrument" && !x.tone)).toHaveLength(43);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "sample")).toHaveLength(40);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(16);
   for (const sound of BUILTIN_SOUNDS) {
@@ -50,6 +50,20 @@ it("makes every usable expanded recording available in articulation/range choice
     expect(tone.keyLow).toBeLessThanOrEqual(tone.keyHigh!);
   }
 });
+it("ships audible defaults for timpani, harp and low flute", () => {
+  for (const id of ["instrument-17-timpani-2-Cs3-single-hit", "instrument-06-harp-1-C3-single-hit", "tone-flute-sustain-60-70"]) {
+    const sound = BUILTIN_SOUNDS.find(s => s.id === id)!;
+    const project = parseProject(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${sound.file}`)).toString()));
+    const rendered = renderProject(project);
+    expect(rendered.peak, id).toBeGreaterThan(.03);
+    expect(rendered.sourcePeak, id).toBeLessThan(1);
+    const template = fixture();
+    template.layers = []; template.assets = {};
+    const inserted = parseProject(appendInstrumentNode(template, project, "checked-instrument"));
+    // Calibration also survives adding the instrument to a user project.
+    expect(renderProject(inserted).peak, id).toBeCloseTo(rendered.peak, 5);
+  }
+}, 20000);
 it("inserts two playable ranges as independent editable instruments and reopens portably", () => {
   const read = (id: string) => {
     const sound = BUILTIN_SOUNDS.find(s => s.tone && s.nameKey === id && s.keyLow! <= 60 && s.keyHigh! >= 60)!;
