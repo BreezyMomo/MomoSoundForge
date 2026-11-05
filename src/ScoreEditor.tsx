@@ -461,7 +461,7 @@ export function ScoreEditor({
                     r = choices.get(n.id);
                   return (
                     <tr key={n.id}>
-                      <td>
+                      <td data-label={t("score.pitch")} >
                         <NumberField
                           label={`${t("score.pitch")} ${index + 1}`}
                           value={n.midi}
@@ -470,7 +470,7 @@ export function ScoreEditor({
                           }
                         />
                       </td>
-                      <td>
+                      <td data-label={t("score.start")} >
                         <NumberField
                           label={`${t("score.start")} ${index + 1}`}
                           value={n.start}
@@ -484,7 +484,7 @@ export function ScoreEditor({
                           {beatsToSeconds(n.start, score.bpm).toFixed(3)} s
                         </small>
                       </td>
-                      <td>
+                      <td data-label={t("score.duration")} >
                         <NumberField
                           label={`${t("score.duration")} ${index + 1}`}
                           value={n.duration}
@@ -501,7 +501,7 @@ export function ScoreEditor({
                           {beatsToSeconds(n.duration, score.bpm).toFixed(3)} s
                         </small>
                       </td>
-                      <td>
+                      <td data-label={t("score.velocity")} >
                         <NumberField
                           label={`${t("score.velocity")} ${index + 1}`}
                           min={1}
@@ -511,7 +511,7 @@ export function ScoreEditor({
                           }
                         />
                       </td>
-                      <td>
+                      <td data-label={t("score.instrument")} >
                         <select
                           aria-label={`${t("score.instrument")} ${index + 1}`}
                           value={n.instrumentId}
@@ -537,7 +537,7 @@ export function ScoreEditor({
                           ))}
                         </select>
                       </td>
-                      <td>
+                      <td data-label={t("score.articulation")} >
                         <select
                           aria-label={`${t("score.articulation")} ${index + 1}`}
                           value={n.articulation}
@@ -550,14 +550,14 @@ export function ScoreEditor({
                           ))}
                         </select>
                       </td>
-                      <td>
+                      <td data-label={t("score.selectedSample")} >
                         <small>
                           {r
                             ? `${project.assets[r.assetId]?.name} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`
                             : t("score.noRegion")}
                         </small>
                       </td>
-                      <td>
+                      <td data-label={t("score.actions")} >
                         <button
                           className="secondary"
                           aria-label={`${t("score.removeNote")} ${index + 1}`}

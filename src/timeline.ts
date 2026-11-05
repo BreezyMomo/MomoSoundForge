@@ -15,6 +15,7 @@ export function adjustCrop(layer: Layer, mode: CropEdit, delta: number) {
       };
 }
 export function stretchClip(layer: Layer, timing: ClipTiming): Partial<Layer> {
+  if (layer.type === "composition") return { start: timing.start };
   return {
     ...timing,
     ...(Math.abs(layer.duration - timing.duration) > 1e-6
@@ -127,6 +128,11 @@ export function boundedSelection(
   next: Partial<Layer>,
   duration: number,
 ) {
+  if (
+    Math.abs((next.duration ?? active.duration) - active.duration) > 1e-6 &&
+    layers.some((l) => ids.includes(l.id) && l.type === "composition")
+  )
+    return layers;
   const transformed = transformSelection(layers, ids, active, next);
   if (
     Math.abs((next.start ?? active.start) - active.start) < 1e-6 &&

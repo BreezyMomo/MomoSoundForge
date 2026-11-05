@@ -1,6 +1,20 @@
-import { beforeSoundPolish } from "./polishAudition";
+import { appendInstrumentNode } from "./instrumentNode";
+import { TreeTimeline } from "./TreeTimeline";
+import { SoundPolish } from "./SoundPolish";
+import {
+  groupNodes,
+  moveNodes,
+  editNode,
+  isolatedNode,
+  nodeKey,
+  normalizeGroups,
+  nodeDocument,
+  nodeParent,
+  type NodeAddress,
+} from "./nodeTree";
+import { bypassEffects } from "./nodeEffects";
+import { beforeSoundPolish, padAudition } from "./polishAudition";
 import { ScoreEditor } from "./ScoreEditor";
-import { emptyScore } from "./instruments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
@@ -13,8 +27,6 @@ import {
   Download,
   Plus,
   Upload,
-  LockKeyhole,
-  LockKeyholeOpen,
   Volume2,
   X,
   Shuffle,
@@ -30,16 +42,19 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import type { DockWorkspace } from "@momo/workbench/dock";
-import {AppearancePreferences} from "./AppearancePreferences";
-import {LanguagePreferences} from "./LanguagePreferences";
+import { AppearancePreferences } from "./AppearancePreferences";
+import { LanguagePreferences } from "./LanguagePreferences";
 import { Workbench } from "./Workbench";
 import { SoundLibrary } from "./SoundLibrary";
 import { Inspector, Range, CommitText } from "./Inspector";
 import { Waveform } from "./Waveform";
-import { TimelineClip } from "./TimelineClip";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { fromPreset } from "./presets";
-import { BUILTIN_SOUNDS, builtinSoundName, loadBuiltinSound } from "./builtinLibrary";
+import {
+  BUILTIN_SOUNDS,
+  builtinSoundName,
+  loadBuiltinSound,
+} from "./builtinLibrary";
 import {
   SAMPLE_RATE,
   MAX_ASSET_BYTES,
@@ -50,10 +65,8 @@ import {
   projectForSave,
   uid,
   varyProject,
-  createLayerPreviewProject,
   assertProjectLimits,
   makeComposition,
-  wrapProject,
   resolveProjectPath,
   updateProjectAtPath,
   type Layer,
@@ -88,7 +101,7 @@ const defaultProject = () =>
   fromPreset("ice", t("preset.ice"), (key) => t(`layer.${key}`));
 const db = (v: number) => (v > 0 ? (20 * Math.log10(v)).toFixed(1) : "−∞");
 function readBuiltinSound(id: string) {
-  const sound = BUILTIN_SOUNDS.find(entry => entry.id === id);
+  const sound = BUILTIN_SOUNDS.find((entry) => entry.id === id);
   if (!sound) throw Error("library.builtinLoadError");
   return loadBuiltinSound(id, builtinSoundName(sound));
 }
@@ -101,7 +114,7 @@ export default function App() {
     past: Project[];
     project: Project;
     future: Project[];
-  }>(() => ({ past: [], project: defaultProject(), future: [] }));
+  }>(() => ({ past: [], project: nodeDocument(defaultProject()), future: [] }));
   const [editPath, setEditPath] = useState<string[]>([]);
   const context = useMemo(
     () => resolveProjectPath(history.project, editPath),
@@ -124,6 +137,7 @@ export default function App() {
       project: Project;
       result: RenderResult;
       original: RenderResult;
+      target: string;
     } | null>(null),
     [renderFailed, setRenderFailed] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null),
@@ -133,7 +147,7 @@ export default function App() {
     [progress, setProgress] = useState(0);
   const [cue, setCue] = useState(0);
   const [originalAudition, setOriginalAudition] = useState(false);
-  useEffect(() => setOriginalAudition(false), [project]);
+  useEffect(() => setOriginalAudition(false), [project, selected]);
   const [encodingStatus, setEncodingStatus] = useState("");
   const encodedCache = useRef<{
     project: Project;
@@ -145,7 +159,6 @@ export default function App() {
   const [selection, setSelection] = useState<string[]>([]),
     [zoom, setZoom] = useState(1),
     [snap, setSnap] = useState(true),
-    [timelineDraft, setTimelineDraft] = useState<Layer[] | null>(null),
     [groupScale, setGroupScale] = useState(1);
   const selectedIds = selection.includes(selected)
     ? selection.filter((id) => project.layers.some((l) => l.id === id))
@@ -166,12 +179,11 @@ export default function App() {
   }, [exportSettings]);
   useEffect(() => {
     setSelection([]);
-    setTimelineDraft(null);
   }, [JSON.stringify(context.path)]);
   useEffect(() => {
     outputVersion.current++;
     setExportOutput(null);
-  }, [project, exportSettings]);
+  }, [history.project, exportSettings]);
   const selectLayer = (
     id: string,
     event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
@@ -236,7 +248,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   const updateCue = useCallback((time: number) => {
-    const value = clamp(time, 0, current.current.duration);
+    const value = clamp(time, 0, 40);
     cueRef.current = value;
     setCue(value);
   }, []);
@@ -265,7 +277,8 @@ export default function App() {
         let next: Project;
         try {
           next = change(h.project);
-          if (next !== h.project) next = reconcileAdvanced(next);
+          if (next !== h.project)
+            next = reconcileAdvanced(normalizeGroups(next));
           assertProjectLimits(next);
         } catch (error) {
           queueMicrotask(() =>
@@ -340,7 +353,7 @@ export default function App() {
       .then((p) => {
         if (cancelled) return;
         if (p) {
-          setHistory({ past: [], project: p, future: [] });
+          setHistory({ past: [], project: nodeDocument(p), future: [] });
           setSelected(p.layers[0]?.id ?? "");
           flash("status.restored");
         }
@@ -398,11 +411,25 @@ export default function App() {
     setRenderFailed(false);
     const timer = setTimeout(() => {
       renderer
-        .current!.render(project)
+        .current!.render(history.project)
         .then(async (result) => {
           if (cancelled) return;
-          const original = project.effects ? await renderer.current!.render(beforeSoundPolish(project)) : result;
-          if (!cancelled) setRendered({ project, result, original });
+          const original = selected
+            ? await renderer.current!.render(
+                beforeSoundPolish(history.project, {
+                  path: context.path,
+                  id: selected,
+                }),
+              )
+            : result;
+          const frames = Math.max(result.left.length, original.left.length);
+          if (!cancelled)
+            setRendered({
+              project: history.project,
+              result: padAudition(result, frames),
+              original: padAudition(original, frames),
+              target: nodeKey({ path: context.path, id: selected }),
+            });
         })
         .catch(() => {
           if (!cancelled) {
@@ -415,20 +442,25 @@ export default function App() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [project, ready, flash]);
+  }, [history.project, selected, JSON.stringify(context.path), ready, flash]);
   useEffect(() => {
     if (!project.layers.some((l) => l.id === selected))
       setSelected(project.layers[0]?.id ?? "");
   }, [project, selected]);
   const play = useCallback(
-    async (input: RenderResult | (() => Promise<RenderResult>), id: string, replace = false) => {
+    async (
+      input: RenderResult | (() => Promise<RenderResult>),
+      id: string,
+      replace = false,
+    ) => {
       if (
-        !replace && (activePlaybackRef.current === id ||
-        pendingPlaybackRef.current === id)
+        !replace &&
+        (activePlaybackRef.current === id || pendingPlaybackRef.current === id)
       ) {
         stop();
         return;
       }
+      const replaceOffset = replace ? (player.current?.position() ?? 0) : 0;
       const token = ++playToken.current;
       if (activePlaybackRef.current === "main" && player.current)
         updateCue(player.current.position());
@@ -443,12 +475,23 @@ export default function App() {
         await player.current!.prepare();
         if (token !== playToken.current) return;
         phase = "render";
-        const result = typeof input === "function" ? await input() : input;
+        const renderedAudio =
+          typeof input === "function" ? await input() : input;
+        const result = replace
+          ? padAudition(
+              renderedAudio,
+              Math.round(playbackDuration.current * renderedAudio.sampleRate),
+            )
+          : renderedAudio;
         if (token !== playToken.current) return;
         phase = "audio";
         const duration = result.left.length / result.sampleRate;
-        const offset =
-          id === "main" && cueRef.current < duration - 1 / result.sampleRate
+        const offset = replace
+          ? Math.min(
+              replaceOffset,
+              Math.max(0, duration - 1 / result.sampleRate),
+            )
+          : id === "main" && cueRef.current < duration - 1 / result.sampleRate
             ? cueRef.current
             : 0;
         const started = await player.current!.play(
@@ -472,8 +515,14 @@ export default function App() {
         if (id === "main") updateCue(offset);
       } catch (error) {
         if (token === playToken.current)
-          flash(error instanceof Error && error.message === "library.builtinLoadError"
-            ? error.message : phase === "render" ? "error.render" : "error.audio");
+          flash(
+            error instanceof Error &&
+              error.message === "library.builtinLoadError"
+              ? error.message
+              : phase === "render"
+                ? "error.render"
+                : "error.audio",
+          );
       } finally {
         if (token === playToken.current) {
           pendingPlaybackRef.current = null;
@@ -483,14 +532,62 @@ export default function App() {
     },
     [playing, stop, loop, monitor, flash, updateCue],
   );
-  const result = rendered?.project === project ? rendered.result : null;
-  const auditionResult = originalAudition && rendered?.project === project ? rendered.original : result;
+  const result = rendered?.project === history.project ? rendered.result : null;
+  const comparisonReady =
+    !!result &&
+    rendered?.target === nodeKey({ path: context.path, id: selected });
+  const auditionResult =
+    originalAudition && comparisonReady ? rendered.original : result;
+  // Keep the last waveform during edits, but never use it for playback/export.
+  // Unrelated documents have new node IDs and must not inherit this preview.
+  const sharesNode = (nodes: Layer[], previous: Set<string>): boolean =>
+    nodes.some((node) => previous.has(node.id) ||
+      (node.project && sharesNode(node.project.layers, previous)));
+  const previousIds = new Set<string>();
+  const collectIds = (nodes: Layer[]) => nodes.forEach((node) => {
+    previousIds.add(node.id);
+    if (node.project) collectIds(node.project.layers);
+  });
+  if (rendered) collectIds(rendered.project.layers);
+  const displayResult = auditionResult ??
+    (sharesNode(history.project.layers, previousIds) ? rendered?.result : null);
+  const timelineDuration = Math.max(
+    history.project.duration,
+    (displayResult?.left.length ?? 0) / (displayResult?.sampleRate ?? 48000),
+    comparisonReady
+      ? rendered.original.left.length / rendered.original.sampleRate
+      : 0,
+  );
   const comparePolish = (original: boolean) => {
-    if (!result || !rendered || original === originalAudition) return;
+    if (
+      !result ||
+      !rendered ||
+      !comparisonReady ||
+      original === originalAudition
+    )
+      return;
     setOriginalAudition(original);
     // Both buffers are ready: replace playback at the current cursor, without changing the project.
-    if (activePlaybackRef.current === "main" || pendingPlaybackRef.current === "main")
+    if (
+      activePlaybackRef.current === "main" ||
+      pendingPlaybackRef.current === "main"
+    )
       void play(original ? rendered.original : result, "main", true);
+    else if (activePlaybackRef.current?.startsWith("node-")) {
+      const address = { path: context.path, id: selected };
+      if (activePlaybackRef.current === `node-${nodeKey(address)}`) {
+        const isolated = isolatedNode(history.project, address);
+        if (original)
+          isolated.layers[0].effects = bypassEffects(
+            isolated.layers[0].effects,
+          );
+        void play(
+          () => renderer.current!.render(isolated),
+          `node-${nodeKey(address)}`,
+          true,
+        );
+      }
+    }
   };
   const beginSeek = () => {
     const resume =
@@ -503,7 +600,8 @@ export default function App() {
     updateCue(time);
     const resume = resumeSeekRef.current;
     resumeSeekRef.current = false;
-    if (resume && result && time < project.duration) void play(auditionResult!, "main");
+    if (resume && result && time < timelineDuration)
+      void play(auditionResult!, "main");
   };
   const rewind = () => {
     beginSeek();
@@ -511,7 +609,9 @@ export default function App() {
     endSeek(0);
   };
   const previewLayer = project.layers.find(
-    (layer) => `layer-${layer.id}` === (playing ?? pendingPlayback),
+    (layer) =>
+      `node-${nodeKey({ path: context.path, id: layer.id })}` ===
+      (playing ?? pendingPlayback),
   );
   useEffect(() => {
     if (!playing) return;
@@ -564,7 +664,18 @@ export default function App() {
     };
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
-  }, [save, help, result, auditionResult, play, playing, pendingPlayback, stop, undo, redo]);
+  }, [
+    save,
+    help,
+    result,
+    auditionResult,
+    play,
+    playing,
+    pendingPlayback,
+    stop,
+    undo,
+    redo,
+  ]);
   const selectedLayer = project.layers.find((l) => l.id === selected);
   const navigate = (path: string[]) => {
     stop();
@@ -590,27 +701,73 @@ export default function App() {
   };
   const wrapCurrent = () => {
     try {
-      const next = wrapProject(current.current);
-      const root = updateProjectAtPath(
+      const grouped = groupNodes(
         rootCurrent.current,
-        pathRef.current,
-        () => next,
+        context.path,
+        selectedIds,
+        t("tree.group"),
       );
-      assertProjectLimits(root);
-      edit(() => next);
-      setSelected(next.layers[0].id);
-      flash("status.grouped");
+      editRoot(() => grouped.root);
+      setSelected(grouped.id);
+      setSelection([grouped.id]);
     } catch (error) {
-      flash(
-        error instanceof Error && error.message.startsWith("error.")
-          ? error.message
-          : "error.project",
-      );
+      flash(error instanceof Error ? error.message : "error.project");
     }
+  };
+  const treeSelect = (
+    address: NodeAddress,
+    event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
+  ) => {
+    stop();
+    if (JSON.stringify(address.path) === JSON.stringify(context.path))
+      selectLayer(address.id, event);
+    else {
+      stop();
+      setEditPath(address.path);
+      setSelected(address.id);
+      setSelection([address.id]);
+    }
+  };
+  const treeMove = (
+    path: string[],
+    ids: string[],
+    target: string[],
+    before?: string,
+  ) => {
+    try {
+      const next = moveNodes(rootCurrent.current, path, ids, target, before);
+      editRoot(() => next);
+      setEditPath(target);
+      setSelected(ids[0]);
+      setSelection(ids);
+    } catch (error) {
+      flash(error instanceof Error ? error.message : "error.project");
+    }
+  };
+  const previewNode = (address: NodeAddress) => {
+    const isolated = isolatedNode(rootCurrent.current, address);
+    if (
+      originalAudition &&
+      nodeKey(address) === nodeKey({ path: context.path, id: selected })
+    )
+      isolated.layers[0].effects = bypassEffects(isolated.layers[0].effects);
+    void play(
+      () => renderer.current!.render(isolated),
+      `node-${nodeKey(address)}`,
+    );
   };
   const saveCurrentSound = () => {
     download(
-      JSON.stringify(projectForSave(current.current)),
+      JSON.stringify(
+        projectForSave(
+          context.path.length
+            ? isolatedNode(history.project, {
+                path: context.path.slice(0, -1),
+                id: context.path.at(-1)!,
+              })
+            : history.project,
+        ),
+      ),
       `${safeFilename(current.current.name)}.soundforge`,
       "application/json",
     );
@@ -618,7 +775,7 @@ export default function App() {
   };
   async function openLibrarySound(id: string) {
     const next = await readSavedSound(id);
-    editRoot(() => next);
+    editRoot(() => nodeDocument(next));
     scopeEpoch.current++;
     setEditPath([]);
     setSelected(next.layers[0]?.id ?? "");
@@ -635,10 +792,12 @@ export default function App() {
     insertSound(child);
   }
   async function openBuiltinSound(id: string) {
-    const target = rootCurrent.current, epoch = scopeEpoch.current;
+    const target = rootCurrent.current,
+      epoch = scopeEpoch.current;
     const next = await readBuiltinSound(id);
-    if (target !== rootCurrent.current || epoch !== scopeEpoch.current) throw Error("error.scopeChanged");
-    editRoot(() => next);
+    if (target !== rootCurrent.current || epoch !== scopeEpoch.current)
+      throw Error("error.scopeChanged");
+    editRoot(() => nodeDocument(next));
     scopeEpoch.current++;
     setEditPath([]);
     setSelected(next.layers[0]?.id ?? "");
@@ -647,14 +806,26 @@ export default function App() {
     manager.current?.show("editor");
   }
   async function insertBuiltinSound(id: string) {
-    const target = current.current, epoch = scopeEpoch.current;
+    const target = current.current,
+      epoch = scopeEpoch.current;
     const child = await readBuiltinSound(id);
-    if (target !== current.current || epoch !== scopeEpoch.current) throw Error("error.scopeChanged");
+    if (target !== current.current || epoch !== scopeEpoch.current)
+      throw Error("error.scopeChanged");
     insertSound(child);
   }
   function insertSound(child: Project) {
     if (current.current.layers.length >= 16) throw Error("error.layers");
-    const layer = makeComposition(child),
+    if (child.layers.length === 1 && child.layers[0].type === "instrument" &&
+        !child.effects && !child.echo && !child.controls?.length) {
+      const layerId = uid();
+      const append = (p: Project) => appendInstrumentNode(p, child, layerId);
+      assertProjectLimits(updateProjectAtPath(rootCurrent.current, pathRef.current, append));
+      edit(append);
+      setSelected(layerId);
+      manager.current?.show("inspector");
+      return;
+    }
+    const layer = makeComposition(nodeDocument(child)),
       append = (p: Project) => ({
         ...p,
         duration: Math.max(p.duration, layer.duration),
@@ -691,8 +862,10 @@ export default function App() {
     value: number,
   ) => edit((p) => ({ ...p, [key]: value }), key);
   const setPreset = (id: string) => {
-    const next = fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`));
-    editRoot(() => next);
+    const next = nodeDocument(
+      fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`)),
+    );
+    editRoot(() => nodeDocument(next));
     scopeEpoch.current++;
     setEditPath([]);
     setVariations([]);
@@ -729,10 +902,13 @@ export default function App() {
     setSelected(copies[0].id);
   };
   async function finalOutput(p: Project, settings = exportSettings) {
-    const input = await renderer.current!.render({
-      ...p,
-      duration: p.duration + (settings.loopOnly ? 0 : settings.tail),
-    });
+    const audio = await renderer.current!.render(p);
+    const input = settings.loopOnly
+      ? audio
+      : padAudition(
+          audio,
+          audio.left.length + Math.round(settings.tail * audio.sampleRate),
+        );
     return prepareExport(
       input,
       { ...settings, loopOnly: settings.loopOnly && !!p.loopRegion },
@@ -763,11 +939,11 @@ export default function App() {
     setIoBusy(true);
     const version = outputVersion.current;
     try {
-      const { output, bytes } = await encodedOutput(project);
+      const { output, bytes } = await encodedOutput(history.project);
       if (version === outputVersion.current) setExportOutput(output);
       download(
         bytes,
-        `${safeFilename(exportSettings.prefix || project.name)}_01.${exportSettings.format}`,
+        `${safeFilename(exportSettings.prefix || history.project.name)}_01.${exportSettings.format}`,
         AUDIO_MIME[exportSettings.format],
       );
       flash("status.exported");
@@ -780,7 +956,7 @@ export default function App() {
   const auditionExport = () => {
     const version = outputVersion.current;
     void play(async () => {
-      const { output, bytes } = await encodedOutput(project);
+      const { output, bytes } = await encodedOutput(history.project);
       let preview = output;
       if (exportSettings.format !== "wav") {
         const decoded = await player.current!.decode(
@@ -801,8 +977,8 @@ export default function App() {
     }, "export-preview");
   };
   const auditionLoop = (seam = false) => {
-    if (!result || !project.loopRegion) return;
-    const audio = makeLoop(result, project.loopRegion);
+    if (!result || !history.project.loopRegion) return;
+    const audio = makeLoop(result, history.project.loopRegion);
     void play(
       seam ? seamPreview(audio) : audio,
       seam ? "loop-seam" : "loop-region",
@@ -813,7 +989,7 @@ export default function App() {
     setIoBusy(true);
     try {
       if (file.size > 36 * 1024 * 1024) throw Error("error.fileSize");
-      const next = parseProject(JSON.parse(await file.text()));
+      const next = nodeDocument(parseProject(JSON.parse(await file.text())));
       editRoot(() => next);
       scopeEpoch.current++;
       setEditPath([]);
@@ -1031,7 +1207,7 @@ export default function App() {
   );
   const library = (
     <SoundLibrary
-      project={project}
+      project={history.project}
       ready={ready && !ioBusy}
       playback={playing ?? pendingPlayback}
       pendingPlayback={pendingPlayback}
@@ -1039,7 +1215,10 @@ export default function App() {
       onBuiltinOpen={openBuiltinSound}
       onBuiltinInsert={insertBuiltinSound}
       onBuiltinPlay={(id) =>
-        void play(async () => renderer.current!.render(await readBuiltinSound(id)), `builtin-${id}`)
+        void play(
+          async () => renderer.current!.render(await readBuiltinSound(id)),
+          `builtin-${id}`,
+        )
       }
       saveHost={librarySaveHost}
       onPresetInsert={(id) =>
@@ -1108,9 +1287,9 @@ export default function App() {
           <h1>
             <CommitText
               className="project-name"
-              value={project.name}
+              value={history.project.name}
               label={t("editor.name")}
-              onCommit={(v) => edit((p) => ({ ...p, name: v }))}
+              onCommit={(v) => editRoot((p) => ({ ...p, name: v }))}
             />
           </h1>
         </div>
@@ -1183,15 +1362,18 @@ export default function App() {
           />
         </label>
         <span className="time-readout">
-          {(previewLayer ? progress * previewLayer.duration : cue).toFixed(3)}{" "}
-          <span>
-            / {(previewLayer?.duration ?? project.duration).toFixed(2)} s
-          </span>
+          {(previewLayer ? progress * playbackDuration.current : cue).toFixed(
+            3,
+          )}{" "}
+          <span>/ {timelineDuration.toFixed(2)} s</span>
         </span>
       </div>
       <div className="mix-area">
         <div className="section-line">
-          <span>{t("editor.mix")}{originalAudition && ` · ${t("polish.original")}`}</span>
+          <span>
+            {t("editor.mix")}
+            {originalAudition && ` · ${t("polish.original")}`}
+          </span>
           <span>
             {auditionResult
               ? `${t("editor.peak")} ${db(auditionResult.peak)} dBFS`
@@ -1199,11 +1381,11 @@ export default function App() {
           </span>
         </div>
         <PlayheadTimeline
-          duration={project.duration}
-          loopRegion={project.loopRegion}
+          duration={timelineDuration}
+          loopRegion={history.project.loopRegion}
           position={cue}
-          left={auditionResult?.left}
-          right={auditionResult?.right}
+          left={displayResult?.left}
+          right={displayResult?.right}
           disabled={!auditionResult}
           version={project}
           onSeekStart={beginSeek}
@@ -1225,17 +1407,15 @@ export default function App() {
         </div>
       </div>
       <div className="layers-heading">
-        <h2>
-          {t("editor.layers")} <span>{project.layers.length}</span>
-        </h2>
+        <h2>{t("tree.title")}</h2>
         <div className="button-group">
           <button
             className="text-button"
             onClick={wrapCurrent}
-            disabled={!project.layers.length || !ready}
+            disabled={!selectedIds.length || !ready}
           >
             <Layers size={15} />
-            {t("composition.groupAll")}
+            {t("tree.groupSelected")}
           </button>
           <button
             className="text-button"
@@ -1244,29 +1424,6 @@ export default function App() {
           >
             <FilePlus2 size={15} />
             {t("composition.import")}
-          </button>
-          <button
-            className="text-button"
-            disabled={project.layers.length >= 16}
-            onClick={() => {
-              const layer = makeLayer({
-                type: "instrument",
-                name: t("score.title"),
-                score: emptyScore(),
-                duration: project.duration,
-                frequency: 440,
-                endFrequency: 440,
-                gain: 1,
-                attack: 0,
-                release: 0,
-                decay: 0,
-                cutoff: 22000,
-              });
-              edit((p) => ({ ...p, layers: [...p.layers, layer] }));
-              setSelected(layer.id);
-            }}
-          >
-            {t("score.addTrack")}
           </button>
           <button
             className="text-button"
@@ -1421,7 +1578,14 @@ export default function App() {
             </label>
             <button
               className="secondary"
-              disabled={!selectedLayer}
+              disabled={
+                !selectedLayer ||
+                selectedIds.some(
+                  (id) =>
+                    project.layers.find((l) => l.id === id)?.type ===
+                    "composition",
+                )
+              }
               onClick={() => {
                 if (selectedLayer)
                   edit((p) => ({
@@ -1438,265 +1602,66 @@ export default function App() {
         </details>
         <span className="field-help">{t("pro.selectHelp")}</span>
       </div>
-      <div className="timeline-scroll">
-        <div className="layer-list" style={{ width: `${zoom * 100}%` }}>
-          <div className="layer-row timeline-ruler-row">
-            <PlayheadTimeline
-              compact
-              duration={project.duration}
-              loopRegion={project.loopRegion}
-              position={cue}
-              disabled={!result}
-              version={project}
-              onSeekStart={beginSeek}
-              onSeek={updateCue}
-              onSeekEnd={endSeek}
-            />
-          </div>
-          {project.layers.map((l, i) => (
-            <div
-              className={`layer-row ${selectedIds.includes(l.id) ? "selected" : ""} ${l.muted ? "muted" : ""}`}
-              key={l.id}
-              data-layer-id={l.id}
-            >
-              <button
-                className="layer-identity"
-                onClick={(e) => selectLayer(l.id, e)}
-                onDoubleClick={() =>
-                  l.type === "composition" && enterComposition(l.id)
-                }
-                title={
-                  l.type === "composition"
-                    ? t("composition.enterHint")
-                    : undefined
-                }
-              >
-                <span className="layer-index">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span>
-                  <strong>{l.name}</strong>
-                  <small>
-                    {t(
-                      l.type === "synth"
-                        ? "editor.synth"
-                        : l.type === "instrument"
-                          ? "score.title"
-                          : l.type === "composition"
-                            ? "editor.composition"
-                            : "editor.sample",
-                    )}{" "}
-                    ·{" "}
-                    {l.type === "synth"
-                      ? t(`wave.${l.wave}`)
-                      : l.type === "instrument"
-                        ? t("score.noteCount", l.score?.notes.length ?? 0)
-                        : l.type === "composition"
-                          ? t(
-                              "composition.layerCount",
-                              l.project?.layers.length ?? 0,
-                            )
-                          : project.assets[l.assetId!]?.name}
-                  </small>
-                </span>
-              </button>
-              <button
-                className={`layer-preview icon-button ${playing === `layer-${l.id}` || pendingPlayback === `layer-${l.id}` ? "on" : ""}`}
-                disabled={!ready}
-                aria-pressed={
-                  playing === `layer-${l.id}` ||
-                  pendingPlayback === `layer-${l.id}`
-                }
-                aria-label={t(
-                  playing === `layer-${l.id}` ||
-                    pendingPlayback === `layer-${l.id}`
-                    ? "editor.stopLayer"
-                    : "editor.playLayer",
-                  l.name,
-                )}
-                title={t(
-                  playing === `layer-${l.id}` ||
-                    pendingPlayback === `layer-${l.id}`
-                    ? "editor.stopLayer"
-                    : "editor.playLayer",
-                  l.name,
-                )}
-                onClick={() =>
-                  void play(
-                    () =>
-                      renderer.current!.render(
-                        createLayerPreviewProject(current.current, l.id),
-                      ),
-                    `layer-${l.id}`,
-                  )
-                }
-              >
-                {pendingPlayback === `layer-${l.id}` ? (
-                  <LoaderCircle size={14} className="preview-loading" />
-                ) : playing === `layer-${l.id}` ? (
-                  <Square size={13} fill="currentColor" />
-                ) : (
-                  <Play size={14} fill="currentColor" />
-                )}
-              </button>
-              <TimelineClip
-                layer={l}
-                projectDuration={project.duration}
-                position={cue}
-                cropMode={cropMode && selected === l.id}
-                data={result?.layers[l.id]}
-                onSelect={() => selectLayer(l.id)}
-                onBegin={stop}
-                displayLayer={
-                  timelineDraft?.find((x) => x.id === l.id) ??
-                  resolveControls(project).layers.find((x) => x.id === l.id)
-                }
-                constrain={(next) =>
-                  transformLayers(project, l, next).find(
-                    (x) => x.id === l.id,
-                  ) ?? l
-                }
-                disabledParameters={(project.controls ?? []).flatMap((c) =>
-                  c.mappings
-                    .filter((m) => m.layerId === l.id)
-                    .map((m) => m.parameter),
-                )}
-                snapTargets={
-                  snap
-                    ? [
-                        0,
-                        project.duration,
-                        cue,
-                        ...project.layers
-                          .filter(
-                            (x) => !selectedIds.includes(x.id) && x.id !== l.id,
-                          )
-                          .flatMap((x) => [x.start, x.start + x.duration]),
-                      ]
-                    : []
-                }
-                onPreview={(next) =>
-                  setTimelineDraft(
-                    next ? transformLayers(project, l, next) : null,
-                  )
-                }
-                onCommit={(timing) =>
-                  edit((p) => ({ ...p, layers: transformLayers(p, l, timing) }))
-                }
-              />
-              <div className="layer-controls">
-                <button
-                  className={l.muted ? "toggle on" : "toggle"}
-                  aria-pressed={l.muted}
-                  aria-label={`${t("editor.muted")} ${l.name}`}
-                  title={t("editor.muted")}
-                  onClick={() =>
-                    edit((p) => ({
-                      ...p,
-                      layers: p.layers.map((a) =>
-                        a.id === l.id ? { ...a, muted: !a.muted } : a,
-                      ),
-                    }))
-                  }
-                >
-                  M
-                </button>
-                <button
-                  className={l.solo ? "toggle on" : "toggle"}
-                  aria-pressed={l.solo}
-                  aria-label={`${t("editor.solo")} ${l.name}`}
-                  title={t("editor.solo")}
-                  onClick={() =>
-                    edit((p) => ({
-                      ...p,
-                      layers: p.layers.map((a) =>
-                        a.id === l.id ? { ...a, solo: !a.solo } : a,
-                      ),
-                    }))
-                  }
-                >
-                  S
-                </button>
-                <button
-                  className={l.locked ? "toggle on" : "toggle"}
-                  aria-pressed={l.locked}
-                  aria-label={`${t("editor.lock")} ${l.name}`}
-                  title={t("editor.lock")}
-                  onClick={() =>
-                    edit((p) => ({
-                      ...p,
-                      layers: p.layers.map((a) =>
-                        a.id === l.id ? { ...a, locked: !a.locked } : a,
-                      ),
-                    }))
-                  }
-                >
-                  {l.locked ? (
-                    <LockKeyhole size={13} />
-                  ) : (
-                    <LockKeyholeOpen size={13} />
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
-          {!project.layers.length && (
-            <div className="empty-state">
-              <AudioLines size={26} />
-              <p>{t("editor.empty")}</p>
-              <button className="secondary" onClick={addSynth}>
-                <Plus size={15} />
-                {t("action.add")}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      {truncated && <p className="warning-line">{t("editor.clipped")}</p>}
+      <TreeTimeline
+        root={history.project}
+        selected={{ path: context.path, id: selected }}
+        ids={selectedIds}
+        result={displayResult ?? null}
+        ready={!!auditionResult}
+        cue={cue}
+        duration={timelineDuration}
+        zoom={zoom}
+        cropMode={cropMode}
+        playing={playing}
+        onSelect={treeSelect}
+        onPatch={(address, patch) =>
+          editRoot((root) => editNode(root, address, patch))
+        }
+        onTiming={(address, patch) =>
+          editRoot((root) => {
+            const parent = nodeParent(root, address.path),
+              active = parent.layers.find((l) => l.id === address.id)!;
+            const layers = transformLayers(
+              { ...parent, duration: 10 },
+              active,
+              patch,
+            );
+            const next = structuredClone(root);
+            nodeParent(next, address.path).layers = layers;
+            return next;
+          })
+        }
+        snap={snap}
+        onSeekStart={beginSeek}
+        onSeek={updateCue}
+        onSeekEnd={endSeek}
+        onMove={treeMove}
+        onPreview={previewNode}
+        onBegin={stop}
+      />
       <div className="master-controls">
         <Range
           label={t("editor.duration")}
-          value={project.duration}
+          value={history.project.duration}
           min={0.1}
           max={10}
           step={0.01}
           unit="s"
-          onChange={(v) => changeProject("duration", v)}
-        />
-        <Range
-          label={t("editor.master")}
-          value={project.master}
-          min={0}
-          max={1.5}
-          onChange={(v) => changeProject("master", v)}
-        />
-        <Range
-          label={t("editor.echo")}
-          value={project.echo}
-          min={0}
-          max={0.6}
-          onChange={(v) => changeProject("echo", v)}
+          onChange={(v) => editRoot((p) => ({ ...p, duration: v }))}
         />
       </div>
-      {selectedLayer?.type === "instrument" && (
-        <ScoreEditor
-          key={selectedLayer.id}
-          project={project}
-          layer={selectedLayer}
-          onChange={(next) => edit(() => next)}
-        />
-      )}
+      <p className="field-help">
+        {t("tree.tailHelp")}
+        {result?.tailLimited && ` ${t("tree.tailLimited")}`}
+      </p>
       <MacroEditor
         project={project}
         onChange={(next) => edit(() => next, "controls")}
       />
       <ProjectTools
-        original={originalAudition}
-        onCompare={comparePolish}
-        compareBusy={!result || ioBusy}
-        project={project}
+        project={history.project}
         cue={cue}
-        onChange={(next) => edit(() => next, "processing")}
+        onChange={(next) => editRoot(() => next, "processing")}
         onLoop={() => auditionLoop()}
         onSeam={() => auditionLoop(true)}
         busy={!result || ioBusy}
@@ -1891,6 +1856,21 @@ export default function App() {
             editor,
             inspector: (
               <Inspector
+                sourceEditor={selectedLayer?.type === "instrument" ? (
+                  <ScoreEditor key={selectedLayer.id} project={project} layer={selectedLayer}
+                    onChange={(next) => edit(() => next)} />
+                ) : undefined}
+                postProcessing={
+                  selectedLayer && (
+                    <SoundPolish
+                      node={selectedLayer}
+                      onChange={(effects) => changeLayer("effects", effects)}
+                      original={originalAudition}
+                      onCompare={comparePolish}
+                      busy={!comparisonReady || ioBusy}
+                    />
+                  )
+                }
                 layer={selectedLayer}
                 project={project}
                 onChange={changeLayer}
@@ -1976,7 +1956,7 @@ export default function App() {
       )}
       {exportOpen && (
         <ExportDialog
-          project={project}
+          project={history.project}
           settings={exportSettings}
           onSettings={(settings) => {
             stop();

@@ -114,7 +114,13 @@ export function createBuiltinLoader(
       const json = await readBounded(stream, sound.projectBytes);
       if (json.byteLength !== sound.projectBytes) throw failed();
       const project = parseProject(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(json)));
-      if (name) project.name = name.slice(0, 120);
+      if (name) {
+        project.name = name.slice(0, 120);
+        if (sound.kind === "instrument") for (const layer of project.layers) {
+          layer.name = project.name;
+          for (const instrument of layer.score?.instruments ?? []) instrument.name = t(sound.nameKey);
+        }
+      }
       return project;
     } catch {
       // Do not retain a failed resource; retry can fetch a repaired deployment.

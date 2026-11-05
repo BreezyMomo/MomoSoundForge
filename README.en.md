@@ -51,7 +51,7 @@ npm run preview
 4. Set variation seed and amount, then generate five variations. Locked layers preserve their parameters and noise seeds. A zero amount produces identical audio.
 5. Save the editable project or export a final WAV.
 
-Times are in seconds. Layers extending beyond the project duration are cut; the editor shows a warning. Leave enough room for echo tails. Loop playback repeats the project; it does not author seamless loops. Sample speed also changes pitch; independent time stretching is not implemented.
+Times are in seconds. Effect tails extend automatically beyond authored content. Loop playback repeats the project; it does not author seamless loops. Sample speed also changes pitch; independent time stretching is not implemented.
 
 Drag the middle of a timeline clip to move it, or its edge handles to resize it. Moving preserves duration; the left handle preserves the end, and the right handle preserves the start. Adjustments use 0.01-second steps, or 0.001 seconds while holding Shift. Focus a clip or handle and use the left/right arrow keys for keyboard adjustment. Releasing updates the properties and audio with one undo step per drag. Escape or pointer cancellation discards the gesture. Resizing changes layer duration; sample playback speed remains a separate parameter.
 
@@ -71,7 +71,7 @@ Before development and production builds, the bundled resources are generated fr
 
 Instrument entries use a trimmed default playback range with a fade at the end. Piano entries detect a continuous quiet interval after the note decays, excluding long noise beds and isolated late recording sounds; other instruments retain sustained playing and natural resonance. Complete samples remain embedded. Source WAVs and existing projects are preserved.
 
-After tuning a sound, choose **Save to library** beside the editor title, name it and save. Its card appears in the unified sound list, retaining the current sound's layers, nested sounds, parameters and samples. Saving while inside a composition stores just that child sound.
+After tuning a sound, choose **Save to library** beside the editor title, name it and save. Its card appears in the unified sound list, retaining the current sound's layers, nested sounds, parameters and samples. Saving to the library always stores the complete work.
 
 Use the card's play button to audition it, **Open to edit** to open it as a full project, or **Add to current** to insert it as a composition layer in the sound you are editing. Saving the same name offers **Update saved sound** or **Save a copy**. Library originals, opened projects and inserted compositions are independent. Save back to the library to update an original.
 
@@ -79,15 +79,17 @@ The card's additional actions include Rename, Export project and Remove sound. R
 
 ## Compose and reuse sounds
 
-Use **Group all** above the layers to place the current sound's layers, relative timing, master level, echo and samples inside one composition layer. Move, resize, adjust gain or pan, change speed, trim, reverse or audition the composition as a whole.
+The layer area is an expandable node tree. Select siblings with Ctrl / Shift and choose **Group selected nodes**. Drag the six-dot grip on the left: row edges reorder and group centers nest. An insertion line or group highlight shows the destination. Esc cancels, Alt + arrows on a focused grip reorder, and the destination selector remains available. Moving across groups preserves absolute timing. Unbind macro mappings before moving or grouping affected nodes.
 
-Use **Embed sound** to select a saved `.soundforge` project and add it as a component of the current sound. This embeds an editable copy, including its nested sounds and samples, without depending on the original file path. Duplicated compositions can also be edited independently.
+Each sound and group has **Post-processing**. Children are processed first, mixed, then processed by their group. Group all nodes when you want a shared effect. The document root is neutral; final peak protection runs once. Before/after audition bypasses only the selected node, retaining child effects and leaving exports unchanged.
 
-Double-click a composition's name or choose **Edit composition** in its properties to edit the layers inside. Use the breadcrumb above the editor to return to a parent or the root sound. Child edits share the full project's undo history. Untrimmed composition windows follow changes to their child sound's duration.
+Group durations follow child content. Groups can be moved; stretch and crop individual sound nodes. Pale extensions represent automatic effect tails, included in audition and default export. Each effect tail is limited to four seconds with a fade and notice at the limit; overall rendering also has length and resource budgets.
 
-The header's **Save project** action and Ctrl/Cmd+S always save the full root project. Inside a child, **Save this sound** exports just the current child project for reuse. Playback, WAV export and variations use the sound currently being edited. New files use `momo.soundforge/v2`; existing v1 files are upgraded when saved.
+Row playback starts at the node and includes its descendants and effects, excluding ancestors. Top playback and export always use the complete work. Playheads, snapping, multiselection movement, undo and variation locks remain available. Collapse and before/after states are not saved or recorded in undo.
 
-Each sound remains 0.1–10 seconds long. Each scope has at most 16 direct layers, with six nesting levels, 128 total layers and 24 MiB of decoded sample data across the full project. A composition's duration controls its playback window; speed also changes pitch.
+**Embed sound** inserts an editable copy with nested groups and samples. **Save project**, Ctrl/Cmd+S and **Save to library** save the complete work. Inside a group, **Save this sound** saves that group with its effects.
+
+Limits: 16 direct nodes per scope, six nesting levels, 128 total nodes and 24 MiB of decoded samples. During development, legacy processing and timing semantics are not guaranteed.
 
 ## Current boundaries
 
@@ -117,3 +119,5 @@ Outer clip edges stretch the complete waveform with a corresponding pitch change
 Use **Add instrument part** to create a playable multi-sample part. Import a portable `.sfinstrument` package, then add notes or import a `momo.note-events/v1` / `melody-design/recipe-v1` JSON file. Notes expose MIDI pitch, beat position, duration, velocity, instrument and articulation; BPM converts beats to seconds. Sample mapping supports key/velocity zones, deterministic round robin, verified sustain loops and recorded release samples. Missing coverage is silent with an explicit notice.
 
 Open `examples/instruments/flute/phrase.soundforge` for an editable five-note example using 18 real VSCO 2 CE flute recordings (CC0). The matching WAV, portable instrument, event JSON and conversion provenance are included. See [instrument format and integration guide](docs/instruments.md). The 10-second project window and 24 MiB decoded asset budget remain in force. This is a note-event editor, not a full MIDI sequencer or a general SFZ engine; pitch shifting uses ordinary resampling.
+
+Preview, add or open instruments from the sound library. Each is a regular instrument node with notes, rhythm, velocity and sample mappings in the inspector; grouping, post-processing and saving to the library use the normal workflow.

@@ -1,0 +1,123 @@
+.tree-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.tree-node-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.tree-node-name strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-node-name small {
+  color: var(--ui-muted);
+}
+.tree-spacer {
+  width: 28px;
+  flex-shrink: 0;
+}
+.tree-move-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.tree-move-tools label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tree-move-tools select {
+  max-width: 220px;
+}
+.node-tree .tree-row {
+  grid-template-columns: minmax(120px, 160px) 28px minmax(150px, 1fr) 84px;
+  gap: 8px;
+  padding: 5px;
+  border: 1px solid transparent;
+}
+.clip-effect-tail {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  background: var(--wave);
+  opacity: 0.18;
+  border: 1px dashed currentColor;
+  pointer-events: none;
+}
+.node-post-target {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.node-tree .tree-ruler {
+  display: grid;
+  align-items: center;
+}
+.node-tree .layer-list {
+  min-width: 494px;
+}
+.node-tree .layer-controls > button {
+  flex: 0 0 27px;
+  min-width: 27px;
+  width: 27px;
+  padding: 3px;
+}
+
+.node-drag-handle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  min-width: 22px;
+  min-height: 30px;
+  padding: 2px;
+  cursor: grab;
+  touch-action: none;
+  color: var(--ui-muted);
+}
+.node-drag-handle:hover {
+  color: var(--ui-text);
+  background: var(--ui-surface);
+}
+.node-drag-handle:active {
+  cursor: grabbing;
+}
+.node-tree .node-dragging {
+  opacity: 0.45;
+}
+.node-tree .node-drop-before {
+  box-shadow: 0 -3px 0 var(--wave);
+}
+.node-tree .node-drop-after {
+  box-shadow: 0 3px 0 var(--wave);
+}
+.node-tree .node-drop-inside {
+  outline: 2px solid var(--wave);
+  outline-offset: -2px;
+  background: var(--ui-surface);
+}
+.node-drag-ghost {
+  position: fixed;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  max-width: 240px;
+  overflow: hidden;
+  border: 1px solid var(--ui-line-strong);
+  border-radius: 4px;
+  background: var(--ui-panel);
+  color: var(--ui-text);
+  box-shadow: 0 8px 24px var(--ui-shadow);
+  pointer-events: none;
+}

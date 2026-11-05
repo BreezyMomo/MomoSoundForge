@@ -33,7 +33,15 @@ export type Macro = {
   mappings: Mapping[];
 };
 export type EffectGroup = "toneEnabled" | "delayEnabled" | "spaceEnabled";
-export type EffectParameter = "low" | "mid" | "high" | "delayTime" | "delayFeedback" | "delayWet" | "reverb" | "ceiling";
+export type EffectParameter =
+  | "low"
+  | "mid"
+  | "high"
+  | "delayTime"
+  | "delayFeedback"
+  | "delayWet"
+  | "reverb"
+  | "ceiling";
 export type Effects = Partial<Record<EffectGroup, boolean>> & {
   low: number;
   mid: number;
@@ -122,9 +130,16 @@ export function validateAdvanced(project: Project) {
   };
   const number = (v: unknown, a: number, b: number) =>
     typeof v === "number" && Number.isFinite(v) && v >= a && v <= b;
-  if (project.effects) {
+  for (const effects of [
+    project.effects,
+    ...project.layers.map((l) => l.effects),
+  ]) {
+    if (effects === undefined) continue;
+    if (!effects || typeof effects !== "object" || Array.isArray(effects))
+      fail();
     for (const key of ["toneEnabled", "delayEnabled", "spaceEnabled"] as const)
-      if (project.effects[key] !== undefined && typeof project.effects[key] !== "boolean") fail();
+      if (effects[key] !== undefined && typeof effects[key] !== "boolean")
+        fail();
     const ranges: Record<EffectParameter, number[]> = {
       low: [-24, 24],
       mid: [-24, 24],
@@ -136,7 +151,7 @@ export function validateAdvanced(project: Project) {
       ceiling: [-12, 0],
     };
     for (const [k, [a, b]] of Object.entries(ranges))
-      if (!number(project.effects[k as EffectParameter], a, b)) fail();
+      if (!number(effects[k as EffectParameter], a, b)) fail();
   }
   if (project.loopRegion) {
     const r = project.loopRegion;

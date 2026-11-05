@@ -12,7 +12,9 @@
 .polish-advanced { margin: 16px 0; }
 .polish-advanced summary { cursor: pointer; }
 
-.sound-polish { container-type: inline-size; }
+/* Updating the first visible range can otherwise move Chromium's scroll anchor
+   during a native thumb drag and interrupt the gesture in a scrolled panel. */
+.sound-polish { container-type: inline-size; overflow-anchor: none; }
 .polish-group .field-help { min-height: 3.6em; }
 @container (min-width: 424px) and (max-width: 647px) {
   .polish-group:last-child { grid-column: 1 / -1; }

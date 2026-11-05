@@ -97,3 +97,13 @@
 }
 
 .score-editor th:nth-child(7), .score-editor td:nth-child(7) { min-width: 140px; }
+
+/* The node inspector is narrow: keep all note parameters within its width. */
+.sound-inspector .score-editor table,
+.sound-inspector .score-editor tbody { display: block; min-width: 0; }
+.sound-inspector .score-editor thead { display: none; }
+.sound-inspector .score-editor tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--ui-line); }
+.sound-inspector .score-editor td { display: block; min-width: 0; padding: 0; border: 0; }
+.sound-inspector .score-editor td::before { content: attr(data-label); display: block; margin-bottom: 6px; color: var(--ui-muted); }
+.sound-inspector .score-editor td input,
+.sound-inspector .score-editor td select { width: 100%; }

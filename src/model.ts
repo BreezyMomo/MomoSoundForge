@@ -23,6 +23,7 @@ export type Layer = {
   name: string;
   type: "synth" | "sample" | "composition" | "instrument";
   score?: Score;
+  effects?: Effects;
   project?: Project;
   wave: Wave;
   noiseSeed: number;
@@ -78,6 +79,9 @@ export type RenderResult = {
   gainReduction: number;
   rms: number;
   layers: Record<string, Float32Array>;
+  tails?: Record<string, number>;
+  processedLayers?: Record<string, Float32Array>;
+  tailLimited?: boolean;
 };
 export const uid = () =>
   globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random()}`;
@@ -298,6 +302,9 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       ),
       noiseSeed: l.noiseSeed ?? r.seed,
       ...(l.type === "instrument" ? { score: structuredClone(l.score!) } : {}),
+      ...(l.effects !== undefined
+        ? { effects: structuredClone(l.effects) }
+        : {}),
       ...(l.automation !== undefined
         ? { automation: structuredClone(l.automation) }
         : {}),
@@ -352,16 +359,40 @@ export function varyProject(
     layers: project.layers.map((l) =>
       l.locked
         ? { ...l }
-        : {
-            ...l,
-            noiseSeed:
-              amount === 0 ? l.noiseSeed : Math.floor(random() * 4294967296),
-            frequency: clamp(jitter(l.frequency, 0.8), 20, 20000),
-            endFrequency: clamp(jitter(l.endFrequency, 0.8), 20, 20000),
-            duration: clamp(jitter(l.duration, 0.35), 0.01, 10),
-            gain: clamp(jitter(l.gain, 0.3), 0, 1.5),
-            pan: clamp(l.pan + (random() - 0.5) * amount * 0.4, -1, 1),
-          },
+        : l.type === "composition" && l.project
+          ? (() => {
+              const child = varyProject(
+                l.project,
+                amount === 0
+                  ? l.project.seed
+                  : Math.floor(random() * 4294967296),
+                amount,
+              );
+              const duration =
+                amount === 0
+                  ? l.duration
+                  : Math.max(
+                      0.1,
+                      ...child.layers.map((n) => n.start + n.duration),
+                    );
+              return {
+                ...l,
+                project: { ...child, duration },
+                duration,
+                gain: clamp(jitter(l.gain, 0.3), 0, 1.5),
+                pan: clamp(l.pan + (random() - 0.5) * amount * 0.4, -1, 1),
+              };
+            })()
+          : {
+              ...l,
+              noiseSeed:
+                amount === 0 ? l.noiseSeed : Math.floor(random() * 4294967296),
+              frequency: clamp(jitter(l.frequency, 0.8), 20, 20000),
+              endFrequency: clamp(jitter(l.endFrequency, 0.8), 20, 20000),
+              duration: clamp(jitter(l.duration, 0.35), 0.01, 10),
+              gain: clamp(jitter(l.gain, 0.3), 0, 1.5),
+              pan: clamp(l.pan + (random() - 0.5) * amount * 0.4, -1, 1),
+            },
     ),
   };
 }
@@ -377,6 +408,9 @@ export function createLayerPreviewProject(
   return {
     ...project,
     duration: layer.duration,
+    master: 1,
+    echo: 0,
+    effects: undefined,
     controls: undefined,
     controlValues: undefined,
     loopRegion: undefined,

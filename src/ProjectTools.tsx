@@ -1,7 +1,6 @@
 import { Range } from "./Inspector";
 import { t } from "./i18n";
 import type { Project } from "./model";
-import { SoundPolish } from "./SoundPolish";
 export function ProjectTools({
   project,
   cue,
@@ -9,9 +8,6 @@ export function ProjectTools({
   onLoop,
   onSeam,
   busy,
-  original,
-  onCompare,
-  compareBusy,
 }: {
   project: Project;
   cue: number;
@@ -19,9 +15,6 @@ export function ProjectTools({
   onLoop: () => void;
   onSeam: () => void;
   busy: boolean;
-  original: boolean;
-  onCompare: (original: boolean) => void;
-  compareBusy: boolean;
 }) {
   const region = project.loopRegion;
   const updateRegion = (
@@ -39,7 +32,6 @@ export function ProjectTools({
     });
   return (
     <>
-      <SoundPolish project={project} onChange={onChange} original={original} onCompare={onCompare} busy={compareBusy} />
       <details className="pro-section">
         <summary>{t("pro.loop")}</summary>
         <label>
