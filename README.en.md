@@ -137,3 +137,9 @@ Open Video reference in the header and import a local video. Select a start and 
 New project creates an empty 10-second work. Enter its duration below the timeline; Enter or blur applies the value. Clips, groups and notes can exceed 10 seconds. Zoom and horizontal scrolling support long timelines. Extend to content end includes rendered effect tails. Shortening the work preserves clips and notes outside the range and shows a notice. Preview, waveform and default export use the same work range; extra export tail time extends rendering explicitly.
 
 There is no fixed creative duration cap. Layer counts, nesting, decoded assets and rendering allocations remain budgeted; exceeding a resource budget reports an error instead of silently truncating content. Rendering still uses complete buffers, not unlimited streaming. Superseded previews are cancelled; identical audio uses a bounded cache, including when only video markers or names change.
+
+## Workspace layouts and shared controls
+
+The Layout menu provides Sound design, Video sound design and Note editing layouts. Video sound design places the reference picture and sound timeline in the center. Note editing gives the piano roll its own main workspace, with instrument-track selection and project playback. Double-click a note in a track to open the note workspace; return to arrangement through its tab. Layouts, docking, panel visibility, language and appearance are browser preferences and do not change the project, notes or undo history.
+
+Help and export use shared dialogs with contained Tab focus, Escape dismissal and focus restoration. Video and note toolbars use Workbench controls. Numeric fields allow incomplete text while editing and commit on Enter or blur; Escape cancels an uncommitted edit.

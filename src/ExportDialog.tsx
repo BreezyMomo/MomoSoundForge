@@ -1,5 +1,17 @@
-import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  FieldGroup,
+  Field,
+  FieldLabel,
+  WorkbenchChoice,
+  Input,
+  Checkbox,
+} from "@momo/workbench/react";
 import { Range } from "./Inspector";
 import { t } from "./i18n";
 import type { Project, RenderResult } from "./model";
@@ -8,7 +20,9 @@ import {
   type ExportSettings,
   type ExportFormat,
 } from "./exportAudio";
+
 export function ExportDialog({
+  open,
   encodingStatus,
   project,
   settings,
@@ -21,10 +35,11 @@ export function ExportDialog({
   output,
   onClose,
 }: {
+  open: boolean;
   encodingStatus: string;
   project: Project;
   settings: ExportSettings;
-  onSettings: (s: ExportSettings) => void;
+  onSettings: (settings: ExportSettings) => void;
   onPreview: () => void;
   onExport: () => void;
   onExportPack: () => void;
@@ -33,112 +48,83 @@ export function ExportDialog({
   output: RenderResult | null;
   onClose: () => void;
 }) {
-  const dialog = useRef<HTMLDialogElement>(null),
-    region = project.loopRegion;
-  useEffect(() => {
-    const node = dialog.current!;
-    node.showModal();
-    return () => {
-      node.close();
-      queueMicrotask(() =>
-        document.querySelector<HTMLButtonElement>(".export-button")?.focus(),
-      );
-    };
-  }, []);
+  const region = project.loopRegion;
   return (
-    <dialog
-      ref={dialog}
-      className="export-dialog"
-      aria-labelledby="export-title"
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          const r = e.currentTarget.getBoundingClientRect();
-          if (
-            e.clientX < r.left ||
-            e.clientX > r.right ||
-            e.clientY < r.top ||
-            e.clientY > r.bottom
-          )
-            onClose();
-        }
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!value) onClose();
       }}
     >
-      <div className="export-heading">
-        <div>
-          <h2 id="export-title">{t("pro.export")}</h2>
-          <p>{project.name}</p>
-        </div>
-        <button
-          autoFocus
-          className="icon-button"
-          aria-label={t("action.close")}
-          onClick={onClose}
-        >
-          <X size={18} />
-        </button>
-      </div>
-      <div className="pro-section export-settings">
-        <fieldset className="export-fields" disabled={busy}>
-          <div className="pro-grid">
-            <label>
-              {t("export.format")}
-              <select
+      <DialogContent
+        className="sound-export-dialog wb:max-h-[calc(100dvh-2rem)] wb:overflow-y-auto"
+        finalFocus={() =>
+          document.querySelector<HTMLButtonElement>(".export-button")
+        }
+      >
+        <DialogHeader>
+          <DialogTitle>{t("pro.export")}</DialogTitle>
+          <DialogDescription>{project.name}</DialogDescription>
+        </DialogHeader>
+        <fieldset disabled={busy} className="export-fields">
+          <FieldGroup className="sound-export-grid">
+            <Field>
+              <FieldLabel>{t("export.format")}</FieldLabel>
+              <WorkbenchChoice
+                label={t("export.format")}
                 value={settings.format}
-                onChange={(e) =>
-                  onSettings({
-                    ...settings,
-                    format: e.target.value as ExportFormat,
-                  })
-                }
-              >
-                {EXPORT_FORMATS.map((f) => (
-                  <option key={f} value={f}>
-                    {t(`export.format.${f}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {t("pro.prefix")}
-              <input
-                value={settings.prefix}
-                maxLength={80}
-                onChange={(e) =>
-                  onSettings({ ...settings, prefix: e.target.value })
+                disabled={busy}
+                items={EXPORT_FORMATS.map((format) => ({
+                  value: format,
+                  label: t("export.format." + format),
+                }))}
+                onValueChange={(format) =>
+                  onSettings({ ...settings, format: format as ExportFormat })
                 }
               />
-            </label>
-            <label>
-              {t("pro.sampleRate")}
-              <select
-                value={settings.sampleRate}
-                onChange={(e) =>
-                  onSettings({ ...settings, sampleRate: +e.target.value })
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="export-prefix">{t("pro.prefix")}</FieldLabel>
+              <Input
+                id="export-prefix"
+                value={settings.prefix}
+                maxLength={80}
+                disabled={busy}
+                onChange={(event) =>
+                  onSettings({ ...settings, prefix: event.target.value })
                 }
-              >
-                {[22050, 44100, 48000].map((rate) => (
-                  <option key={rate} value={rate}>
-                    {rate} Hz
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {t("pro.channels")}
-              <select
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{t("pro.sampleRate")}</FieldLabel>
+              <WorkbenchChoice
+                label={t("pro.sampleRate")}
+                value={String(settings.sampleRate)}
+                disabled={busy}
+                items={[22050, 44100, 48000].map((rate) => ({
+                  value: String(rate),
+                  label: rate + " Hz",
+                }))}
+                onValueChange={(rate) =>
+                  onSettings({ ...settings, sampleRate: Number(rate) })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel>{t("pro.channels")}</FieldLabel>
+              <WorkbenchChoice
+                label={t("pro.channels")}
                 value={settings.mono ? "mono" : "stereo"}
-                onChange={(e) =>
-                  onSettings({ ...settings, mono: e.target.value === "mono" })
+                disabled={busy}
+                items={["stereo", "mono"].map((value) => ({
+                  value,
+                  label: t("pro." + value),
+                }))}
+                onValueChange={(value) =>
+                  onSettings({ ...settings, mono: value === "mono" })
                 }
-              >
-                <option value="stereo">{t("pro.stereo")}</option>
-                <option value="mono">{t("pro.mono")}</option>
-              </select>
-            </label>
+              />
+            </Field>
             <Range
               label={t("pro.tail")}
               value={settings.tail}
@@ -146,24 +132,27 @@ export function ExportDialog({
               max={2}
               step={0.01}
               unit="s"
-              onChange={(v) => onSettings({ ...settings, tail: v })}
+              disabled={busy}
+              onChange={(tail) => onSettings({ ...settings, tail })}
             />
-          </div>
-          <div className="pro-checks">
+          </FieldGroup>
+          <FieldGroup className="sound-option-fields">
             {(["normalize", "trimSilence", "loopOnly"] as const).map((key) => (
-              <label key={key}>
-                <input
-                  type="checkbox"
+              <Field key={key} orientation="horizontal" className="wb:w-auto">
+                <Checkbox
+                  id={"export-" + key}
                   checked={settings[key]}
-                  disabled={key === "loopOnly" && !region}
-                  onChange={(e) =>
-                    onSettings({ ...settings, [key]: e.target.checked })
+                  disabled={busy || (key === "loopOnly" && !region)}
+                  onCheckedChange={(checked) =>
+                    onSettings({ ...settings, [key]: checked })
                   }
                 />
-                {t(`pro.${key}`)}
-              </label>
+                <FieldLabel htmlFor={"export-" + key}>
+                  {t("pro." + key)}
+                </FieldLabel>
+              </Field>
             ))}
-          </div>
+          </FieldGroup>
           {settings.normalize && (
             <Range
               label={t("pro.targetRms")}
@@ -172,42 +161,45 @@ export function ExportDialog({
               max={-6}
               step={0.1}
               unit="dBFS"
-              onChange={(v) => onSettings({ ...settings, targetRms: v })}
+              disabled={busy}
+              onChange={(targetRms) => onSettings({ ...settings, targetRms })}
             />
           )}
         </fieldset>
-        <p className="field-help">{t(`export.hint.${settings.format}`)}</p>
-        <p className="field-help">{t("pro.exportHelp")}</p>
+        <p className="wb:text-muted-foreground">
+          {t("export.hint." + settings.format)}
+        </p>
+        <p className="wb:text-muted-foreground">{t("pro.exportHelp")}</p>
         {encodingStatus && <p role="status">{t(encodingStatus)}</p>}
-        <div className="button-group">
-          <button className="secondary" disabled={busy} onClick={onPreview}>
+        <div className="wb:flex wb:flex-wrap wb:gap-2">
+          <Button variant="outline" disabled={busy} onClick={onPreview}>
             {t("pro.previewExport")}
-          </button>
-          <button className="primary" disabled={busy} onClick={onExport}>
+          </Button>
+          <Button disabled={busy} onClick={onExport}>
             {t("export.downloadFormat", settings.format.toUpperCase())}
-          </button>
-          <button
-            className="secondary"
+          </Button>
+          <Button
+            variant="outline"
             disabled={busy || !variationCount}
             onClick={onExportPack}
           >
             {t("export.pack", variationCount)}
-          </button>
+          </Button>
         </div>
         {output && (
-          <p className="field-help">
+          <p className="wb:text-muted-foreground">
             {t(
               "pro.outputInfo",
               (output.left.length / output.sampleRate).toFixed(3),
               (20 * Math.log10(output.peak || 1e-9)).toFixed(1),
               (20 * Math.log10(output.rms || 1e-9)).toFixed(1),
             )}
-            {output.rms < 0.001 && ` · ${t("pro.silentWarning")}`}
-            {output.gainReduction < 0.999 && ` · ${t("pro.limitWarning")}`}
-            {output.sourcePeak > 1 && ` · ${t("pro.clipWarning")}`}
+            {output.rms < 0.001 && " · " + t("pro.silentWarning")}
+            {output.gainReduction < 0.999 && " · " + t("pro.limitWarning")}
+            {output.sourcePeak > 1 && " · " + t("pro.clipWarning")}
           </p>
         )}
-      </div>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

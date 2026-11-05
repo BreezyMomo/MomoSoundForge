@@ -4,8 +4,7 @@
   border-top: 1px solid var(--ui-line);
   min-width: 0;
 }
-.score-editor header,
-.score-toolbar {
+.score-editor header {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -18,29 +17,6 @@
 .score-editor h2 {
   font-size: 15px;
   margin: 0;
-}
-.score-editor label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-  min-width: 0;
-}
-.score-editor select,
-.score-editor input:not([type="checkbox"]) {
-  min-height: 32px;
-  max-width: 100%;
-  border: 1px solid var(--ui-line-strong);
-  border-radius: 4px;
-  padding: 5px 8px;
-  background: var(--ui-inset);
-  color: inherit;
-}
-.score-toolbar label {
-  max-width: 300px;
-}
-.score-toolbar input[type="number"] {
-  width: 90px;
 }
 .score-table-scroll {
   overflow-x: auto;
@@ -59,13 +35,6 @@
   border-bottom: 1px solid var(--ui-line);
   font-weight: 400;
 }
-.score-editor td input {
-  width: 74px;
-  font-variant-numeric: tabular-nums;
-}
-.score-editor td select {
-  width: 125px;
-}
 .score-editor td small {
   display: block;
   max-width: 180px;
@@ -73,7 +42,7 @@
 }
 .score-region-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 12px;
   margin-top: 12px;
 }
@@ -81,29 +50,42 @@
 .score-region-form .button-group {
   grid-column: 1/-1;
 }
-.score-region-form .check-field {
-  flex-direction: row;
-  align-items: center;
-}
 .score-issues {
   font-size: 12px;
   line-height: 1.6;
   padding-left: 20px;
 }
 
-.score-editor button[aria-pressed="true"] {
-  background: var(--ui-text);
-  color: var(--ui-bg);
+.score-editor th:nth-child(7),
+.score-editor td:nth-child(7) {
+  min-width: 140px;
 }
-
-.score-editor th:nth-child(7), .score-editor td:nth-child(7) { min-width: 140px; }
 
 /* The node inspector is narrow: keep all note parameters within its width. */
 .sound-inspector .score-editor table,
-.sound-inspector .score-editor tbody { display: block; min-width: 0; }
-.sound-inspector .score-editor thead { display: none; }
-.sound-inspector .score-editor tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--ui-line); }
-.sound-inspector .score-editor td { display: block; min-width: 0; padding: 0; border: 0; }
-.sound-inspector .score-editor td::before { content: attr(data-label); display: block; margin-bottom: 6px; color: var(--ui-muted); }
-.sound-inspector .score-editor td input,
-.sound-inspector .score-editor td select { width: 100%; }
+.sound-inspector .score-editor tbody {
+  display: block;
+  min-width: 0;
+}
+.sound-inspector .score-editor thead {
+  display: none;
+}
+.sound-inspector .score-editor tr {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ui-line);
+}
+.sound-inspector .score-editor td {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.sound-inspector .score-editor td::before {
+  content: attr(data-label);
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ui-muted);
+}

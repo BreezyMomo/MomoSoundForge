@@ -1,3 +1,6 @@
+import { NotesWorkspace } from "./NotesWorkspace";
+import { Button } from "@momo/workbench/react";
+import { HelpDialog } from "./HelpDialog";
 import { VideoReferencePanel } from "./VideoReferencePanel";
 import { appendInstrumentNode } from "./instrumentNode";
 import { TreeTimeline } from "./TreeTimeline";
@@ -17,7 +20,12 @@ import {
 import { bypassEffects } from "./nodeEffects";
 import { beforeSoundPolish, padAudition } from "./polishAudition";
 import { ScoreEditor } from "./ScoreEditor";
-import { noteEndSeconds, orderedNotes, selectRegion, type NoteEvent } from "./instruments";
+import {
+  noteEndSeconds,
+  orderedNotes,
+  selectRegion,
+  type NoteEvent,
+} from "./instruments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
@@ -224,8 +232,7 @@ export default function App() {
     [variationBase, setVariationBase] = useState<Project | null>(null),
     [amount, setAmount] = useState(0.35),
     [busy, setBusy] = useState(false),
-    [ioBusy, setIoBusy] = useState(false),
-    [help, setHelp] = useState(false);
+    [ioBusy, setIoBusy] = useState(false);
   const menu = useRef<HTMLDivElement>(null),
     manager = useRef<DockWorkspace | null>(null),
     projectInput = useRef<HTMLInputElement>(null),
@@ -252,7 +259,9 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   const updateCue = useCallback((time: number) => {
-    const value = Number.isFinite(time) ? clamp(time, 0, rootCurrent.current.duration) : 0;
+    const value = Number.isFinite(time)
+      ? clamp(time, 0, rootCurrent.current.duration)
+      : 0;
     cueRef.current = value;
     setCue(value);
   }, []);
@@ -414,35 +423,43 @@ export default function App() {
     let cancelled = false;
     setRenderFailed(false);
     const abort = new AbortController();
-    const timer = setTimeout(() => {
-      renderer
-        .current!.render(history.project, abort.signal)
-        .then(async (result) => {
-          if (cancelled) return;
-          const original = selected
-            ? await renderer.current!.render(
-                beforeSoundPolish(history.project, {
-                  path: context.path,
-                  id: selected,
-                }), abort.signal,
-              )
-            : result;
-          const frames = Math.max(result.left.length, original.left.length);
-          if (!cancelled)
-            setRendered({
-              project: history.project,
-              result: padAudition(result, frames),
-              original: padAudition(original, frames),
-              target: nodeKey({ path: context.path, id: selected }),
-            });
-        })
-        .catch((error) => {
-          if (!cancelled) {
-            setRenderFailed(true);
-            flash(error?.message === "error.renderBudget" ? "error.renderBudget" : "error.render");
-          }
-        });
-    }, history.project.duration > 10 ? 180 : 90);
+    const timer = setTimeout(
+      () => {
+        renderer
+          .current!.render(history.project, abort.signal)
+          .then(async (result) => {
+            if (cancelled) return;
+            const original = selected
+              ? await renderer.current!.render(
+                  beforeSoundPolish(history.project, {
+                    path: context.path,
+                    id: selected,
+                  }),
+                  abort.signal,
+                )
+              : result;
+            const frames = Math.max(result.left.length, original.left.length);
+            if (!cancelled)
+              setRendered({
+                project: history.project,
+                result: padAudition(result, frames),
+                original: padAudition(original, frames),
+                target: nodeKey({ path: context.path, id: selected }),
+              });
+          })
+          .catch((error) => {
+            if (!cancelled) {
+              setRenderFailed(true);
+              flash(
+                error?.message === "error.renderBudget"
+                  ? "error.renderBudget"
+                  : "error.render",
+              );
+            }
+          });
+      },
+      history.project.duration > 10 ? 180 : 90,
+    );
     return () => {
       cancelled = true;
       abort.abort();
@@ -547,15 +564,20 @@ export default function App() {
   // Keep the last waveform during edits, but never use it for playback/export.
   // Unrelated documents have new node IDs and must not inherit this preview.
   const sharesNode = (nodes: Layer[], previous: Set<string>): boolean =>
-    nodes.some((node) => previous.has(node.id) ||
-      (node.project && sharesNode(node.project.layers, previous)));
+    nodes.some(
+      (node) =>
+        previous.has(node.id) ||
+        (node.project && sharesNode(node.project.layers, previous)),
+    );
   const previousIds = new Set<string>();
-  const collectIds = (nodes: Layer[]) => nodes.forEach((node) => {
-    previousIds.add(node.id);
-    if (node.project) collectIds(node.project.layers);
-  });
+  const collectIds = (nodes: Layer[]) =>
+    nodes.forEach((node) => {
+      previousIds.add(node.id);
+      if (node.project) collectIds(node.project.layers);
+    });
   if (rendered) collectIds(rendered.project.layers);
-  const displayResult = auditionResult ??
+  const displayResult =
+    auditionResult ??
     (sharesNode(history.project.layers, previousIds) ? rendered?.result : null);
   const timelineDuration = history.project.duration;
   const comparePolish = (original: boolean) => {
@@ -644,13 +666,18 @@ export default function App() {
           target instanceof HTMLTextAreaElement ||
           target instanceof HTMLSelectElement ||
           target.isContentEditable;
-      if (target.closest('[role="dialog"], dialog')) return;
+      if (
+        e.defaultPrevented ||
+        target.closest('[role="dialog"], dialog') ||
+        document.querySelector("[data-slot=dialog-content][data-open]")
+      )
+        return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         save();
         return;
       }
-      if (typing || help) return;
+      if (typing) return;
       if (e.code === "Space") {
         if (target.closest('button, [role="button"], summary')) return;
         e.preventDefault();
@@ -666,7 +693,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", listener);
   }, [
     save,
-    help,
     result,
     auditionResult,
     play,
@@ -758,25 +784,59 @@ export default function App() {
   };
   const previewNote = (address: NodeAddress, note: NoteEvent) => {
     const isolated = isolatedNode(rootCurrent.current, address);
-    const layer = isolated.layers[0], score = layer.score;
+    const layer = isolated.layers[0],
+      score = layer.score;
     if (!score) return;
     // Resolve with the original ordering so round-robin audition matches the score.
     const counters = new Map<string, number>();
     let region;
     for (const n of orderedNotes(score)) {
-      const chosen = selectRegion(score.instruments.find(i => i.id === n.instrumentId), n,
-        isolated.seed ^ layer.noiseSeed, counters);
-      if (n.id === note.id) { region = chosen; break; }
+      const chosen = selectRegion(
+        score.instruments.find((i) => i.id === n.instrumentId),
+        n,
+        isolated.seed ^ layer.noiseSeed,
+        counters,
+      );
+      if (n.id === note.id) {
+        region = chosen;
+        break;
+      }
     }
-    const instrument = score.instruments.find(i => i.id === note.instrumentId);
-    if (!region || !instrument) { flash("roll.unmapped"); return; }
+    const instrument = score.instruments.find(
+      (i) => i.id === note.instrumentId,
+    );
+    if (!region || !instrument) {
+      flash("roll.unmapped");
+      return;
+    }
     const single = { ...note, start: 0 };
-    const duration = Math.max(0.1, noteEndSeconds(single, region, isolated.assets, score.bpm));
+    const duration = Math.max(
+      0.1,
+      noteEndSeconds(single, region, isolated.assets, score.bpm),
+    );
     isolated.duration = duration;
-    isolated.layers = [{ ...layer, duration, sourceDuration: undefined, trim: 0, reverse: false,
-      cropStart: 0, cropEnd: 1, attack: 0, release: 0,
-      score: { ...score, instruments: [{ ...instrument, regions: [region] }], notes: [single] } }];
-    void play(() => renderer.current!.render(isolated), `note-${nodeKey(address)}-${note.id}`);
+    isolated.layers = [
+      {
+        ...layer,
+        duration,
+        sourceDuration: undefined,
+        trim: 0,
+        reverse: false,
+        cropStart: 0,
+        cropEnd: 1,
+        attack: 0,
+        release: 0,
+        score: {
+          ...score,
+          instruments: [{ ...instrument, regions: [region] }],
+          notes: [single],
+        },
+      },
+    ];
+    void play(
+      () => renderer.current!.render(isolated),
+      `note-${nodeKey(address)}-${note.id}`,
+    );
   };
   const saveCurrentSound = () => {
     download(
@@ -837,11 +897,18 @@ export default function App() {
   }
   function insertSound(child: Project) {
     if (current.current.layers.length >= 16) throw Error("error.layers");
-    if (child.layers.length === 1 && child.layers[0].type === "instrument" &&
-        !child.effects && !child.echo && !child.controls?.length) {
+    if (
+      child.layers.length === 1 &&
+      child.layers[0].type === "instrument" &&
+      !child.effects &&
+      !child.echo &&
+      !child.controls?.length
+    ) {
       const layerId = uid();
       const append = (p: Project) => appendInstrumentNode(p, child, layerId);
-      assertProjectLimits(updateProjectAtPath(rootCurrent.current, pathRef.current, append));
+      assertProjectLimits(
+        updateProjectAtPath(rootCurrent.current, pathRef.current, append),
+      );
       edit(append);
       setSelected(layerId);
       manager.current?.show("inspector");
@@ -924,9 +991,14 @@ export default function App() {
     setSelected(copies[0].id);
   };
   async function finalOutput(p: Project, settings = exportSettings) {
-    const input = await renderer.current!.render(settings.loopOnly ? p : {
-      ...p, duration: p.duration + settings.tail,
-    });
+    const input = await renderer.current!.render(
+      settings.loopOnly
+        ? p
+        : {
+            ...p,
+            duration: p.duration + settings.tail,
+          },
+    );
     return prepareExport(
       input,
       { ...settings, loopOnly: settings.loopOnly && !!p.loopRegion },
@@ -1071,7 +1143,12 @@ export default function App() {
       if (file.size > 24 * 1024 * 1024) throw Error("error.fileSize");
       const data = await file.arrayBuffer(),
         buffer = await player.current!.decode(data);
-      if (buffer.length > MAX_SAMPLE_FRAMES || buffer.length * Math.min(2, buffer.numberOfChannels) * 4 > MAX_ASSET_BYTES) throw Error("error.budget");
+      if (
+        buffer.length > MAX_SAMPLE_FRAMES ||
+        buffer.length * Math.min(2, buffer.numberOfChannels) * 4 >
+          MAX_ASSET_BYTES
+      )
+        throw Error("error.budget");
       if (JSON.stringify(importPath) !== JSON.stringify(pathRef.current))
         throw Error("error.scopeChanged");
       const id = uid(),
@@ -1640,7 +1717,13 @@ export default function App() {
             const parent = nodeParent(root, address.path),
               active = parent.layers.find((l) => l.id === address.id)!;
             const layers = transformLayers(
-              { ...parent, duration: Math.max(parent.duration, timelineDuration - pathOffset(root, address.path)) },
+              {
+                ...parent,
+                duration: Math.max(
+                  parent.duration,
+                  timelineDuration - pathOffset(root, address.path),
+                ),
+              },
               active,
               patch,
             );
@@ -1656,18 +1739,44 @@ export default function App() {
         onMove={treeMove}
         onPreview={previewNode}
         onNoteAudition={previewNote}
+        onOpenNotes={(address) => {
+          treeSelect(address);
+          const dock = manager.current;
+          if (!dock) return;
+          if (dock.has("notes")) dock.show("notes");
+          else dock.control([{ action: "preset", preset: "notes" }]);
+        }}
         onBegin={stop}
       />
       <div className="master-controls">
-        <label className="range-field"><span>{t("editor.duration")} · s</span>
-          <TimeInput label={t("editor.duration")} value={history.project.duration} min={0.1}
-            onChange={v => editRoot(p => ({ ...p, duration: v }))}/>
+        <label className="range-field">
+          <span>{t("editor.duration")} · s</span>
+          <TimeInput
+            label={t("editor.duration")}
+            value={history.project.duration}
+            min={0.1}
+            onChange={(v) => editRoot((p) => ({ ...p, duration: v }))}
+          />
         </label>
-        <button className="secondary" onClick={() => editRoot(p => ({ ...p,
-          duration: Math.max(p.duration, ...p.layers.map(l => l.start + l.duration + (result?.tails?.[l.id] ?? 0))),
-        }))}>{t("editor.extendToContent")}</button>
-        {truncated && <span className="field-help">{t("editor.outsideRange")}</span>}
-
+        <button
+          className="secondary"
+          onClick={() =>
+            editRoot((p) => ({
+              ...p,
+              duration: Math.max(
+                p.duration,
+                ...p.layers.map(
+                  (l) => l.start + l.duration + (result?.tails?.[l.id] ?? 0),
+                ),
+              ),
+            }))
+          }
+        >
+          {t("editor.extendToContent")}
+        </button>
+        {truncated && (
+          <span className="field-help">{t("editor.outsideRange")}</span>
+        )}
       </div>
       <p className="field-help">
         {t("tree.tailHelp")}
@@ -1823,12 +1932,26 @@ export default function App() {
             <Redo2 size={17} />
           </button>
           <span className="header-divider" />
-          <button className="text-button" title={t("file.new")} aria-label={t("file.new")}
-            disabled={!ready || ioBusy} onClick={() => {
-              editRoot(() => defaultProject()); scopeEpoch.current++;
-              setEditPath([]); setSelected(""); setSelection([]); setVariations([]); updateCue(0); setZoom(1);
+          <button
+            className="text-button"
+            title={t("file.new")}
+            aria-label={t("file.new")}
+            disabled={!ready || ioBusy}
+            onClick={() => {
+              editRoot(() => defaultProject());
+              scopeEpoch.current++;
+              setEditPath([]);
+              setSelected("");
+              setSelection([]);
+              setVariations([]);
+              updateCue(0);
+              setZoom(1);
               manager.current?.show("editor");
-            }}><FilePlus2 size={16}/><span>{t("file.new")}</span></button>
+            }}
+          >
+            <FilePlus2 size={16} />
+            <span>{t("file.new")}</span>
+          </button>
           <button
             className="text-button"
             aria-label={t("file.open")}
@@ -1851,19 +1974,21 @@ export default function App() {
           </button>
         </div>
         <div className="header-right">
-<button className="secondary" onClick={() => manager.current?.show("video")}>{t("video.title")}</button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const dock = manager.current;
+              if (!dock) return;
+              if (dock.has("video")) dock.show("video");
+              else dock.control([{ action: "preset", preset: "video" }]);
+            }}
+          >
+            {t("video.title")}
+          </Button>
           <div ref={menu} className="layout-menu" />
           <AppearancePreferences />
           <LanguagePreferences />
-          <button
-            className="momo-header-button"
-            data-momo-header-control="true"
-            aria-label={t("header.help")}
-            title={t("header.help")}
-            onClick={() => setHelp(true)}
-          >
-            <span className="momo-header-label">{t("header.help")}</span>
-          </button>
+          <HelpDialog />
           <button
             className="secondary export-button"
             disabled={!result || ioBusy}
@@ -1879,26 +2004,105 @@ export default function App() {
         <Workbench
           contents={{
             library,
-            video: <VideoReferencePanel reference={history.project.videoReference} cue={cue}
-              playing={playing === "main"} ready={!!auditionResult} loop={loop} onLoop={setLoop}
-              onStop={stop} onSeek={updateCue}
-              onToggle={() => {
-                if (playing) { stop(); return; }
-                if (!auditionResult || !history.project.videoReference) return;
-                const r = history.project.videoReference;
-                const frames = Math.round((r.end - r.start) * auditionResult.sampleRate);
-                if (cue >= r.end - r.start) updateCue(0);
-                void play({ ...auditionResult, left: auditionResult.left.slice(0, frames), right: auditionResult.right.slice(0, frames) }, "main");
-              }}
-              onChange={(videoReference) => editRoot(p => ({ ...p, videoReference,
-                duration: videoReference ? Math.max(p.duration, videoReference.end - videoReference.start) : p.duration }))}/>,
+            notes: (
+              <NotesWorkspace
+                layers={project.layers}
+                selected={selected}
+                cue={cue}
+                duration={timelineDuration}
+                onSelect={(id) => treeSelect({ path: context.path, id })}
+                onBegin={stop}
+                onChange={(note) => {
+                  if (selectedLayer?.score)
+                    editRoot((root) =>
+                      editNode(
+                        root,
+                        { path: context.path, id: selectedLayer.id },
+                        {
+                          score: {
+                            ...selectedLayer.score!,
+                            notes: selectedLayer.score!.notes.map((n) =>
+                              n.id === note.id ? note : n,
+                            ),
+                          },
+                        },
+                      ),
+                    );
+                }}
+                onAudition={(note) => {
+                  if (selectedLayer)
+                    previewNote(
+                      { path: context.path, id: selectedLayer.id },
+                      note,
+                    );
+                }}
+                ready={!!auditionResult}
+                playing={playing === "main"}
+                onToggle={() => {
+                  if (playing || pendingPlayback) stop();
+                  else if (auditionResult) void play(auditionResult, "main");
+                }}
+                onArrange={() => manager.current?.show("editor")}
+              />
+            ),
+            video: (
+              <VideoReferencePanel
+                reference={history.project.videoReference}
+                cue={cue}
+                playing={playing === "main"}
+                ready={!!auditionResult}
+                loop={loop}
+                onLoop={setLoop}
+                onStop={stop}
+                onSeek={updateCue}
+                onToggle={() => {
+                  if (playing) {
+                    stop();
+                    return;
+                  }
+                  if (!auditionResult || !history.project.videoReference)
+                    return;
+                  const r = history.project.videoReference;
+                  const frames = Math.round(
+                    (r.end - r.start) * auditionResult.sampleRate,
+                  );
+                  if (cue >= r.end - r.start) updateCue(0);
+                  void play(
+                    {
+                      ...auditionResult,
+                      left: auditionResult.left.slice(0, frames),
+                      right: auditionResult.right.slice(0, frames),
+                    },
+                    "main",
+                  );
+                }}
+                onChange={(videoReference) =>
+                  editRoot((p) => ({
+                    ...p,
+                    videoReference,
+                    duration: videoReference
+                      ? Math.max(
+                          p.duration,
+                          videoReference.end - videoReference.start,
+                        )
+                      : p.duration,
+                  }))
+                }
+              />
+            ),
             editor,
             inspector: (
               <Inspector
-                sourceEditor={selectedLayer?.type === "instrument" ? (
-                  <ScoreEditor key={selectedLayer.id} project={project} layer={selectedLayer}
-                    onChange={(next) => edit(() => next)} />
-                ) : undefined}
+                sourceEditor={
+                  selectedLayer?.type === "instrument" ? (
+                    <ScoreEditor
+                      key={selectedLayer.id}
+                      project={project}
+                      layer={selectedLayer}
+                      onChange={(next) => edit(() => next)}
+                    />
+                  ) : undefined
+                }
                 postProcessing={
                   selectedLayer && (
                     <SoundPolish
@@ -1993,59 +2197,30 @@ export default function App() {
           </button>
         </div>
       )}
-      {exportOpen && (
-        <ExportDialog
-          project={history.project}
-          settings={exportSettings}
-          onSettings={(settings) => {
+      <ExportDialog
+        open={exportOpen}
+        project={history.project}
+        settings={exportSettings}
+        onSettings={(settings) => {
+          stop();
+          setExportSettings(settings);
+        }}
+        onPreview={auditionExport}
+        onExport={() => void exportCurrent()}
+        onExportPack={() => void exportPack()}
+        encodingStatus={encodingStatus}
+        variationCount={variations.length}
+        busy={!result || ioBusy || !!encodingStatus}
+        output={exportOutput}
+        onClose={() => {
+          if (
+            activePlaybackRef.current === "export-preview" ||
+            pendingPlaybackRef.current === "export-preview"
+          )
             stop();
-            setExportSettings(settings);
-          }}
-          onPreview={auditionExport}
-          onExport={() => void exportCurrent()}
-          onExportPack={() => void exportPack()}
-          encodingStatus={encodingStatus}
-          variationCount={variations.length}
-          busy={!result || ioBusy || !!encodingStatus}
-          output={exportOutput}
-          onClose={() => {
-            if (
-              activePlaybackRef.current === "export-preview" ||
-              pendingPlaybackRef.current === "export-preview"
-            )
-              stop();
-            setExportOpen(false);
-          }}
-        />
-      )}
-      {help && (
-        <div className="modal-backdrop" onClick={() => setHelp(false)}>
-          <section
-            className="help-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="help-title"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setHelp(false);
-            }}
-          >
-            <button
-              autoFocus
-              className="icon-button close-help"
-              aria-label={t("action.close")}
-              onClick={() => setHelp(false)}
-            >
-              <X size={18} />
-            </button>
-            <AudioLines size={30} />
-            <h2 id="help-title">{t("help.title")}</h2>
-            <p>{t("help.body")}</p>
-            <p className="help-keys">{t("help.keys")}</p>
-            <p className="field-help">{t("help.scope")}</p>
-          </section>
-        </div>
-      )}
+          setExportOpen(false);
+        }}
+      />
     </div>
   );
 }

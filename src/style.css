@@ -1459,9 +1459,6 @@ span {
   .variants-toolbar {
     flex-wrap: nowrap;
   }
-  .header-right .layout-menu {
-    display: none;
-  }
   .dock-stack-actions {
     display: none;
   }

@@ -13,9 +13,6 @@
 .roll-note-resize.reverse { left: 0; right: auto; border-left: 2px solid var(--ui-text); border-right: 0; }
 .roll-velocity { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--ui-text); opacity: .65; pointer-events: none; }
 .roll-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 12px; }
-.roll-toolbar label { display: flex; align-items: center; gap: 5px; }
-.roll-toolbar input { width: 58px; }
-.roll-toolbar input, .roll-toolbar select { background: var(--ui-inset); color: inherit; border: 1px solid var(--ui-line-strong); border-radius: 3px; padding: 4px; }
 .expanded .roll-scroll { max-height: 300px; overflow: auto; border: 1px solid var(--ui-line-strong); margin-top: 8px; }
 .roll-ruler { position: sticky; top: 0; height: 24px; margin-left: 44px; background: var(--ui-panel); z-index: 3; font-size: 11px; }
 .roll-ruler span { position: absolute; top: 4px; padding-left: 3px; }

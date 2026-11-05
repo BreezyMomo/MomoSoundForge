@@ -1,0 +1,5 @@
+.notes-workspace { display:flex; flex-direction:column; gap:var(--ui-field-gap); height:100%; min-height:0; min-width:0; padding:var(--ui-pane-padding); }
+.notes-workspace-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:var(--ui-field-gap); }
+.notes-workspace-time { font-variant-numeric:tabular-nums; color:var(--ui-muted); font-size:12px; }
+.notes-workspace .note-roll.expanded { display:flex; flex-direction:column; flex:1; min-height:0; }
+.notes-workspace .expanded .roll-scroll { flex:1; min-height:120px; max-height:none; }

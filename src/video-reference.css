@@ -1,17 +1,10 @@
-.video-reference { padding:16px; min-width:0; }
-.video-reference button { border:1px solid var(--ui-line-strong); border-radius:4px; padding:5px 9px; background:var(--ui-inset); }
-.video-reference button:disabled { opacity:.45; cursor:default; }
-.video-reference button:not(:disabled):hover { border-color:var(--ui-text); }
+.video-reference { padding:var(--ui-pane-padding); min-width:0; }
 .video-reference video { display:block; width:100%; max-height:360px; background:#000; object-fit:contain; }
 .video-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0; }
 .video-actions input { min-width:100px; flex:1; }
 .video-name { overflow-wrap:anywhere; }
 .video-position { font-variant-numeric:tabular-nums; font-size:12px; color:var(--ui-muted); }
 .video-reference > input[type=range] { width:100%; }
-.video-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; }
-.video-fields label { display:flex; flex-direction:column; gap:6px; font-size:12px; }
-.video-fields input { width:100%; min-width:0; }
-.video-reference input:not([type=range]) { color:var(--ui-text); background:var(--ui-inset); border:1px solid var(--ui-line-strong); border-radius:4px; padding:6px; }
 .video-markers { padding:0; list-style:none; }
 .video-markers li { display:flex; justify-content:space-between; gap:8px; border-bottom:1px solid var(--ui-line); padding:5px 0; }
 .tree-marker-strip { position:relative; height:24px; }

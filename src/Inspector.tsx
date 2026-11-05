@@ -1,5 +1,11 @@
+import {
+  WorkbenchNumberInput,
+  WorkbenchSlider,
+  Field,
+  FieldLabel,
+} from "@momo/workbench/react";
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { Copy, Trash2, SlidersHorizontal } from "lucide-react";
 import type { Layer, Project } from "./model";
 import { t } from "./i18n";
@@ -48,22 +54,29 @@ export function CommitText({
     />
   );
 }
-export function TimeInput({ label, value, min = 0, onChange, disabled = false }: {
-  label: string; value: number; min?: number; onChange: (value: number) => void; disabled?: boolean;
+export function TimeInput({
+  label,
+  value,
+  min = 0,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  value: number;
+  min?: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
 }) {
-  const [draft, setDraft] = useState(String(value));
-  useEffect(() => setDraft(String(value)), [value]);
-  return <input aria-label={label} type="number" min={min} step="0.01" disabled={disabled}
-    value={draft} onChange={e => setDraft(e.target.value)}
-    onBlur={() => {
-      const next = Number(draft);
-      if (draft.trim() && Number.isFinite(next) && next >= min) {
-        if (next !== value) onChange(next);
-      } else setDraft(String(value));
-    }} onKeyDown={e => {
-      if (e.key === "Enter") e.currentTarget.blur();
-      if (e.key === "Escape") setDraft(String(value));
-    }}/>;
+  return (
+    <WorkbenchNumberInput
+      label={label}
+      value={value}
+      min={min}
+      step={0.01}
+      disabled={disabled}
+      onValueCommit={onChange}
+    />
+  );
 }
 export function Range({
   label,
@@ -86,42 +99,37 @@ export function Range({
   unit?: string;
   onChange: (v: number) => void;
 }) {
+  const id = useId();
   const precision = step >= 1 ? 0 : step >= 0.1 ? 1 : step >= 0.01 ? 2 : 3;
   return (
-    <label className="range-field momo-field">
-      <span className="field-line">
-        <span>{label}</span>
-        <span className="number-wrap">
-          {unbounded ? <TimeInput label={label} value={value} min={min} disabled={disabled} onChange={onChange}/> : <input
-            aria-label={label}
-            disabled={disabled}
-            type="number"
+    <Field className="wb:gap-1">
+      <div className="wb:flex wb:items-center wb:justify-between wb:gap-2">
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        <div className="wb:flex wb:items-center wb:gap-1">
+          <WorkbenchNumberInput
+            id={id}
+            label={label}
             value={Number(value.toFixed(precision))}
             min={min}
-            max={max}
+            max={unbounded ? undefined : max}
             step={step}
-            onChange={(e) => {
-              if (
-                e.target.value !== "" &&
-                Number.isFinite(e.target.valueAsNumber)
-              )
-                onChange(Math.max(min, Math.min(max, e.target.valueAsNumber)));
-            }}
-          />}
-          <span>{unit}</span>
-        </span>
-      </span>
-      <input
-        disabled={disabled}
-        aria-label={`${label} slider`}
-        type="range"
+            disabled={disabled}
+            onValueCommit={onChange}
+            className="sound-range-number"
+          />
+          {unit && <span>{unit}</span>}
+        </div>
+      </div>
+      <WorkbenchSlider
+        label={t("control.slider", label)}
+        value={value}
         min={min}
         max={max}
         step={step}
-        value={value}
-        onChange={(e) => onChange(e.target.valueAsNumber)}
+        disabled={disabled}
+        onValueChange={onChange}
       />
-    </label>
+    </Field>
   );
 }
 export function Inspector({
@@ -359,10 +367,24 @@ export function Inspector({
       </section>
       <section className="property-section">
         <h3>{t("prop.timing")}</h3>
-        {range("start", "prop.start", 0, Math.max(project.duration, layer.start), 0.01, "s")}
+        {range(
+          "start",
+          "prop.start",
+          0,
+          Math.max(project.duration, layer.start),
+          0.01,
+          "s",
+        )}
         {layer.type !== "composition" && (
           <>
-            {range("duration", "prop.duration", 0.01, Math.max(project.duration, layer.duration), 0.01, "s")}
+            {range(
+              "duration",
+              "prop.duration",
+              0.01,
+              Math.max(project.duration, layer.duration),
+              0.01,
+              "s",
+            )}
             {range(
               "attack",
               "prop.attack",

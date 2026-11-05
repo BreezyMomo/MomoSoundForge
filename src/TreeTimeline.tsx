@@ -35,6 +35,7 @@ export function TreeTimeline({
   onMove,
   onPreview,
   onNoteAudition,
+  onOpenNotes,
   onBegin,
   onTiming,
   snap,
@@ -70,6 +71,7 @@ export function TreeTimeline({
   onSeekEnd: (time: number) => void;
   onPreview: (address: NodeAddress) => void;
   onNoteAudition: (address: NodeAddress, note: NoteEvent) => void;
+  onOpenNotes: (address: NodeAddress) => void;
   onBegin: () => void;
 }) {
   const [closed, setClosed] = useState<Set<string>>(new Set());
@@ -357,7 +359,7 @@ export function TreeTimeline({
                   onBegin={onBegin}
                   onNoteChange={changeNote}
                   onNoteAudition={note => onNoteAudition(address, note)}
-                  onExpandNotes={() => { onSelect(address); setOpenScore(key); }}
+                  onExpandNotes={() => onOpenNotes(address)}
                   disabledParameters={(parent.controls ?? []).flatMap((c) =>
                     c.mappings
                       .filter((m) => m.layerId === layer.id)
@@ -457,7 +459,7 @@ export function TreeTimeline({
                 </div>
                 {layer.type === "instrument" && layer.score && openScore === key && <div className="tree-note-editor">
                   <NoteRoll layer={layer} onChange={changeNote} onSelect={() => onSelect(address)}
-                    onBegin={onBegin} onAudition={note => onNoteAudition(address, note)} />
+                    onBegin={onBegin} onAudition={note => onNoteAudition(address, note)} onExpand={() => onOpenNotes(address)} />
                 </div>}
               </div>
             );

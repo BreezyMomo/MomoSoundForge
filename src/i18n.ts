@@ -6,6 +6,18 @@ import {
 import { WORKBENCH_CATALOGS } from "@momo/workbench/locales";
 import { BUILTIN_MESSAGES } from "./builtinMessages";
 const words: Record<string, [string, string]> = {
+  "control.slider": ["{0}滑杆", "{0} slider"],
+  "layout.soundDesign": ["音效制作", "Sound design"],
+  "layout.videoDesign": ["视频配音", "Video sound design"],
+  "layout.noteDesign": ["音符编辑", "Note editing"],
+  "notes.panel": ["音符编辑", "Note editor"],
+  "notes.track": ["乐器轨道", "Instrument track"],
+  "notes.chooseTrack": ["选择乐器轨道", "Choose an instrument track"],
+  "notes.chooseHint": ["选择一条乐器轨道，编辑和试听其中的音符。", "Choose an instrument track to edit and audition its notes."],
+  "notes.empty": ["从声音库添加乐器，再开始编辑音符。", "Add an instrument from the sound library to start editing notes."],
+  "notes.playProject": ["试听作品", "Play project"],
+  "notes.pauseProject": ["暂停试听", "Pause project"],
+  "roll.openWorkspace": ["在音符工作区打开", "Open in note workspace"],
   "file.new": ["新建工程", "New project"],
   "file.untitled": ["未命名音效", "Untitled sound"],
   "editor.extendToContent": ["扩展到内容末尾", "Extend to content end"],

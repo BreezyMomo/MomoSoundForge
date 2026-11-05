@@ -1,0 +1,65 @@
+@layer theme, base, components, utilities;
+
+/* Product layout rules live in a named layer so shared control isolation preserves them.
+   Colors, control dimensions and interaction styling remain owned by Workbench. */
+@layer utilities {
+  .sound-region-fields[data-slot="field-group"] {
+    display: contents;
+  }
+  .sound-score-toolbar[data-slot="field-group"] {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .sound-help-dialog[data-slot="dialog-content"] {
+    max-width: min(576px, calc(100vw - 2rem));
+  }
+  .sound-export-dialog[data-slot="dialog-content"] {
+    max-width: min(720px, calc(100vw - 2rem));
+  }
+  .sound-export-grid[data-slot="field-group"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: 16px;
+  }
+  .sound-video-grid[data-slot="field-group"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+    gap: 12px;
+  }
+  .sound-option-fields[data-slot="field-group"],
+  .sound-wrap-fields[data-slot="field-group"] {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .sound-option-fields[data-slot="field-group"] {
+    gap: 16px;
+    margin-block: 16px;
+  }
+  .sound-range-number[data-slot="input"] {
+    width: 88px;
+  }
+  .sound-note-velocity[data-slot="input"] {
+    width: 80px;
+  }
+  .sound-track-choice[data-slot="select-trigger"] {
+    max-width: 100%;
+  }
+  .notes-workspace-toolbar > [data-slot="field"] {
+    flex: 1 1 260px;
+    min-width: min(260px, 100%);
+  }
+  .notes-workspace-toolbar > [data-slot="field"] > [data-slot="field-label"] {
+    flex: none;
+    white-space: nowrap;
+  }
+  .sound-video-marker[data-slot="input"] {
+    flex: 1;
+    min-width: 0;
+  }
+}
+.sound-help-copy {
+  line-height: 1.6;
+}

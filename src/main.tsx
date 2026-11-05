@@ -4,8 +4,20 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@momo/workbench/theme-tokens.css";
 import App from "./App";
+import { WorkbenchProvider } from "@momo/workbench/react";
+import { appearance } from "./AppearancePreferences";
+import { language, t } from "./i18n";
 import "./style.css";
-createRoot(document.getElementById("root")!).render(<App />);
+import "./workbench-controls.css";
+createRoot(document.getElementById("root")!).render(
+  <WorkbenchProvider
+    appearance={appearance}
+    language={language}
+    ui={{ text: t, format: t, onLanguageChange: language.onLanguageChange }}
+  >
+    <App />
+  </WorkbenchProvider>,
+);
 
 import "@momo/workbench/react.css";
 import "@momo/workbench/tabs.css";

@@ -1,3 +1,18 @@
+import {
+  Button,
+  Input,
+  Checkbox,
+  Field,
+  FieldGroup,
+  FieldLabel,
+  type WorkbenchChoiceProps,
+  WorkbenchChoice,
+  WorkbenchNumberInput,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@momo/workbench/react";
 import { useRef, useState } from "react";
 import { t } from "./i18n";
 import {
@@ -37,17 +52,29 @@ function NumberField({
   step?: number;
 }) {
   return (
-    <input
-      aria-label={label}
-      type="number"
-      min={min}
-      max={Number.isFinite(max) ? max : undefined}
-      step={step}
+    <WorkbenchNumberInput
+      label={label}
       value={value}
-      onChange={(e) => {
-        if (e.target.value !== "" && Number.isFinite(e.target.valueAsNumber))
-          onChange(Math.max(min, Math.min(max, e.target.valueAsNumber)));
-      }}
+      min={min}
+      max={max}
+      step={step}
+      onValueCommit={onChange}
+    />
+  );
+}
+function RegionChoice({
+  defaultValue,
+  ...props
+}: Omit<WorkbenchChoiceProps, "value" | "onValueChange"> & {
+  defaultValue: string;
+}) {
+  const [value, setValue] = useState(defaultValue);
+  return (
+    <WorkbenchChoice
+      {...props}
+      value={value}
+      onValueChange={setValue}
+      className="wb:w-full wb:min-w-0"
     />
   );
 }
@@ -223,169 +250,169 @@ export function ScoreEditor({
   );
   const quantize = (n: number) => (snap ? Math.round(n / snap) * snap : n);
   return (
-    <section className="score-editor" aria-label={t("score.title")}>
-      <header>
-        <h2>
-          {t("score.title")} · {layer.name}
-        </h2>
-        <div className="button-group">
-          <button
+    <section className="score-editor">
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(String(value))}
+        className="wb:min-w-0"
+        aria-label={t("score.title")}
+      >
+        <header>
+          <h2>
+            {t("score.title")} · {layer.name}
+          </h2>
+          <TabsList aria-label={t("score.title")}>
+            <TabsTrigger value="notes">{t("score.notes")}</TabsTrigger>
+            <TabsTrigger value="mapping">{t("score.mapping")}</TabsTrigger>
+          </TabsList>
+        </header>
+        {error && (
+          <p role="alert" className="warning-line">
+            {error}
+          </p>
+        )}
+        <FieldGroup className="sound-score-toolbar">
+          <Field className="wb:min-w-0">
+            <FieldLabel>{t("score.instrument")}</FieldLabel>
+            <WorkbenchChoice
+              label={t("score.instrument")}
+              className="wb:w-full wb:min-w-0"
+              value={inst?.id ?? ""}
+              items={[
+                { value: "", label: t("score.choose") },
+                ...score.instruments.map((i) => ({
+                  value: i.id,
+                  label: i.name,
+                })),
+              ]}
+              onValueChange={setInstrumentId}
+            />
+          </Field>
+          <Button
+            variant="outline"
             className="secondary"
-            aria-pressed={tab === "notes"}
-            onClick={() => setTab("notes")}
+            onClick={() => bundleInput.current?.click()}
+            disabled={score.instruments.length >= 8}
           >
-            {t("score.notes")}
-          </button>
-          <button
-            className="secondary"
-            aria-pressed={tab === "mapping"}
-            onClick={() => setTab("mapping")}
-          >
-            {t("score.mapping")}
-          </button>
-        </div>
-      </header>
-      {error && (
-        <p role="alert" className="warning-line">
-          {error}
-        </p>
-      )}
-      <div className="score-toolbar">
-        <label>
-          {t("score.instrument")}
-          <select
-            value={inst?.id ?? ""}
-            onChange={(e) => setInstrumentId(e.target.value)}
-          >
-            <option value="" disabled>
-              {t("score.choose")}
-            </option>
-            {score.instruments.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="secondary"
-          onClick={() => bundleInput.current?.click()}
-          disabled={score.instruments.length >= 8}
-        >
-          {t("score.importInstrument")}
-        </button>
-        <input
-          ref={bundleInput}
-          type="file"
-          accept=".json,.sfinstrument"
-          hidden
-          onChange={(e) => {
-            void importBundle(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-      </div>
-      {!score.instruments.length && (
-        <p className="field-help">{t("score.empty")}</p>
-      )}
-      {tab === "notes" ? (
-        <>
-          <div className="score-toolbar">
-            <label>
-              BPM
-              <NumberField
-                label="BPM"
-                value={score.bpm}
-                min={20}
-                max={300}
-                onChange={(bpm) => commit({ ...score, bpm })}
-              />
-            </label>
-            <label>
-              {t("score.snap")}
-              <select
-                value={snap}
-                onChange={(e) => setSnap(Number(e.target.value))}
-              >
-                {[0, 0.125, 0.25, 0.5, 1].map((n) => (
-                  <option key={n} value={n}>
-                    {n === 0 ? t("score.off") : `${n} ${t("score.beats")}`}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              className="secondary"
-              disabled={!inst || score.notes.length >= 256}
-              onClick={() => {
-                if (!inst) return;
-                const r = inst.regions[0],
-                  start = quantize(
-                    score.notes.reduce(
-                      (m, n) => Math.max(m, n.start + n.duration),
-                      0,
-                    ),
-                  );
-                commit({
-                  ...score,
-                  notes: [
-                    ...score.notes,
-                    {
-                      id: uid(),
-                      instrumentId: inst.id,
-                      midi: r.rootMidi,
-                      start,
-                      duration: 0.5,
-                      velocity: Math.round(
-                        (r.velocityLow + r.velocityHigh) / 2,
+            {t("score.importInstrument")}
+          </Button>
+          <input
+            ref={bundleInput}
+            type="file"
+            accept=".json,.sfinstrument"
+            hidden
+            onChange={(e) => {
+              void importBundle(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </FieldGroup>
+        {!score.instruments.length && (
+          <p className="field-help">{t("score.empty")}</p>
+        )}
+        {tab === "notes" ? (
+          <TabsContent value="notes">
+            <FieldGroup className="sound-score-toolbar">
+              <Field className="wb:min-w-0">
+                <FieldLabel>BPM</FieldLabel>
+                <NumberField
+                  label="BPM"
+                  value={score.bpm}
+                  min={20}
+                  max={300}
+                  onChange={(bpm) => commit({ ...score, bpm })}
+                />
+              </Field>
+              <Field className="wb:min-w-0">
+                <FieldLabel>{t("score.snap")}</FieldLabel>
+                <WorkbenchChoice
+                  label={t("score.snap")}
+                  value={String(snap)}
+                  onValueChange={(value) => setSnap(Number(value))}
+                  items={[0, 0.125, 0.25, 0.5, 1].map((value) => ({
+                    value: String(value),
+                    label: value
+                      ? value + " " + t("score.beats")
+                      : t("score.off"),
+                  }))}
+                />
+              </Field>
+              <Button
+                variant="outline"
+                className="secondary"
+                disabled={!inst || score.notes.length >= 256}
+                onClick={() => {
+                  if (!inst) return;
+                  const r = inst.regions[0],
+                    start = quantize(
+                      score.notes.reduce(
+                        (m, n) => Math.max(m, n.start + n.duration),
+                        0,
                       ),
-                      articulation: r.articulation,
-                    },
-                  ],
-                });
-              }}
-            >
-              {t("score.addNote")}
-            </button>
-            <button
-              className="secondary"
-              disabled={!inst}
-              onClick={() => notesInput.current?.click()}
-            >
-              {t("score.importNotes")}
-            </button>
-            <button
-              className="secondary"
-              onClick={() => {
-                const blob = new Blob(
-                    [
-                      JSON.stringify(
-                        {
-                          schema: "momo.note-events/v1",
-                          bpm: score.bpm,
-                          notes: score.notes,
-                        },
-                        null,
-                        2,
-                      ),
+                    );
+                  commit({
+                    ...score,
+                    notes: [
+                      ...score.notes,
+                      {
+                        id: uid(),
+                        instrumentId: inst.id,
+                        midi: r.rootMidi,
+                        start,
+                        duration: 0.5,
+                        velocity: Math.round(
+                          (r.velocityLow + r.velocityHigh) / 2,
+                        ),
+                        articulation: r.articulation,
+                      },
                     ],
-                    { type: "application/json" },
-                  ),
-                  url = URL.createObjectURL(blob),
-                  a = document.createElement("a");
-                a.href = url;
-                a.download = "notes.json";
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              }}
-            >
-              {t("score.exportNotes")}
-            </button>
-            <button
-              className="secondary"
-              disabled={!score.notes.length}
-              onClick={() => {
-                const duration = Math.max(
+                  });
+                }}
+              >
+                {t("score.addNote")}
+              </Button>
+              <Button
+                variant="outline"
+                className="secondary"
+                disabled={!inst}
+                onClick={() => notesInput.current?.click()}
+              >
+                {t("score.importNotes")}
+              </Button>
+              <Button
+                variant="outline"
+                className="secondary"
+                onClick={() => {
+                  const blob = new Blob(
+                      [
+                        JSON.stringify(
+                          {
+                            schema: "momo.note-events/v1",
+                            bpm: score.bpm,
+                            notes: score.notes,
+                          },
+                          null,
+                          2,
+                        ),
+                      ],
+                      { type: "application/json" },
+                    ),
+                    url = URL.createObjectURL(blob),
+                    a = document.createElement("a");
+                  a.href = url;
+                  a.download = "notes.json";
+                  a.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }}
+              >
+                {t("score.exportNotes")}
+              </Button>
+              <Button
+                variant="outline"
+                className="secondary"
+                disabled={!score.notes.length}
+                onClick={() => {
+                  const duration = Math.max(
                     0.1,
                     ...score.notes.map((n) =>
                       noteEndSeconds(
@@ -395,426 +422,447 @@ export function ScoreEditor({
                         score.bpm,
                       ),
                     ),
-                );
-                onChange({
-                  ...project,
-                  duration: Math.max(
-                    project.duration,
-                    layer.start + duration,
-                  ),
-                  layers: project.layers.map((l) =>
-                    l.id === layer.id
-                      ? { ...l, duration, sourceDuration: undefined }
-                      : l,
-                  ),
-                });
-              }}
-            >
-              {t("score.fit")}
-            </button>
-            <input
-              ref={notesInput}
-              type="file"
-              accept=".json"
-              hidden
-              onChange={(e) => {
-                void importNotes(e.target.files?.[0]);
-                e.target.value = "";
-              }}
-            />
-          </div>
-          <p className="field-help">
-            {t("score.timeHint", (60 / score.bpm).toFixed(3))}
-          </p>
-          <div className="score-table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  {[
-                    "pitch",
-                    "start",
-                    "duration",
-                    "velocity",
-                    "instrument",
-                    "articulation",
-                    "selectedSample",
-                    "actions",
-                  ].map((k) => (
-                    <th key={k}>{t("score." + k)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {score.notes.map((n, index) => {
-                  const i = score.instruments.find(
-                      (i) => i.id === n.instrumentId,
-                    ),
-                    arts = [
-                      ...new Set([
-                        n.articulation,
-                        ...(i?.regions.map((r) => r.articulation) ?? []),
-                      ]),
-                    ],
-                    r = choices.get(n.id);
-                  return (
-                    <tr key={n.id}>
-                      <td data-label={t("score.pitch")} >
-                        <NumberField
-                          label={`${t("score.pitch")} ${index + 1}`}
-                          value={n.midi}
-                          onChange={(midi) =>
-                            updateNote(n.id, { midi: Math.round(midi) })
-                          }
-                        />
-                      </td>
-                      <td data-label={t("score.start")} >
-                        <NumberField
-                          label={`${t("score.start")} ${index + 1}`}
-                          value={n.start}
-                          max={Number.POSITIVE_INFINITY}
-                          step={snap || 0.01}
-                          onChange={(v) =>
-                            updateNote(n.id, { start: quantize(v) })
-                          }
-                        />
-                        <small>
-                          {beatsToSeconds(n.start, score.bpm).toFixed(3)} s
-                        </small>
-                      </td>
-                      <td data-label={t("score.duration")} >
-                        <NumberField
-                          label={`${t("score.duration")} ${index + 1}`}
-                          value={n.duration}
-                          min={0.005}
-                          max={Number.POSITIVE_INFINITY}
-                          step={snap || 0.01}
-                          onChange={(v) =>
-                            updateNote(n.id, {
-                              duration: Math.max(0.005, quantize(v)),
-                            })
-                          }
-                        />
-                        <small>
-                          {beatsToSeconds(n.duration, score.bpm).toFixed(3)} s
-                        </small>
-                      </td>
-                      <td data-label={t("score.velocity")} >
-                        <NumberField
-                          label={`${t("score.velocity")} ${index + 1}`}
-                          min={1}
-                          value={n.velocity}
-                          onChange={(velocity) =>
-                            updateNote(n.id, { velocity: Math.round(velocity) })
-                          }
-                        />
-                      </td>
-                      <td data-label={t("score.instrument")} >
-                        <select
-                          aria-label={`${t("score.instrument")} ${index + 1}`}
-                          value={n.instrumentId}
-                          onChange={(e) => {
-                            const next = score.instruments.find(
-                              (i) => i.id === e.target.value,
-                            )!;
-                            updateNote(n.id, {
-                              instrumentId: next.id,
-                              articulation: next.regions[0].articulation,
-                            });
-                          }}
-                        >
-                          {!i && (
-                            <option value={n.instrumentId}>
-                              {t("score.missingInstrument")}
-                            </option>
-                          )}
-                          {score.instruments.map((i) => (
-                            <option key={i.id} value={i.id}>
-                              {i.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td data-label={t("score.articulation")} >
-                        <select
-                          aria-label={`${t("score.articulation")} ${index + 1}`}
-                          value={n.articulation}
-                          onChange={(e) =>
-                            updateNote(n.id, { articulation: e.target.value })
-                          }
-                        >
-                          {arts.map((a) => (
-                            <option key={a}>{a}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td data-label={t("score.selectedSample")} >
-                        <small>
-                          {r
-                            ? `${project.assets[r.assetId]?.name} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`
-                            : t("score.noRegion")}
-                        </small>
-                      </td>
-                      <td data-label={t("score.actions")} >
-                        <button
-                          className="secondary"
-                          aria-label={`${t("score.removeNote")} ${index + 1}`}
-                          onClick={() =>
-                            commit({
-                              ...score,
-                              notes: score.notes.filter((x) => x.id !== n.id),
-                            })
-                          }
-                        >
-                          {t("score.removeNote")}
-                        </button>
-                      </td>
-                    </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {!!issues.length && (
-            <ul className="score-issues">
-              {issues.slice(0, 12).map((issue, i) => (
-                <li key={i}>
-                  {score.notes.findIndex((n) => n.id === issue.noteId) + 1}:{" "}
-                  {t(issue.key)}
-                </li>
-              ))}
-              {issues.length > 12 && (
-                <li>{t("score.moreIssues", issues.length - 12)}</li>
-              )}
-            </ul>
-          )}
-        </>
-      ) : (
-        <>
-          <div className="score-toolbar">
-            <label>
-              {t("score.asset")}
-              <select
-                value={assetId}
-                onChange={(e) => setAssetId(e.target.value)}
-              >
-                <option value="">{t("score.choose")}</option>
-                {Object.values(project.assets).map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              className="secondary"
-              disabled={!assetId || score.instruments.length >= 8}
-              onClick={addInstrument}
-            >
-              {t("score.fromSample")}
-            </button>
-            <button
-              className="secondary"
-              disabled={!inst || !assetId}
-              onClick={() => {
-                if (inst) {
-                  const r = regionFor(assetId);
-                  if (
-                    updateInstrument({ ...inst, regions: [...inst.regions, r] })
-                  )
-                    setRegionId(r.id);
-                }
-              }}
-            >
-              {t("score.addRegion")}
-            </button>
-          </div>
-          {inst && (
-            <>
-              <p className="field-help">
-                {inst.name} · {inst.license} {inst.source}
-              </p>
-              <label>
-                {t("score.region")}
-                <select
-                  value={region?.id ?? ""}
-                  onChange={(e) => setRegionId(e.target.value)}
-                >
-                  {inst.regions.map((r, i) => (
-                    <option key={r.id} value={r.id}>
-                      {i + 1}. {project.assets[r.assetId]?.name} ·{" "}
-                      {r.articulation} · MIDI {r.keyLow}–{r.keyHigh} · vel{" "}
-                      {r.velocityLow}–{r.velocityHigh} · RR {r.roundRobin}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {region && (
-                <form
-                  className="score-region-form"
-                  key={region.id + JSON.stringify(region)}
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const f = new FormData(e.currentTarget),
-                      num = (k: string) => Number(f.get(k));
-                    const next: SampleRegion = {
-                      ...region,
-                      assetId: String(f.get("assetId")),
-                      rootMidi: num("rootMidi"),
-                      keyLow: num("keyLow"),
-                      keyHigh: num("keyHigh"),
-                      velocityLow: num("velocityLow"),
-                      velocityHigh: num("velocityHigh"),
-                      articulation: String(f.get("articulation")).trim(),
-                      roundRobin: num("roundRobin"),
-                      tuneCents: num("tuneCents"),
-                      gainDb: num("gainDb"),
-                      releaseSeconds: num("releaseSeconds"),
-                      releaseAssetId:
-                        String(f.get("releaseAssetId")) || undefined,
-                      loop: f.has("loopEnabled")
-                        ? {
-                            start: num("loopStart"),
-                            end: num("loopEnd"),
-                            crossfade: num("crossfade"),
-                            verified: true,
-                          }
-                        : undefined,
-                    };
-                    updateInstrument({
-                      ...inst,
-                      name: String(f.get("instrumentName")).trim(),
-                      regions: inst.regions.map((r) =>
-                        r.id === region.id ? next : r,
-                      ),
-                    });
-                  }}
-                >
-                  <label>
-                    {t("score.instrumentName")}
-                    <input
-                      name="instrumentName"
-                      defaultValue={inst.name}
-                      required
-                      maxLength={120}
-                    />
-                  </label>
-                  <label>
-                    {t("score.asset")}
-                    <select name="assetId" defaultValue={region.assetId}>
-                      {Object.values(project.assets).map((a) => (
-                        <option value={a.id} key={a.id}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  {(
-                    [
-                      "rootMidi",
-                      "keyLow",
-                      "keyHigh",
-                      "velocityLow",
-                      "velocityHigh",
-                      "roundRobin",
-                      "tuneCents",
-                      "gainDb",
-                      "releaseSeconds",
-                    ] as const
-                  ).map((k) => (
-                    <label key={k}>
-                      {t("score." + k)}
-                      <input
-                        type="number"
-                        step={
-                          k === "releaseSeconds"
-                            ? 0.005
-                            : k === "gainDb"
-                              ? 0.1
-                              : 1
-                        }
-                        name={k}
-                        defaultValue={region[k]}
-                        required
-                      />
-                    </label>
-                  ))}
-                  <label>
-                    {t("score.articulation")}
-                    <input
-                      name="articulation"
-                      defaultValue={region.articulation}
-                      required
-                      maxLength={60}
-                    />
-                  </label>
-                  <label>
-                    {t("score.releaseAsset")}
-                    <select
-                      name="releaseAssetId"
-                      defaultValue={region.releaseAssetId ?? ""}
-                    >
-                      <option value="">{t("score.none")}</option>
-                      {Object.values(project.assets).map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="check-field">
-                    <input
-                      type="checkbox"
-                      name="loopEnabled"
-                      defaultChecked={!!region.loop}
-                    />
-                    {t("score.loopVerified")}
-                  </label>
-                  {(["loopStart", "loopEnd", "crossfade"] as const).map(
-                    (k, i) => (
-                      <label key={k}>
-                        {t("score." + k)}
-                        <input
-                          name={k}
-                          type="number"
-                          step="1"
-                          defaultValue={
-                            i === 0
-                              ? (region.loop?.start ?? 0)
-                              : i === 1
-                                ? (region.loop?.end ?? 0)
-                                : (region.loop?.crossfade ?? 64)
-                          }
-                        />
-                      </label>
+                  onChange({
+                    ...project,
+                    duration: Math.max(
+                      project.duration,
+                      layer.start + duration,
                     ),
-                  )}
-                  <p className="field-help">{t("score.loopHint")}</p>
-                  <div className="button-group">
-                    <button className="primary" type="submit">
-                      {t("score.applyRegion")}
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={inst.regions.length <= 1}
-                      onClick={() =>
-                        updateInstrument({
-                          ...inst,
-                          regions: inst.regions.filter(
-                            (r) => r.id !== region.id,
-                          ),
-                        })
-                      }
-                    >
-                      {t("score.removeRegion")}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </>
-          )}
-        </>
-      )}
+                    layers: project.layers.map((l) =>
+                      l.id === layer.id
+                        ? { ...l, duration, sourceDuration: undefined }
+                        : l,
+                    ),
+                  });
+                }}
+              >
+                {t("score.fit")}
+              </Button>
+              <input
+                ref={notesInput}
+                type="file"
+                accept=".json"
+                hidden
+                onChange={(e) => {
+                  void importNotes(e.target.files?.[0]);
+                  e.target.value = "";
+                }}
+              />
+            </FieldGroup>
+            <p className="field-help">
+              {t("score.timeHint", (60 / score.bpm).toFixed(3))}
+            </p>
+            <div className="score-table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    {[
+                      "pitch",
+                      "start",
+                      "duration",
+                      "velocity",
+                      "instrument",
+                      "articulation",
+                      "selectedSample",
+                      "actions",
+                    ].map((k) => (
+                      <th key={k}>{t("score." + k)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {score.notes.map((n, index) => {
+                    const i = score.instruments.find(
+                        (i) => i.id === n.instrumentId,
+                      ),
+                      arts = [
+                        ...new Set([
+                          n.articulation,
+                          ...(i?.regions.map((r) => r.articulation) ?? []),
+                        ]),
+                      ],
+                      r = choices.get(n.id);
+                    return (
+                      <tr key={n.id}>
+                        <td data-label={t("score.pitch")}>
+                          <NumberField
+                            label={`${t("score.pitch")} ${index + 1}`}
+                            value={n.midi}
+                            onChange={(midi) =>
+                              updateNote(n.id, { midi: Math.round(midi) })
+                            }
+                          />
+                        </td>
+                        <td data-label={t("score.start")}>
+                          <NumberField
+                            label={`${t("score.start")} ${index + 1}`}
+                            value={n.start}
+                            max={Number.POSITIVE_INFINITY}
+                            step={snap || 0.01}
+                            onChange={(v) =>
+                              updateNote(n.id, { start: quantize(v) })
+                            }
+                          />
+                          <small>
+                            {beatsToSeconds(n.start, score.bpm).toFixed(3)} s
+                          </small>
+                        </td>
+                        <td data-label={t("score.duration")}>
+                          <NumberField
+                            label={`${t("score.duration")} ${index + 1}`}
+                            value={n.duration}
+                            min={0.005}
+                            max={Number.POSITIVE_INFINITY}
+                            step={snap || 0.01}
+                            onChange={(v) =>
+                              updateNote(n.id, {
+                                duration: Math.max(0.005, quantize(v)),
+                              })
+                            }
+                          />
+                          <small>
+                            {beatsToSeconds(n.duration, score.bpm).toFixed(3)} s
+                          </small>
+                        </td>
+                        <td data-label={t("score.velocity")}>
+                          <NumberField
+                            label={`${t("score.velocity")} ${index + 1}`}
+                            min={1}
+                            value={n.velocity}
+                            onChange={(velocity) =>
+                              updateNote(n.id, {
+                                velocity: Math.round(velocity),
+                              })
+                            }
+                          />
+                        </td>
+                        <td data-label={t("score.instrument")}>
+                          <WorkbenchChoice
+                            label={`${t("score.instrument")} ${index + 1}`}
+                            value={n.instrumentId}
+                            className="wb:w-full wb:min-w-0"
+                            items={[
+                              ...(!i
+                                ? [
+                                    {
+                                      value: n.instrumentId,
+                                      label: t("score.missingInstrument"),
+                                    },
+                                  ]
+                                : []),
+                              ...score.instruments.map((i) => ({
+                                value: i.id,
+                                label: i.name,
+                              })),
+                            ]}
+                            onValueChange={(value) => {
+                              const next = score.instruments.find(
+                                (i) => i.id === value,
+                              )!;
+                              updateNote(n.id, {
+                                instrumentId: next.id,
+                                articulation: next.regions[0].articulation,
+                              });
+                            }}
+                          />
+                        </td>
+                        <td data-label={t("score.articulation")}>
+                          <WorkbenchChoice
+                            label={`${t("score.articulation")} ${index + 1}`}
+                            value={n.articulation}
+                            className="wb:w-full wb:min-w-0"
+                            items={arts.map((a) => ({ value: a, label: a }))}
+                            onValueChange={(articulation) =>
+                              updateNote(n.id, { articulation })
+                            }
+                          />
+                        </td>
+                        <td data-label={t("score.selectedSample")}>
+                          <small>
+                            {r
+                              ? `${project.assets[r.assetId]?.name} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`
+                              : t("score.noRegion")}
+                          </small>
+                        </td>
+                        <td data-label={t("score.actions")}>
+                          <Button
+                            variant="outline"
+                            className="secondary"
+                            aria-label={`${t("score.removeNote")} ${index + 1}`}
+                            onClick={() =>
+                              commit({
+                                ...score,
+                                notes: score.notes.filter((x) => x.id !== n.id),
+                              })
+                            }
+                          >
+                            {t("score.removeNote")}
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {!!issues.length && (
+              <ul className="score-issues">
+                {issues.slice(0, 12).map((issue, i) => (
+                  <li key={i}>
+                    {score.notes.findIndex((n) => n.id === issue.noteId) + 1}:{" "}
+                    {t(issue.key)}
+                  </li>
+                ))}
+                {issues.length > 12 && (
+                  <li>{t("score.moreIssues", issues.length - 12)}</li>
+                )}
+              </ul>
+            )}
+          </TabsContent>
+        ) : (
+          <TabsContent value="mapping">
+            <FieldGroup className="sound-score-toolbar">
+              <Field className="wb:min-w-0">
+                <FieldLabel>{t("score.asset")}</FieldLabel>
+                <WorkbenchChoice
+                  label={t("score.asset")}
+                  value={assetId}
+                  onValueChange={setAssetId}
+                  className="wb:w-full wb:min-w-0"
+                  items={[
+                    { value: "", label: t("score.choose") },
+                    ...Object.values(project.assets).map((a) => ({
+                      value: a.id,
+                      label: a.name,
+                    })),
+                  ]}
+                />
+              </Field>
+              <Button
+                variant="outline"
+                className="secondary"
+                disabled={!assetId || score.instruments.length >= 8}
+                onClick={addInstrument}
+              >
+                {t("score.fromSample")}
+              </Button>
+              <Button
+                variant="outline"
+                className="secondary"
+                disabled={!inst || !assetId}
+                onClick={() => {
+                  if (inst) {
+                    const r = regionFor(assetId);
+                    if (
+                      updateInstrument({
+                        ...inst,
+                        regions: [...inst.regions, r],
+                      })
+                    )
+                      setRegionId(r.id);
+                  }
+                }}
+              >
+                {t("score.addRegion")}
+              </Button>
+            </FieldGroup>
+            {inst && (
+              <>
+                <p className="field-help">
+                  {inst.name} · {inst.license} {inst.source}
+                </p>
+                <Field className="wb:min-w-0">
+                  <FieldLabel>{t("score.region")}</FieldLabel>
+                  <WorkbenchChoice
+                    label={t("score.region")}
+                    value={region?.id ?? ""}
+                    onValueChange={setRegionId}
+                    className="wb:w-full wb:min-w-0"
+                    items={inst.regions.map((r, i) => ({
+                      value: r.id,
+                      label: `${i + 1}. ${project.assets[r.assetId]?.name} · ${r.articulation} · MIDI ${r.keyLow}–${r.keyHigh} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`,
+                    }))}
+                  />
+                </Field>
+                {region && (
+                  <form
+                    className="score-region-form"
+                    key={region.id + JSON.stringify(region)}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const f = new FormData(e.currentTarget),
+                        num = (k: string) => Number(f.get(k));
+                      const next: SampleRegion = {
+                        ...region,
+                        assetId: String(f.get("assetId")),
+                        rootMidi: num("rootMidi"),
+                        keyLow: num("keyLow"),
+                        keyHigh: num("keyHigh"),
+                        velocityLow: num("velocityLow"),
+                        velocityHigh: num("velocityHigh"),
+                        articulation: String(f.get("articulation")).trim(),
+                        roundRobin: num("roundRobin"),
+                        tuneCents: num("tuneCents"),
+                        gainDb: num("gainDb"),
+                        releaseSeconds: num("releaseSeconds"),
+                        releaseAssetId:
+                          String(f.get("releaseAssetId")) || undefined,
+                        loop: f.has("loopEnabled")
+                          ? {
+                              start: num("loopStart"),
+                              end: num("loopEnd"),
+                              crossfade: num("crossfade"),
+                              verified: true,
+                            }
+                          : undefined,
+                      };
+                      updateInstrument({
+                        ...inst,
+                        name: String(f.get("instrumentName")).trim(),
+                        regions: inst.regions.map((r) =>
+                          r.id === region.id ? next : r,
+                        ),
+                      });
+                    }}
+                  >
+                    <FieldGroup className="sound-region-fields">
+                      <Field className="wb:min-w-0">
+                        <FieldLabel>{t("score.instrumentName")}</FieldLabel>
+                        <Input
+                          aria-label={t("score.instrumentName")}
+                          name="instrumentName"
+                          defaultValue={inst.name}
+                          required
+                          maxLength={120}
+                        />
+                      </Field>
+                      <Field className="wb:min-w-0">
+                        <FieldLabel>{t("score.asset")}</FieldLabel>
+                        <RegionChoice
+                          label={t("score.asset")}
+                          name="assetId"
+                          defaultValue={region.assetId}
+                          items={Object.values(project.assets).map((a) => ({
+                            value: a.id,
+                            label: a.name,
+                          }))}
+                        />
+                      </Field>
+                      {(
+                        [
+                          "rootMidi",
+                          "keyLow",
+                          "keyHigh",
+                          "velocityLow",
+                          "velocityHigh",
+                          "roundRobin",
+                          "tuneCents",
+                          "gainDb",
+                          "releaseSeconds",
+                        ] as const
+                      ).map((k) => (
+                        <Field key={k} className="wb:min-w-0">
+                          <FieldLabel>{t("score." + k)}</FieldLabel>
+                          <Input
+                            type="number"
+                            step={
+                              k === "releaseSeconds"
+                                ? 0.005
+                                : k === "gainDb"
+                                  ? 0.1
+                                  : 1
+                            }
+                            aria-label={t("score." + k)}
+                            name={k}
+                            defaultValue={region[k]}
+                            required
+                          />
+                        </Field>
+                      ))}
+                      <Field className="wb:min-w-0">
+                        <FieldLabel>{t("score.articulation")}</FieldLabel>
+                        <Input
+                          aria-label={t("score.articulation")}
+                          name="articulation"
+                          defaultValue={region.articulation}
+                          required
+                          maxLength={60}
+                        />
+                      </Field>
+                      <Field className="wb:min-w-0">
+                        <FieldLabel>{t("score.releaseAsset")}</FieldLabel>
+                        <RegionChoice
+                          label={t("score.releaseAsset")}
+                          name="releaseAssetId"
+                          defaultValue={region.releaseAssetId ?? ""}
+                          items={[
+                            { value: "", label: t("score.none") },
+                            ...Object.values(project.assets).map((a) => ({
+                              value: a.id,
+                              label: a.name,
+                            })),
+                          ]}
+                        />
+                      </Field>
+                      <Field orientation="horizontal">
+                        <Checkbox
+                          id={`score-loop-${layer.id}`}
+                          name="loopEnabled"
+                          defaultChecked={!!region.loop}
+                        />
+                        <FieldLabel htmlFor={`score-loop-${layer.id}`}>
+                          {t("score.loopVerified")}
+                        </FieldLabel>
+                      </Field>
+                      {(["loopStart", "loopEnd", "crossfade"] as const).map(
+                        (k, i) => (
+                          <Field key={k} className="wb:min-w-0">
+                            <FieldLabel>{t("score." + k)}</FieldLabel>
+                            <Input
+                              aria-label={t("score." + k)}
+                              name={k}
+                              type="number"
+                              step="1"
+                              defaultValue={
+                                i === 0
+                                  ? (region.loop?.start ?? 0)
+                                  : i === 1
+                                    ? (region.loop?.end ?? 0)
+                                    : (region.loop?.crossfade ?? 64)
+                              }
+                            />
+                          </Field>
+                        ),
+                      )}
+                      <p className="field-help">{t("score.loopHint")}</p>
+                      <div className="button-group">
+                        <Button type="submit">{t("score.applyRegion")}</Button>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          className="secondary"
+                          disabled={inst.regions.length <= 1}
+                          onClick={() =>
+                            updateInstrument({
+                              ...inst,
+                              regions: inst.regions.filter(
+                                (r) => r.id !== region.id,
+                              ),
+                            })
+                          }
+                        >
+                          {t("score.removeRegion")}
+                        </Button>
+                      </div>
+                    </FieldGroup>
+                  </form>
+                )}
+              </>
+            )}
+          </TabsContent>
+        )}
+      </Tabs>
     </section>
   );
 }
