@@ -3,6 +3,7 @@ import { gzipSync } from "node:zlib";
 import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir, stat, copyFile, readdir, realpath, unlink } from "node:fs/promises";
 import path from "node:path";
+import { instrumentJobs, instrumentProject, recordingId } from "./builtin-instruments.mjs";
 
 const root = process.cwd();
 const output = path.join(root, "public/sound-library");
@@ -15,6 +16,7 @@ const orchestraRoot = "samples/orchestra-basics-20261104";
 const expandedRoot = "samples/orchestra-expanded-20261105";
 const fx = await readJson(`${fxRoot}/manifest.json`);
 const orchestra = await readJson(`${orchestraRoot}/manifest.json`);
+const expanded = await readJson(`${expandedRoot}/manifest.json`);
 const fxExamples = await readJson(`${fxRoot}/examples/recipes.json`);
 const jobs = [];
 for (const sample of fx.samples) jobs.push({
@@ -24,17 +26,20 @@ for (const sample of fx.samples) jobs.push({
   keywords: `${sample.id} ${sample.sourceArchiveMember} ${sample.author}`,
 });
 const variants = new Map();
+const expandedInstruments = new Set(expanded.samples.map(s => s.instrumentId));
 for (const sample of orchestra.samples) {
+  if (expandedInstruments.has(sample.instrumentId)) continue;
   const group = [sample.instrumentId, sample.rootMidi, sample.articulation, sample.velocityLow, sample.velocityHigh].join(":");
   const variant = (variants.get(group) ?? 0) + 1; variants.set(group, variant);
   jobs.push({
     id: `instrument-${sample.id}`, kind: "instrument", nameKey: `builtin.instrument.${sample.instrumentId}`,
     category: sample.family, source: `${orchestraRoot}/${sample.wavFile}`, sample,
     rootNote: sample.rootNote, velocity: `${sample.velocityLow}–${sample.velocityHigh}`,
-    variant, articulation: sample.articulation,
+    variant, articulation: sample.articulation, recordingIds: [recordingId(sample)],
     keywords: `${sample.instrumentId} ${sample.sourcePath} ${sample.rootMidi ?? ""} ${sample.rootNote ?? ""}`,
   });
 }
+jobs.push(...instrumentJobs(expanded, expandedRoot));
 const effectCategories = ["impacts", "interface", "magic", "motion", "motion", "liquid", "liquid", "foley"];
 for (const [index, entry] of fxExamples.entries()) jobs.push({
   id: `example-${entry.id}`, kind: "example", nameKey: `builtin.example.${entry.id.slice(3)}`,
@@ -51,10 +56,11 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
+  "tools/build-builtin-library.mjs", "tools/builtin-instruments.mjs", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
   `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
-  ...jobs.map((job) => job.source),
+  `${expandedRoot}/manifest.json`,
+  ...jobs.flatMap((job) => job.sourceFiles ?? [job.source]),
 ])];
 const fingerprint = hash(JSON.stringify(await Promise.all(sourceFiles.map(async (name) => {
   const info = await stat(path.join(root, name));
@@ -80,7 +86,12 @@ try {
   const sounds = [];
   for (const job of jobs) {
     let source;
-    if (job.kind === "instrument") {
+    if (job.tone) {
+      source = await instrumentProject(job, root, { makeLayer, encodeSamples });
+      const raw = renderProject(parseProject(source));
+      // One gain for the entire range keeps the relative velocity dynamics intact.
+      if (raw.sourcePeak > .8) source.master = .8 / raw.sourcePeak;
+    } else if (job.kind === "instrument") {
       const wav = await readFile(path.join(root, job.source));
       if (hash(wav) !== job.sample.wavSha256 || wav.toString("ascii", 36, 40) !== "data" ||
           wav.readUInt32LE(24) !== 48000 || wav.readUInt16LE(22) !== 2 || wav.readUInt16LE(34) !== 16)
@@ -122,8 +133,8 @@ try {
     // so fetch would receive decoded JSON. Keep the explicit gzip envelope binary.
     const digest = hash(compressed), file = `${digest}.soundforge.bin`;
     await writeFile(path.join(output, file), compressed);
-    const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation } = job;
-    sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation,
+    const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds } = job;
+    sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds,
       duration: project.duration, file, compressedBytes: compressed.length, projectBytes: json.length, sha256: digest, waveform });
   }
   const catalog = JSON.stringify({ schema: "momo.builtin-library/v1", sounds }, null, 2) + "\n";
