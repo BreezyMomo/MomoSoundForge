@@ -121,3 +121,7 @@ Use **Add instrument part** to create a playable multi-sample part. Import a por
 Open `examples/instruments/flute/phrase.soundforge` for an editable five-note example using 18 real VSCO 2 CE flute recordings (CC0). The matching WAV, portable instrument, event JSON and conversion provenance are included. See [instrument format and integration guide](docs/instruments.md). The 10-second project window and 24 MiB decoded asset budget remain in force. This is a note-event editor, not a full MIDI sequencer or a general SFZ engine; pitch shifting uses ordinary resampling.
 
 Preview, add or open instruments from the sound library. Each is a regular instrument node with notes, rhythm, velocity and sample mappings in the inspector; grouping, post-processing and saving to the library use the normal workflow.
+
+## Video reference
+
+Open Video reference in the header and import a local video. Select a start and up to 10 seconds; sound time zero maps to the selected start. Frame steps use decoded presentation timestamps, including variable frame rates. Video shares the sound playhead, with synchronized and looping segment preview. Original audio defaults to muted and is excluded from exports. Named markers appear on the timeline and support clip snapping. Projects and drafts save alignment and markers; relink the original video after reopening (video bytes are not bundled). Videos must be playable by the browser and local decoder, up to 80 MB, 120 seconds and 4K. Indexing is cancellable and time-bounded. The panel supports docking and floating.

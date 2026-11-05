@@ -1,3 +1,4 @@
+import { VideoReferencePanel } from "./VideoReferencePanel";
 import { appendInstrumentNode } from "./instrumentNode";
 import { TreeTimeline } from "./TreeTimeline";
 import { SoundPolish } from "./SoundPolish";
@@ -1826,6 +1827,7 @@ export default function App() {
           </button>
         </div>
         <div className="header-right">
+<button className="secondary" onClick={() => manager.current?.show("video")}>{t("video.title")}</button>
           <div ref={menu} className="layout-menu" />
           <AppearancePreferences />
           <LanguagePreferences />
@@ -1853,6 +1855,19 @@ export default function App() {
         <Workbench
           contents={{
             library,
+            video: <VideoReferencePanel reference={history.project.videoReference} cue={cue}
+              playing={playing === "main"} ready={!!auditionResult} loop={loop} onLoop={setLoop}
+              onStop={stop} onSeek={updateCue}
+              onToggle={() => {
+                if (playing) { stop(); return; }
+                if (!auditionResult || !history.project.videoReference) return;
+                const r = history.project.videoReference;
+                const frames = Math.round((r.end - r.start) * auditionResult.sampleRate);
+                if (cue >= r.end - r.start) updateCue(0);
+                void play({ ...auditionResult, left: auditionResult.left.slice(0, frames), right: auditionResult.right.slice(0, frames) }, "main");
+              }}
+              onChange={(videoReference) => editRoot(p => ({ ...p, videoReference,
+                duration: videoReference ? Math.max(p.duration, videoReference.end - videoReference.start) : p.duration }))}/>,
             editor,
             inspector: (
               <Inspector

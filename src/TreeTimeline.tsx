@@ -203,6 +203,11 @@ export function TreeTimeline({
             />
             <span />
           </div>
+          {!!root.videoReference?.markers.length && <div className="tree-row"><span/><span/><div className="tree-marker-strip">
+            {root.videoReference.markers.filter(m => m.time <= duration).map(m => <button key={m.id}
+              style={{left:`${m.time / duration * 100}%`}} title={`${m.name} · ${m.time.toFixed(3)} s`}
+              onClick={() => { onSeekStart(); onSeek(m.time); onSeekEnd(m.time); }}>{m.name}</button>)}
+          </div><span/></div>}
           {rows.map(({ layer, address, offset, parent }) => {
             const key = nodeKey(address),
               group = layer.type === "composition";
@@ -354,6 +359,7 @@ export function TreeTimeline({
                       ? [
                           cue,
                           0,
+                          ...(root.videoReference?.markers.map(m => m.time) ?? []),
                           ...rows
                             .filter(
                               (r) =>

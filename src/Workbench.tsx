@@ -12,6 +12,7 @@ import { t, language } from "./i18n";
 import "@momo/workbench/dock.css";
 import "@momo/workbench/motion.css";
 const panels = [
+  { id: "video", title: "video.title", showEdge: "top", dockRatio: { y: 0.45 } },
   { id: "library", title: "panel.library", showEdge: "left" },
   { id: "editor", title: "panel.editor" },
   { id: "inspector", title: "panel.inspector", showEdge: "right" },

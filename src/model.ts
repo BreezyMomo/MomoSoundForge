@@ -1,3 +1,4 @@
+import { validateVideoReference, type VideoReference } from "./videoReference";
 import {
   validateScore,
   scoreAssets,
@@ -57,6 +58,7 @@ export type SampleAsset = {
   channels: string[];
 };
 export type Project = {
+  videoReference?: VideoReference;
   schema: "momo.soundforge/v2";
   name: string;
   controls?: Macro[];
@@ -323,6 +325,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
   }
   budget.stack.delete(raw);
   const parsed: Project = {
+    ...(r.videoReference !== undefined ? { videoReference: validateVideoReference(r.videoReference) } : {}),
     schema: "momo.soundforge/v2",
     name: r.name,
     seed: r.seed,
