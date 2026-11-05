@@ -298,7 +298,7 @@ export function SoundLibrary({
             {[...buckets].map(([key, choices]) => {
               const item = choices.find(e => e.key === toneChoices[key]) ?? (preferences.filter === "recent" ? choices[0] : preferredBuiltin(choices));
               const entry = item.saved;
-              const title = item.builtin?.kind === "instrument" ? builtinToneName(item.builtin) : item.name;
+              const title = item.builtin && (item.builtin.kind === "instrument" || item.builtin.recordingGroup) ? builtinToneName(item.builtin) : item.name;
               return <article className="saved-sound" key={key} aria-label={title}>
                 <div className="saved-sound-title">
                   <strong title={item.name}>{title}</strong>
@@ -307,9 +307,9 @@ export function SoundLibrary({
                     <button className="icon-button" disabled={!ready || busy} aria-label={t("library.listen", item.name)} aria-pressed={playback === item.key} aria-busy={pendingPlayback === item.key} onClick={() => { if (playback !== item.key) remember(item.key); if (entry) onPlay(item.id); else if (item.builtin) onBuiltinPlay(item.id); else onPresetPlay(item.id); }}>{pendingPlayback === item.key ? <LoaderCircle size={14} className="spin"/> : playback === item.key ? <Square size={14} fill="currentColor"/> : <Play size={14} fill="currentColor"/>}</button>
                   </div>}
                 </div>
-                {item.builtin?.kind === "instrument" && <label className="library-tone-choice">
-                  <span>{t(item.builtin.tone ? "library.range" : "library.take")}</span>
-                  <select aria-label={t(item.builtin.tone ? "library.range" : "library.take")} value={item.key} disabled={busy} onChange={event => {
+                {item.builtin && (item.builtin.kind === "instrument" || (item.builtin.recordingGroup && choices.length > 1)) && <label className="library-tone-choice">
+                  <span>{t(item.builtin.recordingGroup ? "library.recording" : item.builtin.tone ? "library.range" : "library.take")}</span>
+                  <select aria-label={t(item.builtin.recordingGroup ? "library.recording" : item.builtin.tone ? "library.range" : "library.take")} value={item.key} disabled={busy} onChange={event => {
                     if (playback === item.key) onBuiltinPlay(item.id);
                     setToneChoices(prev => ({ ...prev, [key]: event.target.value }));
                   }}>{choices.map(choice => <option key={choice.key} value={choice.key}>{builtinChoiceName(choice.builtin!)}</option>)}</select>

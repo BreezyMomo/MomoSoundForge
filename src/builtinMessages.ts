@@ -1,3 +1,4 @@
+import { GAME_SFX_MESSAGES } from "./gameSfxMessages";
 const instruments: Record<string, [string, string]> = {
   "violin-section": ["小提琴组", "Violin section"],
   "solo-violin": ["独奏小提琴", "Solo violin"],
@@ -68,6 +69,7 @@ const effects: Record<string, [string, string]> = {
   "spinner-01": ["指尖陀螺机构", "Fidget spinner"],
 };
 export const BUILTIN_MESSAGES: Record<string, [string, string]> = {
+  ...GAME_SFX_MESSAGES,
   ...Object.fromEntries(Object.entries(instruments).map(([id, words]) => [`builtin.instrument.${id}`, words])),
   ...Object.fromEntries(Object.entries(effects).map(([id, words]) => [`builtin.effect.${id}`, words])),
   "library.keys": ["钢琴与键盘", "Piano & keys"],

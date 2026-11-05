@@ -1,0 +1,21 @@
+[
+  { "id": "footstep-carpet", "name": ["地毯脚步", "Carpet footstep"], "category": "footsteps", "pack": "impact-sounds", "prefix": "footstep_carpet_", "indices": [0, 1, 3], "note": "Publisher files 002 and 004 are byte-identical duplicates of 001 and 003; omit them.", "keywords": "walk run step soft indoor 走路 跑步 室内 轻柔" },
+  { "id": "footstep-concrete", "name": ["水泥地脚步", "Concrete footstep"], "category": "footsteps", "pack": "impact-sounds", "prefix": "footstep_concrete_", "indices": [0, 1, 2, 3, 4], "keywords": "walk run step stone hard 走路 跑步 石地 硬地" },
+  { "id": "footstep-grass", "name": ["草地脚步", "Grass footstep"], "category": "footsteps", "pack": "impact-sounds", "prefix": "footstep_grass_", "indices": [0, 1, 2, 3, 4], "keywords": "walk run step outdoor 走路 跑步 户外 草丛" },
+  { "id": "footstep-snow", "name": ["雪地脚步", "Snow footstep"], "category": "footsteps", "pack": "impact-sounds", "prefix": "footstep_snow_", "indices": [0, 1, 2, 3, 4], "keywords": "walk run step crunch 走路 跑步 积雪 冰雪" },
+  { "id": "footstep-wood", "name": ["木地板脚步", "Wooden floor footstep"], "category": "footsteps", "pack": "impact-sounds", "prefix": "footstep_wood_", "indices": [0, 1, 2, 3, 4], "keywords": "walk run step floor 走路 跑步 地板 室内" },
+  { "id": "punch-medium", "name": ["拳击命中", "Punch impact"], "category": "impacts", "pack": "impact-sounds", "prefix": "impactPunch_medium_", "indices": [0, 1, 2, 3, 4], "keywords": "fight hit attack melee combat 战斗 攻击 拳脚 肉搏" },
+  { "id": "punch-heavy", "name": ["重拳命中", "Heavy punch impact"], "category": "impacts", "pack": "impact-sounds", "prefix": "impactPunch_heavy_", "indices": [0, 1, 2, 3, 4], "keywords": "fight hit attack melee combat 战斗 攻击 拳脚 肉搏" },
+  { "id": "body-thud", "name": ["身体闷响", "Heavy body thud"], "category": "impacts", "pack": "impact-sounds", "prefix": "impactSoft_heavy_", "indices": [0, 1, 2, 3, 4], "keywords": "land fall hit soft body 落地 跌落 身体 软质" },
+  { "id": "wood-heavy", "name": ["木材重击", "Heavy wood impact"], "category": "impacts", "pack": "impact-sounds", "prefix": "impactWood_heavy_", "indices": [0, 1, 2, 3, 4], "keywords": "hit attack break box crate 木箱 木板 攻击 碰撞" },
+  { "id": "metal-heavy", "name": ["金属重击", "Heavy metal impact"], "category": "impacts", "pack": "impact-sounds", "prefix": "impactMetal_heavy_", "indices": [0, 1, 2], "keywords": "hit attack clang armor sword 金属 盔甲 刀剑 碰撞" },
+  { "id": "glass-break", "name": ["玻璃碎裂", "Glass shatter"], "category": "impacts", "pack": "impact-sounds", "prefix": "impactGlass_heavy_", "indices": [0, 1, 2], "keywords": "break hit shatter window 破坏 破碎 窗户" },
+  { "id": "door-open", "name": ["开门", "Door opening"], "category": "mechanisms", "pack": "rpg-audio", "files": ["doorOpen_1.ogg", "doorOpen_2.ogg"], "keywords": "door open entrance 门 打开 入口" },
+  { "id": "door-close", "name": ["关门", "Door closing"], "category": "mechanisms", "pack": "rpg-audio", "files": ["doorClose_1.ogg", "doorClose_2.ogg", "doorClose_3.ogg", "doorClose_4.ogg"], "keywords": "door shut slam 门 关闭 砰" },
+  { "id": "creak", "name": ["吱呀摩擦", "Creak"], "category": "mechanisms", "pack": "rpg-audio", "files": ["creak1.ogg", "creak2.ogg", "creak3.ogg"], "keywords": "door hinge wood rusty 门铰链 木头 老旧 摩擦" },
+  { "id": "latch", "name": ["金属门闩", "Metal latch"], "category": "mechanisms", "pack": "rpg-audio", "files": ["metalLatch.ogg"], "keywords": "door lock unlock mechanism 锁 解锁 机关 门闩" },
+  { "id": "switch", "name": ["金属咔哒", "Metal click"], "category": "mechanisms", "pack": "rpg-audio", "files": ["metalClick.ogg"], "keywords": "switch click lever button mechanism 开关 拉杆 按钮 机关" },
+  { "id": "draw-knife", "name": ["刀刃出鞘", "Knife draw"], "category": "motion", "pack": "rpg-audio", "files": ["drawKnife1.ogg", "drawKnife2.ogg", "drawKnife3.ogg"], "keywords": "weapon draw equip blade 武器 装备 拔刀 出鞘" },
+  { "id": "knife-swish", "name": ["刀刃挥动", "Knife swish"], "category": "motion", "pack": "rpg-audio", "files": ["knifeSlice.ogg", "knifeSlice2.ogg"], "keywords": "weapon slice swing attack blade 武器 刀剑 挥砍 攻击" },
+  { "id": "chop", "name": ["劈砍", "Chop"], "category": "impacts", "pack": "rpg-audio", "files": ["chop.ogg"], "keywords": "weapon chop axe attack 劈砍 斧头 攻击" }
+]

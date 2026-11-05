@@ -24,16 +24,19 @@ export type BuiltinSound = {
   keyHigh?: number;
   maxSourceSeconds?: number;
   recordingIds?: string[];
+  recordingGroup?: string;
+  recording?: number;
 };
 export const BUILTIN_SOUNDS = catalog.sounds as BuiltinSound[];
 type Translate = (key: string, ...values: unknown[]) => string;
 
 export const midiLabel = (midi: number) => `${["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"][midi % 12]}${Math.floor(midi / 12) - 1}`;
-export const builtinToneKey = (sound: BuiltinSound) => sound.kind === "instrument" ? `${sound.nameKey}:${sound.articulation}` : sound.id;
+export const builtinToneKey = (sound: BuiltinSound) => sound.recordingGroup ?? (sound.kind === "instrument" ? `${sound.nameKey}:${sound.articulation}` : sound.id);
 export function builtinToneName(sound: BuiltinSound, translate: Translate = t) {
   return sound.kind === "instrument" ? `${translate(sound.nameKey)} · ${translate(`builtin.articulation.${sound.articulation}`)}` : translate(sound.nameKey);
 }
 export function builtinChoiceName(sound: BuiltinSound, translate: Translate = t) {
+  if (sound.recordingGroup) return translate("builtin.recordingChoice", sound.recording);
   return sound.tone ? `${midiLabel(sound.keyLow!)}–${midiLabel(sound.keyHigh!)}`
     : translate("builtin.takeChoice", sound.rootNote ?? translate("builtin.unpitched"), sound.velocity, sound.variant);
 }
@@ -43,6 +46,7 @@ export function preferredBuiltin<T extends { builtin?: BuiltinSound }>(items: T[
 
 export function builtinSoundName(sound: BuiltinSound, translate: Translate = t, short = false) {
   const name = translate(sound.nameKey);
+  if (sound.recordingGroup) return short ? name : translate("builtin.recordingName", name, sound.recording);
   if (sound.kind !== "instrument") return name;
   if (sound.tone) return `${builtinToneName(sound, translate)} · ${builtinChoiceName(sound, translate)}`;
   if (short) return sound.rootNote ? translate("builtin.instrumentShort", name, sound.rootNote) : name;
@@ -136,6 +140,8 @@ export function createBuiltinLoader(
       const project = parseProject(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(json)));
       if (name) {
         project.name = name.slice(0, 120);
+        for (const layer of project.layers) if (layer.name.startsWith("builtin.game")) layer.name = t(layer.name);
+        for (const control of project.controls ?? []) if (control.name.startsWith("builtin.gameControl.")) control.name = t(control.name);
         if (sound.kind === "instrument") for (const layer of project.layers) {
           layer.name = project.name;
           for (const instrument of layer.score?.instruments ?? []) instrument.name = t(sound.nameKey);
