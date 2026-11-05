@@ -4,7 +4,9 @@ import {
   createMessageCatalog,
 } from "@momo/workbench/i18n";
 import { WORKBENCH_CATALOGS } from "@momo/workbench/locales";
+import { BUILTIN_MESSAGES } from "./builtinMessages";
 const words: Record<string, [string, string]> = {
+  ...BUILTIN_MESSAGES,
   "export.format": ["文件格式", "File format"],
   "export.format.wav": ["WAV · 无损 PCM16", "WAV · Lossless PCM16"],
   "export.format.ogg": ["OGG · Vorbis", "OGG · Vorbis"],

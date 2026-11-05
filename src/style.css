@@ -1748,6 +1748,11 @@ span {
     transition-duration: 0.001ms !important;
   }
 }
+.library-category-select { display: flex; align-items: center; gap: 8px; }
+.library-category-select > span { flex: none; color: var(--ui-subtle); font-size: 12px; }
+.library-category-select > select { flex: 1; min-width: 0; width: 100%; }
+.library-builtin-count { margin: 0; color: var(--ui-subtle); font-size: 12px; }
+.sound-card-tools .spin { animation: preview-spin .8s linear infinite; }
 .library-toolbar { display: flex; align-items: center; gap: 8px; }
 .library-toolbar .search-field { flex: 1; min-width: 0; margin: 0; }
 .library-display { position: relative; flex-shrink: 0; font-size: 12px; }

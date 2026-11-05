@@ -37,6 +37,7 @@ import { Waveform } from "./Waveform";
 import { TimelineClip } from "./TimelineClip";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { fromPreset } from "./presets";
+import { BUILTIN_SOUNDS, builtinSoundName, loadBuiltinSound } from "./builtinLibrary";
 import {
   SAMPLE_RATE,
   MAX_ASSET_BYTES,
@@ -84,6 +85,11 @@ type Variation = { project: Project; result: RenderResult };
 const defaultProject = () =>
   fromPreset("ice", t("preset.ice"), (key) => t(`layer.${key}`));
 const db = (v: number) => (v > 0 ? (20 * Math.log10(v)).toFixed(1) : "−∞");
+function readBuiltinSound(id: string) {
+  const sound = BUILTIN_SOUNDS.find(entry => entry.id === id);
+  if (!sound) throw Error("library.builtinLoadError");
+  return loadBuiltinSound(id, builtinSoundName(sound));
+}
 export default function App() {
   const lang = useLanguage();
   const [librarySaveHost, setLibrarySaveHost] = useState<HTMLDivElement | null>(
@@ -457,9 +463,10 @@ export default function App() {
         setPlaying(id);
         setProgress(offset / duration);
         if (id === "main") updateCue(offset);
-      } catch {
+      } catch (error) {
         if (token === playToken.current)
-          flash(phase === "render" ? "error.render" : "error.audio");
+          flash(error instanceof Error && error.message === "library.builtinLoadError"
+            ? error.message : phase === "render" ? "error.render" : "error.audio");
       } finally {
         if (token === playToken.current) {
           pendingPlaybackRef.current = null;
@@ -610,6 +617,24 @@ export default function App() {
       child = await readSavedSound(id);
     if (target !== current.current || epoch !== scopeEpoch.current)
       throw Error("error.scopeChanged");
+    insertSound(child);
+  }
+  async function openBuiltinSound(id: string) {
+    const target = rootCurrent.current, epoch = scopeEpoch.current;
+    const next = await readBuiltinSound(id);
+    if (target !== rootCurrent.current || epoch !== scopeEpoch.current) throw Error("error.scopeChanged");
+    editRoot(() => next);
+    scopeEpoch.current++;
+    setEditPath([]);
+    setSelected(next.layers[0]?.id ?? "");
+    updateCue(0);
+    setVariations([]);
+    manager.current?.show("editor");
+  }
+  async function insertBuiltinSound(id: string) {
+    const target = current.current, epoch = scopeEpoch.current;
+    const child = await readBuiltinSound(id);
+    if (target !== current.current || epoch !== scopeEpoch.current) throw Error("error.scopeChanged");
     insertSound(child);
   }
   function insertSound(child: Project) {
@@ -994,7 +1019,13 @@ export default function App() {
       project={project}
       ready={ready && !ioBusy}
       playback={playing ?? pendingPlayback}
+      pendingPlayback={pendingPlayback}
       onPreset={setPreset}
+      onBuiltinOpen={openBuiltinSound}
+      onBuiltinInsert={insertBuiltinSound}
+      onBuiltinPlay={(id) =>
+        void play(async () => renderer.current!.render(await readBuiltinSound(id)), `builtin-${id}`)
+      }
       saveHost={librarySaveHost}
       onPresetInsert={(id) =>
         insertSound(
