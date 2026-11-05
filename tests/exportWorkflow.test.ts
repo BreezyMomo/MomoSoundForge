@@ -1,3 +1,4 @@
+import { renderExport } from "../src/exportPipeline";
 import { describe, expect, it } from "vitest";
 import { makeProject, makeLayer, type Project } from "../src/model";
 import { renderProject } from "../src/engine";
@@ -8,7 +9,6 @@ import {
   exportWav,
   parseExportSettings,
   prepareExport,
-  renderExport,
 } from "../src/exportAudio";
 
 const project = (): Project => ({

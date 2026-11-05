@@ -6,6 +6,7 @@ import path from "node:path";
 import { instrumentJobs, instrumentProject, recordingId } from "./builtin-instruments.mjs";
 import { legacyInstrumentLevels, standaloneBoostDb } from "./builtin-levels.mjs";
 import { levels } from "./audit-builtin-library.mjs";
+import { gameSfxJobs, gameSfxProject } from "./builtin-game-sfx.mjs";
 
 const root = process.cwd();
 const output = path.join(root, "public/sound-library");
@@ -16,13 +17,16 @@ const readJson = async (name) => JSON.parse(await readFile(path.join(root, name)
 const fxRoot = "samples/cc0-starter-20261104";
 const orchestraRoot = "samples/orchestra-basics-20261104";
 const expandedRoot = "samples/orchestra-expanded-20261105";
+const gameRoot = "samples/game-sfx-starter-20261105";
 const fx = await readJson(`${fxRoot}/manifest.json`);
 const orchestra = await readJson(`${orchestraRoot}/manifest.json`);
 const expanded = await readJson(`${expandedRoot}/manifest.json`);
+const game = await readJson(`${gameRoot}/manifest.json`);
 const quality = await readJson("tools/builtin-quality.json");
 const excludedStandalone = new Set(quality.excludedStandaloneSamples.map(entry => entry.id));
 const fxExamples = await readJson(`${fxRoot}/examples/recipes.json`);
 const jobs = [];
+jobs.push(...gameSfxJobs(game, gameRoot));
 for (const sample of fx.samples) jobs.push({
   id: `fx-${sample.id}`, kind: "sample", nameKey: `builtin.effect.${sample.id.slice(3)}`,
   category: sample.category === "details" ? "foley" : sample.category,
@@ -62,10 +66,11 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
+  "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
   `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   `${expandedRoot}/manifest.json`,
+  `${gameRoot}/manifest.json`, ...game.sources.map(s => `${gameRoot}/${s.includedLicenseFile}`),
   ...jobs.flatMap((job) => job.sourceFiles ?? [job.source]),
 ])];
 const fingerprint = hash(JSON.stringify(await Promise.all(sourceFiles.map(async (name) => {
@@ -76,7 +81,7 @@ try {
   if (!process.argv.includes("--force") && (await readFile(stampFile, "utf8")) === fingerprint) {
     const previous = await readJson("src/data/builtin-catalog.json");
     await Promise.all(previous.sounds.map((sound) => stat(path.join(output, sound.file))));
-    await Promise.all(["vsco-cc0.txt", "kenney-cc0.txt", "sources.json"].map((file) => stat(path.join(output, "licenses", file))));
+    await Promise.all(["vsco-cc0.txt", "kenney-cc0.txt", "game-impact-sounds.txt", "game-rpg-audio.txt", "sources.json"].map((file) => stat(path.join(output, "licenses", file))));
     console.log(`Built-in library ready: ${previous.sounds.length} sounds.`);
     process.exit(0);
   }
@@ -92,7 +97,9 @@ try {
   const sounds = [];
   for (const job of jobs) {
     let source;
-    if (job.tone) {
+    if (job.gameSfx) {
+      source = await gameSfxProject(job, root, gameRoot, { makeLayer, encodeSamples });
+    } else if (job.tone) {
       source = await instrumentProject(job, root, { makeLayer, encodeSamples });
       let raw = renderProject(parseProject(source));
       // A naturally weak low-register note need not be the first sound a novice
@@ -141,6 +148,14 @@ try {
     } else source = JSON.parse(await readFile(path.join(root, job.source), "utf8"));
     let project = parseProject(projectForSave(source));
     let audio = renderProject(project);
+    if (job.gameSfx) {
+      const measured = levels([audio.left, audio.right], audio.sampleRate);
+      if (measured.status === "silent" || audio.sourcePeak >= 1) throw Error(`Review game SFX default: ${job.id}`);
+      const gainDb = Math.min(-20 - measured.activeRmsDb, -6 - 20 * Math.log10(audio.sourcePeak));
+      project.master = Math.min(1.5, project.master * 10 ** (gainDb / 20));
+      project = parseProject(projectForSave(project));
+      audio = renderProject(project);
+    }
     if (job.kind === "instrument" && !job.tone) {
       const boostDb = standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate));
       if (boostDb > 0) {
@@ -173,8 +188,8 @@ try {
     // so fetch would receive decoded JSON. Keep the explicit gzip envelope binary.
     const digest = hash(compressed), file = `${digest}.soundforge.bin`;
     await writeFile(path.join(output, file), compressed);
-    const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds } = job;
-    sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds,
+    const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording } = job;
+    sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording,
       duration: project.duration, file, compressedBytes: compressed.length, projectBytes: json.length, sha256: digest, waveform });
   }
   const catalog = JSON.stringify({ schema: "momo.builtin-library/v1", sounds }, null, 2) + "\n";
@@ -184,9 +199,11 @@ try {
   await mkdir(path.join(output, "licenses"), { recursive: true });
   await copyFile(path.join(root, `${orchestraRoot}/licenses/VSCO-LICENSE`), path.join(output, "licenses/vsco-cc0.txt"));
   await copyFile(path.join(root, `${fxRoot}/licenses/kenney-impact-License.txt`), path.join(output, "licenses/kenney-cc0.txt"));
+  for (const source of game.sources) await copyFile(path.join(root, gameRoot, source.includedLicenseFile), path.join(output, `licenses/game-${source.id.replace("kenney-", "")}.txt`));
   await writeFile(path.join(output, "licenses/sources.json"), JSON.stringify({
     license: "CC0-1.0", sources: [
       ...fx.sources,
+      ...game.sources.map(source => ({ ...source, includedLicenseFile: `licenses/game-${source.id.replace("kenney-", "")}.txt` })),
       { author: "Versilian Studios / Sam Gossner; Simon Dalzell; Elan Hickler / Soundemote", sourceUrl: orchestra.source,
         sourceCommit: orchestra.sourceCommit, license: orchestra.license, licenseUrl: orchestra.licenseUrl },
     ],

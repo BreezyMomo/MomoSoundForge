@@ -1,6 +1,12 @@
 import { NotesWorkspace } from "./NotesWorkspace";
 import { Button } from "@momo/workbench/react";
 import { HelpDialog } from "./HelpDialog";
+import { SupportDialog } from "./SupportDialog";
+import { AITools } from './AITools';
+import { useAIEditor } from './useAIEditor';
+import { generateVariants } from './aiCapabilities';
+import { renderExport } from './exportPipeline';
+import { flushSync } from 'react-dom';
 import { VideoReferencePanel } from "./VideoReferencePanel";
 import { appendInstrumentNode } from "./instrumentNode";
 import { TreeTimeline } from "./TreeTimeline";
@@ -77,7 +83,6 @@ import {
   parseProject,
   projectForSave,
   uid,
-  varyProject,
   assertProjectLimits,
   makeComposition,
   resolveProjectPath,
@@ -94,7 +99,6 @@ import { reconcileAdvanced, boundControl, resolveControls } from "./advanced";
 import { boundedSelection } from "./timeline";
 import {
   readExportSettings,
-  renderExport,
   type ExportResult,
   audioResult,
   makeLoop,
@@ -362,6 +366,21 @@ export default function App() {
         : h,
     );
   }, [stop]);
+  const ai = useAIEditor({
+    project: history.project, ready, exportSettings,
+    publishVariants: (base, items, path) => {
+      stop(); scopeEpoch.current++;
+      setEditPath(path); setSelection([]); setSelected('');
+      setVariations(items); setVariationBase(base);
+      manager.current?.show('variants');
+    },
+    commit: (expected, next) => {
+      if (rootCurrent.current !== expected) throw Error('ai.stale');
+      stop(); editGroup.current = { key: '', time: 0 };
+      flushSync(() => setHistory(h => ({ past: [...h.past, h.project].slice(-50), project: next, future: [] })));
+    },
+    undo: () => flushSync(undo), redo: () => flushSync(redo),
+  });
   const save = useCallback(() => {
     download(
       JSON.stringify(projectForSave(rootCurrent.current)),
@@ -1230,25 +1249,21 @@ export default function App() {
   }
   async function generate() {
     if (!renderer.current || busy) return;
+    ai.invalidateVariants();
     stop();
     setBusy(true);
     const base = current.current,
       items: Variation[] = [];
     const epoch = scopeEpoch.current;
     try {
-      for (let i = 0; i < 5; i++) {
-        const next = varyProject(
-          base,
-          (base.seed + 1 + i * 7919) >>> 0,
-          amount,
-        );
-        next.name = `${base.name.slice(0, 110)} ${String(i + 1).padStart(2, "0")}`;
+      for (const next of generateVariants(base, { amount })) {
         items.push({
           project: next,
           result: await renderer.current.render(next),
         });
       }
       if (alive.current && epoch === scopeEpoch.current) {
+        ai.invalidateVariants();
         setVariations(items);
         setVariationBase(base);
       }
@@ -1999,6 +2014,15 @@ export default function App() {
             <Save size={16} />
             <span>{t("file.save")}</span>
           </button>
+          <button
+            className="secondary export-button"
+            disabled={!result || ioBusy}
+            onClick={() => setExportOpen(true)}
+            aria-haspopup="dialog"
+          >
+            <Download size={16} />
+            <span>{t("export.open")}</span>
+          </button>
         </div>
         <div className="header-right">
           <Button
@@ -2015,16 +2039,10 @@ export default function App() {
           <div ref={menu} className="layout-menu" />
           <AppearancePreferences />
           <LanguagePreferences />
+          <AITools project={history.project} {...ai} />
+          <SupportDialog />
           <HelpDialog />
-          <button
-            className="secondary export-button"
-            disabled={!result || ioBusy}
-            onClick={() => setExportOpen(true)}
-            aria-haspopup="dialog"
-          >
-            <Download size={16} />
-            <span>{t("export.open")}</span>
-          </button>
+
         </div>
       </header>
       <main className={!ready ? "restoring" : ""}>

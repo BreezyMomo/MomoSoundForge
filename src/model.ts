@@ -1,4 +1,5 @@
 import { validateVideoReference, type VideoReference } from "./videoReference";
+import { validateSampleSource, type SampleSource } from './sampleSource';
 import {
   validateScore,
   scoreAssets,
@@ -57,6 +58,7 @@ export type Layer = {
   locked: boolean;
 };
 export type SampleAsset = {
+  source?: SampleSource;
   id: string;
   name: string;
   sampleRate: number;
@@ -230,6 +232,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     }
     if (lengths.some((l) => l !== lengths[0])) return fail();
     assets[id] = {
+      ...(a.source !== undefined ? { source: validateSampleSource(a.source) } : {}),
       id,
       name: a.name,
       sampleRate: a.sampleRate,
@@ -359,20 +362,18 @@ export function varyProject(
 ): Project {
   const random = rng(seed),
     jitter = (value: number, scale: number) =>
-      value * Math.pow(2, (random() - 0.5) * amount * scale);
+      value * Math.pow(2, (random() - 0.5) * amount * scale),
+    // Instrument round-robin selection uses project.seed ^ layer.noiseSeed.
+    // Compensate for the new project seed when this voice must stay identical.
+    preservedSeed = (l: Layer) => l.type === "instrument"
+      ? (l.noiseSeed ^ project.seed ^ seed) >>> 0
+      : l.noiseSeed;
   return {
     ...project,
     seed: seed >>> 0,
     layers: project.layers.map((l) =>
       l.locked || amount === 0
-        ? {
-            ...l,
-            // Instruments choose recordings using project.seed ^ noiseSeed.
-            // Preserve that effective seed when the sound must stay unchanged.
-            ...(l.type === "instrument"
-              ? { noiseSeed: (l.noiseSeed ^ project.seed ^ seed) >>> 0 }
-              : {}),
-          }
+        ? { ...l, noiseSeed: preservedSeed(l) }
         : l.type === "composition" && l.project
           ? (() => {
               const child = varyProject(

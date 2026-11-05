@@ -4,10 +4,10 @@ import type { Layer } from "./model";
 import {
   DEFAULT_EFFECTS,
   type EffectParameter,
-  type EffectGroup,
   type Effects,
 } from "./advanced";
 import "./sound-polish.css";
+import { POLISH_GROUPS, POLISH_RANGES, polishAmount, resetPolish, type PolishKey } from './polishControls';
 
 export function SoundPolish({
   node,
@@ -25,25 +25,7 @@ export function SoundPolish({
   const effects = node.effects ?? DEFAULT_EFFECTS;
   const change = (key: EffectParameter, value: number) =>
     onChange({ ...effects, [key]: value });
-  const groups: { id: string; flag: EffectGroup; keys: EffectParameter[] }[] = [
-    { id: "tone", flag: "toneEnabled", keys: ["low", "mid", "high"] },
-    {
-      id: "delay",
-      flag: "delayEnabled",
-      keys: ["delayTime", "delayFeedback", "delayWet"],
-    },
-    { id: "space", flag: "spaceEnabled", keys: ["reverb"] },
-  ];
-  const ranges: Record<EffectParameter, [number, number, number, string]> = {
-    low: [-24, 24, 0.1, "dB"],
-    mid: [-24, 24, 0.1, "dB"],
-    high: [-24, 24, 0.1, "dB"],
-    delayTime: [0.01, 1, 0.001, "s"],
-    delayFeedback: [0, 0.85, 0.01, ""],
-    delayWet: [0, 1, 0.01, ""],
-    reverb: [0, 1, 0.01, ""],
-    ceiling: [-12, 0, 0.1, "dBFS"],
-  };
+  const groups = POLISH_GROUPS, ranges = POLISH_RANGES;
   return (
     <details className="pro-section sound-polish" open>
       <summary>{t("tree.post")}</summary>
@@ -99,11 +81,7 @@ export function SoundPolish({
                   className="secondary"
                   aria-label={t("polish.resetGroup", t(`polish.${group.id}`))}
                   onClick={() => {
-                    const next = { ...effects, [group.flag]: true };
-                    group.keys.forEach((key) => {
-                      next[key] = DEFAULT_EFFECTS[key];
-                    });
-                    onChange(next);
+                    onChange(resetPolish(effects, group.id));
                   }}
                 >
                   {t("polish.reset")}
@@ -112,12 +90,7 @@ export function SoundPolish({
               <p className="field-help">{t(`polish.${group.id}Help`)}</p>
               {group.keys.map((key) => {
                 const [min, max, step] = ranges[key];
-                const tone = group.id === "tone";
-                const amount = Math.round(
-                  tone
-                    ? (effects[key] / max) * 100
-                    : ((effects[key] - min) / (max - min)) * 100,
-                );
+                const amount = Math.round(polishAmount(key as PolishKey, effects[key]));
                 const display =
                   key === "delayTime"
                     ? `${Number(effects[key].toFixed(3))} s`
