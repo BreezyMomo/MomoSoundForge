@@ -1,7 +1,7 @@
 import { uid, type Project } from "./model";
 
 // A library instrument is a leaf node, with portable, independently owned assets.
-export function appendInstrumentNode(parent: Project, child: Project, id = uid()): Project {
+export function appendInstrumentNode(parent: Project, child: Project, id: string = uid()): Project {
   const layer = structuredClone(child.layers[0]);
   if (child.layers.length !== 1 || layer.type !== "instrument" || !layer.score)
     throw Error("error.project");
