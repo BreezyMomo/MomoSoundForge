@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { playbackPosition, timeAtPointer } from "../src/playback";
+import { adjustLoopBoundary, playbackPosition, timeAtPointer } from "../src/playback";
 describe("playback position and seeking", () => {
+  it("constrains loop edges without crossing and keeps millisecond precision", () => {
+    const region = { start: 2, end: 5 };
+    expect(adjustLoopBoundary(region, "start", -1, 10)).toEqual({ start: 0, end: 5 });
+    expect(adjustLoopBoundary(region, "start", 9, 10)).toEqual({ start: 4.99, end: 5 });
+    expect(adjustLoopBoundary(region, "end", 0, 10)).toEqual({ start: 2, end: 2.01 });
+    expect(adjustLoopBoundary(region, "end", 15, 10)).toEqual({ start: 2, end: 10 });
+    expect(adjustLoopBoundary(region, "end", 6.1236, 10).end).toBe(6.124);
+    expect(region).toEqual({ start: 2, end: 5 });
+  });
   it("tracks playback from the selected offset and clamps at the end", () => {
     expect(playbackPosition(0.2, 0.3, 1, false)).toBe(0.5);
     expect(playbackPosition(2, 0.3, 1, false)).toBe(1);

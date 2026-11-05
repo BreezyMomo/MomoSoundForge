@@ -764,6 +764,25 @@ span {
   touch-action: none;
   user-select: none;
 }
+.timeline-shell { position: relative; min-width: 0; }
+.loop-boundary {
+  position: absolute; top: 0; bottom: 13px; width: 14px; padding: 0;
+  transform: translateX(-50%); border: 0; border-radius: 0; background: transparent;
+  color: var(--wave); cursor: ew-resize; touch-action: none; z-index: 2;
+}
+.loop-boundary::before { content: ""; position: absolute; top: 0; bottom: 0; left: 6px; width: 2px; background: currentColor; }
+.loop-boundary i { position: absolute; top: 0; left: 3px; width: 8px; height: 16px; border-radius: 2px; background: currentColor; }
+.loop-boundary:hover, .loop-boundary:focus-visible { color: var(--ui-text); background: transparent; }
+.loop-boundary:focus-visible { outline: 1px solid var(--ui-text); outline-offset: 2px; }
+.waveform-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.waveform-tools .range-truncation { font-size: 12px; line-height: 1.5; }
+.waveform-tool-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.loop-settings { display: flex; flex-direction: column; gap: 12px; }
+.loop-settings > label { display: flex; align-items: center; gap: 8px; }
+.loop-settings .pro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
+.loop-settings .button-group { flex-wrap: wrap; gap: 6px; }
+.loop-seam-settings > summary { cursor: pointer; margin-bottom: 8px; }
+.loop-seam-settings .button-group, .loop-seam-settings .field-help { margin-top: 10px; }
 .mix-timeline:focus-visible {
   outline: 1px solid var(--ui-line-strong);
   outline-offset: 3px;
@@ -1878,8 +1897,9 @@ span {
 .selection-tools > summary { border:1px solid var(--ui-line-strong); border-radius:4px; padding:7px 10px; cursor:pointer; }
 .selection-tools > div { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 0; }
 .selection-tools[open] { flex-basis:100%; }
-.loop-region-overlay { position:absolute; top:0; bottom:0; border:1px dashed var(--wave); background:color-mix(in srgb,var(--wave) 7%,transparent); pointer-events:none; }
-.loop-region-overlay span { position:absolute; top:3px; right:4px; font-size:10px; color:var(--wave); }
+.loop-region-overlay { position:absolute; top:0; bottom:0; border:1px dashed var(--wave); background:color-mix(in srgb,var(--wave) 7%,transparent); pointer-events:none; container-type:inline-size; overflow:hidden; }
+.loop-region-overlay span { position:absolute; top:3px; right:4px; font-size:10px; color:var(--wave); white-space:nowrap; }
+@container (max-width: 72px) { .loop-region-overlay span { display:none; } }
 .layer-time-ruler .loop-region-overlay span { display:none; }
 .export-dialog { width:min(720px,calc(100vw - 32px)); max-height:calc(100dvh - 48px); overflow:auto; padding:24px; color:var(--ui-text); background:var(--ui-panel); border:1px solid var(--ui-line-strong); border-radius:8px; }
 .export-dialog::backdrop { background:#0009; }

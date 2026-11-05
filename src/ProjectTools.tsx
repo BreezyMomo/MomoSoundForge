@@ -1,4 +1,4 @@
-import { Range } from "./Inspector";
+import { Range, TimeInput } from "./Inspector";
 import { t } from "./i18n";
 import type { Project } from "./model";
 export function ProjectTools({
@@ -31,9 +31,7 @@ export function ProjectTools({
       },
     });
   return (
-    <>
-      <details className="pro-section">
-        <summary>{t("pro.loop")}</summary>
+      <div className="loop-settings">
         <label>
           <input
             type="checkbox"
@@ -56,33 +54,20 @@ export function ProjectTools({
         {region && (
           <>
             <div className="pro-grid">
-              <Range
+              <label className="range-field"><span>{t("pro.loopStart")} · s</span><TimeInput
                 label={t("pro.loopStart")}
                 value={region.start}
                 min={0}
                 max={region.end - 0.01}
-                step={0.001}
-                unit="s"
                 onChange={(v) => updateRegion(v, region.end)}
-              />
-              <Range
+              /></label>
+              <label className="range-field"><span>{t("pro.loopEnd")} · s</span><TimeInput
                 label={t("pro.loopEnd")}
                 value={region.end}
                 min={region.start + 0.01}
                 max={project.duration}
-                step={0.001}
-                unit="s"
                 onChange={(v) => updateRegion(region.start, v)}
-              />
-              <Range
-                label={t("pro.crossfade")}
-                value={region.crossfade}
-                min={0}
-                max={(region.end - region.start) / 2}
-                step={0.001}
-                unit="s"
-                onChange={(v) => updateRegion(region.start, region.end, v)}
-              />
+              /></label>
             </div>
             <div className="button-group">
               <button
@@ -99,6 +84,14 @@ export function ProjectTools({
               >
                 {t("pro.cueEnd")}
               </button>
+            </div>
+            <p className="field-help">{t("pro.dragLoopHelp")}</p>
+            <details className="loop-seam-settings">
+              <summary>{t("pro.seamSettings")}</summary>
+              <Range label={t("pro.crossfade")} value={region.crossfade} min={0}
+                max={(region.end - region.start) / 2} step={0.001} unit="s"
+                onChange={v => updateRegion(region.start, region.end, v)} />
+              <div className="button-group">
               <button className="secondary" disabled={busy} onClick={onLoop}>
                 {t("pro.previewLoop")}
               </button>
@@ -112,9 +105,9 @@ export function ProjectTools({
                 (region.end - region.start - region.crossfade).toFixed(3),
               )}
             </p>
+            </details>
           </>
         )}
-      </details>
-    </>
+      </div>
   );
 }

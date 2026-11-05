@@ -63,7 +63,7 @@ import { AppearancePreferences } from "./AppearancePreferences";
 import { LanguagePreferences } from "./LanguagePreferences";
 import { Workbench } from "./Workbench";
 import { SoundLibrary } from "./SoundLibrary";
-import { Inspector, Range, CommitText, TimeInput } from "./Inspector";
+import { Inspector, Range, CommitText } from "./Inspector";
 import { Waveform } from "./Waveform";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { fromPreset } from "./presets";
@@ -92,7 +92,7 @@ import {
   type RenderResult,
 } from "./model";
 import { MacroEditor, exposeParameter } from "./AuthoringTools";
-import { ProjectTools } from "./ProjectTools";
+import { WaveformTools } from "./WaveformTools";
 import { encodeAudio, AUDIO_MIME } from "./encodeAudio";
 import { ExportDialog } from "./ExportDialog";
 import { reconcileAdvanced, boundControl, resolveControls } from "./advanced";
@@ -1542,7 +1542,10 @@ export default function App() {
           left={displayResult?.left}
           right={displayResult?.right}
           disabled={!auditionResult}
-          version={project}
+          version={history.project}
+          onLoopBegin={stop}
+          onLoopChange={loopRegion => editRoot(p => ({ ...p, loopRegion: { ...p.loopRegion!, ...loopRegion,
+            crossfade: Math.min(p.loopRegion?.crossfade ?? 0, (loopRegion.end - loopRegion.start) / 2) } }))}
           onSeekStart={beginSeek}
           onSeek={updateCue}
           onSeekEnd={endSeek}
@@ -1560,6 +1563,9 @@ export default function App() {
                 : t(auditionResult ? "editor.ready" : "editor.rendering")}
           </span>
         </div>
+        <WaveformTools project={history.project} cue={cue} ready={!!result} busy={!result || ioBusy}
+          truncated={truncated} extendedDuration={extendedDuration} tailLimited={!!result?.tailLimited}
+          onChange={next => editRoot(() => next)} onLoop={() => auditionLoop()} onSeam={() => auditionLoop(true)} />
       </div>
       <div className="layers-heading">
         <h2>{t("tree.title")}</h2>
@@ -1820,30 +1826,6 @@ export default function App() {
         }}
         onBegin={stop}
       />
-      <div className="master-controls">
-        <label className="range-field">
-          <span>{t("editor.duration")} · s</span>
-          <TimeInput
-            label={t("editor.duration")}
-            value={history.project.duration}
-            min={0.1}
-            onChange={(v) => editRoot((p) => ({ ...p, duration: v }))}
-          />
-        </label>
-        <button
-          className="secondary"
-          disabled={!truncated}
-          title={t("editor.extendHelp")}
-          onClick={() => editRoot(p => ({ ...p, duration: Math.max(p.duration, extendedDuration) }))}
-        >
-          {truncated ? t("editor.extendToSeconds", extendedDuration.toFixed(3)) : t("editor.extendToContent")}
-        </button>
-        <span className={truncated ? "range-truncation" : "field-help"} role="status">
-          {!result ? t("tree.waveUpdating") : truncated
-            ? t("editor.outsideRange", history.project.duration.toFixed(3), (extendedDuration - history.project.duration).toFixed(3))
-            : t("editor.rangeComplete")}
-        </span>
-      </div>
       <p className="field-help">
         {t("tree.tailHelp")}
         {result?.tailLimited && ` ${t("tree.tailLimited")}`}
@@ -1851,14 +1833,6 @@ export default function App() {
       <MacroEditor
         project={project}
         onChange={(next) => edit(() => next, "controls")}
-      />
-      <ProjectTools
-        project={history.project}
-        cue={cue}
-        onChange={(next) => editRoot(() => next, "processing")}
-        onLoop={() => auditionLoop()}
-        onSeam={() => auditionLoop(true)}
-        busy={!result || ioBusy}
       />
     </div>
   );

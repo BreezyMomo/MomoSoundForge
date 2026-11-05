@@ -1,4 +1,8 @@
 import { clamp } from "./model";
+export function adjustLoopBoundary(region: { start: number; end: number }, edge: "start" | "end", time: number, duration: number) {
+  const value = Math.round(time * 1000) / 1000;
+  return { ...region, [edge]: edge === "start" ? clamp(value, 0, region.end - 0.01) : clamp(value, region.start + 0.01, duration) };
+}
 export function playbackPosition(
   elapsed: number,
   offset: number,

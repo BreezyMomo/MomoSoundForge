@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Waveform } from "./Waveform";
-import { timeAtPointer } from "./playback";
+import { adjustLoopBoundary, timeAtPointer } from "./playback";
 import { clamp } from "./model";
 import { t } from "./i18n";
 import { rulerTicks } from "./timeline";
@@ -24,6 +24,8 @@ export function PlayheadTimeline({
   onSeekEnd,
   compact = false,
   loopRegion,
+  onLoopBegin,
+  onLoopChange,
 }: {
   duration: number;
   position: number;
@@ -36,6 +38,8 @@ export function PlayheadTimeline({
   onSeekEnd: (time: number) => void;
   compact?: boolean;
   loopRegion?: { start: number; end: number };
+  onLoopBegin?: () => void;
+  onLoopChange?: (region: { start: number; end: number }) => void;
 }) {
   const host = useRef<HTMLDivElement>(null),
     gesture = useRef<{
@@ -45,6 +49,30 @@ export function PlayheadTimeline({
       node: HTMLDivElement;
     } | null>(null);
   const [width, setWidth] = useState(300);
+  const [loopDraft, setLoopDraft] = useState<{ start: number; end: number } | null>(null);
+  const loopDrag = useRef<{ id: number; node: HTMLButtonElement; edge: "start" | "end";
+    x: number; width: number; original: { start: number; end: number }; next: { start: number; end: number } } | null>(null);
+  const shownLoop = loopDraft ?? loopRegion;
+  const clearLoop = () => {
+    const active = loopDrag.current;
+    loopDrag.current = null;
+    if (active?.node.hasPointerCapture(active.id)) active.node.releasePointerCapture(active.id);
+    return active;
+  };
+  const finishLoop = (cancel = false) => {
+    const active = clearLoop();
+    if (!active) return;
+    setLoopDraft(null);
+    if (!cancel && (active.next.start !== active.original.start || active.next.end !== active.original.end))
+      onLoopChange?.(active.next);
+  };
+  const moveLoop = (event: PointerEvent<HTMLButtonElement>) => {
+    const active = loopDrag.current;
+    if (!active || active.id !== event.pointerId) return;
+    const time = active.original[active.edge] + (event.clientX - active.x) / active.width * duration;
+    active.next = adjustLoopBoundary(active.original, active.edge, time, duration);
+    setLoopDraft(active.next);
+  };
   useEffect(() => {
     if (!compact || !host.current) return;
     const observer = new ResizeObserver(entries => setWidth(entries[0].contentRect.width));
@@ -61,10 +89,13 @@ export function PlayheadTimeline({
   };
   useEffect(() => {
     clear();
-  }, [version]);
+    clearLoop();
+    setLoopDraft(null);
+  }, [version, disabled]);
   useEffect(
     () => () => {
       clear();
+      clearLoop();
     },
     [],
   );
@@ -107,6 +138,7 @@ export function PlayheadTimeline({
     onSeekEnd(time);
   };
   return (
+    <div className="timeline-shell">
     <div
       ref={host}
       className={`mix-timeline ${compact ? "layer-time-ruler" : ""} ${disabled ? "disabled" : ""}`}
@@ -160,16 +192,16 @@ export function PlayheadTimeline({
       onLostPointerCapture={() => finish(true)}
       onKeyDown={keyboard}
     >
-      {loopRegion && (
+      {shownLoop && (
         <div
           className="loop-region-overlay"
-          title={t("pro.loop")}
+          aria-hidden="true"
           style={{
-            left: `${(loopRegion.start / duration) * 100}%`,
-            width: `${((loopRegion.end - loopRegion.start) / duration) * 100}%`,
+            left: `${(shownLoop.start / duration) * 100}%`,
+            width: `${((shownLoop.end - shownLoop.start) / duration) * 100}%`,
           }}
         >
-          <span>{t("pro.loop")}</span>
+          <span>{t("pro.loopRange")}</span>
         </div>
       )}
       {!compact && (
@@ -194,6 +226,41 @@ export function PlayheadTimeline({
       >
         <span className="playhead-handle" />
       </div>
+    </div>
+    {!compact && shownLoop && onLoopChange && (["start", "end"] as const).map(edge => (
+      <button key={edge} type="button" role="slider" className={`loop-boundary loop-boundary-${edge}`}
+        style={{ left: `${shownLoop[edge] / duration * 100}%` }} disabled={disabled}
+        aria-label={t(edge === "start" ? "pro.dragLoopStart" : "pro.dragLoopEnd")}
+        aria-valuemin={edge === "start" ? 0 : shownLoop.start + 0.01}
+        aria-valuemax={edge === "start" ? shownLoop.end - 0.01 : duration}
+        aria-valuenow={Number(shownLoop[edge].toFixed(3))}
+        aria-valuetext={`${shownLoop[edge].toFixed(3)} s`} title={t("pro.dragLoopHelp")}
+        onPointerDown={event => {
+          if (disabled || event.button !== 0 || !event.isPrimary || loopDrag.current) return;
+          event.preventDefault(); event.stopPropagation();
+          event.currentTarget.focus({ preventScroll: true });
+          loopDrag.current = { id: event.pointerId, node: event.currentTarget, edge, x: event.clientX,
+            width: host.current!.getBoundingClientRect().width, original: shownLoop, next: shownLoop };
+          event.currentTarget.setPointerCapture(event.pointerId);
+          onLoopBegin?.();
+        }}
+        onPointerMove={moveLoop}
+        onPointerUp={event => { if (loopDrag.current?.id === event.pointerId) { moveLoop(event); finishLoop(); } }}
+        onPointerCancel={() => finishLoop(true)} onLostPointerCapture={() => finishLoop(true)}
+        onKeyDown={event => {
+          if (event.key === "Escape" && loopDrag.current) {
+            event.preventDefault(); event.stopPropagation(); finishLoop(true); return;
+          }
+          if (disabled || loopDrag.current) return;
+          const step = event.shiftKey ? 0.001 : 0.01;
+          const time = event.key === "ArrowLeft" ? shownLoop[edge] - step : event.key === "ArrowRight" ? shownLoop[edge] + step
+            : event.key === "Home" ? 0 : event.key === "End" ? duration : null;
+          if (time === null) return;
+          event.preventDefault(); event.stopPropagation();
+          const next = adjustLoopBoundary(shownLoop, edge, time, duration);
+          if (next[edge] !== shownLoop[edge]) { onLoopBegin?.(); onLoopChange(next); }
+        }}><i aria-hidden="true" /></button>
+    ))}
     </div>
   );
 }

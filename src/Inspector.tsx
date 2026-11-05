@@ -58,21 +58,24 @@ export function TimeInput({
   label,
   value,
   min = 0,
+  max,
   onChange,
   disabled = false,
 }: {
   label: string;
   value: number;
   min?: number;
+  max?: number;
   onChange: (value: number) => void;
   disabled?: boolean;
 }) {
   return (
     <WorkbenchNumberInput
       label={label}
-      value={value}
+      value={Number(value.toFixed(3))}
       min={min}
-      step={0.01}
+      max={max}
+      step={0.001}
       disabled={disabled}
       onValueCommit={onChange}
     />
