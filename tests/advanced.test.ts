@@ -446,9 +446,9 @@ describe("multi-layer timeline", () => {
         .sourceDuration,
     ).toBe(0.2);
   });
-  it("rejects out-of-bounds groups and edits crop/fade only on the active clip", () => {
+  it("rejects out-of-bounds scaling and edits crop/fade only on the active clip", () => {
     const ls = layers();
-    expect(boundedSelection(ls, ["a", "b"], ls[0], { start: 0.8 }, 1)).toBe(ls);
+    expect(boundedSelection(ls, ["a", "b"], ls[0], { duration: 1 }, 1)).toBe(ls);
     const edited = boundedSelection(
       ls,
       ["a", "b"],
@@ -458,6 +458,29 @@ describe("multi-layer timeline", () => {
     );
     expect(edited[0].cropStart).toBe(0.2);
     expect(edited[1]).toBe(ls[1]);
+  });
+  it("stops a dragged set at either boundary without changing gaps or durations", () => {
+    const ls = [...layers(), makeLayer({ id: "untouched", start: 0, duration: 0.1 })];
+    for (const active of ls.slice(0, 2)) {
+      const right = boundedSelection(ls, ["a", "b"], active, { start: active.start + 10 }, 1);
+      expect(right[0].start).toBeCloseTo(0.6);
+      expect(right[1].start).toBeCloseTo(0.9);
+      const left = boundedSelection(ls, ["a", "b"], active, { start: active.start - 10 }, 1);
+      expect(left[0].start).toBeCloseTo(0);
+      expect(left[1].start).toBeCloseTo(0.3);
+      expect(right.map(l => l.duration)).toEqual(ls.map(l => l.duration));
+      expect(left.map(l => l.duration)).toEqual(ls.map(l => l.duration));
+      expect(right[2]).toBe(ls[2]);
+      expect(left[2]).toBe(ls[2]);
+      expect(boundedSelection(left, ["a", "b"], left[1], { start: 0 }, 1)).toBe(left);
+    }
+  });
+  it("moves smoothly back from an overshoot using the original gesture snapshot", () => {
+    const ls = layers();
+    const positions = [0.2, 0.7, 0.8, 0.3].map(delta =>
+      boundedSelection(ls, ["a", "b"], ls[1], { start: ls[1].start + delta }, 1)[0].start);
+    [0.3, 0.6, 0.6, 0.4].forEach((value, i) => expect(positions[i]).toBeCloseTo(value));
+    expect(ls[0].start).toBe(0.1);
   });
   it("snaps to the closest boundary within tolerance", () => {
     expect(snapTime(0.298, [0.2, 0.3, 0.5], 0.01)).toBe(0.3);

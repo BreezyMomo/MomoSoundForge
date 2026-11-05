@@ -31,6 +31,7 @@ type Gesture = {
   node: HTMLButtonElement;
   timing: Layer;
   moved: boolean;
+  plainClick: boolean;
 };
 export function TimelineClip({
   layer: sourceLayer,
@@ -47,6 +48,7 @@ export function TimelineClip({
   onPreview,
   data,
   onSelect,
+  onClearSelection,
   onBegin,
   onCommit,
   onNoteChange,
@@ -66,7 +68,8 @@ export function TimelineClip({
   disabledParameters?: string[];
   onPreview?: (next: Layer | null) => void;
   data?: Float32Array;
-  onSelect: () => void;
+  onSelect: (event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean }) => void;
+  onClearSelection?: () => void;
   onBegin: () => void;
   onCommit: (timing: Partial<Layer>) => void;
   onNoteChange?: (note: NoteEvent) => void;
@@ -81,6 +84,7 @@ export function TimelineClip({
   );
   const lane = useRef<HTMLDivElement>(null),
     gesture = useRef<Gesture | null>(null);
+  const selectOnClick = useRef(false);
   const waveform = useRef(data);
   if (data) waveform.current = data;
   const [draft, setDraft] = useState<Layer | null>(null);
@@ -123,6 +127,7 @@ export function TimelineClip({
   const finish = (commit: boolean) => {
     const active = gesture.current;
     if (!active) return;
+    selectOnClick.current = commit && !active.moved && active.plainClick;
     gesture.current = null;
     setDraft(null);
     onPreview?.(null);
@@ -159,6 +164,13 @@ export function TimelineClip({
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.focus({ preventScroll: true });
+    selectOnClick.current = false;
+    // Modifier clicks toggle selection only; they must not start a drag of
+    // a clip that has just been removed from the selection.
+    if (event.ctrlKey || event.metaKey) {
+      onSelect(event);
+      return;
+    }
     gesture.current = {
       pointerId: event.pointerId,
       originX: event.clientX,
@@ -169,9 +181,10 @@ export function TimelineClip({
       node: event.currentTarget,
       timing: layer,
       moved: false,
+      plainClick: !event.shiftKey,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
-    onSelect();
+    onSelect(event.ctrlKey || event.metaKey || event.shiftKey ? event : undefined);
     onBegin();
   };
   const move = (event: PointerEvent<HTMLButtonElement>) => {
@@ -275,12 +288,22 @@ export function TimelineClip({
     onPointerUp: end,
     onPointerCancel: () => finish(false),
     onLostPointerCapture: () => finish(false),
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+      // Preserve the set while dragging, but a plain click selects only this
+      // clip after pointer-up. Modifier clicks were handled on pointer-down.
+      event.stopPropagation();
+      if (event.detail === 0 || selectOnClick.current) onSelect(event);
+      selectOnClick.current = false;
+    },
     onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) =>
       keyboard(event, mode),
   });
   const seconds = (value: number) => value.toFixed(draft ? 3 : 2);
   return (
-    <div className={`layer-lane ${layer.type === "instrument" ? "instrument-lane" : ""}`} ref={lane} onClick={onSelect}>
+    <div className={`layer-lane ${layer.type === "instrument" ? "instrument-lane" : ""}`} ref={lane} onClick={(event) => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey) onSelect(event);
+      else onClearSelection?.();
+    }}>
       {tail > 0 && (
         <div
           className="clip-effect-tail"

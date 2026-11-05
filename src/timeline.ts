@@ -139,6 +139,19 @@ export function boundedSelection(
   next: Partial<Layer>,
   duration: number,
 ) {
+  // Clamp the entire moving set by its earliest start and latest end. Rejecting
+  // an overshoot makes every clip jump back to its original position mid-drag.
+  if (Math.abs((next.duration ?? active.duration) - active.duration) < 1e-6 &&
+      Math.abs((next.start ?? active.start) - active.start) > 1e-6) {
+    const chosen = layers.filter((layer) => ids.includes(layer.id));
+    if (!chosen.length) return layers;
+    const minDelta = -Math.min(...chosen.map((layer) => layer.start));
+    const maxDelta = duration - Math.max(...chosen.map((layer) => layer.start + layer.duration));
+    if (minDelta > maxDelta) return layers;
+    const delta = Math.max(minDelta, Math.min(maxDelta, next.start! - active.start));
+    if (Math.abs(delta) < 1e-6) return layers;
+    next = { ...next, start: active.start + delta };
+  }
   if (
     Math.abs((next.duration ?? active.duration) - active.duration) > 1e-6 &&
     layers.some((l) => ids.includes(l.id) && l.type === "composition")

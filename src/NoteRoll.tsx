@@ -382,6 +382,21 @@ export function NoteRoll({
                   (span.start >= 1 || span.start + span.width <= 0)
                 )
                   return null;
+                // The overview is a thumbnail: dragging it moves the whole clip.
+                // Keep individual note hit targets in the expanded editor.
+                if (compact) return (
+                  <span
+                    key={n.id}
+                    className="roll-note-preview"
+                    aria-hidden="true"
+                    style={{
+                      left: `${span.start * 100}%`,
+                      width: `${span.width * 100}%`,
+                      top: `${((high - n.midi) / count) * 100}%`,
+                      opacity: 0.45 + n.velocity / 127 * 0.55,
+                    }}
+                  />
+                );
                 const label = t(
                   "roll.note",
                   index + 1,

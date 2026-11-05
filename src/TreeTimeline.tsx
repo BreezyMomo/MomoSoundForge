@@ -31,6 +31,7 @@ export function TreeTimeline({
   cropMode,
   playing,
   onSelect,
+  onClearSelection,
   onPatch,
   onMove,
   onPreview,
@@ -58,6 +59,7 @@ export function TreeTimeline({
     event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
   ) => void;
   onPatch: (address: NodeAddress, patch: Partial<Layer>) => void;
+  onClearSelection: () => void;
   onMove: (
     path: string[],
     ids: string[],
@@ -134,7 +136,13 @@ export function TreeTimeline({
   const selectionAt = (path: string[]) =>
     JSON.stringify(path) === JSON.stringify(selected.path);
   return (
-    <div className="node-tree">
+    <div className="node-tree" onKeyDown={(event) => {
+      if (event.key === "Escape" && !event.defaultPrevented && !reorder.active &&
+          !(event.target as HTMLElement).closest('input, textarea, select, [role="combobox"], .tree-note-editor')) {
+        event.preventDefault();
+        onClearSelection();
+      }
+    }}>
       {reorder.active &&
         createPortal(
           <div
@@ -147,6 +155,18 @@ export function TreeTimeline({
           </div>,
           document.body,
         )}
+      {rows.some(({ layer }) => layer.type === "instrument") && (
+        <div className="tree-view-tools">
+          <span className="field-help">{t("roll.overviewHint")}</span>
+          <button
+            className="secondary"
+            disabled={openScore === null}
+            onClick={() => setOpenScore(null)}
+          >
+            {t("roll.collapseAll")}
+          </button>
+        </div>
+      )}
       <div className="tree-move-tools">
         <label>
           {t("tree.destination")}
@@ -327,6 +347,7 @@ export function TreeTimeline({
                   {layer.type === "instrument" && <button className="tree-note-toggle"
                     aria-label={t("roll.toggle", layer.name)} aria-expanded={openScore === key}
                     onClick={() => { onSelect(address); setOpenScore(openScore === key ? null : key); }}>
+                    {openScore === key ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                     {t("roll.notes")}
                   </button>}
                 </div>
@@ -355,11 +376,12 @@ export function TreeTimeline({
                   }
                   tail={tail}
                   moveOnly={group}
-                  onSelect={() => onSelect(address)}
+                  onSelect={(event) => onSelect(address, event)}
+                  onClearSelection={onClearSelection}
                   onBegin={onBegin}
                   onNoteChange={changeNote}
                   onNoteAudition={note => onNoteAudition(address, note)}
-                  onExpandNotes={() => onOpenNotes(address)}
+                  onExpandNotes={() => { onSelect(address); setOpenScore(key); }}
                   disabledParameters={(parent.controls ?? []).flatMap((c) =>
                     c.mappings
                       .filter((m) => m.layerId === layer.id)

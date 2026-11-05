@@ -1,7 +1,8 @@
-.layer-lane.instrument-lane { min-height: 150px; }
-.instrument-lane .clip-move .waveform { position: absolute; left: 10px; right: 10px; bottom: 2px; top: auto; width: calc(100% - 20px); opacity: .35; margin: 0; height: 17px; }
+.layer-lane.instrument-lane { min-height: 52px; }
+.instrument-lane .clip-move .waveform { position: absolute; left: 10px; right: 10px; bottom: 1px; top: auto; width: calc(100% - 20px); opacity: .35; margin: 0; height: 7px; }
 .note-roll { color: var(--ui-text); min-width: 0; }
-.note-roll.compact { position: absolute; inset: 25px 0 20px; z-index: 2; pointer-events: none; }
+.note-roll.compact { position: absolute; inset: 20px 0 9px; z-index: 2; pointer-events: none; }
+.roll-note-preview { position: absolute; height: 2px; min-width: 2px; background: var(--wave, #87b7c5); pointer-events: none; }
 .compact .roll-scroll, .compact .roll-surface, .compact .roll-body, .compact .roll-grid { height: 100%; }
 .roll-grid { position: relative; flex: 1; min-width: 0; overflow: hidden; }
 .roll-body { display: flex; }
@@ -25,4 +26,7 @@
 .roll-empty { display: block; padding: 8px; font-size: 11px; color: var(--ui-muted); }
 .roll-overflow { position: absolute; right: 8px; bottom: 0; z-index: 2; pointer-events: auto; max-width: 100%; font-size: 11px; padding: 3px; background: var(--ui-inset); color: var(--ui-text); }
 .tree-note-editor { grid-column: 1 / -1; min-width: 0; padding: 10px; border-top: 1px solid var(--ui-line); }
-.tree-note-toggle { font-size: 11px; padding: 3px 5px; margin-left: auto; }
+.tree-note-toggle { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; font-size: 11px; padding: 3px 5px; margin-left: auto; }
+.tree-view-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
+.tree-view-tools .field-help { margin: 0; }
+.tree-view-tools button { flex-shrink: 0; }

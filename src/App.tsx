@@ -172,9 +172,10 @@ export default function App() {
     [zoom, setZoom] = useState(1),
     [snap, setSnap] = useState(true),
     [groupScale, setGroupScale] = useState(1);
+  const selectionAnchor = useRef<string | null>(null);
   const selectedIds = selection.includes(selected)
     ? selection.filter((id) => project.layers.some((l) => l.id === id))
-    : [selected];
+    : project.layers.some((layer) => layer.id === selected) ? [selected] : [];
   const [exportSettings, setExportSettings] =
     useState<ExportSettings>(readExportSettings);
   const [exportOutput, setExportOutput] = useState<RenderResult | null>(null);
@@ -191,6 +192,7 @@ export default function App() {
   }, [exportSettings]);
   useEffect(() => {
     setSelection([]);
+    selectionAnchor.current = null;
   }, [JSON.stringify(context.path)]);
   useEffect(() => {
     outputVersion.current++;
@@ -201,21 +203,28 @@ export default function App() {
     event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
   ) => {
     if (event?.shiftKey) {
-      const a = project.layers.findIndex((l) => l.id === selected),
+      const anchor = selectionAnchor.current ?? selected;
+      const anchorIndex = project.layers.findIndex((l) => l.id === anchor),
         b = project.layers.findIndex((l) => l.id === id);
+      const a = anchorIndex < 0 ? b : anchorIndex;
+      selectionAnchor.current = project.layers[a]?.id ?? id;
       setSelection(
         project.layers
           .slice(Math.min(a, b), Math.max(a, b) + 1)
           .map((l) => l.id),
       );
     } else if (event?.ctrlKey || event?.metaKey) {
+      selectionAnchor.current = id;
       const next = selectedIds.includes(id)
         ? selectedIds.filter((x) => x !== id)
         : [...selectedIds, id];
       setSelection(next);
       setSelected(next.includes(id) ? id : (next[0] ?? ""));
       return;
-    } else if (event || !selectedIds.includes(id)) setSelection([id]);
+    } else if (event || !selectedIds.includes(id)) {
+      setSelection([id]);
+      selectionAnchor.current = id;
+    }
     setSelected(id);
   };
   const transformLayers = (p: Project, l: Layer, next: Partial<Layer>) => {
@@ -467,7 +476,7 @@ export default function App() {
     };
   }, [history.project, selected, JSON.stringify(context.path), ready, flash]);
   useEffect(() => {
-    if (!project.layers.some((l) => l.id === selected))
+    if (selected && !project.layers.some((l) => l.id === selected))
       setSelected(project.layers[0]?.id ?? "");
   }, [project, selected]);
   const play = useCallback(
@@ -1709,6 +1718,11 @@ export default function App() {
         cropMode={cropMode}
         playing={playing}
         onSelect={treeSelect}
+        onClearSelection={() => {
+          setSelection([]);
+          setSelected("");
+          selectionAnchor.current = null;
+        }}
         onPatch={(address, patch) =>
           editRoot((root) => editNode(root, address, patch))
         }
@@ -1727,6 +1741,7 @@ export default function App() {
               active,
               patch,
             );
+            if (layers === parent.layers) return root;
             const next = structuredClone(root);
             nodeParent(next, address.path).layers = layers;
             return next;
