@@ -219,7 +219,7 @@ describe("rejects unsafe scores", () => {
     "bad pitch": (s: Score): unknown => (s.notes[0].midi = 128),
     "negative duration": (s: Score): unknown => (s.notes[0].duration = -1),
     "NaN velocity": (s: Score): unknown => (s.notes[0].velocity = NaN),
-    "out of window": (s: Score): unknown => (s.notes[0].start = 11),
+    "nonfinite time": (s: Score): unknown => (s.notes[0].start = Infinity),
     "reversed range": (s: Score): unknown =>
       (s.instruments[0].regions[0].velocityLow = 128),
     "missing asset": (s: Score): unknown =>

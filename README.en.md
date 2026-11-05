@@ -35,8 +35,8 @@ npm run preview
 - Up to 16 direct layers per sound, using synthesis, samples or editable nested sounds, with mute, solo, duplicate, delete and variation locks.
 - Group a tuned sound into one layer, or embed another saved project. Up to six nesting levels and 128 layers across the entire project.
 - Sine, triangle, sawtooth, square and white noise; exponential frequency sweeps, fades, decay, low-pass filtering, saturation, gain and pan.
-- Browser-supported audio import, source offset, speed/pitch adjustment, reverse and envelopes. The first two channels are retained. Maximum 30 seconds per sample and 24 MiB of decoded sample data per project.
-- 0.1–10 second projects, layered timing, master gain, echo, loop playback and a separate monitor level.
+- Browser-supported audio import, source offset, speed/pitch adjustment, reverse and envelopes. The first two channels are retained. Up to 5.76 million samples per channel and 24 MiB of decoded sample data per project.
+- Projects default to 10 seconds with user-defined duration, layered timing, master gain, echo, loop playback and a separate monitor level.
 - Five seeded variations with audition and apply controls. ZIP exports include five WAVs, five editable projects and a seed manifest.
 - 48 kHz, 16-bit stereo PCM WAV. Playback, final waveform and export use the same render.
 - `.soundforge` projects with all nested sounds and used samples embedded, legacy project import, IndexedDB drafts, undo and redo.
@@ -93,7 +93,7 @@ Limits: 16 direct nodes per scope, six nesting levels, 128 total nodes and 24 Mi
 
 ## Current boundaries
 
-This version focuses on short sound effects. It does not include music sequencing, speech generation, online AI models, MCP, video synchronization, plugin hosting or game engine runtime integration.
+This version focuses on short sound effects. It does not include music sequencing, speech generation, online AI models, MCP, plugin hosting or game engine runtime integration.
 
 The synth is a lightweight procedural implementation. Sawtooth and square waves may alias at high pitches. Sound quality and suitability should be refined through listening in actual games. Imported material keeps its source licensing.
 
@@ -124,4 +124,10 @@ Preview, add or open instruments from the sound library. Each is a regular instr
 
 ## Video reference
 
-Open Video reference in the header and import a local video. Select a start and up to 10 seconds; sound time zero maps to the selected start. Frame steps use decoded presentation timestamps, including variable frame rates. Video shares the sound playhead, with synchronized and looping segment preview. Original audio defaults to muted and is excluded from exports. Named markers appear on the timeline and support clip snapping. Projects and drafts save alignment and markers; relink the original video after reopening (video bytes are not bundled). Videos must be playable by the browser and local decoder, up to 80 MB, 120 seconds and 4K. Indexing is cancellable and time-bounded. The panel supports docking and floating.
+Open Video reference in the header and import a local video. Select a start and segment length without a fixed seconds cap; sound time zero maps to the selected start. Frame steps use decoded presentation timestamps, including variable frame rates. Video shares the sound playhead, with synchronized and looping segment preview. Original audio defaults to muted and is excluded from exports. Named markers appear on the timeline and support clip snapping. Projects and drafts save alignment and markers; relink the original video after reopening (video bytes are not bundled). Videos must be playable by the browser and local decoder, up to 80 MB and 4K. Indexing is cancellable and time-bounded. The panel supports docking and floating.
+
+### Work duration and resources
+
+New project creates an empty 10-second work. Enter its duration below the timeline; Enter or blur applies the value. Clips, groups and notes can exceed 10 seconds. Zoom and horizontal scrolling support long timelines. Extend to content end includes rendered effect tails. Shortening the work preserves clips and notes outside the range and shows a notice. Preview, waveform and default export use the same work range; extra export tail time extends rendering explicitly.
+
+There is no fixed creative duration cap. Layer counts, nesting, decoded assets and rendering allocations remain budgeted; exceeding a resource budget reports an error instead of silently truncating content. Rendering still uses complete buffers, not unlimited streaming. Superseded previews are cancelled; identical audio uses a bounded cache, including when only video markers or names change.

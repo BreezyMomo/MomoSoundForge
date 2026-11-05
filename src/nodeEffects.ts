@@ -1,7 +1,7 @@
 import { DEFAULT_EFFECTS, type Effects } from "./advanced";
 // Finite tail and allocation bounds also apply to imported projects.
 export const MAX_EFFECT_TAIL = 4;
-export const MAX_RENDER_SECONDS = 40;
+export const MAX_RENDER_SAMPLES = 128 * 1024 * 1024; // Conservative allocation/work budget, not a duration cap.
 export function effectTail(e?: Effects) {
   if (!e) return 0;
   let seconds = 0;

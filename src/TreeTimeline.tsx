@@ -351,7 +351,7 @@ export function TreeTimeline({
                     ...next,
                     start: Math.max(
                       offset,
-                      Math.min(10 - next.duration, next.start),
+                      Math.min(duration - next.duration, next.start),
                     ),
                   })}
                   snapTargets={
@@ -397,7 +397,7 @@ export function TreeTimeline({
                               chosen ? ids : [layer.id],
                               layer,
                               { ...next, start: next.start - offset },
-                              10,
+                              Math.max(parent.duration, duration - offset),
                             ),
                           }
                         : null,

@@ -1,4 +1,4 @@
-import { effectTail, MAX_RENDER_SECONDS } from "./nodeEffects";
+import { effectTail, MAX_RENDER_SAMPLES } from "./nodeEffects";
 import { renderScore } from "./instruments";
 import { resolveControls, curveValue, processEffects } from "./advanced";
 import {
@@ -76,12 +76,12 @@ function renderNested(
             effectTail(l.effects),
         ),
       ) + effectTail(p.effects);
-    if (seconds > MAX_RENDER_SECONDS) throw Error("error.renderBudget");
+    if (!Number.isFinite(seconds) || seconds * sampleRate * 4 > MAX_RENDER_SAMPLES) throw Error("error.renderBudget");
     return seconds;
   };
-  const length = Math.max(1, Math.ceil(estimate(resolved) * sampleRate));
-  context.frames += length * 2;
-  if (context.frames > 24_000_000) throw Error("error.renderBudget");
+  const length = Math.max(1, Math.ceil((depth === 0 ? project.duration : estimate(resolved)) * sampleRate));
+  context.frames += length * 4;
+  if (!Number.isFinite(context.frames) || context.frames > MAX_RENDER_SAMPLES) throw Error("error.renderBudget");
   const left = new Float32Array(length),
     right = new Float32Array(length),
     layers: Record<string, Float32Array> = Object.create(null),
@@ -98,7 +98,7 @@ function renderNested(
     const base = inputL.length;
     const extra = Math.ceil(effectTail(clip.effects) * sampleRate);
     context.frames += (base + extra) * 3;
-    if (context.frames > 24_000_000) throw Error("error.renderBudget");
+    if (!Number.isFinite(context.frames) || context.frames > MAX_RENDER_SAMPLES) throw Error("error.renderBudget");
     const l = new Float32Array(base + extra),
       r = new Float32Array(base + extra);
     l.set(inputL);
@@ -166,8 +166,11 @@ function renderNested(
       throw Error("Too many sound layers");
     if (layer.type === "composition" && !layer.project)
       throw Error("Missing nested audio");
-    const n = Math.round(layer.duration * sampleRate),
-      sourceLeft = new Float32Array(n),
+    const n = Math.round(layer.duration * sampleRate);
+    context.frames += n * 5 + Math.ceil(clip.duration * sampleRate) * 5;
+    if (!Number.isFinite(context.frames) || context.frames > MAX_RENDER_SAMPLES)
+      throw Error("error.renderBudget");
+    const sourceLeft = new Float32Array(n),
       sourceRight = new Float32Array(n);
     const noise = rng(layer.noiseSeed ^ stableHash(layer.id));
     let phase = 0;
@@ -385,6 +388,7 @@ function renderNested(
   if (project.effects) processEffects(left, right, sampleRate, project.effects);
   const finalLength = Math.min(
     length,
+    depth === 0 ? Math.round(project.duration * sampleRate) : Infinity,
     usedLength + Math.ceil(effectTail(project.effects) * sampleRate),
   );
   let sourcePeak = 0;

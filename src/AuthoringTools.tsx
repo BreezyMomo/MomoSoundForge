@@ -23,7 +23,7 @@ export function exposeParameter(
     layer.automation?.[key as AutomationKey]?.length
   )
     return project;
-  const [min, max] = PARAMS[key];
+  const [min, max] = key === "start" ? [0, Math.max(project.duration, layer.start)] : PARAMS[key];
   const control: Macro = {
     id: uid(),
     name: `${layer.name} · ${t(`pro.param.${key}`)}`.slice(0, 120),
@@ -237,7 +237,7 @@ export function MacroEditor({
               ),
               range = child
                 ? [child.min, child.max]
-                : PARAMS[m.parameter as Parameter];
+                : m.parameter === "start" ? [0, Math.max(project.duration, m.low, m.high)] : PARAMS[m.parameter as Parameter];
             const change = (patch: Partial<Mapping>) =>
               update(c.id, {
                 mappings: c.mappings.map((v, j) =>
@@ -345,7 +345,7 @@ export function MacroEditor({
                   range =
                     parameter === "control" && child
                       ? [child.min, child.max]
-                      : PARAMS[parameter as Parameter];
+                      : parameter === "start" ? [0, Math.max(project.duration, layer.start)] : PARAMS[parameter as Parameter];
                 setError("");
                 update(c.id, {
                   mappings: [

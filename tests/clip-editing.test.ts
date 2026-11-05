@@ -40,7 +40,7 @@ describe("non-destructive crop and whole-clip stretch", () => {
     expect(adjustCrop(l,"cropEnd",-20).cropEnd).toBeGreaterThan(.2);
   });
   it("rejects invalid stored crop and source durations", () => {
-    for(const patch of [{cropStart:.9,cropEnd:.2},{cropStart:NaN},{cropEnd:2},{sourceDuration:Infinity},{sourceDuration:11}]) {
+    for(const patch of [{cropStart:.9,cropEnd:.2},{cropStart:NaN},{cropEnd:2},{sourceDuration:0},{sourceDuration:Infinity}]) {
       const p=project("synth");Object.assign(p.layers[0],patch);
       expect(()=>parseProject(p)).toThrow();
     }

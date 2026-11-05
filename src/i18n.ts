@@ -6,18 +6,22 @@ import {
 import { WORKBENCH_CATALOGS } from "@momo/workbench/locales";
 import { BUILTIN_MESSAGES } from "./builtinMessages";
 const words: Record<string, [string, string]> = {
+  "file.new": ["新建工程", "New project"],
+  "file.untitled": ["未命名音效", "Untitled sound"],
+  "editor.extendToContent": ["扩展到内容末尾", "Extend to content end"],
+  "editor.outsideRange": ["部分内容位于工程范围外，已保留。试听和默认导出只包含工程范围，可扩展时长恢复。", "Some content is outside the work range and is preserved. Preview and default export use the work range; extend it to include that content."],
   "video.loop": ["循环试听片段", "Loop preview segment"],
   "video.title": ["视频参考", "Video reference"],
   "video.import": ["导入参考视频", "Import reference video"],
   "video.relink": ["关联 / 更换视频", "Link / replace video"],
   "video.remove": ["移除参考", "Remove reference"],
   "video.cancel": ["取消", "Cancel"],
-  "video.empty": ["导入动作录像，对齐声音与画面。支持最多 120 秒、80 MB、4K 视频，选取最多 10 秒配音片段。", "Import an action clip to align sound with picture. Up to 120 seconds, 80 MB and 4K; select up to 10 seconds to design."],
+  "video.empty": ["导入动作录像，对齐声音与画面。可选择任意长度的参考片段；视频文件最多 80 MB、4K。", "Import an action clip to align sound with picture. Select any segment length; video files support up to 80 MB and 4K."],
   "video.missing": ["请重新关联参考视频。片段和标记已保留。", "Relink the reference video. The segment and markers are preserved."],
   "video.indexing": ["正在读取实际帧位置，可取消…", "Indexing actual frame timestamps. You can cancel…"],
   "video.failed": ["无法读取此视频，请尝试 MP4（H.264）或 WebM。", "Could not read this video. Try MP4 (H.264) or WebM."],
   "video.invalid": ["视频参考数据无效。", "Invalid video reference data."],
-  "video.limit": ["请使用 120 秒以内、80 MB 以下、最高 4K 的视频。", "Use a video up to 120 seconds, 80 MB and 4K."],
+  "video.limit": ["请使用 80 MB 以下、最高 4K、时长有效的视频。", "Use a video up to 80 MB and 4K, with a valid duration."],
   "video.playFailed": ["视频无法开始播放，请重新点击同步试听。", "Video playback failed. Try synchronized preview again."],
   "video.previous": ["上一帧", "Previous frame"],
   "video.next": ["下一帧", "Next frame"],
@@ -51,14 +55,14 @@ const words: Record<string, [string, string]> = {
   "tree.post": ["后处理", "Post-processing"],
   "tree.target": ["当前节点：{0}", "Current node: {0}"],
   "tree.tail": ["效果尾音 {0} 秒", "Effect tail: {0} s"],
-  "tree.tailHelp": ["淡色延伸表示效果尾音，试听与默认导出会完整包含；分组只能移动，缩放与裁切请操作声音节点。", "Pale extensions show effect tails, included in audition and default export. Groups move as a whole; resize and crop individual sounds."],
+  "tree.tailHelp": ["淡色延伸表示效果尾音；试听和默认导出使用工程范围，可扩展到内容末尾以保留尾音。分组只能移动，缩放与裁切请操作声音节点。", "Pale extensions show effect tails. Preview and default export use the work range; extend to content end to include tails. Groups move as a whole; resize and crop individual sounds."],
   "tree.tailLimited": ["部分效果尾音已达到 4 秒上限并淡出。", "Some effect tails reached the 4-second limit and fade out."],
   "error.tree.bound": ["所选节点受组合控件驱动，请先解除映射再调整层级。", "Selected nodes are driven by macro controls. Remove their mappings before changing hierarchy."],
   "error.tree.choose": ["请先选择同级声音节点。", "Select sibling sound nodes first."],
   "error.tree.cycle": ["不能移入自身或子节点。", "Cannot move into itself or its descendants."],
   "error.tree.timeBounds": ["移动后会超出可编辑时间范围，请先调整分组位置。", "The move would exceed the editable time range. Adjust the group position first."],
   "error.tree.duplicateId": ["目标组内存在相同节点 ID，请先复制节点后再移动。", "The destination has a node with the same ID. Duplicate the node before moving it."],
-  "error.renderBudget": ["声音渲染超出资源预算，请减少节点或尾音。", "Audio rendering exceeds its resource budget. Reduce nodes or tails."],
+  "error.renderBudget": ["本次渲染所需内存过多。请缩短工程或声音层、减少嵌套，或拆分工程；内容未被裁切。", "This render needs too much memory. Shorten the work or clips, reduce nesting, or split the project. Content has not been trimmed."],
 
   "polish.title": ["声音修饰", "Sound polish"],
   "polish.compare": ["试听对比", "Audition comparison"],
@@ -718,8 +722,8 @@ const words: Record<string, [string, string]> = {
     "Cannot decode this audio. Choose a browser-supported WAV, MP3 or OGG file.",
   ],
   "error.budget": [
-    "采样最多 30 秒，工程采样总量最多 24 MiB（解码后）。",
-    "Samples are limited to 30 seconds; total decoded sample data to 24 MiB.",
+    "工程采样总量最多 24 MiB（解码后），单声道最多 576 万个采样点。",
+    "Total decoded sample data is limited to 24 MiB, with up to 5.76 million samples per channel.",
   ],
   "error.fileSize": [
     "文件过大，工程限制为 36 MiB，音频文件限制为 24 MiB。",
@@ -741,7 +745,7 @@ const words: Record<string, [string, string]> = {
   "help.title": ["从一个声音，做出一套音效", "Build a sound into a sound set"],
   "help.body": [
     "选择预设后点击试听。每个声音层都有独立声源、时间和包络；M 静音，S 独奏，锁定只影响变体生成。变体改变音高、长度、音量与声像，固定种子可复现。采样使用变速变调。每个声音和分组都有后处理，淡色区域表示自动保留的效果尾音。试听和 WAV 使用同一渲染；监听音量仅影响播放。保存工程会携带使用中的采样。草稿仅保存在本浏览器，跨电脑请下载工程。",
-    "Choose a preset and press Play. Each layer has its own source, timing and envelope. M mutes, S solos; locking only affects variation generation. Variations change pitch, duration, gain and pan reproducibly. Sample pitch follows playback speed. Sounds and groups each have post-processing. Pale timeline extensions indicate automatically retained effect tails. Playback and WAV share the same render; monitor level only affects playback. Saved projects embed used samples. Drafts stay in this browser; download a project to move it to another device.",
+    "Choose a preset and press Play. Each layer has its own source, timing and envelope. M mutes, S solos; locking only affects variation generation. Variations change pitch, duration, gain and pan reproducibly. Sample pitch follows playback speed. Sounds and groups each have post-processing. Pale timeline extensions indicate effect tails within the work range. Playback and WAV share the same render; monitor level only affects playback. Saved projects embed used samples. Drafts stay in this browser; download a project to move it to another device.",
   ],
   "help.keys": [
     "空格：试听 / 暂停 · Ctrl/Cmd+Z：撤销 · Ctrl/Cmd+Shift+Z：重做 · Ctrl/Cmd+S：保存工程",

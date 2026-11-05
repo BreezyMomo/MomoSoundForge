@@ -198,7 +198,7 @@ describe("portable sample projects", () => {
     const p = sampleProject();
     expect(() => parseProject({ ...p, schema: "future" })).toThrow();
     expect(() => parseProject({ ...p, master: Infinity })).toThrow();
-    expect(() => parseProject({ ...p, duration: 100000 })).toThrow();
+    expect(() => parseProject({ ...p, duration: Infinity })).toThrow();
     expect(() => parseProject({ ...p, assets: {} })).toThrow();
     expect(() =>
       parseProject({ ...p, layers: [{ ...p.layers[0], gain: NaN }] }),

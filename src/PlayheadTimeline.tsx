@@ -1,6 +1,8 @@
 import {
   useEffect,
   useRef,
+  useState,
+  useMemo,
   type PointerEvent,
   type KeyboardEvent,
 } from "react";
@@ -8,6 +10,7 @@ import { Waveform } from "./Waveform";
 import { timeAtPointer } from "./playback";
 import { clamp } from "./model";
 import { t } from "./i18n";
+import { rulerTicks } from "./timeline";
 
 export function PlayheadTimeline({
   duration,
@@ -41,6 +44,14 @@ export function PlayheadTimeline({
       value: number;
       node: HTMLDivElement;
     } | null>(null);
+  const [width, setWidth] = useState(300);
+  useEffect(() => {
+    if (!compact || !host.current) return;
+    const observer = new ResizeObserver(entries => setWidth(entries[0].contentRect.width));
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, [compact]);
+  const ticks = useMemo(() => rulerTicks(duration, width), [duration, width]);
   const clear = () => {
     const active = gesture.current;
     gesture.current = null;
@@ -166,8 +177,11 @@ export function PlayheadTimeline({
           <Waveform data={left} right={right} label={t("editor.mix")} />
         </div>
       )}
-      <div className="time-ruler">
-        {Array.from({ length: 5 }, (_, i) => (
+      <div className={`time-ruler ${compact ? "adaptive" : ""}`}>
+        {compact ? ticks.map((time, i) => <span key={time} style={{ left: `${time / duration * 100}%`,
+          transform: i === 0 ? "none" : i === ticks.length - 1 ? "translateX(-100%)" : "translateX(-50%)" }}>
+          {time.toFixed(2)}{i === ticks.length - 1 ? " s" : ""}
+        </span>) : Array.from({ length: 5 }, (_, i) => (
           <span key={i}>
             {((duration * i) / 4).toFixed(2)}
             {i === 4 ? " s" : ""}

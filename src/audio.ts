@@ -1,36 +1,73 @@
 import type { Project, RenderResult } from "./model";
 import { clamp } from "./model";
 import { playbackPosition } from "./playback";
-export function createRenderer() {
-  const worker = new Worker(new URL("./render.worker.ts", import.meta.url), {
-    type: "module",
-  });
-  let serial = 0;
-  const pending = new Map<
-    number,
-    { resolve: (r: RenderResult) => void; reject: (e: Error) => void }
-  >();
-  worker.onmessage = ({ data }) => {
-    const job = pending.get(data.id);
-    if (!job) return;
-    pending.delete(data.id);
-    data.error ? job.reject(Error("render")) : job.resolve(data.result);
+function audioIdentity(project: Project): unknown {
+  return { ...project, name: undefined, videoReference: undefined,
+    layers: project.layers.map(layer => ({ ...layer, name: undefined,
+      project: layer.project ? audioIdentity(layer.project) : undefined,
+    })),
   };
-  worker.onerror = () => {
-    for (const job of pending.values()) job.reject(Error("render"));
-    pending.clear();
+}
+export function createRenderer() {
+  type Job = { id: number; project: Project; key: string; resolve: (r: RenderResult) => void;
+    reject: (e: Error) => void; signal?: AbortSignal; abort: () => void };
+  let worker: Worker | undefined, active: Job | undefined, serial = 0, disposed = false;
+  const queue: Job[] = [];
+  const cache = new Map<string, { result: RenderResult; bytes: number }>();
+  const forget = (job: Job) => job.signal?.removeEventListener("abort", job.abort);
+  const run = () => {
+    if (active || disposed || !queue.length) return;
+    active = queue.shift()!;
+    if (!worker) {
+      worker = new Worker(new URL("./render.worker.ts", import.meta.url), { type: "module" });
+      worker.onmessage = ({ data }) => {
+        const job = active;
+        if (!job || data.id !== job.id) return;
+        active = undefined; forget(job);
+        if (data.error) job.reject(Error(data.error));
+        else {
+          const result: RenderResult = data.result;
+          const arrays = new Set([result.left, result.right, ...Object.values(result.layers), ...Object.values(result.processedLayers ?? {})]);
+          const bytes = [...arrays].reduce((n, a) => n + a.byteLength, 0);
+          if (bytes <= 64 * 1024 * 1024) {
+            while (cache.size && (cache.size >= 2 || [...cache.values()].reduce((n, c) => n + c.bytes, bytes) > 64 * 1024 * 1024)) cache.delete(cache.keys().next().value!);
+            cache.set(job.key, { result, bytes });
+          }
+          job.resolve(result);
+        }
+        run();
+      };
+      worker.onerror = () => {
+        const job = active; active = undefined;
+        worker?.terminate(); worker = undefined;
+        if (job) { forget(job); job.reject(Error("error.render")); }
+        run();
+      };
+    }
+    worker.postMessage({ id: active.id, project: active.project });
   };
   return {
-    render: (project: Project) =>
-      new Promise<RenderResult>((resolve, reject) => {
-        const id = ++serial;
-        pending.set(id, { resolve, reject });
-        worker.postMessage({ id, project });
-      }),
+    render: (project: Project, signal?: AbortSignal): Promise<RenderResult> => {
+      if (disposed || signal?.aborted) return Promise.reject(Error("cancelled"));
+      // Video alignment and labels do not change audio; reuse the exact same samples.
+      const key = JSON.stringify(audioIdentity(project));
+      const cached = cache.get(key);
+      if (cached) return Promise.resolve(cached.result);
+      return new Promise((resolve, reject) => {
+        const job: Job = { id: ++serial, project, key, resolve, reject, signal, abort: () => {
+          forget(job);
+          if (active === job) { worker?.terminate(); worker = undefined; active = undefined; }
+          else { const i = queue.indexOf(job); if (i >= 0) queue.splice(i, 1); }
+          reject(Error("cancelled")); run();
+        }};
+        signal?.addEventListener("abort", job.abort, { once: true });
+        queue.push(job); run();
+      });
+    },
     dispose: () => {
-      worker.terminate();
-      for (const job of pending.values()) job.reject(Error("disposed"));
-      pending.clear();
+      disposed = true; worker?.terminate();
+      for (const job of [...queue, ...(active ? [active] : [])]) { forget(job); job.reject(Error("disposed")); }
+      queue.length = 0; active = undefined; cache.clear();
     },
   };
 }

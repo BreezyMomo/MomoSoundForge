@@ -48,6 +48,23 @@ export function CommitText({
     />
   );
 }
+export function TimeInput({ label, value, min = 0, onChange, disabled = false }: {
+  label: string; value: number; min?: number; onChange: (value: number) => void; disabled?: boolean;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+  return <input aria-label={label} type="number" min={min} step="0.01" disabled={disabled}
+    value={draft} onChange={e => setDraft(e.target.value)}
+    onBlur={() => {
+      const next = Number(draft);
+      if (draft.trim() && Number.isFinite(next) && next >= min) {
+        if (next !== value) onChange(next);
+      } else setDraft(String(value));
+    }} onKeyDown={e => {
+      if (e.key === "Enter") e.currentTarget.blur();
+      if (e.key === "Escape") setDraft(String(value));
+    }}/>;
+}
 export function Range({
   label,
   value,
@@ -57,7 +74,9 @@ export function Range({
   unit = "",
   onChange,
   disabled = false,
+  unbounded = false,
 }: {
+  unbounded?: boolean;
   disabled?: boolean;
   label: string;
   value: number;
@@ -73,7 +92,7 @@ export function Range({
       <span className="field-line">
         <span>{label}</span>
         <span className="number-wrap">
-          <input
+          {unbounded ? <TimeInput label={label} value={value} min={min} disabled={disabled} onChange={onChange}/> : <input
             aria-label={label}
             disabled={disabled}
             type="number"
@@ -88,7 +107,7 @@ export function Range({
               )
                 onChange(Math.max(min, Math.min(max, e.target.valueAsNumber)));
             }}
-          />
+          />}
           <span>{unit}</span>
         </span>
       </span>
@@ -154,6 +173,7 @@ export function Inspector({
           max={max}
           step={step}
           unit={unit}
+          unbounded={key === "start" || key === "duration" || key === "trim"}
           disabled={!!driver || !!curve}
           onChange={(v) => onChange(key, v)}
         />
@@ -339,10 +359,10 @@ export function Inspector({
       </section>
       <section className="property-section">
         <h3>{t("prop.timing")}</h3>
-        {range("start", "prop.start", 0, project.duration, 0.01, "s")}
+        {range("start", "prop.start", 0, Math.max(project.duration, layer.start), 0.01, "s")}
         {layer.type !== "composition" && (
           <>
-            {range("duration", "prop.duration", 0.01, 10, 0.01, "s")}
+            {range("duration", "prop.duration", 0.01, Math.max(project.duration, layer.duration), 0.01, "s")}
             {range(
               "attack",
               "prop.attack",

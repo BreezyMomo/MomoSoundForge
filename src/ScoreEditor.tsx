@@ -41,7 +41,7 @@ function NumberField({
       aria-label={label}
       type="number"
       min={min}
-      max={max}
+      max={Number.isFinite(max) ? max : undefined}
       step={step}
       value={value}
       onChange={(e) => {
@@ -385,9 +385,7 @@ export function ScoreEditor({
               className="secondary"
               disabled={!score.notes.length}
               onClick={() => {
-                const duration = Math.min(
-                  10,
-                  Math.max(
+                const duration = Math.max(
                     0.1,
                     ...score.notes.map((n) =>
                       noteEndSeconds(
@@ -397,13 +395,12 @@ export function ScoreEditor({
                         score.bpm,
                       ),
                     ),
-                  ),
                 );
                 onChange({
                   ...project,
                   duration: Math.max(
                     project.duration,
-                    Math.min(10, layer.start + duration),
+                    layer.start + duration,
                   ),
                   layers: project.layers.map((l) =>
                     l.id === layer.id
@@ -474,7 +471,7 @@ export function ScoreEditor({
                         <NumberField
                           label={`${t("score.start")} ${index + 1}`}
                           value={n.start}
-                          max={50}
+                          max={Number.POSITIVE_INFINITY}
                           step={snap || 0.01}
                           onChange={(v) =>
                             updateNote(n.id, { start: quantize(v) })
@@ -489,7 +486,7 @@ export function ScoreEditor({
                           label={`${t("score.duration")} ${index + 1}`}
                           value={n.duration}
                           min={0.005}
-                          max={50}
+                          max={Number.POSITIVE_INFINITY}
                           step={snap || 0.01}
                           onChange={(v) =>
                             updateNote(n.id, {

@@ -17,7 +17,7 @@ self.onmessage = (event: MessageEvent<{ id: number; project: Project }>) => {
         ],
       },
     );
-  } catch {
-    self.postMessage({ id, error: true });
+  } catch (error) {
+    self.postMessage({ id, error: error instanceof Error && error.message === "error.renderBudget" ? error.message : "error.render" });
   }
 };

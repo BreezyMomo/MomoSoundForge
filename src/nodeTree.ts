@@ -27,7 +27,7 @@ export function normalizeGroups(root: Project): Project {
       0.1,
       ...child.layers.map((n) => n.start + n.duration),
     );
-    if (duration > 10 + 1e-6) throw Error("error.tree.timeBounds");
+    if (!Number.isFinite(duration)) throw Error("error.tree.timeBounds");
     return { ...l, duration, project: { ...child, duration } };
   });
   return { ...root, layers };
@@ -71,7 +71,7 @@ export function groupNodes(
   assertProjectLimits(normalized);
   return { root: normalized, id: group.id };
 }
-function pathOffset(root: Project, path: string[]) {
+export function pathOffset(root: Project, path: string[]) {
   let time = 0,
     p = root;
   for (const id of path) {
@@ -109,7 +109,7 @@ export function moveNodes(
   if (
     chosen.some(
       (l) =>
-        l.start + delta < -1e-6 || l.start + delta + l.duration > 10 + 1e-6,
+        l.start + delta < -1e-6 || !Number.isFinite(l.start + delta + l.duration),
     )
   )
     throw Error("error.tree.timeBounds");

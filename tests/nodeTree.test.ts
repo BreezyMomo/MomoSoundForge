@@ -98,7 +98,7 @@ describe("audio node tree", () => {
     ).toBeLessThan(1e-6);
     expect(() => moveNodes(g.root, [], [g.id], [g.id])).toThrow();
   });
-  it("renders full nested tails outside authored clip lengths and exposes the same range to export", () => {
+  it("preserves nested tails while respecting the root work range", () => {
     const p = project();
     p.duration = 0.6;
     p.layers[0].effects = {
@@ -111,7 +111,8 @@ describe("audio node tree", () => {
     const group = g.root.layers.find((l) => l.id === g.id)!;
     group.effects = { ...DEFAULT_EFFECTS, reverb: 0.4 };
     const rendered = renderProject(g.root, 8000);
-    expect(rendered.left.length / 8000).toBeGreaterThan(0.6);
+    expect(rendered.left.length / 8000).toBe(0.6);
+    expect(renderProject({ ...g.root, duration: 4 }, 8000).left.slice(4800).some(x => Math.abs(x) > .0001)).toBe(true);
     expect(rendered.tails![JSON.stringify([g.id, "a"])]).toBeGreaterThan(0);
     expect(rendered.tails![g.id]).toBeGreaterThan(0);
     expect(group.duration).toBeCloseTo(0.5);

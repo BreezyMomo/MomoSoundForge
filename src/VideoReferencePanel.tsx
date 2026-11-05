@@ -43,14 +43,14 @@ export function VideoReferencePanel({ reference, cue, playing, ready, loop, onLo
         const finish = () => { clearTimeout(timer); probe.removeAttribute('src'); probe.load(); };
         const timer = setTimeout(() => { finish(); reject(Error('video.failed')); }, 15000);
         probe.onloadedmetadata = () => { const d = probe.duration; const pixels = probe.videoWidth * probe.videoHeight; finish();
-          if (!Number.isFinite(d) || d > 120 || d < .01 || pixels > 3840 * 2160) reject(Error('video.limit')); else resolve(d); };
+          if (!Number.isFinite(d) || d < .01 || pixels > 3840 * 2160) reject(Error('video.limit')); else resolve(d); };
         probe.onerror = () => { finish(); reject(Error('video.failed')); }; probe.src = url;
       });
       const times = await indexVideo(file, controller.signal);
       if (controller.signal.aborted || latestReference.current !== reference) return;
       setSource({ url, name: file.name, size: file.size }); url = ''; setFrames(times);
       if (!reference || reference.name !== file.name || reference.size !== file.size || Math.abs(reference.duration - duration) > .01)
-        onChange({ name: file.name, size: file.size, duration, start: 0, end: Math.min(10, duration), markers: [] });
+        onChange({ name: file.name, size: file.size, duration, start: 0, end: duration, markers: [] });
       onSeek(0);
     } catch (e) { if (!controller.signal.aborted) setError(e instanceof Error && e.message === 'video.limit' ? 'video.limit' : 'video.failed'); }
     finally { if (url) URL.revokeObjectURL(url); if (job.current === controller) setBusy(false); }
@@ -77,7 +77,7 @@ export function VideoReferencePanel({ reference, cue, playing, ready, loop, onLo
       <input aria-label={t('video.seek')} type="range" min={0} max={reference.end - reference.start} step={.001} value={Math.min(cue, reference.end - reference.start)} onChange={e => seek(e.target.valueAsNumber)}/>
       <div className="video-fields">
         <label>{t('video.start')}<input type="number" min={0} max={reference.duration - .01} step={.001} value={reference.start} onChange={e => { const start = e.target.valueAsNumber; if (Number.isFinite(start) && start >= 0 && start < reference.duration - .009) { onStop(); onChange({ ...reference, start, end: Math.min(reference.duration, start + reference.end - reference.start) }); onSeek(0); } }}/></label>
-        <label>{t('video.length')}<input type="number" min={.01} max={Math.min(10, reference.duration - reference.start)} step={.001} value={Number((reference.end-reference.start).toFixed(3))} onChange={e => { const n = e.target.valueAsNumber; if (Number.isFinite(n) && n >= .01 && n <= Math.min(10, reference.duration - reference.start)) { onStop(); onChange({ ...reference, end: reference.start+n }); onSeek(0); } }}/></label>
+        <label>{t('video.length')}<input type="number" min={.01} max={reference.duration - reference.start} step={.001} value={Number((reference.end-reference.start).toFixed(3))} onChange={e => { const n = e.target.valueAsNumber; if (Number.isFinite(n) && n >= .01 && n <= reference.duration - reference.start) { onStop(); onChange({ ...reference, end: reference.start+n }); onSeek(0); } }}/></label>
         <label>{t('video.volume')}<input type="range" min={0} max={1} step={.01} value={volume} onChange={e => setVolume(e.target.valueAsNumber)}/></label>
       </div>
       <p className="field-help">{t('video.mapping')}</p>

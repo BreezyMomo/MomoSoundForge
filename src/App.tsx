@@ -11,6 +11,7 @@ import {
   normalizeGroups,
   nodeDocument,
   nodeParent,
+  pathOffset,
   type NodeAddress,
 } from "./nodeTree";
 import { bypassEffects } from "./nodeEffects";
@@ -47,7 +48,7 @@ import { AppearancePreferences } from "./AppearancePreferences";
 import { LanguagePreferences } from "./LanguagePreferences";
 import { Workbench } from "./Workbench";
 import { SoundLibrary } from "./SoundLibrary";
-import { Inspector, Range, CommitText } from "./Inspector";
+import { Inspector, Range, CommitText, TimeInput } from "./Inspector";
 import { Waveform } from "./Waveform";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { fromPreset } from "./presets";
@@ -59,9 +60,11 @@ import {
 import {
   SAMPLE_RATE,
   MAX_ASSET_BYTES,
+  MAX_SAMPLE_FRAMES,
   clamp,
   encodeSamples,
   makeLayer,
+  makeProject,
   parseProject,
   projectForSave,
   uid,
@@ -98,8 +101,7 @@ import {
 } from "./storage";
 import { language, t, useLanguage } from "./i18n";
 type Variation = { project: Project; result: RenderResult };
-const defaultProject = () =>
-  fromPreset("ice", t("preset.ice"), (key) => t(`layer.${key}`));
+const defaultProject = () => makeProject(t("file.untitled"));
 const db = (v: number) => (v > 0 ? (20 * Math.log10(v)).toFixed(1) : "−∞");
 function readBuiltinSound(id: string) {
   const sound = BUILTIN_SOUNDS.find((entry) => entry.id === id);
@@ -249,7 +251,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   const updateCue = useCallback((time: number) => {
-    const value = clamp(time, 0, 40);
+    const value = Number.isFinite(time) ? clamp(time, 0, rootCurrent.current.duration) : 0;
     cueRef.current = value;
     setCue(value);
   }, []);
@@ -410,9 +412,10 @@ export default function App() {
     if (!ready) return;
     let cancelled = false;
     setRenderFailed(false);
+    const abort = new AbortController();
     const timer = setTimeout(() => {
       renderer
-        .current!.render(history.project)
+        .current!.render(history.project, abort.signal)
         .then(async (result) => {
           if (cancelled) return;
           const original = selected
@@ -420,7 +423,7 @@ export default function App() {
                 beforeSoundPolish(history.project, {
                   path: context.path,
                   id: selected,
-                }),
+                }), abort.signal,
               )
             : result;
           const frames = Math.max(result.left.length, original.left.length);
@@ -432,15 +435,16 @@ export default function App() {
               target: nodeKey({ path: context.path, id: selected }),
             });
         })
-        .catch(() => {
+        .catch((error) => {
           if (!cancelled) {
             setRenderFailed(true);
-            flash("error.render");
+            flash(error?.message === "error.renderBudget" ? "error.renderBudget" : "error.render");
           }
         });
-    }, 90);
+    }, history.project.duration > 10 ? 180 : 90);
     return () => {
       cancelled = true;
+      abort.abort();
       clearTimeout(timer);
     };
   }, [history.project, selected, JSON.stringify(context.path), ready, flash]);
@@ -552,13 +556,7 @@ export default function App() {
   if (rendered) collectIds(rendered.project.layers);
   const displayResult = auditionResult ??
     (sharesNode(history.project.layers, previousIds) ? rendered?.result : null);
-  const timelineDuration = Math.max(
-    history.project.duration,
-    (displayResult?.left.length ?? 0) / (displayResult?.sampleRate ?? 48000),
-    comparisonReady
-      ? rendered.original.left.length / rendered.original.sampleRate
-      : 0,
-  );
+  const timelineDuration = history.project.duration;
   const comparePolish = (original: boolean) => {
     if (
       !result ||
@@ -903,13 +901,9 @@ export default function App() {
     setSelected(copies[0].id);
   };
   async function finalOutput(p: Project, settings = exportSettings) {
-    const audio = await renderer.current!.render(p);
-    const input = settings.loopOnly
-      ? audio
-      : padAudition(
-          audio,
-          audio.left.length + Math.round(settings.tail * audio.sampleRate),
-        );
+    const input = await renderer.current!.render(settings.loopOnly ? p : {
+      ...p, duration: p.duration + settings.tail,
+    });
     return prepareExport(
       input,
       { ...settings, loopOnly: settings.loopOnly && !!p.loopRegion },
@@ -1054,7 +1048,7 @@ export default function App() {
       if (file.size > 24 * 1024 * 1024) throw Error("error.fileSize");
       const data = await file.arrayBuffer(),
         buffer = await player.current!.decode(data);
-      if (buffer.duration > 30) throw Error("error.budget");
+      if (buffer.length > MAX_SAMPLE_FRAMES || buffer.length * Math.min(2, buffer.numberOfChannels) * 4 > MAX_ASSET_BYTES) throw Error("error.budget");
       if (JSON.stringify(importPath) !== JSON.stringify(pathRef.current))
         throw Error("error.scopeChanged");
       const id = uid(),
@@ -1084,7 +1078,7 @@ export default function App() {
         assetId: id,
         frequency: 440,
         endFrequency: 440,
-        duration: clamp(buffer.duration, 0.01, 10),
+        duration: Math.max(0.01, buffer.duration),
         gain: 0.8,
         decay: 0,
         release: 0.02,
@@ -1092,7 +1086,7 @@ export default function App() {
       });
       const append = (p: Project) => ({
         ...p,
-        duration: Math.max(p.duration, Math.min(10, buffer.duration + 0.05)),
+        duration: Math.max(p.duration, buffer.duration + 0.05),
         assets: { ...projectForSave(p).assets, [id]: asset },
         layers: [...p.layers, layer],
       });
@@ -1203,8 +1197,8 @@ export default function App() {
       setIoBusy(false);
     }
   }
-  const truncated = project.layers.some(
-    (l) => !l.muted && l.start + l.duration > project.duration + 0.005,
+  const truncated = history.project.layers.some(
+    (l) => l.start + l.duration > history.project.duration + 0.005,
   );
   const library = (
     <SoundLibrary
@@ -1491,7 +1485,7 @@ export default function App() {
             aria-label={t("pro.zoom")}
             type="range"
             min={1}
-            max={8}
+            max={Math.max(8, Math.ceil(timelineDuration / 2))}
             step={0.25}
             value={zoom}
             onChange={(e) => setZoom(+e.target.value)}
@@ -1623,7 +1617,7 @@ export default function App() {
             const parent = nodeParent(root, address.path),
               active = parent.layers.find((l) => l.id === address.id)!;
             const layers = transformLayers(
-              { ...parent, duration: 10 },
+              { ...parent, duration: Math.max(parent.duration, timelineDuration - pathOffset(root, address.path)) },
               active,
               patch,
             );
@@ -1641,15 +1635,15 @@ export default function App() {
         onBegin={stop}
       />
       <div className="master-controls">
-        <Range
-          label={t("editor.duration")}
-          value={history.project.duration}
-          min={0.1}
-          max={10}
-          step={0.01}
-          unit="s"
-          onChange={(v) => editRoot((p) => ({ ...p, duration: v }))}
-        />
+        <label className="range-field"><span>{t("editor.duration")} · s</span>
+          <TimeInput label={t("editor.duration")} value={history.project.duration} min={0.1}
+            onChange={v => editRoot(p => ({ ...p, duration: v }))}/>
+        </label>
+        <button className="secondary" onClick={() => editRoot(p => ({ ...p,
+          duration: Math.max(p.duration, ...p.layers.map(l => l.start + l.duration + (result?.tails?.[l.id] ?? 0))),
+        }))}>{t("editor.extendToContent")}</button>
+        {truncated && <span className="field-help">{t("editor.outsideRange")}</span>}
+
       </div>
       <p className="field-help">
         {t("tree.tailHelp")}
@@ -1805,6 +1799,12 @@ export default function App() {
             <Redo2 size={17} />
           </button>
           <span className="header-divider" />
+          <button className="text-button" title={t("file.new")} aria-label={t("file.new")}
+            disabled={!ready || ioBusy} onClick={() => {
+              editRoot(() => defaultProject()); scopeEpoch.current++;
+              setEditPath([]); setSelected(""); setSelection([]); setVariations([]); updateCue(0); setZoom(1);
+              manager.current?.show("editor");
+            }}><FilePlus2 size={16}/><span>{t("file.new")}</span></button>
           <button
             className="text-button"
             aria-label={t("file.open")}

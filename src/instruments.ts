@@ -136,10 +136,10 @@ export function validateScore(
       !text(n.instrumentId) ||
       !integer(n.midi, 0, 127) ||
       !integer(n.velocity, 1, 127) ||
-      !number(n.start, 0, 50) ||
-      !number(n.duration, 0.005, 50) ||
+      !number(n.start, 0, Number.MAX_VALUE) ||
+      !number(n.duration, 0.005, Number.MAX_VALUE) ||
       !text(n.articulation, 60) ||
-      beatsToSeconds(n.start + n.duration, score.bpm) > 10.000001
+      !Number.isFinite(beatsToSeconds(n.start + n.duration, score.bpm))
     )
       fail();
     // Unknown instruments remain editable and explicitly silent, rather than silently substituted.

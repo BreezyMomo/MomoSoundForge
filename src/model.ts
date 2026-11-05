@@ -14,10 +14,15 @@ import {
   type LoopRegion,
 } from "./advanced";
 export const SAMPLE_RATE = 48000;
-export const MAX_SAMPLE_FRAMES = 5_760_000; // 30 seconds at the maximum accepted rate, 192 kHz.
+export const MAX_SAMPLE_FRAMES = 5_760_000; // Per-channel decoded sample budget; duration depends on sample rate.
 export const MAX_ASSET_BYTES = 24 * 1024 * 1024;
 export const MAX_COMPOSITION_DEPTH = 6;
 export const MAX_TOTAL_LAYERS = 128;
+export const DEFAULT_PROJECT_DURATION = 10;
+export const makeProject = (name: string): Project => ({
+  schema: "momo.soundforge/v2", name, seed: 2048,
+  duration: DEFAULT_PROJECT_DURATION, master: 1, echo: 0, layers: [], assets: {},
+});
 export type Wave = "sine" | "triangle" | "saw" | "square" | "noise";
 export type Layer = {
   id: string;
@@ -182,7 +187,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     !str(r.name) ||
     !num(r.seed, 0, 4294967295) ||
     !Number.isInteger(r.seed) ||
-    !num(r.duration, 0.1, 10) ||
+    !num(r.duration, 0.1, Number.MAX_VALUE) ||
     !num(r.master, 0, 1.5) ||
     !num(r.echo, 0, 0.6) ||
     !Array.isArray(r.layers) ||
@@ -218,8 +223,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       const decoded = decodeSamples(channel);
       if (
         !decoded.length ||
-        decoded.length > MAX_SAMPLE_FRAMES ||
-        decoded.length / a.sampleRate > 30.001
+        decoded.length > MAX_SAMPLE_FRAMES
       )
         return fail();
       lengths.push(decoded.length);
@@ -247,15 +251,15 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       return fail();
     ids.add(l.id);
     if (
-      (l.sourceDuration !== undefined && !num(l.sourceDuration, 0.01, 10)) ||
+      (l.sourceDuration !== undefined && !num(l.sourceDuration, 0.01, Number.MAX_VALUE)) ||
       (l.cropStart !== undefined && !num(l.cropStart, 0, 1)) ||
       (l.cropEnd !== undefined && !num(l.cropEnd, 0, 1)) ||
       (l.cropStart ?? 0) >= (l.cropEnd ?? 1)
     )
       return fail();
     const ranges = {
-      start: [0, 10],
-      duration: [0.01, 10],
+      start: [0, Number.MAX_VALUE],
+      duration: [0.01, Number.MAX_VALUE],
       gain: [0, 1.5],
       pan: [-1, 1],
       frequency: [20, 20000],
@@ -265,7 +269,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       decay: [0, 10],
       cutoff: [30, 22000],
       drive: [0, 10],
-      trim: [0, 30],
+      trim: [0, Number.MAX_VALUE],
     } as const;
     for (const [key, [min, max]] of Object.entries(ranges))
       if (!num(l[key as keyof Layer], min, max)) return fail();
@@ -392,7 +396,7 @@ export function varyProject(
                 amount === 0 ? l.noiseSeed : Math.floor(random() * 4294967296),
               frequency: clamp(jitter(l.frequency, 0.8), 20, 20000),
               endFrequency: clamp(jitter(l.endFrequency, 0.8), 20, 20000),
-              duration: clamp(jitter(l.duration, 0.35), 0.01, 10),
+              duration: Math.max(0.01, jitter(l.duration, 0.35)),
               gain: clamp(jitter(l.gain, 0.3), 0, 1.5),
               pan: clamp(l.pan + (random() - 0.5) * amount * 0.4, -1, 1),
             },
@@ -537,7 +541,7 @@ export function updateProjectAtPath(
     layer.trim === 0 &&
     Math.abs(layer.duration - before.duration / (layer.frequency / 440)) < 1e-6;
   const duration = followsDuration
-    ? clamp(after.duration / (layer.frequency / 440), 0.01, 10)
+    ? Math.max(0.01, after.duration / (layer.frequency / 440))
     : layer.duration;
   const updated = {
     ...layer,
@@ -547,7 +551,7 @@ export function updateProjectAtPath(
   };
   const projectDuration =
     followsDuration && layer.start + layer.duration <= root.duration + 1e-6
-      ? Math.min(10, Math.max(root.duration, layer.start + duration))
+      ? Math.max(root.duration, layer.start + duration)
       : root.duration;
   return {
     ...root,

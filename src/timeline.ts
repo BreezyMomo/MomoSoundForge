@@ -26,6 +26,17 @@ export function stretchClip(layer: Layer, timing: ClipTiming): Partial<Layer> {
 export type ClipTiming = { start: number; duration: number };
 export type ClipEdit = "move" | "start" | "end";
 export const MIN_CLIP_DURATION = 0.01;
+export function rulerTicks(duration: number, width: number): number[] {
+  const count = Math.max(2, Math.min(1000, Math.floor(width / 90)));
+  const raw = duration / count;
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const step = ([1, 2, 5, 10].find(n => n * power >= raw) ?? 10) * power;
+  if (!Number.isFinite(step) || step <= 0) return [0, duration];
+  const ticks = Array.from({ length: Math.ceil(duration / step) }, (_, i) => i * step);
+  // Leave enough room for the end label when the duration isn't a round interval.
+  if (ticks.length > 1 && duration - ticks.at(-1)! < step * .6) ticks.pop();
+  return [...ticks, duration];
+}
 
 /** Calculate from the gesture's original timing, never from the previous pointer move. */
 export function adjustClipTiming(
@@ -63,7 +74,7 @@ export function adjustClipTiming(
           MIN_CLIP_DURATION,
           Math.max(
             MIN_CLIP_DURATION,
-            Math.min(10, projectDuration - original.start),
+            projectDuration - original.start,
           ),
         ),
       ),
@@ -72,7 +83,7 @@ export function adjustClipTiming(
   const start = clean(
     clamp(
       original.start + snapped,
-      Math.max(0, end - 10),
+      0,
       Math.max(0, end - MIN_CLIP_DURATION),
     ),
   );

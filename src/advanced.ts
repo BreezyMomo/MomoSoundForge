@@ -8,7 +8,7 @@ export const PARAMS = {
   cutoff: [30, 22000],
   frequency: [20, 20000],
   endFrequency: [20, 20000],
-  start: [0, 10],
+  start: [0, Number.MAX_VALUE],
   attack: [0, 3],
   release: [0, 5],
   decay: [0, 10],

@@ -1036,6 +1036,8 @@ span {
   padding-top: 18px;
   border-top: 1px solid var(--ui-line);
 }
+.master-controls > button { align-self:end; justify-self:start; }
+.master-controls > .field-help { grid-column:1 / -1; }
 .range-field {
   display: flex;
   flex-direction: column;
@@ -1736,7 +1738,7 @@ span {
     margin-top: 10px;
     padding-top: 10px;
   }
-  .master-controls > .range-field > input {
+  .master-controls > .range-field > input[type="range"] {
     display: none;
   }
 }
@@ -1793,11 +1795,11 @@ span {
 .layer-playhead { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ui-text); pointer-events: none; z-index: 2; }
 .layer-time-ruler { container-type: inline-size; }
 @container (max-width: 280px) {
-  .layer-time-ruler .time-ruler span:nth-child(2),
-  .layer-time-ruler .time-ruler span:nth-child(4) { display: none; }
+  .layer-time-ruler .time-ruler:not(.adaptive) span:nth-child(2),
+  .layer-time-ruler .time-ruler:not(.adaptive) span:nth-child(4) { display: none; }
 }
 @container (max-width: 140px) {
-  .layer-time-ruler .time-ruler span:nth-child(3) { display: none; }
+  .layer-time-ruler .time-ruler:not(.adaptive) span:nth-child(3) { display: none; }
 }
 .clip-edit-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--ui-subtle); margin-bottom: 6px; }
 .clip-edit-toolbar [aria-pressed="true"] { background: var(--ui-selected); color: var(--ui-text); }
@@ -1861,3 +1863,4 @@ span {
 .export-dialog .pro-checks { gap:14px; }
 @media(max-width:520px) { .export-dialog { padding:16px; } .export-dialog .pro-grid { grid-template-columns:1fr; } }
 .export-fields { border:0; padding:0; margin:0; min-width:0; }
+.time-ruler.adaptive { position:relative; height:16px; display:block; } .time-ruler.adaptive span { position:absolute; top:0; white-space:nowrap; }

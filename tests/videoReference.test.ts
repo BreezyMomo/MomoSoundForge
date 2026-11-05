@@ -11,9 +11,11 @@ describe('video reference', () => {
     expect(stepFrame(times,.117,-1)).toBe(.067);
     expect(stepFrame(times,0,-1)).toBe(0);
     expect(stepFrame(times,.133,1)).toBe(.133);
+    expect(stepFrame(times,.15,-1)).toBe(.133);
+    expect(stepFrame(times,.08,-1)).toBe(.067);
   });
   it('rejects unbounded and malformed external references', () => {
-    for(const patch of [{duration:Infinity},{size:100*1024*1024},{start:-1},{end:25},{markers:Array(65).fill({id:'x',name:'x',time:1})},{markers:[{id:'x',name:'x',time:NaN}]}])
+    for(const patch of [{duration:Infinity},{size:100*1024*1024},{start:-1},{end:31},{markers:Array(65).fill({id:'x',name:'x',time:1})},{markers:[{id:'x',name:'x',time:NaN}]}])
       expect(()=>validateVideoReference({...reference(),...patch})).toThrow();
   });
   it('round-trips alignment and named markers without requiring a local video path', () => {

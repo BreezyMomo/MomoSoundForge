@@ -7,7 +7,7 @@ export function instrumentPlaybackRange(
 ) {
   const length = channels[0].length;
   const originalDuration = length / sampleRate;
-  const maximumDuration = Math.min(10, Math.max(.1, originalDuration));
+  const maximumDuration = Math.max(.1, originalDuration);
   const windowFrames = Math.max(1, Math.round(sampleRate * .02));
   const envelope: number[] = [];
   let peak = 0, peakIndex = 0;

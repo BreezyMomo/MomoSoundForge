@@ -27,7 +27,7 @@ it("preserves long sustained playing and internal rests", () => {
   const audio = signal(9, t => t < 2 || (t > 3 && t < 8) ? .08 : 0);
   const range = instrumentPlaybackRange([audio], rate, "flute");
   expect(range.duration).toBeCloseTo(8.18, 2);
-  expect(instrumentPlaybackRange([signal(12, () => .08)], rate, "violin-section").duration).toBe(10);
+  expect(instrumentPlaybackRange([signal(12, () => .08)], rate, "violin-section").duration).toBe(12);
 });
 it("uses either stereo channel and retains even very quiet ringing", () => {
   const left = signal(5, t => t < .3 ? .2 : 0);
