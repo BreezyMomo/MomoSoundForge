@@ -4,6 +4,12 @@
 
 Create layered game sound effects in your browser using procedural synthesis and local samples. Audio processing and project storage run on your device; no account or online inference service is required.
 
+## Product goal
+
+Help game developers without audio expertise create good-sounding everyday effects they can use directly in their games. Learn from mature sound tools and adapt their capabilities through scenario presets, intuitive descriptions, macro controls and useful defaults, while preserving room for detailed editing. An optional professional mode is a future direction.
+
+See [Product goals and design principles (Chinese)](docs/product-vision.md) for the full direction and decision criteria for future AI work. This section describes the long-term goal; implemented features are listed below.
+
 ## Run locally
 
 Requires Node.js 22 or later.
