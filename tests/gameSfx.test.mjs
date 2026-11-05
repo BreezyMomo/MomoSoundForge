@@ -11,7 +11,7 @@ import { levels } from '../tools/audit-builtin-library.mjs';
 const root = 'samples/game-sfx-starter-20261105';
 const manifest = JSON.parse(readFileSync(`${root}/manifest.json`, 'utf8'));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-const recordings = BUILTIN_SOUNDS.filter(s => s.recordingGroup);
+const recordings = BUILTIN_SOUNDS.filter(s => s.recordingGroup?.startsWith('game-'));
 const scenes = BUILTIN_SOUNDS.filter(s => s.id.startsWith('example-game-'));
 const read = sound => {
   const bytes = readFileSync(`public/sound-library/${sound.file}`);
