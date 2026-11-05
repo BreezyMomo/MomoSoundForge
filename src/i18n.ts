@@ -73,7 +73,7 @@ const words: Record<string, [string, string]> = {
   "polish.advancedHelp": ["与上方控制同步。关闭的效果组保留设置，重新开启即可恢复。", "These parameters share the controls above. Disabled groups retain their settings."],
   "polish.protection": ["最终试听与导出统一进行音量保护，分组内部不重复限幅。", "Peak protection runs once at the audition/export output, never inside groups."],
 
-  "score.title": ["乐器声部", "Instrument part"],
+  "score.title": ["乐器", "Instrument"],
   "score.addTrack": ["添加乐器声部", "Add instrument part"],
   "score.notes": ["音符", "Notes"],
   "score.mapping": ["采样映射", "Sample mapping"],
@@ -159,8 +159,8 @@ const words: Record<string, [string, string]> = {
   "score.moreIssues": ["另外 {0} 条提示", "{0} more notices"],
   "score.noteCount": ["{0} 个音符", "{0} notes"],
   "score.editHint": [
-    "在声音编排下方编辑此声部的音符与采样映射。",
-    "Edit notes and sample mappings below the layer timeline.",
+    "在当前属性面板中编辑音符、节奏与乐器参数。",
+    "Edit notes, rhythm and instrument parameters in this properties panel.",
   ],
 
   ...BUILTIN_MESSAGES,

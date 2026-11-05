@@ -114,8 +114,10 @@ export function Inspector({
   onEnter,
   onExpose,
   postProcessing,
+  sourceEditor,
 }: {
   postProcessing?: ReactNode;
+  sourceEditor?: ReactNode;
   layer?: Layer;
   project: Project;
   onChange: (key: keyof Layer, value: Layer[keyof Layer]) => void;
@@ -216,6 +218,7 @@ export function Inspector({
           onCommit={(v) => onChange("name", v)}
         />
       </label>
+      {sourceEditor}
       {postProcessing}
       <section className="property-section">
         <h3>{t("prop.source")}</h3>

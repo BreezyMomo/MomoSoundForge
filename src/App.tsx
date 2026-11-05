@@ -1,3 +1,4 @@
+import { appendInstrumentNode } from "./instrumentNode";
 import { TreeTimeline } from "./TreeTimeline";
 import { SoundPolish } from "./SoundPolish";
 import {
@@ -14,7 +15,6 @@ import {
 import { bypassEffects } from "./nodeEffects";
 import { beforeSoundPolish, padAudition } from "./polishAudition";
 import { ScoreEditor } from "./ScoreEditor";
-import { emptyScore } from "./instruments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
@@ -815,6 +815,16 @@ export default function App() {
   }
   function insertSound(child: Project) {
     if (current.current.layers.length >= 16) throw Error("error.layers");
+    if (child.layers.length === 1 && child.layers[0].type === "instrument" &&
+        !child.effects && !child.echo && !child.controls?.length) {
+      const layerId = uid();
+      const append = (p: Project) => appendInstrumentNode(p, child, layerId);
+      assertProjectLimits(updateProjectAtPath(rootCurrent.current, pathRef.current, append));
+      edit(append);
+      setSelected(layerId);
+      manager.current?.show("inspector");
+      return;
+    }
     const layer = makeComposition(nodeDocument(child)),
       append = (p: Project) => ({
         ...p,
@@ -1418,29 +1428,6 @@ export default function App() {
           <button
             className="text-button"
             disabled={project.layers.length >= 16}
-            onClick={() => {
-              const layer = makeLayer({
-                type: "instrument",
-                name: t("score.title"),
-                score: emptyScore(),
-                duration: project.duration,
-                frequency: 440,
-                endFrequency: 440,
-                gain: 1,
-                attack: 0,
-                release: 0,
-                decay: 0,
-                cutoff: 22000,
-              });
-              edit((p) => ({ ...p, layers: [...p.layers, layer] }));
-              setSelected(layer.id);
-            }}
-          >
-            {t("score.addTrack")}
-          </button>
-          <button
-            className="text-button"
-            disabled={project.layers.length >= 16}
             onClick={addSynth}
           >
             <Plus size={15} />
@@ -1667,14 +1654,6 @@ export default function App() {
         {t("tree.tailHelp")}
         {result?.tailLimited && ` ${t("tree.tailLimited")}`}
       </p>
-      {selectedLayer?.type === "instrument" && (
-        <ScoreEditor
-          key={selectedLayer.id}
-          project={project}
-          layer={selectedLayer}
-          onChange={(next) => edit(() => next)}
-        />
-      )}
       <MacroEditor
         project={project}
         onChange={(next) => edit(() => next, "controls")}
@@ -1877,6 +1856,10 @@ export default function App() {
             editor,
             inspector: (
               <Inspector
+                sourceEditor={selectedLayer?.type === "instrument" ? (
+                  <ScoreEditor key={selectedLayer.id} project={project} layer={selectedLayer}
+                    onChange={(next) => edit(() => next)} />
+                ) : undefined}
                 postProcessing={
                   selectedLayer && (
                     <SoundPolish

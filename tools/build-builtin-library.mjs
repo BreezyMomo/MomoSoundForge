@@ -86,9 +86,17 @@ try {
       for (let i = 0; i < length; i++) for (let c = 0; c < 2; c++) channels[c][i] = wav.readInt16LE(44 + i * 4 + c * 2) / 32768;
       const { duration, release } = instrumentPlaybackRange(channels, 48000, job.sample.instrumentId);
       source = {
-        schema: "momo.soundforge/v2", name: job.id, seed: 2048, duration, master: 1.25, echo: 0,
+        schema: "momo.soundforge/v2", name: job.id, seed: 2048, duration, master: 1, echo: 0,
         assets: { [job.sample.id]: { id: job.sample.id, name: path.basename(job.source), sampleRate: 48000, channels: channels.map(encodeSamples) } },
-        layers: [makeLayer({ id: `layer-${job.sample.id}`, name: job.sample.id, type: "sample", assetId: job.sample.id,
+        layers: [makeLayer({ id: `layer-${job.sample.id}`, name: job.sample.id, type: "instrument",
+          score: { schema: "momo.score/v1", bpm: 120,
+            instruments: [{ id: job.sample.instrumentId, name: job.sample.instrumentId, license: "CC0-1.0",
+              regions: [{ id: job.sample.id, assetId: job.sample.id, rootMidi: job.sample.rootMidi ?? 60,
+                keyLow: 0, keyHigh: 127, velocityLow: 1, velocityHigh: 127,
+                articulation: job.sample.articulation, roundRobin: 0, tuneCents: 0, gainDb: 0, releaseSeconds: release }] }],
+            notes: [{ id: `note-${job.sample.id}`, instrumentId: job.sample.instrumentId,
+              midi: job.sample.rootMidi ?? 60, start: 0, duration: Math.max(.05, duration - release) * 2,
+              velocity: 100, articulation: job.sample.articulation }] },
           duration, frequency: 440, endFrequency: 440, gain: 1.3, attack: .002, release, decay: 0, cutoff: 22000, noiseSeed: 2048 })],
       };
     } else source = JSON.parse(await readFile(path.join(root, job.source), "utf8"));

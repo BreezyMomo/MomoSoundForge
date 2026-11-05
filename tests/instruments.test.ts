@@ -1,3 +1,4 @@
+import { appendInstrumentNode } from "../src/instrumentNode";
 import { describe, it, expect } from "vitest";
 import {
   encodeSamples,
@@ -345,4 +346,24 @@ it("rejects reversed loops, missing release assets, unknown schema and excess in
     change(p.layers[0].score!);
     expect(() => parseProject(p)).toThrow();
   }
+});
+
+it("inserts library instruments as independent leaves with portable assets", () => {
+  const source = fixture();
+  source.layers[0].score!.instruments[0].regions[0].releaseAssetId = "hard";
+  const snapshot = structuredClone(source);
+  const parent = { ...fixture(), layers: [] };
+  const first = appendInstrumentNode(parent, source, "first");
+  const second = appendInstrumentNode(first, source, "second");
+  expect(second.layers.map(l => l.type)).toEqual(["instrument", "instrument"]);
+  const a = second.layers[0].score!.instruments[0].regions[0];
+  const b = second.layers[1].score!.instruments[0].regions[0];
+  expect(a.assetId).not.toBe(b.assetId);
+  expect(a.releaseAssetId).not.toBe(b.releaseAssetId);
+  expect(second.assets.soft).toEqual(parent.assets.soft);
+  expect(source).toEqual(snapshot);
+  const portable = parseProject(projectForSave(first));
+  expect(renderProject(portable, sr).left).toEqual(renderProject(source, sr).left);
+  second.layers[1].score!.notes[0].midi = 65;
+  expect(second.layers[0].score!.notes[0].midi).toBe(60);
 });
