@@ -7,6 +7,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { createDockWorkspace, type DockWorkspace } from "@momo/workbench/dock";
+import {mountDockMenu} from '@momo/workbench/react';
+import {appearance} from './AppearancePreferences';
 import { createLayoutModel, type LayoutNode } from "@momo/workbench/layout";
 import { t, language } from "./i18n";
 import "@momo/workbench/dock.css";
@@ -101,6 +103,7 @@ export function Workbench({
       menuHost: menuHost.current,
       panels: containers,
       model,
+      renderMenu:options=>mountDockMenu({...options,appearance,language}),
       storageKey: `momo-sound-forge:layout:v1${compact ? ":compact" : ""}`,
       ui: { text: t, format: t, onLanguageChange: language.onLanguageChange },
       menuPresets: [
