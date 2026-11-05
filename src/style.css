@@ -1496,6 +1496,7 @@ span {
   }
   .header-right {
     gap: 5px;
+    flex-wrap: wrap;
     flex-basis: 100%;
     justify-content: flex-end;
   }

@@ -15,7 +15,6 @@ import {
   LockKeyhole,
   LockKeyholeOpen,
   Volume2,
-  HelpCircle,
   X,
   Shuffle,
   Check,
@@ -1849,12 +1848,13 @@ export default function App() {
           <AppearancePreferences />
           <LanguagePreferences />
           <button
-            className="icon-button"
-            aria-label={t("help.label")}
-            title={t("help.label")}
+            className="momo-header-button"
+            data-momo-header-control="true"
+            aria-label={t("header.help")}
+            title={t("header.help")}
             onClick={() => setHelp(true)}
           >
-            <HelpCircle size={17} />
+            <span className="momo-header-label">{t("header.help")}</span>
           </button>
           <button
             className="secondary export-button"
