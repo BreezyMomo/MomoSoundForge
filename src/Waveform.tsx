@@ -6,12 +6,16 @@ export function Waveform({
   color,
   className = "",
   label,
+  startFrame = 0,
+  endFrame = data?.length ?? 0,
 }: {
   data?: Float32Array;
   right?: Float32Array;
   color?: string;
   className?: string;
   label: string;
+  startFrame?: number;
+  endFrame?: number;
 }) {
   const { appearance } = useWorkbench();
   const ref = useRef<HTMLCanvasElement>(null);
@@ -43,12 +47,13 @@ export function Waveform({
       for (let x = 0; x < width; x++) {
         let lo = 0,
           hi = 0;
-        const start = Math.floor((x / width) * data.length),
+        const span = Math.max(0, endFrame - startFrame);
+        const start = Math.floor(startFrame + (x / width) * span),
           end = Math.max(
             start + 1,
-            Math.floor(((x + 1) / width) * data.length),
+            Math.floor(startFrame + ((x + 1) / width) * span),
           );
-        for (let j = start; j < Math.min(data.length, end); j++) {
+        for (let j = Math.max(0, start); j < Math.min(data.length, end, endFrame); j++) {
           lo = Math.min(lo, data[j], right?.[j] ?? 0);
           hi = Math.max(hi, data[j], right?.[j] ?? 0);
         }
@@ -90,7 +95,7 @@ export function Waveform({
       observer.disconnect();
       unsubscribe();
     };
-  }, [data, right, color, appearance]);
+  }, [data, right, color, appearance, startFrame, endFrame]);
   return (
     <canvas
       ref={ref}

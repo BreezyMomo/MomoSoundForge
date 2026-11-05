@@ -16,6 +16,7 @@ import { PlayheadTimeline } from "./PlayheadTimeline";
 import { boundedSelection } from "./timeline";
 import { TimelineClip } from "./TimelineClip";
 import { NoteRoll } from "./NoteRoll";
+import { scoreBeatAtTime, scoreTimeAtBeat } from "./noteEditing";
 import type { NoteEvent } from "./instruments";
 import { t } from "./i18n";
 import "./node-tree.css";
@@ -25,11 +26,13 @@ export function TreeTimeline({
   ids,
   result,
   ready,
+  beforeKey,
   cue,
   duration,
   zoom,
   cropMode,
   playing,
+  previewTime,
   onSelect,
   onClearSelection,
   onPatch,
@@ -49,11 +52,13 @@ export function TreeTimeline({
   ids: string[];
   result: RenderResult | null;
   ready: boolean;
+  beforeKey?: string;
   cue: number;
   duration: number;
   zoom: number;
   cropMode: boolean;
   playing: string | null;
+  previewTime: number;
   onSelect: (
     address: NodeAddress,
     event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
@@ -133,6 +138,7 @@ export function TreeTimeline({
     }
   };
   collect(root);
+  const previewRow = rows.find(({ address }) => playing === `node-${nodeKey(address)}`);
   const selectionAt = (path: string[]) =>
     JSON.stringify(path) === JSON.stringify(selected.path);
   return (
@@ -240,6 +246,11 @@ export function TreeTimeline({
               group = layer.type === "composition";
             const chosen = selectionAt(address.path) && ids.includes(layer.id);
             const tail = result?.tails?.[key] ?? 0;
+            const previewPath = previewRow && [...previewRow.address.path, previewRow.address.id];
+            const inPreview = previewRow && (nodeKey(previewRow.address) === key ||
+              previewPath!.every((id, index) => address.path[index] === id));
+            const scoreTime = inPreview ? previewTime + previewRow.offset + previewRow.layer.start : cue;
+            const timeAtBeat = (beat: number) => Math.max(0, Math.min(duration, scoreTimeAtBeat(layer, beat, offset)));
             const changeNote = (note: NoteEvent) => onPatch(address, {
               score: { ...layer.score!, notes: layer.score!.notes.map(n => n.id === note.id ? note : n) },
             });
@@ -335,7 +346,7 @@ export function TreeTimeline({
                     <small>
                       {t(
                         group
-                          ? "tree.group"
+                          ? (beforeKey === key ? "tree.groupBefore" : "tree.groupProcessed")
                           : layer.type === "instrument"
                             ? "score.title"
                             : layer.type === "sample"
@@ -375,6 +386,8 @@ export function TreeTimeline({
                       : (result?.processedLayers?.[key] ?? result?.layers[key])
                   }
                   tail={tail}
+                  sampleRate={result?.sampleRate}
+                  tailData={result?.processedLayers?.[key]}
                   moveOnly={group}
                   onSelect={(event) => onSelect(address, event)}
                   onClearSelection={onClearSelection}
@@ -481,6 +494,14 @@ export function TreeTimeline({
                 </div>
                 {layer.type === "instrument" && layer.score && openScore === key && <div className="tree-note-editor">
                   <NoteRoll layer={layer} onChange={changeNote} onSelect={() => onSelect(address)}
+                    playheadBeat={scoreBeatAtTime(layer, scoreTime, offset)}
+                    playheadVisible={(!playing || playing === "main" || !!inPreview) &&
+                      scoreTime >= offset + layer.start && scoreTime <= offset + layer.start + layer.duration}
+                    followPlayhead={playing === "main" || !!inPreview}
+                    seekReady={ready}
+                    onSeekStart={onSeekStart}
+                    onSeekBeat={beat => onSeek(timeAtBeat(beat))}
+                    onSeekEnd={beat => onSeekEnd(timeAtBeat(beat))}
                     onBegin={onBegin} onAudition={note => onNoteAudition(address, note)} onExpand={() => onOpenNotes(address)} />
                 </div>}
               </div>

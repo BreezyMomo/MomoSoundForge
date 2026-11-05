@@ -46,13 +46,20 @@
 }
 .clip-effect-tail {
   position: absolute;
-  top: 12px;
-  bottom: 12px;
-  background: var(--wave);
-  opacity: 0.18;
-  border: 1px dashed currentColor;
+  top: 4px;
+  bottom: 4px;
+  background: color-mix(in srgb, var(--wave) 7%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--wave) 35%, transparent);
+  border-left: 0;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
+.clip-tail-label { font-size: 11px; color: var(--ui-subtle); white-space: nowrap; padding: 5px 0 0 4px; }
+.clip-effect-tail .waveform { width: 100%; height: 25px; min-height: 0; flex: 1; opacity: .85; }
+.tree-waveform-status { margin: 8px 0; }
+.master-controls > .range-truncation { grid-column: 1 / -1; color: var(--ui-text); font-size: 12px; font-weight: 400; line-height: 1.5; }
 .node-post-target {
   font-weight: 600;
   margin-bottom: 10px;
@@ -120,4 +127,12 @@
   color: var(--ui-text);
   box-shadow: 0 8px 24px var(--ui-shadow);
   pointer-events: none;
+}
+
+/* Use the clip edges as time coordinates, including at the body/tail boundary. */
+.layer-lane:not(.instrument-lane) .clip-move .waveform { position: absolute; left: 0; bottom: 4px; width: 100%; height: calc(100% - 22px); }
+.clip-effect-tail .waveform { position: absolute; left: 0; bottom: 4px; height: calc(100% - 22px); }
+
+@media (min-width: 901px) and (max-height: 1000px) {
+  .clip-effect-tail { top: 2px; bottom: 2px; }
 }

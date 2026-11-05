@@ -1,5 +1,5 @@
 import { clamp, type Layer } from "./model";
-import { beatsToSeconds, type NoteEvent } from "./instruments";
+import { beatsToSeconds, secondsToBeats, type NoteEvent } from "./instruments";
 
 export const pitchName = (midi: number) =>
   `${["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"][midi % 12]}${Math.floor(midi / 12) - 1}`;
@@ -30,4 +30,16 @@ export function noteSpan(layer: Layer, note: NoteEvent) {
     start: ((layer.reverse ? source - end : start) - layer.trim) / rate / source,
     width: (end - start) / rate / source,
   };
+}
+
+/** Map the shared project clock to the untransformed score and back. */
+export function scoreBeatAtTime(layer: Layer, time: number, offset = 0) {
+  const source = layer.sourceDuration ?? layer.duration;
+  const position = layer.trim + (time - offset - layer.start) * source / layer.duration * (layer.frequency / 440);
+  return secondsToBeats(layer.reverse ? source - position : position, layer.score!.bpm);
+}
+export function scoreTimeAtBeat(layer: Layer, beat: number, offset = 0) {
+  const source = layer.sourceDuration ?? layer.duration;
+  const position = beatsToSeconds(beat, layer.score!.bpm);
+  return offset + layer.start + ((layer.reverse ? source - position : position) - layer.trim) / (layer.frequency / 440) * layer.duration / source;
 }

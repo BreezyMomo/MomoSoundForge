@@ -18,4 +18,11 @@ describe("playback position and seeking", () => {
     expect(timeAtPointer(900, 100, 400, 0.1236)).toBe(0.1236);
     expect(timeAtPointer(250, 100, 0, 2)).toBe(0);
   });
+  it("wraps within a nonzero loop range while retaining project time", () => {
+    const region = { start: 2, end: 5 };
+    expect(playbackPosition(0.5, 3, 10, true, region)).toBe(3.5);
+    expect(playbackPosition(2, 3, 10, true, region)).toBe(2);
+    expect(playbackPosition(9.5, 3, 10, true, region)).toBe(3.5);
+    expect(playbackPosition(2, 3, 10, false, region)).toBe(5);
+  });
 });

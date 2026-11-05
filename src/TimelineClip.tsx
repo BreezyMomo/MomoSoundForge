@@ -37,6 +37,7 @@ export function TimelineClip({
   layer: sourceLayer,
   offset = 0,
   tail = 0,
+  sampleRate = 48000,
   moveOnly = false,
   projectDuration,
   position,
@@ -47,6 +48,7 @@ export function TimelineClip({
   disabledParameters = [],
   onPreview,
   data,
+  tailData,
   onSelect,
   onClearSelection,
   onBegin,
@@ -58,6 +60,7 @@ export function TimelineClip({
   layer: Layer;
   offset?: number;
   tail?: number;
+  sampleRate?: number;
   moveOnly?: boolean;
   projectDuration: number;
   position: number;
@@ -68,6 +71,7 @@ export function TimelineClip({
   disabledParameters?: string[];
   onPreview?: (next: Layer | null) => void;
   data?: Float32Array;
+  tailData?: Float32Array;
   onSelect: (event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean }) => void;
   onClearSelection?: () => void;
   onBegin: () => void;
@@ -298,22 +302,29 @@ export function TimelineClip({
     onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) =>
       keyboard(event, mode),
   });
+  const visibleBody = Math.max(0, Math.min(timing.duration, projectDuration - timing.start));
+  const visibleTail = Math.max(0, Math.min(tail, projectDuration - timing.start - timing.duration));
+  const bodyFrames = Math.round(layer.duration * sampleRate);
   const seconds = (value: number) => value.toFixed(draft ? 3 : 2);
   return (
     <div className={`layer-lane ${layer.type === "instrument" ? "instrument-lane" : ""}`} ref={lane} onClick={(event) => {
       if (event.ctrlKey || event.metaKey || event.shiftKey) onSelect(event);
       else onClearSelection?.();
     }}>
-      {tail > 0 && (
+      {visibleTail > 0 && (
         <div
           className="clip-effect-tail"
           title={t("tree.tail", tail.toFixed(2))}
           aria-label={t("tree.tail", tail.toFixed(2))}
           style={{
             left: `${((timing.start + timing.duration) / projectDuration) * 100}%`,
-            width: `${(Math.max(0, Math.min(tail, projectDuration - timing.start - timing.duration)) / projectDuration) * 100}%`,
+            width: `${(visibleTail / projectDuration) * 100}%`,
           }}
-        />
+        >
+          <span className="clip-tail-label">{t("tree.tailLabel")}</span>
+          <Waveform data={tailData} label={t("tree.tailWave", layer.name)}
+            startFrame={bodyFrames} endFrame={bodyFrames + Math.round(visibleTail * sampleRate)} />
+        </div>
       )}
       <div
         className={`layer-clip ${draft ? "is-dragging" : ""}`}
@@ -335,7 +346,8 @@ export function TimelineClip({
             {timing.sourceDuration !== undefined &&
               ` · ${(timing.sourceDuration / timing.duration).toFixed(2)}×`}
           </span>
-          <Waveform data={waveform.current} label={layer.name} />
+          <Waveform data={waveform.current} label={layer.name}
+            endFrame={Math.round(bodyFrames * visibleBody / Math.max(0.000001, timing.duration))} />
         </button>
         {sourceLayer.type === "instrument" && sourceLayer.score && onNoteChange && onNoteAudition && (
           <NoteRoll layer={sourceLayer} compact onChange={onNoteChange} onAudition={onNoteAudition}

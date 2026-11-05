@@ -4,10 +4,13 @@ export function playbackPosition(
   offset: number,
   duration: number,
   loop: boolean,
+  region?: { start: number; end: number },
 ) {
   if (!Number.isFinite(duration) || duration <= 0) return 0;
   const position = Math.max(0, elapsed) + clamp(offset, 0, duration);
-  return loop ? position % duration : clamp(position, 0, duration);
+  if (!loop) return clamp(position, 0, duration);
+  const start = region?.start ?? 0, end = region?.end ?? duration;
+  return position < end ? position : start + (position - start) % (end - start);
 }
 export function timeAtPointer(
   x: number,

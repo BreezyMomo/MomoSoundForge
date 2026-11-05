@@ -114,6 +114,38 @@ export function makeLoop(
     result.sampleRate,
   );
 }
+// Shared by the work-range warning and export; muted branches do not extend the range.
+export function contentRange(project: Project, result: RenderResult) {
+  const resolved = resolveControls(project);
+  const hasSolo = (p: Project): boolean =>
+    p.layers.some(
+      (l) => !l.muted && (l.solo || (!!l.project && hasSolo(l.project))),
+    );
+  const solo = hasSolo(resolved);
+  const audible = resolved.layers.filter(
+    (l) =>
+      !l.muted && (!solo || l.solo || (!!l.project && hasSolo(l.project))),
+  );
+  const contentEnd = Math.max(0, ...audible.map((l) => l.start + l.duration));
+  const layerEnd = Math.max(
+    0,
+    ...audible.map(
+      (l) =>
+        l.start + l.duration + (result.tails?.[l.id] ?? effectTail(l.effects)),
+    ),
+  );
+  const echoTail =
+    resolved.echo > 0
+      ? Math.min(
+          MAX_EFFECT_TAIL,
+          0.135 * (1 + Math.ceil(Math.log(0.0001) / Math.log(resolved.echo))),
+        )
+      : 0;
+  return {
+    contentEnd,
+    tailEnd: layerEnd + (audible.length ? effectTail(resolved.effects) + echoTail : 0),
+  };
+}
 export async function renderExport(
   project: Project,
   settings: ExportSettings,
@@ -123,35 +155,8 @@ export async function renderExport(
   const loopOnly = settings.loopOnly && !!project.loopRegion;
   let input = await render(project);
   if (settings.preserveTail && !loopOnly) {
-    const resolved = resolveControls(project);
-    const hasSolo = (p: Project): boolean =>
-      p.layers.some(
-        (l) => !l.muted && (l.solo || (!!l.project && hasSolo(l.project))),
-      );
-    const solo = hasSolo(resolved);
-    const audible = resolved.layers.filter(
-      (l) =>
-        !l.muted && (!solo || l.solo || (!!l.project && hasSolo(l.project))),
-    );
-    const contentEnd = Math.max(0, ...audible.map((l) => l.start + l.duration));
-    const layerEnd = Math.max(
-      0,
-      ...audible.map(
-        (l) =>
-          l.start + l.duration + (input.tails?.[l.id] ?? effectTail(l.effects)),
-      ),
-    );
-    const echoTail =
-      resolved.echo > 0
-        ? Math.min(
-            MAX_EFFECT_TAIL,
-            0.135 * (1 + Math.ceil(Math.log(0.0001) / Math.log(resolved.echo))),
-          )
-        : 0;
-    const duration = Math.max(
-      project.duration,
-      layerEnd + (audible.length ? effectTail(resolved.effects) + echoTail : 0),
-    );
+    const { contentEnd, tailEnd } = contentRange(project, input);
+    const duration = Math.max(project.duration, tailEnd);
     if (duration > project.duration) {
       input = await render({ ...project, duration });
       // Remove unused extension, without shortening authored content or the work range.

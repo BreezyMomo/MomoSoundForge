@@ -63,6 +63,8 @@ Legacy standalone notes restore authored gain, then receive an audible default l
 
 Times are in seconds. Preview and default export use the work duration. Extend to content end to retain effect tails, or use the loop-authoring controls for crossfaded loops. Sample speed also changes pitch; independent time stretching is not implemented.
 
+With a loop region set, the main Loop playback option repeats only the outlined range; without one it repeats the full work. Starting outside the range jumps to its start, and the playhead wraps there at the end. Turning looping off continues through the remaining work. Use the loop-authoring preview to hear the crossfaded seam.
+
 Drag the middle of a timeline clip to move it, or its edge handles to resize it. Moving preserves duration; the left handle preserves the end, and the right handle preserves the start. Adjustments use 0.01-second steps, or 0.001 seconds while holding Shift. Focus a clip or handle and use the left/right arrow keys for keyboard adjustment. Releasing updates the properties and audio with one undo step per drag. Escape or pointer cancellation discards the gesture. Resizing clip edges changes both playback speed and pitch; independent pitch-preserving time stretching is not implemented.
 
 If the mix exceeds full scale, both channels receive one shared gain reduction. Its amount is shown in the editor. Monitor level affects playback only. Layer thumbnails show audio before mixing; the main waveform represents the final output.
@@ -138,7 +140,7 @@ Preview, add or open instruments from the sound library. Each is a regular instr
 
 ## Video reference
 
-Open Video reference in the header and import a local video. Select a start and segment length without a fixed seconds cap; sound time zero maps to the selected start. Frame steps use decoded presentation timestamps, including variable frame rates. Video shares the sound playhead, with synchronized and looping segment preview. Original audio defaults to muted and is excluded from exports. Named markers appear on the timeline and support clip snapping. Projects and drafts save alignment and markers; relink the original video after reopening (video bytes are not bundled). Videos must be playable by the browser and local decoder, up to 80 MB and 4K. Indexing is cancellable and time-bounded. The panel supports docking and floating.
+Open Video reference beside Save to library in the work heading and import a local video. Select a start and segment length without a fixed seconds cap; sound time zero maps to the selected start. Frame steps use decoded presentation timestamps, including variable frame rates. Video shares the sound playhead, with synchronized and looping segment preview. Original audio defaults to muted and is excluded from exports. Named markers appear on the timeline and support clip snapping. Projects and drafts save alignment and markers; relink the original video after reopening (video bytes are not bundled). Videos must be playable by the browser and local decoder, up to 80 MB and 4K. Indexing is cancellable and time-bounded. The panel supports docking and floating.
 
 ### Work duration and resources
 

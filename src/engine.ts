@@ -135,7 +135,8 @@ function renderNested(
     }
     const key = JSON.stringify([...path, clip.id]);
     layers[key] = raw;
-    processedLayers[key] = Float32Array.from({ length: raw.length }, (_, i) =>
+    // Keep the complete audible result for timeline bodies and their effect tails.
+    processedLayers[key] = Float32Array.from({ length: Math.max(raw.length, end) }, (_, i) =>
       Math.abs(l[i] ?? 0) >= Math.abs(r[i] ?? 0) ? (l[i] ?? 0) : (r[i] ?? 0),
     );
     if (!path.length) layers[clip.id] = raw;

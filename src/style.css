@@ -356,12 +356,22 @@ span {
   gap: 10px;
   flex-shrink: 0;
 }
+.project-action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 @media (max-width: 600px) {
   .project-heading {
     flex-wrap: wrap;
   }
   .project-actions {
     align-items: flex-start;
+  }
+  .project-action-buttons {
+    justify-content: flex-start;
   }
 }
 .library-intro p {

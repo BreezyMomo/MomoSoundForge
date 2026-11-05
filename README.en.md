@@ -34,7 +34,7 @@ SoundForge registers its own Sound night · Violet & cyan theme with Workbench: 
 1. Search or audition a sound in **Basic sounds**. Choose **Add** for the current work, or **Edit** to open it separately.
 2. Drag clips in the center to arrange their timing. Each track has an individual audition button.
 3. Adjust the selected sound in the inspector. Choose **Notes** on an instrument track to expand the piano roll, or add notes and import note JSON in the inspector.
-4. Audition the full work. Use **Extend to content end** to retain effect tails.
+4. Audition the full work. Use **Keep full sound** to retain effect tails.
 5. **Save project** keeps editable content and samples. **Export…** produces audio for your game.
 
 **Basic sounds** supplies building blocks, **Examples** provides complete editable arrangements, and **My sounds** holds reusable creations. Inserting a sound creates an independent copy; editing it does not change the original.

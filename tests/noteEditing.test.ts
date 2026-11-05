@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editNote, noteSpan, pitchName, noteGridTicks } from "../src/noteEditing";
+import { editNote, noteSpan, pitchName, noteGridTicks, scoreBeatAtTime, scoreTimeAtBeat } from "../src/noteEditing";
 import { emptyScore, type NoteEvent } from "../src/instruments";
 import { makeLayer } from "../src/model";
 
@@ -26,6 +26,18 @@ describe("visual note editing", () => {
     expect(noteSpan({ ...layer, duration: 2, sourceDuration: 4 }, note)).toEqual(noteSpan(layer, note));
     expect(noteSpan({ ...layer, trim: .5, frequency: 880 }, note)).toEqual({ start: 0, width: .125 });
     expect(noteSpan({ ...layer, reverse: true }, note)).toEqual({ start: .625, width: .25 });
+  });
+  it("maps the shared playhead through nested offsets, stretch, trim and reverse", () => {
+    const layer = makeLayer({ type: "instrument", start: 2, duration: 2, sourceDuration: 4,
+      frequency: 880, trim: 0.5, score: emptyScore() });
+    expect(scoreBeatAtTime(layer, 5.25, 3)).toBe(3);
+    expect(scoreTimeAtBeat(layer, 3, 3)).toBe(5.25);
+    expect(scoreBeatAtTime({ ...layer, reverse: true }, 5.25, 3)).toBe(5);
+    expect(scoreTimeAtBeat({ ...layer, reverse: true }, 5, 3)).toBe(5.25);
+    for (const reverse of [false, true]) for (const time of [0, 4.9, 5, 5.2, 6, 7, 10]) {
+      const transformed = { ...layer, reverse };
+      expect(scoreTimeAtBeat(transformed, scoreBeatAtTime(transformed, time, 3), 3)).toBeCloseTo(time);
+    }
   });
   it("names the full MIDI pitch range", () => {
     expect([0, 60, 61, 127].map(pitchName)).toEqual(["C-1", "C4", "C♯4", "G9"]);

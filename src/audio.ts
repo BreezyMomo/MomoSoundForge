@@ -78,6 +78,7 @@ export class AudioPlayer {
   startTime = 0;
   startOffset = 0;
   duration = 0;
+  loopRegion: { start: number; end: number } | undefined;
   // Decoding a file does not require starting the playback clock.
   decode(data: ArrayBuffer) {
     this.context ??= new AudioContext();
@@ -95,6 +96,7 @@ export class AudioPlayer {
     onEnd: () => void,
     isCurrent: () => boolean = () => true,
     offset = 0,
+    region?: { start: number; end: number },
   ) {
     const context = await this.prepare();
     // A cancelled render/resume must never replace a newer audition.
@@ -128,11 +130,19 @@ export class AudioPlayer {
     this.gain = gain;
     this.startTime = context.currentTime;
     this.duration = result.left.length / result.sampleRate;
+    const start = clamp(region?.start ?? 0, 0, this.duration);
+    const end = clamp(region?.end ?? this.duration, 0, this.duration);
+    this.loopRegion = loop && Number.isFinite(start) && Number.isFinite(end) && end - start >= 1 / result.sampleRate
+      ? { start, end } : undefined;
+    source.loopStart = this.loopRegion?.start ?? 0;
+    source.loopEnd = this.loopRegion?.end ?? this.duration;
     this.startOffset = clamp(
       Number.isFinite(offset) ? offset : 0,
       0,
       Math.max(0, this.duration - 1 / result.sampleRate),
     );
+    if (this.loopRegion && (this.startOffset < start || this.startOffset >= end))
+      this.startOffset = start;
     source.start(0, this.startOffset);
     return true;
   }
@@ -143,6 +153,7 @@ export class AudioPlayer {
       this.startOffset,
       this.duration,
       this.source.loop,
+      this.loopRegion,
     );
   }
   setLoop(loop: boolean) {

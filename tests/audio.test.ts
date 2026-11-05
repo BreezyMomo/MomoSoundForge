@@ -85,6 +85,26 @@ describe("audition cancellation", () => {
     sources[1].onended?.();
     expect(player.position()).toBe(10);
     expect(player.source).toBe(null);
+    // Region playback must drive both Web Audio's loop boundaries and the UI clock.
+    const region = { start: 2, end: 5 };
+    await player.play(result, true, 0.7, () => {}, () => true, 8, region);
+    expect(sources[2].start).toHaveBeenCalledWith(0, 2);
+    expect(player.source?.loopStart).toBe(2);
+    expect(player.source?.loopEnd).toBe(5);
+    context.currentTime = 28;
+    expect(player.position()).toBe(3);
+    player.setLoop(false);
+    context.currentTime = 31;
+    expect(player.position()).toBe(6);
+    await player.play(result, true, 0.7, () => {}, () => true, 4, region);
+    expect(sources[3].start).toHaveBeenCalledWith(0, 4);
+    context.currentTime = 32;
+    expect(player.position()).toBe(2);
+    await player.play(result, true, 0.7, () => {}, () => true, 0, region);
+    expect(sources[4].start).toHaveBeenCalledWith(0, 2);
+    await player.play(result, true, 0.7, () => {}, () => true, 0, { start: 12, end: 14 });
+    expect(player.source?.loopStart).toBe(0);
+    expect(player.source?.loopEnd).toBe(10);
   });
   it("does not replace or stop active audio when a cancelled request resumes later", async () => {
     const source = {

@@ -17,6 +17,7 @@ import {
   nodeParent,
 } from "../src/nodeTree";
 import { beforeSoundPolish, padAudition } from "../src/polishAudition";
+import { contentRange } from "../src/exportAudio";
 import { stretchClip } from "../src/timeline";
 const project = (): Project => ({
   schema: "momo.soundforge/v2",
@@ -120,6 +121,35 @@ describe("audio node tree", () => {
       parseProject(projectForSave(g.root)).layers.find((l) => l.id === g.id)!
         .effects,
     ).toEqual(group.effects);
+  });
+  it("keeps timeline tail samples identical to the extended node mix without squeezing them into the body", () => {
+    const p = project();
+    p.layers = [p.layers[0]];
+    p.duration = 0.3;
+    p.layers[0].effects = { ...DEFAULT_EFFECTS, delayTime: 0.15, delayWet: 0.5, delayFeedback: 0.5 };
+    const g = groupNodes(p, [], ["a"], "group");
+    const root = g.root, group = root.layers[0], key = JSON.stringify([group.id]);
+    const rendered = renderProject(root, 8000);
+    const frames = Math.round(group.duration * 8000), wave = rendered.processedLayers![key];
+    expect(wave.length).toBeGreaterThan(frames);
+    expect(wave.slice(frames).some(v => Math.abs(v) > 0.001)).toBe(true);
+    const isolated = isolatedNode(root, { path: [], id: group.id });
+    const audition = renderProject({ ...isolated, duration: (wave.length + 1) / 8000 }, 8000);
+    const peakChannel = Float32Array.from(audition.left, (v, i) => Math.abs(v) >= Math.abs(audition.right[i]) ? v : audition.right[i]);
+    expect(distance(wave.slice(0, -1), peakChannel.slice(0, wave.length - 1))).toBeLessThan(1e-6);
+    expect(contentRange(root, rendered).tailEnd).toBeCloseTo(group.start + wave.length / 8000);
+    expect(contentRange(root, rendered).tailEnd).toBeGreaterThan(root.duration);
+  });
+  it("uses processed duration for range warnings and excludes muted and non-solo branches", () => {
+    const p = project();
+    p.layers[0].effects = { ...DEFAULT_EFFECTS, delayTime: 0.2, delayWet: 0.7 };
+    p.layers[1].start = 5;
+    p.layers[1].muted = true;
+    const r = renderProject(p, 8000);
+    expect(contentRange(p, r).tailEnd).toBeCloseTo(p.layers[0].start + p.layers[0].duration + r.tails!.a);
+    p.layers[1].muted = false;
+    p.layers[0].solo = true;
+    expect(contentRange(p, renderProject(p, 8000)).tailEnd).toBeCloseTo(contentRange({ ...p, layers: [p.layers[0]] }, r).tailEnd);
   });
   it("node audition skips all ancestors and starts immediately", () => {
     const g = groupNodes(project(), [], ["a", "b"], "g");

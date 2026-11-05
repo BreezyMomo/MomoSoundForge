@@ -39,3 +39,8 @@
 .roll-uncovered-row + .roll-covered-row { border-top: 1px solid color-mix(in srgb, var(--ui-muted) 40%, var(--ui-panel)); }
 .roll-covered-row:has(+ .roll-uncovered-row) { border-bottom-color: color-mix(in srgb, var(--ui-muted) 40%, var(--ui-panel)); }
 .roll-note-uncovered .roll-note-move { background: var(--ui-panel); color: var(--ui-text); border: 1px dashed var(--ui-text); }
+
+.roll-ruler.can-seek { cursor: crosshair; touch-action: none; }
+.roll-ruler.can-seek:focus-visible { outline: 1px solid var(--ui-text); outline-offset: -1px; }
+.roll-playhead { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ui-text); z-index: 4; pointer-events: none; transform: translateX(-.5px); }
+.roll-playhead-head { position: absolute; bottom: 0; width: 10px; height: 8px; background: var(--ui-text); clip-path: polygon(0 0, 100% 0, 100% 50%, 50% 100%, 0 50%); transform: translateX(-50%); pointer-events: none; }

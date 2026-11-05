@@ -6,6 +6,7 @@ import {
 } from "@momo/workbench/react";
 import type { Layer } from "./model";
 import type { NoteEvent } from "./instruments";
+import { scoreBeatAtTime, scoreTimeAtBeat } from "./noteEditing";
 import { NoteRoll } from "./NoteRoll";
 import { t } from "./i18n";
 import "./notes-workspace.css";
@@ -22,6 +23,10 @@ export function NotesWorkspace({
   ready,
   cue,
   duration,
+  offset = 0,
+  onSeekStart,
+  onSeek,
+  onSeekEnd,
   onArrange,
 }: {
   layers: Layer[];
@@ -35,12 +40,17 @@ export function NotesWorkspace({
   ready: boolean;
   cue: number;
   duration: number;
+  offset?: number;
+  onSeekStart: () => void;
+  onSeek: (time: number) => void;
+  onSeekEnd: (time: number) => void;
   onArrange: () => void;
 }) {
   const instruments = layers.filter(
     (layer) => layer.type === "instrument" && layer.score,
   );
   const layer = instruments.find((layer) => layer.id === selected);
+  const timeAtBeat = (beat: number) => Math.max(0, Math.min(duration, scoreTimeAtBeat(layer!, beat, offset)));
   return (
     <section className="notes-workspace" aria-label={t("notes.panel")}>
       <header className="notes-workspace-toolbar">
@@ -80,6 +90,13 @@ export function NotesWorkspace({
           key={layer.id}
           minimumRows={36}
           layer={layer}
+          playheadBeat={scoreBeatAtTime(layer, cue, offset)}
+          playheadVisible={cue >= offset + layer.start && cue <= offset + layer.start + layer.duration}
+          followPlayhead={playing}
+          seekReady={ready}
+          onSeekStart={onSeekStart}
+          onSeekBeat={beat => onSeek(timeAtBeat(beat))}
+          onSeekEnd={beat => onSeekEnd(timeAtBeat(beat))}
           onSelect={() => {}}
           onBegin={onBegin}
           onChange={onChange}

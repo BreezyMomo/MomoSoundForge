@@ -99,6 +99,7 @@ import { reconcileAdvanced, boundControl, resolveControls } from "./advanced";
 import { boundedSelection } from "./timeline";
 import {
   readExportSettings,
+  contentRange,
   type ExportResult,
   audioResult,
   makeLoop,
@@ -260,12 +261,14 @@ export default function App() {
     playToken = useRef(0),
     pendingPlaybackRef = useRef<string | null>(null),
     playbackDuration = useRef(1),
+    loopRef = useRef(loop),
     cueRef = useRef(0),
     activePlaybackRef = useRef<string | null>(null),
     resumeSeekRef = useRef(false),
     scopeEpoch = useRef(0),
     editGroup = useRef({ key: "", time: 0 }),
     alive = useRef(true);
+  loopRef.current = loop;
   const flash = useCallback(
     (key: string, ...values: unknown[]) => setNotice({ key, values }),
     [],
@@ -551,7 +554,7 @@ export default function App() {
             : 0;
         const started = await player.current!.play(
           result,
-          id.startsWith("loop-") || loop,
+          id.startsWith("loop-") || loopRef.current,
           monitor,
           () => {
             if (id === "main") updateCue(duration);
@@ -561,13 +564,15 @@ export default function App() {
           },
           () => token === playToken.current,
           offset,
+          id === "main" ? rootCurrent.current.loopRegion : undefined,
         );
         if (!started || token !== playToken.current) return;
         playbackDuration.current = result.left.length / result.sampleRate;
         activePlaybackRef.current = id;
         setPlaying(id);
-        setProgress(offset / duration);
-        if (id === "main") updateCue(offset);
+        const startedAt = player.current!.position();
+        setProgress(startedAt / duration);
+        if (id === "main") updateCue(startedAt);
       } catch (error) {
         if (token === playToken.current)
           flash(
@@ -686,6 +691,11 @@ export default function App() {
     player.current?.setVolume(monitor);
   }, [monitor]);
   useEffect(() => {
+    if (activePlaybackRef.current === "main" && auditionResult) {
+      // Restart at the current position so toggling outside the region also seeks into it.
+      void play(auditionResult, "main", true);
+      return;
+    }
     player.current?.setLoop(
       activePlaybackRef.current?.startsWith("loop-") || loop,
     );
@@ -1333,9 +1343,10 @@ export default function App() {
       setIoBusy(false);
     }
   }
-  const truncated = history.project.layers.some(
-    (l) => l.start + l.duration > history.project.duration + 0.005,
-  );
+  const fullContentEnd = result ? contentRange(history.project, result).tailEnd : history.project.duration;
+  const extendedDuration = Math.max(history.project.duration, Math.ceil(fullContentEnd * 1000) / 1000);
+  const truncated = !!result && fullContentEnd > history.project.duration + 1 / result.sampleRate;
+  const compareName = project.layers.find(l => l.id === selected)?.name ?? "";
   const library = (
     <SoundLibrary
       project={history.project}
@@ -1433,7 +1444,20 @@ export default function App() {
               exportSettings.format.toUpperCase(),
             )}
           </span>
-          <div ref={setLibrarySaveHost} />
+          <div className="project-action-buttons">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const dock = manager.current;
+                if (!dock) return;
+                if (dock.has("video")) dock.show("video");
+                else dock.control([{ action: "preset", preset: "video" }]);
+              }}
+            >
+              {t("video.title")}
+            </Button>
+            <div ref={setLibrarySaveHost} />
+          </div>
         </div>
       </div>
       <div className="transport">
@@ -1733,17 +1757,23 @@ export default function App() {
         </details>
         <span className="field-help">{t("pro.selectHelp")}</span>
       </div>
+      <p className="tree-waveform-status field-help" role="status">
+        {!auditionResult ? t("tree.waveUpdating") : originalAudition && comparisonReady
+          ? t("tree.waveBefore", compareName) : t("tree.waveAfter")}
+      </p>
       <TreeTimeline
         root={history.project}
         selected={{ path: context.path, id: selected }}
         ids={selectedIds}
         result={displayResult ?? null}
+        beforeKey={originalAudition && comparisonReady ? nodeKey({ path: context.path, id: selected }) : undefined}
         ready={!!auditionResult}
         cue={cue}
         duration={timelineDuration}
         zoom={zoom}
         cropMode={cropMode}
         playing={playing}
+        previewTime={progress * playbackDuration.current}
         onSelect={treeSelect}
         onClearSelection={() => {
           setSelection([]);
@@ -1802,23 +1832,17 @@ export default function App() {
         </label>
         <button
           className="secondary"
-          onClick={() =>
-            editRoot((p) => ({
-              ...p,
-              duration: Math.max(
-                p.duration,
-                ...p.layers.map(
-                  (l) => l.start + l.duration + (result?.tails?.[l.id] ?? 0),
-                ),
-              ),
-            }))
-          }
+          disabled={!truncated}
+          title={t("editor.extendHelp")}
+          onClick={() => editRoot(p => ({ ...p, duration: Math.max(p.duration, extendedDuration) }))}
         >
-          {t("editor.extendToContent")}
+          {truncated ? t("editor.extendToSeconds", extendedDuration.toFixed(3)) : t("editor.extendToContent")}
         </button>
-        {truncated && (
-          <span className="field-help">{t("editor.outsideRange")}</span>
-        )}
+        <span className={truncated ? "range-truncation" : "field-help"} role="status">
+          {!result ? t("tree.waveUpdating") : truncated
+            ? t("editor.outsideRange", history.project.duration.toFixed(3), (extendedDuration - history.project.duration).toFixed(3))
+            : t("editor.rangeComplete")}
+        </span>
       </div>
       <p className="field-help">
         {t("tree.tailHelp")}
@@ -2025,17 +2049,6 @@ export default function App() {
           </button>
         </div>
         <div className="header-right">
-          <Button
-            variant="outline"
-            onClick={() => {
-              const dock = manager.current;
-              if (!dock) return;
-              if (dock.has("video")) dock.show("video");
-              else dock.control([{ action: "preset", preset: "video" }]);
-            }}
-          >
-            {t("video.title")}
-          </Button>
           <div ref={menu} className="layout-menu" />
           <AppearancePreferences />
           <LanguagePreferences />
@@ -2055,6 +2068,10 @@ export default function App() {
                 selected={selected}
                 cue={cue}
                 duration={timelineDuration}
+                offset={pathOffset(history.project, context.path)}
+                onSeekStart={beginSeek}
+                onSeek={updateCue}
+                onSeekEnd={endSeek}
                 onSelect={(id) => treeSelect({ path: context.path, id })}
                 onBegin={stop}
                 onChange={(note) => {
