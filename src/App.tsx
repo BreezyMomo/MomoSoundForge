@@ -30,12 +30,8 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import type { DockWorkspace } from "@momo/workbench/dock";
-import {
-  createAppearance,
-  PRESET_THEME_IDS,
-  type AppearanceController,
-  type ThemeId,
-} from "@momo/workbench/appearance";
+import {AppearancePreferences} from "./AppearancePreferences";
+import {LanguagePreferences} from "./LanguagePreferences";
 import { Workbench } from "./Workbench";
 import { SoundLibrary } from "./SoundLibrary";
 import { Inspector, Range, CommitText } from "./Inspector";
@@ -43,6 +39,7 @@ import { Waveform } from "./Waveform";
 import { TimelineClip } from "./TimelineClip";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { fromPreset } from "./presets";
+import { BUILTIN_SOUNDS, builtinSoundName, loadBuiltinSound } from "./builtinLibrary";
 import {
   SAMPLE_RATE,
   MAX_ASSET_BYTES,
@@ -90,6 +87,11 @@ type Variation = { project: Project; result: RenderResult };
 const defaultProject = () =>
   fromPreset("ice", t("preset.ice"), (key) => t(`layer.${key}`));
 const db = (v: number) => (v > 0 ? (20 * Math.log10(v)).toFixed(1) : "−∞");
+function readBuiltinSound(id: string) {
+  const sound = BUILTIN_SOUNDS.find(entry => entry.id === id);
+  if (!sound) throw Error("library.builtinLoadError");
+  return loadBuiltinSound(id, builtinSoundName(sound));
+}
 export default function App() {
   const lang = useLanguage();
   const [librarySaveHost, setLibrarySaveHost] = useState<HTMLDivElement | null>(
@@ -204,14 +206,12 @@ export default function App() {
     [amount, setAmount] = useState(0.35),
     [busy, setBusy] = useState(false),
     [ioBusy, setIoBusy] = useState(false),
-    [help, setHelp] = useState(false),
-    [theme, setTheme] = useState("original");
+    [help, setHelp] = useState(false);
   const menu = useRef<HTMLDivElement>(null),
     manager = useRef<DockWorkspace | null>(null),
     projectInput = useRef<HTMLInputElement>(null),
     sampleInput = useRef<HTMLInputElement>(null),
-    compositionInput = useRef<HTMLInputElement>(null),
-    appearance = useRef<AppearanceController | null>(null);
+    compositionInput = useRef<HTMLInputElement>(null);
   const renderer = useRef<ReturnType<typeof createRenderer> | null>(null),
     player = useRef<AudioPlayer | null>(null),
     playToken = useRef(0),
@@ -349,25 +349,12 @@ export default function App() {
       .finally(() => {
         if (!cancelled) setReady(true);
       });
-    try {
-      const stored = localStorage.getItem("momo-sound-forge:appearance:v1");
-      if (stored) {
-        appearance.current = createAppearance({
-          storage: localStorage,
-          root: document.documentElement,
-          storageKey: "momo-sound-forge:appearance:v1",
-        });
-        setTheme(appearance.current.get().theme);
-      }
-    } catch {
-      /* Default theme remains usable. */
-    }
+
     return () => {
       cancelled = true;
       alive.current = false;
       renderer.current?.dispose();
       player.current?.dispose();
-      appearance.current?.dispose();
     };
   }, [flash]);
   useEffect(() => {
@@ -478,9 +465,10 @@ export default function App() {
         setPlaying(id);
         setProgress(offset / duration);
         if (id === "main") updateCue(offset);
-      } catch {
+      } catch (error) {
         if (token === playToken.current)
-          flash(phase === "render" ? "error.render" : "error.audio");
+          flash(error instanceof Error && error.message === "library.builtinLoadError"
+            ? error.message : phase === "render" ? "error.render" : "error.audio");
       } finally {
         if (token === playToken.current) {
           pendingPlaybackRef.current = null;
@@ -631,6 +619,24 @@ export default function App() {
       child = await readSavedSound(id);
     if (target !== current.current || epoch !== scopeEpoch.current)
       throw Error("error.scopeChanged");
+    insertSound(child);
+  }
+  async function openBuiltinSound(id: string) {
+    const target = rootCurrent.current, epoch = scopeEpoch.current;
+    const next = await readBuiltinSound(id);
+    if (target !== rootCurrent.current || epoch !== scopeEpoch.current) throw Error("error.scopeChanged");
+    editRoot(() => next);
+    scopeEpoch.current++;
+    setEditPath([]);
+    setSelected(next.layers[0]?.id ?? "");
+    updateCue(0);
+    setVariations([]);
+    manager.current?.show("editor");
+  }
+  async function insertBuiltinSound(id: string) {
+    const target = current.current, epoch = scopeEpoch.current;
+    const child = await readBuiltinSound(id);
+    if (target !== current.current || epoch !== scopeEpoch.current) throw Error("error.scopeChanged");
     insertSound(child);
   }
   function insertSound(child: Project) {
@@ -1007,47 +1013,6 @@ export default function App() {
       setIoBusy(false);
     }
   }
-  function changeTheme(value: string) {
-    setTheme(value);
-    const root = document.documentElement;
-    if (value === "original") {
-      appearance.current?.dispose();
-      appearance.current = null;
-      for (const key of [
-        "theme",
-        "appearanceTheme",
-        "paletteRoles",
-        "interfaceStyle",
-        "density",
-        "tabStyle",
-        "tabOverride",
-        "momoWorkbench",
-      ])
-        delete root.dataset[key];
-      for (const property of Array.from(root.style))
-        if (property.startsWith("--ui-")) root.style.removeProperty(property);
-      root.style.removeProperty("color-scheme");
-      try {
-        localStorage.removeItem("momo-sound-forge:appearance:v1");
-      } catch {
-        /* Session preference remains active. */
-      }
-    } else {
-      try {
-        appearance.current ??= createAppearance({
-          storage: localStorage,
-          root,
-          storageKey: "momo-sound-forge:appearance:v1",
-        });
-        appearance.current.save({
-          ...appearance.current.get(),
-          theme: value as ThemeId,
-        });
-      } catch {
-        flash("status.error");
-      }
-    }
-  }
   const truncated = project.layers.some(
     (l) => !l.muted && l.start + l.duration > project.duration + 0.005,
   );
@@ -1056,7 +1021,13 @@ export default function App() {
       project={project}
       ready={ready && !ioBusy}
       playback={playing ?? pendingPlayback}
+      pendingPlayback={pendingPlayback}
       onPreset={setPreset}
+      onBuiltinOpen={openBuiltinSound}
+      onBuiltinInsert={insertBuiltinSound}
+      onBuiltinPlay={(id) =>
+        void play(async () => renderer.current!.render(await readBuiltinSound(id)), `builtin-${id}`)
+      }
       saveHost={librarySaveHost}
       onPresetInsert={(id) =>
         insertSound(
@@ -1144,7 +1115,8 @@ export default function App() {
       </div>
       <div className="transport">
         <button
-          className="primary play-button"
+          className="primary play-button momo-button"
+          data-variant="primary"
           disabled={!result && !playing && !pendingPlayback}
           onClick={() =>
             playing || pendingPlayback
@@ -1874,28 +1846,8 @@ export default function App() {
         </div>
         <div className="header-right">
           <div ref={menu} className="layout-menu" />
-          <select
-            aria-label={t("theme.label")}
-            className="theme-select"
-            value={theme}
-            onChange={(e) => changeTheme(e.target.value)}
-          >
-            <option value="original">{t("theme.original")}</option>
-            {PRESET_THEME_IDS.map((id) => (
-              <option key={id} value={id}>
-                {t(`theme.${id}`)}
-              </option>
-            ))}
-          </select>
-          <select
-            className="language-select"
-            aria-label="Language"
-            value={lang}
-            onChange={(e) => language.setLanguage(e.target.value)}
-          >
-            <option value="zh-CN">中文</option>
-            <option value="en">EN</option>
-          </select>
+          <AppearancePreferences />
+          <LanguagePreferences />
           <button
             className="icon-button"
             aria-label={t("help.label")}

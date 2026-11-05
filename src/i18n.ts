@@ -4,6 +4,7 @@ import {
   createMessageCatalog,
 } from "@momo/workbench/i18n";
 import { WORKBENCH_CATALOGS } from "@momo/workbench/locales";
+import { BUILTIN_MESSAGES } from "./builtinMessages";
 const words: Record<string, [string, string]> = {
   "score.title": ["乐器声部", "Instrument part"],
   "score.addTrack": ["添加乐器声部", "Add instrument part"],
@@ -95,6 +96,7 @@ const words: Record<string, [string, string]> = {
     "Edit notes and sample mappings below the layer timeline.",
   ],
 
+  ...BUILTIN_MESSAGES,
   "export.format": ["文件格式", "File format"],
   "export.format.wav": ["WAV · 无损 PCM16", "WAV · Lossless PCM16"],
   "export.format.ogg": ["OGG · Vorbis", "OGG · Vorbis"],
@@ -641,15 +643,6 @@ const words: Record<string, [string, string]> = {
     "声音生成失败，请重新打开工程。",
     "Sound rendering failed. Try reopening the project.",
   ],
-  "theme.label": ["外观", "Appearance"],
-  "theme.original": ["原始深色", "Original dark"],
-  "theme.xuanhei": ["玄黑", "Charcoal"],
-  "theme.shuimo": ["水墨", "Ink"],
-  "theme.yuebai": ["月白", "Moonlight"],
-  "theme.qingci": ["青瓷", "Celadon"],
-  "theme.qinghua": ["青花", "Porcelain"],
-  "theme.mineral": ["矿彩", "Mineral"],
-  "theme.ouhe": ["藕荷", "Lotus"],
   "help.label": ["使用帮助", "Help"],
   "help.title": ["从一个声音，做出一套音效", "Build a sound into a sound set"],
   "help.body": [

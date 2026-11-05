@@ -6,3 +6,8 @@ import "@momo/workbench/theme-tokens.css";
 import App from "./App";
 import "./style.css";
 createRoot(document.getElementById("root")!).render(<App />);
+
+import "@momo/workbench/appearance-settings.css";
+import "@momo/workbench/tabs.css";
+
+import "@momo/workbench/language-selector.css";
