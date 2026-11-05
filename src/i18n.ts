@@ -5,7 +5,9 @@ import {
 } from "@momo/workbench/i18n";
 import { WORKBENCH_CATALOGS } from "@momo/workbench/locales";
 import { BUILTIN_MESSAGES } from "./builtinMessages";
+import { AI_MESSAGES } from './aiMessages';
 const words: Record<string, [string, string]> = {
+  ...AI_MESSAGES,
   "control.slider": ["{0}滑杆", "{0} slider"],
   "layout.soundDesign": ["音效制作", "Sound design"],
   "layout.videoDesign": ["视频配音", "Video sound design"],

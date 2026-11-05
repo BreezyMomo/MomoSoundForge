@@ -152,6 +152,10 @@ npm run preview
 
 WAV 不加载额外编码器。其他格式首次使用时按需加载随应用提供的约 32 MB WebAssembly 编码器，之后复用；全部编码在浏览器本地完成，不上传音频、不依赖外部 CDN。编码时面板显示状态并禁用重复操作。第三方组件及源代码出处见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
+## AI 创作
+
+顶部「AI 工具」提供内置创作 Skill，可连接自己的 AI 客户端，查询声音库、写旋律、修改节点并试听。包含原生离线工具与带来源记录的音效检索流程，详见 [AI 创作与素材检索](docs/ai-authoring.md)。
+
 ## 乐器声部
 
 支持多采样区域、力度与演奏法选择、确定性轮替、持续循环与释放，以及按拍编辑的音符事件表。使用说明、便携格式、melody-design 接入和真实长笛示例见 [乐器声部文档](docs/instruments.md)。

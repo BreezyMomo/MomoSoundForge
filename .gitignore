@@ -10,3 +10,4 @@ test-results/
 
 # Generated from the versioned sample collection by predev / prebuild.
 /public/sound-library/
+/public/ai/

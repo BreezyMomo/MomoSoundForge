@@ -119,6 +119,9 @@ export function SoundLibrary({
   }, []);
   useEffect(() => {
     void refresh();
+    const updated = () => void refresh();
+    window.addEventListener('soundforge-library-updated', updated);
+    return () => window.removeEventListener('soundforge-library-updated', updated);
   }, [refresh]);
   useEffect(() => {
     if (dialog && !dialogRef.current?.open) dialogRef.current?.showModal();

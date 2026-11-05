@@ -1,6 +1,9 @@
 import { NotesWorkspace } from "./NotesWorkspace";
 import { Button } from "@momo/workbench/react";
 import { HelpDialog } from "./HelpDialog";
+import { AITools } from './AITools';
+import { useAIEditor } from './useAIEditor';
+import { flushSync } from 'react-dom';
 import { VideoReferencePanel } from "./VideoReferencePanel";
 import { appendInstrumentNode } from "./instrumentNode";
 import { TreeTimeline } from "./TreeTimeline";
@@ -358,6 +361,15 @@ export default function App() {
         : h,
     );
   }, [stop]);
+  const ai = useAIEditor({
+    project: history.project, ready,
+    commit: (expected, next) => {
+      if (rootCurrent.current !== expected) throw Error('ai.stale');
+      stop(); editGroup.current = { key: '', time: 0 };
+      flushSync(() => setHistory(h => ({ past: [...h.past, h.project].slice(-50), project: next, future: [] })));
+    },
+    undo: () => flushSync(undo), redo: () => flushSync(redo),
+  });
   const save = useCallback(() => {
     download(
       JSON.stringify(projectForSave(rootCurrent.current)),
@@ -2004,6 +2016,7 @@ export default function App() {
           <AppearancePreferences />
           <LanguagePreferences />
           <HelpDialog />
+          <AITools project={history.project} {...ai} />
           <button
             className="secondary export-button"
             disabled={!result || ioBusy}

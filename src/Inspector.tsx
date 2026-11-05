@@ -273,6 +273,13 @@ export function Inspector({
                   ? layer.project?.name
                   : project.assets[layer.assetId!]?.name}
             </div>
+            {layer.type === "sample" && project.assets[layer.assetId!]?.source && (() => {
+              const source = project.assets[layer.assetId!]!.source!;
+              return <p className="field-help">
+                {t(source.quality === 'preview' ? 'ai.samplePreview' : 'ai.sampleOriginal')} · {source.license}
+                {' · '}<a href={source.url} target="_blank" rel="noopener noreferrer">{t('ai.sampleSource')}: {source.provider} / {source.author}</a>
+              </p>;
+            })()}
             {layer.type === "composition" && (
               <>
                 <p className="field-help">

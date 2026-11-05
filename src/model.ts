@@ -1,4 +1,5 @@
 import { validateVideoReference, type VideoReference } from "./videoReference";
+import { validateSampleSource, type SampleSource } from './sampleSource';
 import {
   validateScore,
   scoreAssets,
@@ -57,6 +58,7 @@ export type Layer = {
   locked: boolean;
 };
 export type SampleAsset = {
+  source?: SampleSource;
   id: string;
   name: string;
   sampleRate: number;
@@ -230,6 +232,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     }
     if (lengths.some((l) => l !== lengths[0])) return fail();
     assets[id] = {
+      ...(a.source !== undefined ? { source: validateSampleSource(a.source) } : {}),
       id,
       name: a.name,
       sampleRate: a.sampleRate,

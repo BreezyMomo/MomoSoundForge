@@ -1,0 +1,3385 @@
+{
+  "format": "melody-design/lesson-bank-v1",
+  "provenance": "原创教学实验；视频方法的操作化补充，非配乐转录",
+  "eventExtensions": "notes 可选 endMidi（音符期间连续滑向目标，十二平均律 MIDI 坐标）、wave、attackSeconds、decay；基础字段沿用 recipe-v1。durationSeconds 包含释放。",
+  "renderSettings": {
+    "engine": "MomoSoundForge renderProject + encodeWav",
+    "seed": 20261104,
+    "sampleRate": 48000,
+    "targetPeak": 0.18,
+    "defaultWave": "sine",
+    "defaultAttackSeconds": 0.008,
+    "defaultReleaseSeconds": 0.04,
+    "defaultDecay": 0.7,
+    "cutoffHz": 4500
+  },
+  "pairs": [
+    {
+      "id": "E01",
+      "name": "频率与音高",
+      "recipes": [
+        "e01-a",
+        "e01-b"
+      ],
+      "changed": "音高",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "比较高低，不把较高误认为较响。"
+    },
+    {
+      "id": "E02",
+      "name": "八度移调",
+      "recipes": [
+        "e02-a",
+        "e02-b"
+      ],
+      "changed": "整体加十二半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "轮廓保留，音域提高；各音频率恰为两倍。"
+    },
+    {
+      "id": "E03",
+      "name": "有序音阶",
+      "recipes": [
+        "e03-a",
+        "e03-b"
+      ],
+      "changed": "顺序由上行改下行",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "音集相同，旋律方向不同。"
+    },
+    {
+      "id": "E04",
+      "name": "半音与全音",
+      "recipes": [
+        "e04-a",
+        "e04-b"
+      ],
+      "changed": "第二音高一半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "E–F 是半音，E–F♯ 是全音。"
+    },
+    {
+      "id": "E05",
+      "name": "级进与跳进",
+      "recipes": [
+        "e05-a",
+        "e05-b"
+      ],
+      "changed": "音高轮廓与跨度",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "连续移动和跨级跳跃的差异。"
+    },
+    {
+      "id": "E06",
+      "name": "摇篮曲轮廓",
+      "recipes": [
+        "e06-a",
+        "e06-b"
+      ],
+      "changed": "中间音的起伏幅度",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "两句都收在 C，比较窄音域与宽起伏；不是完整摇篮曲配器。"
+    },
+    {
+      "id": "E07",
+      "name": "号角选音",
+      "recipes": [
+        "e07-a",
+        "e07-b"
+      ],
+      "changed": "邻级改三和弦跳进",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "B 用 C、E、G 和高 C，比较宣告感；无真实铜管采样。"
+    },
+    {
+      "id": "E08",
+      "name": "主音落点",
+      "recipes": [
+        "e08-a",
+        "e08-b"
+      ],
+      "changed": "仅末音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "在 C 中心下比较 D 与 C 结尾。"
+    },
+    {
+      "id": "E09",
+      "name": "删去收束音",
+      "recipes": [
+        "e09-a",
+        "e09-b"
+      ],
+      "changed": "删去最后一次事件",
+      "held": "先前音符、节奏、总时长和音色",
+      "listenFor": "B 的最后空位保持休止，比较未完成感。"
+    },
+    {
+      "id": "E10",
+      "name": "问答结构",
+      "recipes": [
+        "e10-a",
+        "e10-b"
+      ],
+      "changed": "第二句末音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "相同开头的两句，B 第二句回到中心。"
+    },
+    {
+      "id": "E11",
+      "name": "动机移调",
+      "recipes": [
+        "e11-a",
+        "e11-b"
+      ],
+      "changed": "第二次动机整体加两半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "节奏和精确音程保持；B 的 F♯ 是移调结果，不叫 C 大调调内模进。"
+    },
+    {
+      "id": "E12",
+      "name": "相对大小调中心",
+      "recipes": [
+        "e12-a",
+        "e12-b"
+      ],
+      "changed": "音高中心与轮廓",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "两句都只用白键；这不是只改一个音的严格控制实验。"
+    },
+    {
+      "id": "E13",
+      "name": "同主音大小调",
+      "recipes": [
+        "e13-a",
+        "e13-b"
+      ],
+      "changed": "三、六级降低半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "在同一 C 中心下比较大调/自然小调材料。"
+    },
+    {
+      "id": "E14",
+      "name": "大调与五声",
+      "recipes": [
+        "e14-a",
+        "e14-b"
+      ],
+      "changed": "F→G，B→A",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "明确映射到大调五声，保留节奏与音符数量。"
+    },
+    {
+      "id": "E15",
+      "name": "黑键五声",
+      "recipes": [
+        "e15-a",
+        "e15-b"
+      ],
+      "changed": "整体升六半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "B 的五种音都在黑键上，音程关系相同。"
+    },
+    {
+      "id": "E16",
+      "name": "都节两个半音",
+      "recipes": [
+        "e16-a",
+        "e16-b"
+      ],
+      "changed": "D→D♭，A→A♭",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "B 为 C 都节教学音集，观察 C–D♭ 与 G–A♭。"
+    },
+    {
+      "id": "E17",
+      "name": "视频的蓝音降音实验",
+      "recipes": [
+        "e17-a",
+        "e17-b"
+      ],
+      "changed": "大调三、五、七级各降半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "这是视频的降音演示，不是标准六音小调布鲁斯音阶。"
+    },
+    {
+      "id": "E18",
+      "name": "小调五声加入蓝音",
+      "recipes": [
+        "e18-a",
+        "e18-b"
+      ],
+      "changed": "一个重复 F 改成 G♭",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "B 使用常见小调布鲁斯六音材料。"
+    },
+    {
+      "id": "E19",
+      "name": "离散音与弯音",
+      "recipes": [
+        "e19-a",
+        "e19-b"
+      ],
+      "changed": "第二音由 E♭ 连续上滑到 E",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "这是完整音符期间的合成滑音，解释弯音机制，不模拟真实推弦。"
+    },
+    {
+      "id": "E20",
+      "name": "希贾兹下方四音",
+      "recipes": [
+        "e20-a",
+        "e20-b"
+      ],
+      "changed": "D 降为 D♭",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "B 的 D♭–E 为增二度，两侧 C–D♭、E–F 为半音；十二平均律近似。"
+    },
+    {
+      "id": "E21",
+      "name": "视频希贾兹音集",
+      "recipes": [
+        "e21-a",
+        "e21-b"
+      ],
+      "changed": "同一教学音集上行/下行",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "标记一、三、一、二、一、二、二半音结构；非完整 maqam 演奏。"
+    },
+    {
+      "id": "E22",
+      "name": "大调与全音",
+      "recipes": [
+        "e22-a",
+        "e22-b"
+      ],
+      "changed": "改用等距两半音上行",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "B 每步全音，保持事件数导致末音不同，不能声称音域完全固定。"
+    },
+    {
+      "id": "E23",
+      "name": "音阶与半音爬行",
+      "recipes": [
+        "e23-a",
+        "e23-b"
+      ],
+      "changed": "每步改成一个半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "B 音域更窄；并非完整十二音半音阶遍历。"
+    },
+    {
+      "id": "E24",
+      "name": "邻音往返",
+      "recipes": [
+        "e24-a",
+        "e24-b"
+      ],
+      "changed": "全音邻接改半音邻接",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "比较两音往返的间距与摩擦。"
+    },
+    {
+      "id": "E25",
+      "name": "低音层",
+      "recipes": [
+        "e25-a",
+        "e25-b"
+      ],
+      "changed": "增加持续低 C",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "旋律不变，比较低音层；峰值匹配不等于感知响度匹配。"
+    },
+    {
+      "id": "E26",
+      "name": "短动机与重复",
+      "recipes": [
+        "e26-a",
+        "e26-b"
+      ],
+      "changed": "重复次数一变三",
+      "held": "单次动机、音色、整体播放窗口",
+      "listenFor": "A 后段留白，B 建立重复预期；三遍不是强制配方。"
+    },
+    {
+      "id": "E27",
+      "name": "重复中的意外",
+      "recipes": [
+        "e27-a",
+        "e27-b"
+      ],
+      "changed": "仅最后一次的末音升八度",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "观察结尾上跳是否更醒目；不保证一定更好。"
+    },
+    {
+      "id": "E28",
+      "name": "按滑的音高机制",
+      "recipes": [
+        "e28-a",
+        "e28-b"
+      ],
+      "changed": "一个音连续上行半音",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "连续运动与音阶离散落点可同时存在；不是古筝录音。"
+    },
+    {
+      "id": "E29",
+      "name": "持续与拨弦式发声",
+      "recipes": [
+        "e29-a",
+        "e29-b"
+      ],
+      "changed": "波形、起音与衰减共同改变",
+      "held": "全部音高、时间、总时长；最终数字峰值匹配",
+      "listenFor": "音符固定，比较发声类别；不能称为真实尺八或三味线。"
+    },
+    {
+      "id": "E30",
+      "name": "长音与细分装饰",
+      "recipes": [
+        "e30-a",
+        "e30-b"
+      ],
+      "changed": "第一音拆成四个短重复音",
+      "held": "后续音符、音色、总时长",
+      "listenFor": "只说明音符细分，非特定民族乐器的滚奏复刻。"
+    },
+    {
+      "id": "E31",
+      "name": "节奏支撑层",
+      "recipes": [
+        "e31-a",
+        "e31-b"
+      ],
+      "changed": "增加四次低频短脉冲",
+      "held": "节奏、音色与渲染设置；最终数字峰值匹配",
+      "listenFor": "旋律不变，观察节拍支撑；脉冲不是手鼓采样。"
+    }
+  ],
+  "recipes": [
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e01-a",
+      "name": "E01 频率与音高 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 0.312,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e01-b",
+      "name": "E01 频率与音高 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 0.312,
+      "notes": [
+        {
+          "midi": 67,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e02-a",
+      "name": "E02 八度移调 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.032,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e02-b",
+      "name": "E02 八度移调 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.032,
+      "notes": [
+        {
+          "midi": 72,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 76,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 79,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e03-a",
+      "name": "E03 有序音阶 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 71,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e03-b",
+      "name": "E03 有序音阶 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 72,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 71,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e04-a",
+      "name": "E04 半音与全音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 0.552,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e04-b",
+      "name": "E04 半音与全音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 0.552,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 66,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e05-a",
+      "name": "E05 级进与跳进 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.032,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e05-b",
+      "name": "E05 级进与跳进 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.032,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e06-a",
+      "name": "E06 摇篮曲轮廓 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 67,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e06-b",
+      "name": "E06 摇篮曲轮廓 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 67,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e07-a",
+      "name": "E07 号角选音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e07-b",
+      "name": "E07 号角选音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e08-a",
+      "name": "E08 主音落点 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.032,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e08-b",
+      "name": "E08 主音落点 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.032,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e09-a",
+      "name": "E09 删去收束音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 0.792,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e09-b",
+      "name": "E09 删去收束音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 0.792,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e10-a",
+      "name": "E10 问答结构 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e10-b",
+      "name": "E10 问答结构 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e11-a",
+      "name": "E11 动机移调 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e11-b",
+      "name": "E11 动机移调 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 66,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e12-a",
+      "name": "E12 相对大小调中心 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e12-b",
+      "name": "E12 相对大小调中心 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 57,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 59,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 57,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e13-a",
+      "name": "E13 同主音大小调 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e13-b",
+      "name": "E13 同主音大小调 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 68,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e14-a",
+      "name": "E14 大调与五声 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 71,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e14-b",
+      "name": "E14 大调与五声 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e15-a",
+      "name": "E15 黑键五声 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e15-b",
+      "name": "E15 黑键五声 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 66,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 68,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 70,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 73,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 75,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e16-a",
+      "name": "E16 都节两个半音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e16-b",
+      "name": "E16 都节两个半音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 68,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e17-a",
+      "name": "E17 视频的蓝音降音实验 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 71,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e17-b",
+      "name": "E17 视频的蓝音降音实验 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 66,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 70,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 66,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e18-a",
+      "name": "E18 小调五声加入蓝音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.752,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 70,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e18-b",
+      "name": "E18 小调五声加入蓝音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.752,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 66,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 70,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e19-a",
+      "name": "E19 离散音与弯音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e19-b",
+      "name": "E19 离散音与弯音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.272,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "endMidi": 64
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e20-a",
+      "name": "E20 希贾兹下方四音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.752,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e20-b",
+      "name": "E20 希贾兹下方四音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.752,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e21-a",
+      "name": "E21 视频希贾兹音集 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 68,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 70,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e21-b",
+      "name": "E21 视频希贾兹音集 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 72,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 70,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 68,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e22-a",
+      "name": "E22 大调与全音 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 71,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e22-b",
+      "name": "E22 大调与全音 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 66,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 68,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 70,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 74,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e23-a",
+      "name": "E23 音阶与半音爬行 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 69,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 71,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e23-b",
+      "name": "E23 音阶与半音爬行 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 63,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 66,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e24-a",
+      "name": "E24 邻音往返 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e24-b",
+      "name": "E24 邻音往返 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e25-a",
+      "name": "E25 低音层 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.52,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e25-b",
+      "name": "E25 低音层 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.52,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 36,
+          "startSeconds": 0,
+          "durationSeconds": 1.4,
+          "velocity": 55
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e26-a",
+      "name": "E26 短动机与重复 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.4,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.18,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.36,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.54,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e26-b",
+      "name": "E26 短动机与重复 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.4,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.18,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.36,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.54,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.9,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.08,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.26,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.62,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.8,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.98,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e27-a",
+      "name": "E27 重复中的意外 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.244,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.18,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.36,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.54,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.9,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.08,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.26,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.62,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.8,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.98,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e27-b",
+      "name": "E27 重复中的意外 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.244,
+      "notes": [
+        {
+          "midi": 64,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.18,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.36,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.54,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.9,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.08,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.26,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 1.62,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.8,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        },
+        {
+          "midi": 72,
+          "startSeconds": 1.98,
+          "durationSeconds": 0.144,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e28-a",
+      "name": "E28 按滑的音高机制 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e28-b",
+      "name": "E28 按滑的音高机制 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.512,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 62,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "endMidi": 65
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e29-a",
+      "name": "E29 持续与拨弦式发声 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        },
+        {
+          "midi": 68,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        },
+        {
+          "midi": 67,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        },
+        {
+          "midi": 65,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.055,
+          "decay": 0,
+          "wave": "sine"
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e29-b",
+      "name": "E29 持续与拨弦式发声 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 1.992,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.48,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        },
+        {
+          "midi": 67,
+          "startSeconds": 0.72,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        },
+        {
+          "midi": 68,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        },
+        {
+          "midi": 67,
+          "startSeconds": 1.2,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        },
+        {
+          "midi": 65,
+          "startSeconds": 1.44,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.68,
+          "durationSeconds": 0.192,
+          "velocity": 80,
+          "attackSeconds": 0.004,
+          "decay": 4,
+          "wave": "triangle"
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e30-a",
+      "name": "E30 长音与细分装饰 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.296,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.32,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.64,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.28,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.6,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.92,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e30-b",
+      "name": "E30 长音与细分装饰 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.296,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.06,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.08,
+          "durationSeconds": 0.06,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.16,
+          "durationSeconds": 0.06,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 0.24,
+          "durationSeconds": 0.06,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.32,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.64,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.28,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.6,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.92,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e31-a",
+      "name": "E31 节奏支撑层 A",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.296,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.32,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.64,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.28,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.6,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.92,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        }
+      ]
+    },
+    {
+      "format": "melody-design/recipe-v1",
+      "id": "e31-b",
+      "name": "E31 节奏支撑层 B",
+      "tonicMidi": 60,
+      "scale": "explicit-events",
+      "durationSeconds": 2.296,
+      "notes": [
+        {
+          "midi": 60,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 0.32,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 0.64,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 65,
+          "startSeconds": 0.96,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 64,
+          "startSeconds": 1.28,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 61,
+          "startSeconds": 1.6,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 60,
+          "startSeconds": 1.92,
+          "durationSeconds": 0.256,
+          "velocity": 80
+        },
+        {
+          "midi": 40,
+          "endMidi": 28,
+          "startSeconds": 0.0,
+          "durationSeconds": 0.1,
+          "velocity": 70,
+          "decay": 5
+        },
+        {
+          "midi": 40,
+          "endMidi": 28,
+          "startSeconds": 0.64,
+          "durationSeconds": 0.1,
+          "velocity": 70,
+          "decay": 5
+        },
+        {
+          "midi": 40,
+          "endMidi": 28,
+          "startSeconds": 1.28,
+          "durationSeconds": 0.1,
+          "velocity": 70,
+          "decay": 5
+        },
+        {
+          "midi": 40,
+          "endMidi": 28,
+          "startSeconds": 1.92,
+          "durationSeconds": 0.1,
+          "velocity": 70,
+          "decay": 5
+        }
+      ]
+    }
+  ]
+}
