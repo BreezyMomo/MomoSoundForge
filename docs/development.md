@@ -31,8 +31,8 @@ Run the library audit for a loudness report; numerical checks do not replace lis
 
 ## 音源构建 / Library generation
 
-`predev` 与 `prebuild` 从已入库的采样、示例和工具生成 `public/sound-library/`，更新 `src/data/builtin-catalog.json`；Vite 将资源复制到 `dist/sound-library/`。
-The predev/prebuild hook generates the runtime library from versioned samples and examples; Vite copies it into the deployment.
+`predev`、`pretest` 与 `prebuild` 从已入库的采样、示例和工具生成 `public/sound-library/`，更新 `src/data/builtin-catalog.json`；未变化的资源复用缓存，Vite 将资源复制到 `dist/sound-library/`。全新克隆也可直接运行测试。
+The predev/pretest/prebuild hook generates the runtime library from versioned samples and examples, reusing unchanged resources. Tests also work on a fresh checkout; Vite copies the library into the deployment.
 
 - 原始资料 / Sources: `samples/` and versioned examples.
 - 生成资源 / Generated library: `public/sound-library/` (Git ignored).
