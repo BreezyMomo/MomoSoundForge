@@ -12,6 +12,7 @@
     "prebuild": "node tools/build-builtin-library.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4180",
+    "pretest": "node tools/build-builtin-library.mjs",
     "test": "vitest run"
   },
   "dependencies": {

@@ -1,0 +1,62 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Checkout source and samples
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Test
+        run: npm test
+      - name: Build app and sound library
+        run: npm run build
+      - name: Check deployment files
+        run: node tools/check-static-site.mjs
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+          retention-days: 1
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
