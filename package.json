@@ -22,7 +22,7 @@
     "@ffmpeg/ffmpeg": "0.12.15",
     "@fontsource/inter": "^5.3.0",
     "@modelcontextprotocol/sdk": "1.32.2",
-    "@momo/workbench": "file:vendor/momo-workbench-0.6.0.tgz",
+    "@momo/workbench": "file:vendor/momo-workbench-0.7.0.tgz",
     "jszip": "^3.10.1",
     "lucide-react": "^0.468.0",
     "react": "^19.1.1",

@@ -1,9 +1,18 @@
 :root {
-  --wave: #8ccde0;
+  --wave: var(--ui-control);
+  --wave-start: var(--ui-accent-text);
+  --wave-end: var(--wave);
+  --wave-mid: color-mix(in srgb, var(--wave-start) 55%, var(--wave-end));
   --line: var(--ui-line);
   font-family: Inter, "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
   font-size: 13px;
   font-synthesis: none;
+}
+@supports (color: hsl(from red h s l)) {
+  :root[data-appearance-theme="soundforge-night"] {
+    --wave-start: hsl(from var(--ui-accent-text) h 90% 72%);
+    --wave-end: hsl(from var(--ui-control) h 80% 76%);
+  }
 }
 * {
   box-sizing: border-box;
@@ -79,12 +88,12 @@ input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   width: 10px;
   height: 10px;
-  background: var(--ui-text);
+  background: var(--ui-control, var(--ui-text));
   border-radius: 50%;
   margin-top: -3.5px;
 }
 input[type="checkbox"] {
-  accent-color: var(--ui-text);
+  accent-color: var(--ui-control, var(--ui-text));
   width: 13px;
   height: 13px;
   margin: 0;
@@ -193,13 +202,13 @@ span {
   font-size: 12px;
 }
 .primary {
-  background: var(--ui-text);
-  color: var(--ui-bg);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
   padding: 8px 16px;
   font-weight: 600;
 }
 .primary:hover {
-  background: var(--ui-muted);
+  background: var(--ui-accent-hover);
 }
 .primary:disabled {
   background: var(--ui-surface);
@@ -702,7 +711,7 @@ span {
   color: var(--ui-muted);
 }
 .mix-wave {
-  height: 112px;
+  height: 144px;
   position: relative;
   margin-top: 6px;
 }
@@ -1389,8 +1398,11 @@ span {
 }
 @media (max-width: 900px) {
   .app-header {
-    height: 54px;
+    height: auto;
     min-height: 54px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px 12px;
   }
   .brand {
     font-size: 14px;
@@ -1399,7 +1411,7 @@ span {
     margin-left: auto;
   }
   .header-right {
-    margin-left: 0;
+    margin-left: auto;
   }
   .export-button {
     padding: 5px 8px;
@@ -1667,7 +1679,7 @@ span {
     padding: 22px 20px;
   }
 }
-/* Keep the full four-layer example visible at standard desktop height. */
+/* Keep transport and timeline compact while leaving room to read the waveform. */
 @media (min-width: 901px) and (max-height: 1000px) {
   .editor-content {
     padding: 16px 22px;
@@ -1683,7 +1695,7 @@ span {
     margin-bottom: 12px;
   }
   .mix-wave {
-    height: 66px;
+    height: 128px;
     margin-top: 4px;
   }
   .mix-area {

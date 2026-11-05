@@ -27,6 +27,8 @@ No account is required. Synthesis, mixing and export run on your device. Factory
 - **Custom workspaces:** dock panels, save layouts, switch themes and UI language, and use arrangement or note-editing layouts.
 - **Delivery and backup:** WAV, OGG, MP3, FLAC, variation ZIPs and editable `.soundforge` projects containing their samples.
 
+SoundForge registers its own Sound night · Violet & cyan theme with Workbench: a near-black workspace, muted violet panels and primary actions, and cyan adjustment controls. New installations use it by default; existing appearance preferences are preserved. Select it from Appearance in the header, alongside the original seven shared themes. The product supplies palette data and translations while Workbench continues to own component structure and interaction. Theme changes repaint waveforms without regenerating or changing the audio.
+
 ## First use
 
 1. Search or audition a sound in **Basic sounds**. Choose **Add** for the current work, or **Edit** to open it separately.

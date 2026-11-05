@@ -8,6 +8,8 @@ import { BUILTIN_MESSAGES } from "./builtinMessages";
 import { AI_MESSAGES } from './aiMessages';
 const words: Record<string, [string, string]> = {
   ...AI_MESSAGES,
+  "appearance.soundforgeNight": ["声夜 · 紫蓝", "Sound night · Violet & cyan"],
+  "appearance.soundforgeNightDescription": ["近黑底色与低饱和暗紫面板，紫色标识主要操作，青蓝色突出调节控件与声音。", "Near-black surfaces with a muted violet cast, violet primary actions and cyan controls alongside the sound waveform."],
   "control.slider": ["{0}滑杆", "{0} slider"],
   "layout.soundDesign": ["音效制作", "Sound design"],
   "layout.videoDesign": ["视频配音", "Video sound design"],
