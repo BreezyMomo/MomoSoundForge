@@ -34,6 +34,8 @@ export const AI_MESSAGES: Record<string, [string, string]> = {
   'ai.operation.capture': ['读取作品', 'Read work'],
   'ai.operation.schema': ['读取编辑规则', 'Read editing schema'],
   'ai.operation.catalog': ['查询声音库', 'Query sound library'],
+  'ai.operation.resources': ['查询声音资源', 'Query sound resources'],
+  'ai.operation.import_resource': ['导入本地库资源', 'Import local library resource'],
   'ai.operation.edit': ['修改作品', 'Edit work'],
   'ai.operation.render': ['生成试听', 'Render preview'],
   'ai.operation.history': ['撤销或重做', 'Undo or redo'],

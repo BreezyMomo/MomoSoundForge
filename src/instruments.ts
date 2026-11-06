@@ -1,11 +1,16 @@
 import type { SampleAsset } from "./model";
-import { decodeSamples, stableHash } from "./model";
+import { decodeSamples, stableHash, rng } from "./model";
+import { parseSynth, synthValues, expressionVoice, synthSample, type SynthDefinition } from './synthesizers';
+import { compileExpression } from './synthExpression';
 export const MAX_SCORE_NOTES = 256;
 export const MAX_TOTAL_NOTES = 1024;
 export type SampleRegion = {
   id: string;
   assetId: string;
+  synth?: SynthDefinition;
+  synthValues?: Record<string, number>;
   rootMidi: number;
+  fixedPitch?: boolean;
   keyLow: number;
   keyHigh: number;
   velocityLow: number;
@@ -94,11 +99,11 @@ export function validateScore(
         !r ||
         !text(r.id) ||
         regionIds.has(r.id) ||
-        !text(r.assetId) ||
-        !Object.hasOwn(assets, r.assetId) ||
+        (!r.synth && (!text(r.assetId) || !Object.hasOwn(assets, r.assetId))) ||
         !integer(r.rootMidi, 0, 127) ||
-        !integer(r.keyLow, 0, r.rootMidi) ||
-        !integer(r.keyHigh, r.rootMidi, 127) ||
+        (r.fixedPitch !== undefined && typeof r.fixedPitch !== 'boolean') ||
+        !integer(r.keyLow, 0, 127) ||
+        !integer(r.keyHigh, r.keyLow, 127) ||
         !integer(r.velocityLow, 1, 127) ||
         !integer(r.velocityHigh, r.velocityLow, 127) ||
         !text(r.articulation, 60) ||
@@ -109,6 +114,10 @@ export function validateScore(
       )
         fail();
       regionIds.add(r.id);
+      if (r.synth) {
+        r.synth = parseSynth(r.synth); r.synthValues = synthValues(r.synth,r.synthValues);
+        if (r.assetId !== '' || r.loop || r.releaseAssetId) fail();
+      }
       if (
         r.releaseAssetId !== undefined &&
         (!text(r.releaseAssetId) || !Object.hasOwn(assets, r.releaseAssetId))
@@ -149,7 +158,7 @@ export function validateScore(
 export function scoreAssets(score: Score): string[] {
   return score.instruments.flatMap((i) =>
     i.regions.flatMap((r) =>
-      r.releaseAssetId ? [r.assetId, r.releaseAssetId] : [r.assetId],
+      r.synth ? [] : r.releaseAssetId ? [r.assetId, r.releaseAssetId] : [r.assetId],
     ),
   );
 }
@@ -157,6 +166,14 @@ export function orderedNotes(score: Score) {
   return [...score.notes].sort(
     (a, b) => a.start - b.start || a.id.localeCompare(b.id, "en"),
   );
+}
+export function compareNoteRegions(midi: number, a: SampleRegion, b: SampleRegion) {
+  // Explicit assignments to a single key override broader shared ranges.
+  return Number(b.keyLow === b.keyHigh) - Number(a.keyLow === a.keyHigh)
+    || Math.abs(midi - a.rootMidi) - Math.abs(midi - b.rootMidi)
+    || a.keyHigh - a.keyLow - (b.keyHigh - b.keyLow)
+    || a.velocityHigh - a.velocityLow - (b.velocityHigh - b.velocityLow)
+    || a.id.localeCompare(b.id, "en");
 }
 export function selectRegion(
   instrument: Instrument | undefined,
@@ -174,13 +191,7 @@ export function selectRegion(
         note.velocity >= r.velocityLow &&
         note.velocity <= r.velocityHigh,
     )
-    .sort(
-      (a, b) =>
-        Math.abs(note.midi - a.rootMidi) - Math.abs(note.midi - b.rootMidi) ||
-        a.keyHigh - a.keyLow - (b.keyHigh - b.keyLow) ||
-        a.velocityHigh - a.velocityLow - (b.velocityHigh - b.velocityLow) ||
-        a.id.localeCompare(b.id, "en"),
-    );
+    .sort((a, b) => compareNoteRegions(note.midi, a, b));
   const first = candidates[0];
   if (!first) return;
   const group = candidates
@@ -219,9 +230,10 @@ export function noteEndSeconds(
 ) {
   const start = beatsToSeconds(note.start, bpm),
     held = beatsToSeconds(note.duration, bpm);
+  if (region?.synth) return start + held + region.releaseSeconds;
   if (!region || !assets[region.assetId]) return start + held;
   const a = assets[region.assetId],
-    rate = 2 ** ((note.midi - region.rootMidi + region.tuneCents / 100) / 12);
+    rate = 2 ** (((region.fixedPitch ? 0 : note.midi - region.rootMidi) + region.tuneCents / 100) / 12);
   const available = channels(a)[0].length / a.sampleRate / rate;
   const main = region.loop
     ? held + region.releaseSeconds
@@ -258,12 +270,13 @@ export function scoreIssues(
       warn("score.noRegion");
       continue;
     }
+    if (r.synth) { if (noteEndSeconds(n,r,assets,score.bpm)>duration+0.001) warn('score.tailClipped'); continue; }
     const asset = assets[r.assetId];
     if (!asset) {
       warn("score.missingSample");
       continue;
     }
-    const rate = 2 ** ((n.midi - r.rootMidi + r.tuneCents / 100) / 12);
+    const rate = 2 ** (((r.fixedPitch ? 0 : n.midi - r.rootMidi) + r.tuneCents / 100) / 12);
     const available = channels(asset)[0].length / asset.sampleRate / rate;
     if (!r.loop && beatsToSeconds(n.duration, score.bpm) > available)
       warn("score.noSustain");
@@ -293,6 +306,7 @@ export function renderScore(
   seconds: number,
   sampleRate: number,
   seed: number,
+  budget = {synthOperations:0},
 ) {
   const left = new Float32Array(Math.round(seconds * sampleRate)),
     right = new Float32Array(left.length),
@@ -304,6 +318,27 @@ export function renderScore(
       seed,
       counters,
     );
+    if (region?.synth) {
+      const s = region.synth, defaults = s.defaults;
+      const held = beatsToSeconds(note.duration,score.bpm), duration = held + region.releaseSeconds;
+      const frames = Math.ceil(duration*sampleRate), start = Math.round(beatsToSeconds(note.start,score.bpm)*sampleRate);
+      const cost=s.program?compileExpression(s.program.expression,s.program.parameters.map(p=>p.variable)).cost:4;
+      budget.synthOperations+=Math.min(frames,Math.max(0,left.length-start))*cost;
+      if (frames > 8_000_000 || budget.synthOperations>60_000_000) throw Error('error.renderBudget');
+      const random = rng((seed ^ stableHash(note.id))>>>0), expression = expressionVoice(s,region.synthValues,random,frames);
+      const frequency = 440 * 2**((note.midi-69+region.tuneCents/100)/12), gain = (note.velocity/127)*10**(region.gainDb/20);
+      const alpha = 1-Math.exp(-2*Math.PI*Math.min(defaults.cutoff,sampleRate*0.45)/sampleRate);
+      let phase=0, filter=0, previous=0, dcPrevious=0;
+      for(let i=0;i<frames && start+i<left.length;i++) {
+        const t=i/sampleRate; phase=(phase+Math.min(frequency,sampleRate*0.45)/sampleRate)%1;
+        const raw=expression ? expression(t,phase,frequency,duration,note.velocity/127) : synthSample('oscillator-v1',defaults.wave,phase,random);
+        filter+=alpha*(raw-filter); const dc=filter-previous+0.995*dcPrevious; previous=filter;dcPrevious=dc;
+        const attack=Math.min(1,t/Math.max(0.003,defaults.attack)), release=Math.min(1,Math.max(0,(duration-t)/region.releaseSeconds));
+        const value=(defaults.drive ? Math.tanh(dc*(1+defaults.drive))/Math.tanh(1+defaults.drive):dc)*attack*release*Math.exp(-defaults.decay*t/duration)*gain;
+        left[start+i]+=value;right[start+i]+=value;
+      }
+      continue;
+    }
     if (!region || !assets[region.assetId]) continue;
     const asset = assets[region.assetId],
       data = channels(asset),
@@ -313,7 +348,7 @@ export function renderScore(
       releaseData = releaseAsset ? channels(releaseAsset) : undefined;
     const step =
       (asset.sampleRate / sampleRate) *
-      2 ** ((note.midi - region.rootMidi + region.tuneCents / 100) / 12);
+      2 ** (((region.fixedPitch ? 0 : note.midi - region.rootMidi) + region.tuneCents / 100) / 12);
     const start = Math.round(
         beatsToSeconds(note.start, score.bpm) * sampleRate,
       ),

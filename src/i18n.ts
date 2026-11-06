@@ -1,5 +1,8 @@
 import { PLAYER_MESSAGES } from "./playerMessages";
 import { DEFINITION_MESSAGES } from "./definitionMessages";
+import { RESOURCE_MESSAGES } from './resourceMessages';
+import { INSPECTOR_MESSAGES } from './inspectorMessages';
+import { INSTRUMENT_EDITOR_MESSAGES } from './instrumentEditorMessages';
 import { useSyncExternalStore } from "react";
 import {
   createLanguageController,
@@ -10,6 +13,9 @@ import { BUILTIN_MESSAGES } from "./builtinMessages";
 import { AI_MESSAGES } from "./aiMessages";
 import { REPLACEMENT_MESSAGES } from "./replacementMessages";
 const words: Record<string, [string, string]> = {
+  ...INSPECTOR_MESSAGES,
+  ...INSTRUMENT_EDITOR_MESSAGES,
+  ...RESOURCE_MESSAGES,
   ...DEFINITION_MESSAGES,
   ...REPLACEMENT_MESSAGES,
   ...PLAYER_MESSAGES,
@@ -383,9 +389,9 @@ const words: Record<string, [string, string]> = {
   "score.mapping": ["采样映射", "Sample mapping"],
   "score.instrument": ["乐器", "Instrument"],
   "score.choose": ["请选择", "Choose…"],
-  "score.importInstrument": ["导入乐器包", "Import instrument"],
+  "score.importInstrument": ["导入乐器定义", "Import instrument definition"],
   "score.empty": [
-    "先导入便携乐器包，或在采样映射中将已导入的采样设为乐器。",
+    "先导入乐器定义，或在采样映射中将已导入的录音绑定为乐器。",
     "Import a portable instrument, or map an existing sample in Sample mapping.",
   ],
   "score.snap": ["节拍吸附", "Beat snap"],
@@ -404,7 +410,7 @@ const words: Record<string, [string, string]> = {
   "score.duration": ["时值（拍）", "Duration (beats)"],
   "score.velocity": ["力度", "Velocity"],
   "score.articulation": ["演奏法", "Articulation"],
-  "score.selectedSample": ["实际采样", "Selected sample"],
+  "score.selectedSample": ["发声来源", "Sound source"],
   "score.actions": ["操作", "Actions"],
   "score.removeNote": ["删除音符", "Delete note"],
   "score.asset": ["采样", "Sample"],
@@ -674,7 +680,7 @@ const words: Record<string, [string, string]> = {
   "pro.param.drive": ["失真", "Drive"],
   "app.subtitle": ["游戏音效工作台", "Game sound workbench"],
   "app.version": ["首版 · 本地创作", "v0.1 · Local workspace"],
-  "panel.library": ["声音库", "Sound library"],
+  "panel.library": ["声音资源库", "Sound resources"],
   "panel.editor": ["声音编排", "Sound arrangement"],
   "panel.inspector": ["声音层属性", "Layer properties"],
   "panel.variants": ["变体工作区", "Variations"],
@@ -727,8 +733,6 @@ const words: Record<string, [string, string]> = {
   "library.list": ["列表", "List"],
   "library.grid": ["波形网格", "Waveform grid"],
   "library.variantDisplay": ["同类声音", "Sound variants"],
-  "library.collapseVariants": ["折叠", "Grouped"],
-  "library.expandVariants": ["展开", "Expanded"],
   "library.variantDisplayHint": [
     "展开后，各音区和录音独立显示，可逐个试听。",
     "Expand pitch ranges and recordings into separate cards to audition each one.",
@@ -881,8 +885,8 @@ const words: Record<string, [string, string]> = {
     "Layers overlap in time. Select a layer to edit.",
   ],
   "editor.empty": [
-    "还没有声音层。添加合成层或导入采样开始创作。",
-    "No layers yet. Add a synth layer or import a sample.",
+    "还没有声音层。从声音资源库添加资源，或导入采样开始创作。",
+    "No layers yet. Add a sound resource or import a recording.",
   ],
   "editor.mix": ["合成波形", "Mix waveform"],
   "editor.playhead": ["播放位置", "Playback position"],
@@ -1104,8 +1108,8 @@ const words: Record<string, [string, string]> = {
   ],
   "help.start.title": ["从一个声音开始", "Start with a sound"],
   "help.start.body": [
-    "在左侧试听基础声音，点击“添加”放入当前作品，或从“组合示例”开始。选中声音后，在右侧调整音色、音符与后处理；声层旁的播放按钮可单独试听。",
-    "Audition Basic sounds on the left and choose Add, or start from an Example. Select a sound to edit its tone, notes and processing in the inspector. Each track has its own audition button.",
+    "在声音资源库试听合成器、乐器或音乐／音效，用卡片上的创作或添加按钮放入作品。选中声音后，在右侧调整音色、音符与后处理；声层旁的播放按钮可单独试听。",
+    "Audition synthesizers, instruments or music/sounds in Sound resources and use the card’s creation or insertion action. Edit tone, notes and processing in the inspector. Each track has its own audition button.",
   ],
   "help.editing.title": ["编排、修饰与比较", "Arrange, process and compare"],
   "help.editing.body": [
@@ -1114,8 +1118,8 @@ const words: Record<string, [string, string]> = {
   ],
   "help.saving.title": ["保存与导出", "Save and export"],
   "help.saving.body": [
-    "“保存工程”保留可编辑结构与采样，“存入声音库”方便复用；“导出…”提供 WAV、OGG、MP3、FLAC 和变体 ZIP。草稿仅保存在当前浏览器和网址，跨设备请下载工程。监听音量仅影响试听，不改变导出文件。",
-    "Save project keeps editable content and samples; Save to library makes sounds reusable. Export offers WAV, OGG, MP3, FLAC and variation ZIPs. Drafts belong to this browser and site; download a project to move devices. Monitor volume affects playback only, not exported files.",
+    "“保存工程”保留可编辑结构和依赖，“保存当前作品为资源”写入选定的本地库文件夹；“导出…”提供 WAV、OGG、MP3、FLAC 和变体 ZIP。草稿保存在当前浏览器，个人库请备份整个文件夹或导出资源包。监听音量仅影响试听。",
+    "Save project keeps editable content and dependencies; Save current work as resource writes to your connected folder library. Export offers WAV, OGG, MP3, FLAC and variation ZIPs. Drafts stay in the browser; back up the library folder or export resource packages. Monitor volume affects playback only.",
   ],
   "help.shortcuts.title": ["常用快捷键", "Keyboard shortcuts"],
   "help.shortcuts.body": [

@@ -64,3 +64,7 @@ low/mid/high 为 -100–100；feedback/wet/reverb 为 0–100；delayTime 仍是
 需要取得实际成品音频供客户端试听时，使用 `sound_render` 的 `output:"export",settings:{...}`；返回实际编码的文件，metrics 标注为编码前的处理结果。此模式不能同时使用 start/end 或 beforePolish。原生试听仍默认 WAV；成品响应上限 8 MiB，过大时直接下载。OGG/MP3/FLAC 首次使用会加载本地编码器。离线 CLI 的 render 目前仍只输出原生 WAV。
 
 原生工程为 momo.soundforge/v4，文档持有 root 播放器；capture 返回根混音视图 inputs。输入的发声参数位于 player，例如 patch: {player: {frequency: 880}}。player 浅合并，score/effects 等字段整体传入。位置、读取起止（秒）、速度、循环、播放占用、音量、声像留在输入；effects 属于 player。嵌套组合为 input.player.mix.inputs，音符为 input.player.score，组合控件值为 input.player.controlValues。duration 是播放占用，player.duration 是源主体时长。普通 patch 不能改变 type、assetId 或 mix。替换时保留输入使用设置，超出新声音范围补静音。
+
+## 统一声音资源与本地库
+
+`sound_resources` 与 `sound_import_resource` 的类型、个人库访问范围和保存流程见 [音源资源](resources.md)。个人资源使用用户已连接的文件夹；资源保存不进入作品撤销，新增定义与保存完整音乐／音效是不同类型。

@@ -57,7 +57,16 @@ Legacy standalone notes restore authored gain, then receive an audible default l
 
 A work contains layers. Each layer has outer settings and replaceable content: synthesized sound, an audio clip, an instrument performance, or an editable combination. Instruments currently use recordings; notes describe the performance.
 
-Choose **Edit content** or **Replace content** in layer properties. Replacement accepts built-in recordings, combination examples, current group assets and local audio. A whole combination can become an audio clip, and an audio clip can become an editable combination. Synth and instrument layers can also receive those contents.
+Open the **Sound** tab in layer properties to choose a synthesizer or instrument, edit notes, or **Replace content**. A combination's **Edit content** opens its internal timeline. Replacement accepts built-in recordings, combination examples, current group assets and local audio. A whole combination can become an audio clip, and an audio clip can become an editable combination. Synth and instrument layers can also receive those contents.
+
+The property header shows the current layer's editable name, content type and containing mix. Four task tabs contain collapsible sections:
+
+- **Sound**: source, synthesis or notes, sound shape and tone.
+- **Playback**: placement and playback length in the current mix, source range, speed, looping and reverse.
+- **Mix & FX**: the layer's level and position, plus effects belonging to its sound content.
+- **Automation**: changes to volume, pan or low-pass frequency over playback time.
+
+Tab and section preferences stay on this device, outside projects and undo history. Switching tabs preserves the note editor's current state.
 
 Replacement retains name, placement, read range, speed, loop, playback length, volume, pan, mute/solo, variation lock and volume/pan curves. The new player replaces the old sound, children, notes and own effects; parent mix effects stay. Old content bindings and filter automation are removed. Out-of-range reads play silence without shortening the loop period. Fit to new sound length is an explicit action and preserves loop playback length. The work window stays fixed.
 
@@ -67,7 +76,7 @@ Audition in the full work before confirming. Cancel makes no document change; co
 
 1. Find a sound in the library. Use Open to edit for a standalone project, Add to current for a composition layer, or its play button to audition it.
 2. Select a layer and adjust its source, pitch, timing, envelope and processing. The play button between its name and waveform auditions that layer from its own start for its own duration, skipping the timeline lead-in. Click again to stop; loop mode repeats only that layer. Auditioning leaves project timing, mute and solo settings unchanged.
-3. Add synth layers or import samples.
+3. Add sound resources or import recordings.
 4. Set variation seed and amount, then generate five variations. Locked layers preserve their parameters and noise seeds. A zero amount produces identical audio.
 5. Save the editable project or export a final WAV.
 
@@ -85,23 +94,15 @@ The mix waveform has a persistent playhead. Click the waveform or ruler, or drag
 
 Shortcuts: Space to play/pause; Ctrl/Cmd+Z to undo; Ctrl/Cmd+Shift+Z to redo; Ctrl/Cmd+S to save. Text fields retain normal editing shortcuts.
 
-## Use the sound library
+## Use sound resources
 
-Rejected takes are deleted from the library and source files. `tools/builtin-quality.json` retains only the rejection reason to prevent reintroduction. The amplified F♯2 timpani lacked a clear drum attack; its original and working copies have been deleted. The timpani card and bundled examples now use C♯3, and the audition reel and distribution archive are cleaned as well. Review records distinguish listening feedback from signal measurements: passing level checks is not a sound-quality certification.
+The sidebar and top-bar resource manager share the same factory and local resources. The default source view shows recordings and synthesizers; filter recordings, synthesizers, instrument definitions and music/sounds by type, source or category, with search, favorites and recent use. Each recording is a separate counted item, labeled with original pitch, strength and take. Instruments define note bindings. Search covers the entire library; Show more loads the next group of cards.
 
-The library separates **Basic sounds**, **Combinations** and **My sounds**. Basic sounds contains 108 choices: 48 instrument/articulation combinations, 52 CC0 sound-effect groups and 8 synthesis presets. Instruments use 725 distinct recordings; sound effects provide 126 selectable clips. Alternate recordings of the same action share one card with a Recording selector. Different actions, materials and impact strengths keep separate cards. Instruments are grouped by instrument and articulation, with ranges selected within the card. Browse the 30 editable combinations separately. Categories, bilingual search, favorites and recent items work within each section.
+Use **Create with synthesizer**, **Write notes with instrument** or **Add to work**. Instrument insertion starts with an empty score. Resource management offers editing/export; local resources can be deleted. Library changes never update existing work instances.
 
-The new game SFX starter adds five footstep surfaces, punches and material impacts, doors and mechanisms, and blade actions, plus eight editable scene combinations. Defaults have trimmed playback ranges and matched levels; combinations retain their layers and controls such as Landing weight and Impact. Recordings come from two Kenney CC0 packs. Originals, licenses, archive paths and conversion details are retained in [the collection notes](../samples/game-sfx-starter-20261105/使用说明.txt).
+Open a local folder in **Manage resources** before saving personal resources. Create synthesizers, define instruments, import resource files or upload audio. **Save current work as resource** captures the whole work; explicitly select an existing sound to publish a new version or save a new resource. Packages and indexes are read-verified after writing. Factory resources and work editing remain usable without a connected folder.
 
-The 682 usable recordings for piano, flute, violin section, cello section, horn and trumpet are available as 20 articulations across 88 selectable ranges. Each range retains its velocity layers and alternate takes, selected automatically when editing notes. Author mappings and remaining coverage gaps are preserved; see `samples/orchestra-expanded-20261105/coverage.json`.
-
-Each new range uses at most 10 MiB of decoded samples. Long recordings use the first four seconds, disclosed on the card; shorter recordings remain complete. Note length and transposition must fit the available source; no unverified loops are enabled. Full originals remain in the source collection. Other instruments retain their existing individual takes. Bundled resources load on demand and projects embed their selected assets. Development and production builds generate `public/sound-library/` with source and CC0 notices. The total project sample budget remains 24 MiB.
-
-After tuning a sound, choose **Save to library** beside the editor title, name it and save. Its card appears in the unified sound list, retaining the current sound's layers, nested sounds, parameters and samples. Saving to the library always stores the complete work.
-
-Use the card's play button to audition it, **Open to edit** to open it as a full project, or **Add to current** to insert an editable instrument layer (for instruments) or a composition layer. Saving switches to My sounds. Saving the same name offers **Update saved sound** or **Save a copy**. Library originals, opened projects and inserted sounds are independent. Save back to the library to update an original.
-
-The card's additional actions include Rename, Export project and Remove sound. Removed sounds remain in **Recently removed** and can be restored. The library persists across reloads in the current browser and origin. Use **Export project** for backup or transfer; open the project on another device and save it to that device's library.
+Legacy browser sounds and definitions can be migrated to the folder, keeping originals as backup. Remote libraries, sync, trash and history browsing are not implemented. See [Sound resources and local libraries](sound-resources.en.md) for creation steps, formats and budgets.
 
 ## Compose and reuse sounds
 
@@ -181,10 +182,8 @@ Wind, rain & thunder and Birds & nature provide 20 working clips in eight groups
 
 ## Create synthesizers and instruments
 
-Open **Synthesizers & instruments** in the top bar to manage reusable definitions. A synthesizer definition stores an algorithm and its default parameters. The first implementation supports the basic oscillator algorithm with multiple saved parameter definitions. Create a sound layer to edit its duration and instance parameters, then save the finished sound to the sound library.
+Use **Sound resources → Manage resources**. Synthesizers can use the basic oscillator or a custom numeric expression with declared parameters. Instruments map recordings or synth snapshots to notes without storing melodies. Create an empty instrument score and write the performance in the note editor. Mapping edits update the resource draft directly; audition with the keyboard before saving.
 
-An instrument definition maps recordings to pitches, velocities and articulations; it contains no melody. Start from a built-in definition, or create an instrument, import a recording, select the sample and create its first mapping. Apply mapping edits before saving the definition. Creating a sound layer produces an empty score; add notes in the note editor.
+Existing layers offer same-type resource selection. Timing and effects survive; instrument changes preserve notes. Cross-algorithm synth switches remove obsolete source-parameter macro mappings and cutoff automation, retaining start/gain/pan mappings. The work edit is undoable.
 
-Existing synth and instrument layers offer a definition selector in their properties. Switching instruments preserves notes and warns about unsupported pitches. Parent timing, read ranges, speed, looping and effects are preserved, and the operation can be undone. Editing a library definition does not change existing works.
-
-Definitions are stored in the current browser and can be exported/imported as `.sfsynth` or portable `.sfinstrument` files with recordings. They are separate from finished sounds in My sounds.
+See [Sound resources and local libraries](sound-resources.en.md) for folder storage, detailed steps and AI imports.

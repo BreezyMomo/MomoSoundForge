@@ -10,6 +10,7 @@ import { applyEdits, AUTHORING_SCHEMA, projectScoreIssues } from '../src/aiAutho
 import { fromPreset, PRESETS } from '../src/presets';
 import { validateSampleSource } from '../src/sampleSource';
 import catalog from '../src/data/builtin-catalog.json';
+import { importResource, resourceProject, RESOURCE_BYTES } from '../src/soundResources';
 
 const [command, ...args] = process.argv.slice(2);
 const options: Record<string, string> = {};
@@ -47,8 +48,18 @@ export function decodePCM(bytes: Buffer, name: string, id: string) {
 }
 
 async function run() {
-  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
+  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
   if (command === 'schema') return console.log(JSON.stringify(AUTHORING_SCHEMA, null, 2));
+  if (['resource-validate','resource-pack','resource-project','resource-render'].includes(command)) {
+    const bytes=await readFile(need('--input'));if(bytes.length>RESOURCE_BYTES)throw Error('Resource exceeds budget');
+    const r=importResource(JSON.parse(bytes.toString('utf8')));
+    if(command==='resource-validate')return console.log(JSON.stringify({valid:true,id:r.id,name:r.name,kind:r.kind,version:r.version}));
+    if(command==='resource-pack')return write(need('--out'),JSON.stringify(r,null,2));
+    const p=resourceProject(r,command==='resource-render');
+    if(command==='resource-project')return save(p);
+    const audio=renderProject(p);await write(need('--out'),new Uint8Array(encodeWav(audio)));
+    return console.log(JSON.stringify({peak:audio.peak,rms:audio.rms,listeningVerified:false}));
+  }
   if (command === 'catalog') return console.log(JSON.stringify({ presets: PRESETS.map(p => ({ id: p.id, duration: p.duration })), sounds: catalog.sounds.map(({ waveform, ...s }) => s) }));
   if (command === 'new') {
     if (options['--preset'] && !PRESETS.some(p => p.id === options['--preset'])) throw Error('Unknown preset');

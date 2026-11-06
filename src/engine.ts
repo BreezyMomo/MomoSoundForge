@@ -1,7 +1,8 @@
 import { playerDuration, sourceTime, mixTail } from "./playerPlayback";
 import { effectTail, MAX_RENDER_SAMPLES } from "./nodeEffects";
 import { renderScore } from "./instruments";
-import { synthSample } from "./synthesizers";
+import { synthSample, expressionVoice } from "./synthesizers";
+import { compileExpression } from './synthExpression';
 import { resolveControls, curveValue, processEffects } from "./advanced";
 import {
   SAMPLE_RATE,
@@ -43,6 +44,7 @@ export function renderProject(
   return renderNested(project, sampleRate, 0, {
     inputs: 0,
     frames: 0,
+    synthOperations: 0,
     stack: new Set(),
     solos,
   });
@@ -54,6 +56,7 @@ function renderNested(
   context: {
     inputs: number;
     frames: number;
+    synthOperations: number;
     solos: string[][];
     stack: Set<Project>;
   },
@@ -159,6 +162,11 @@ function renderNested(
     const sourceLeft = new Float32Array(n),
       sourceRight = new Float32Array(n);
     const noise = rng(layer.player.noiseSeed);
+    if(layer.player.synth?.program) {
+      const p=layer.player.synth.program;context.synthOperations+=n*compileExpression(p.expression,p.parameters.map(x=>x.variable)).cost;
+      if(context.synthOperations>60_000_000)throw Error('error.renderBudget');
+    }
+    const expression = expressionVoice(layer.player.synth, layer.player.synthValues, noise, n);
     let phase = 0;
     const filters = [0, 0],
       previousInputs = [0, 0],
@@ -195,6 +203,7 @@ function renderNested(
             layer.duration,
             sampleRate,
             layer.player.noiseSeed,
+            context,
           )
         : null;
     const channels = child ? [child.left, child.right] : performance
@@ -241,7 +250,7 @@ function renderNested(
         value = read(channels[0]);
         stereo = read(channels[1] ?? channels[0]);
       } else {
-        value = synthSample(layer.player.synth?.algorithm ?? "oscillator-v1", layer.player.wave, phase, noise);
+        value = expression ? expression(t,phase,frequency,layer.duration) : synthSample("oscillator-v1", layer.player.wave, phase, noise);
         stereo = value;
       }
       const attack =

@@ -53,3 +53,7 @@ node scripts/cli.mjs import-wav --audio original.wav --metadata source.json --ou
 ## 原创旋律练习
 
 `assets/lesson-recipes.json` 保留 melody-design 的 31 组原创 A/B 音符数据。运行 `lesson --id e01-a --out e01-a.soundforge`，再 render。用于解释音高、节奏和音阶等机制，都是基础合成实验，不冒充真实乐器。
+
+## 创建可导入的音源资源
+
+`resource-validate`、`resource-pack`、`resource-render`、`resource-project` 支持合成器算法、乐器定义和音乐／音效资源。先查 `schema.resources`，步骤和示例见 [音源资源](resources.md)。

@@ -1,4 +1,4 @@
-import { BASIC_SYNTH, parseSynth, type SynthDefinition } from "./synthesizers";
+import { BASIC_SYNTH, parseSynth, synthValues, type SynthDefinition } from "./synthesizers";
 import { emptyScore, type Instrument } from "./instruments";
 import { makeLayer, makeProject, parseProject, projectForSave, uid, type Project, type SampleAsset } from "./model";
 export type InstrumentDefinition = {
@@ -26,7 +26,7 @@ export function definitionProject(raw: SoundDefinition, preview = false): Projec
     const instrument = structuredClone(d.instrument), score = { ...emptyScore(), instruments: [instrument] };
     if (preview) {
       const r = instrument.regions[0];
-      score.notes = [{ id: uid(), instrumentId: instrument.id, midi: r.rootMidi,
+      score.notes = [{ id: 'definition-audition', instrumentId: instrument.id, midi: Math.max(r.keyLow,Math.min(r.keyHigh,r.rootMidi)),
         velocity: Math.round((r.velocityLow + r.velocityHigh) / 2), articulation: r.articulation, start: 0, duration: 1 }];
     }
     p.assets = structuredClone(d.assets);
@@ -42,14 +42,19 @@ export function bindDefinition(project: Project, id: string, raw: SoundDefinitio
   let assets = project.assets;
   const input = structuredClone(target);
   if (d.schema === "momo.synth/v1") {
-    input.player = { ...input.player, ...d.defaults, synth: d };
+    input.player = { ...input.player, ...d.defaults, synth: d, synthValues: synthValues(d) };
+    // Parameter bindings belong to the old algorithm's parameter meanings.
+    if (target.player.synth?.algorithm !== d.algorithm) {
+      if (input.automation) { input.automation = {...input.automation}; delete input.automation.cutoff; }
+      project = {...project, controls:project.controls?.map(c=>({...c,mappings:c.mappings.filter(b=>b.layerId !== id || ['start','gain','pan'].includes(b.parameter))}))};
+    }
   } else {
     const mapping = new Map(Object.keys(d.assets).map(k => [k, uid()]));
     assets = { ...assets, ...Object.fromEntries(Object.values(d.assets).map(a => {
       const id = mapping.get(a.id)!; return [id, { ...a, id }];
     })) };
     const instrument = structuredClone(d.instrument);
-    instrument.regions = instrument.regions.map(r => ({ ...r, assetId: mapping.get(r.assetId)!,
+    instrument.regions = instrument.regions.map(r => ({ ...r, assetId: r.synth ? '' : mapping.get(r.assetId)!,
       ...(r.releaseAssetId ? { releaseAssetId: mapping.get(r.releaseAssetId)! } : {}) }));
     input.player.score = { ...(input.player.score ?? emptyScore()), instruments: [instrument],
       notes: (input.player.score?.notes ?? []).map(n => ({ ...n, instrumentId: instrument.id })) };
@@ -60,6 +65,6 @@ export function bindDefinition(project: Project, id: string, raw: SoundDefinitio
 export function synthFromPlayer(project: Project, id: string): SynthDefinition {
   const p = project.inputs.find(l => l.id === id)?.player;
   if (p?.type !== "synth") throw Error("definition.typeMismatch");
-  return parseSynth({ ...(p.synth ?? BASIC_SYNTH), defaults: { wave: p.wave, frequency: p.frequency,
+  return parseSynth({ ...(p.synth ?? BASIC_SYNTH), ...(p.synth?.program?{program:{...p.synth.program,parameters:p.synth.program.parameters.map(x=>({...x,default:p.synthValues?.[x.variable]??x.default}))}}:{}), defaults: { wave: p.wave, frequency: p.frequency,
     endFrequency: p.endFrequency, attack: p.attack, release: p.release, decay: p.decay, cutoff: p.cutoff, drive: p.drive } });
 }

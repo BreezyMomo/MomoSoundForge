@@ -210,7 +210,7 @@ export function ScoreEditor({
         id: raw.instrument.id,
         regions: raw.instrument.regions.map((r) => ({
           ...r,
-          assetId: mapping.get(r.assetId)!,
+          assetId: r.synth ? '' : mapping.get(r.assetId)!,
           releaseAssetId: r.releaseAssetId
             ? mapping.get(r.releaseAssetId)
             : undefined,
@@ -622,7 +622,7 @@ export function ScoreEditor({
                           <td data-label={t("score.selectedSample")}>
                             <small>
                               {r
-                                ? `${project.assets[r.assetId]?.name} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`
+                                ? `${r.synth?.name ?? project.assets[r.assetId]?.name} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`
                                 : t("score.noRegion")}
                             </small>
                           </td>
@@ -724,11 +724,12 @@ export function ScoreEditor({
                       className="wb:w-full wb:min-w-0"
                       items={inst.regions.map((r, i) => ({
                         value: r.id,
-                        label: `${i + 1}. ${project.assets[r.assetId]?.name} · ${r.articulation} · MIDI ${r.keyLow}–${r.keyHigh} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`,
+                        label: `${i + 1}. ${r.synth?.name ?? project.assets[r.assetId]?.name} · ${r.articulation} · MIDI ${r.keyLow}–${r.keyHigh} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`,
                       }))}
                     />
                   </Field>
-                  {region && (
+                  {region?.synth && <p className="field-help">{t('resources.synthMappingHelp')}</p>}
+                  {region && !region.synth && (
                     <form
                       className="score-region-form"
                       key={region.id + JSON.stringify(region)}

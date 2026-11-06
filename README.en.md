@@ -8,7 +8,7 @@ Create game sound effects and short melodies in your browser: choose sounds, lay
 
 **[Use online (GitHub Pages)](https://breezymomo.github.io/MomoSoundForge/) · [User guide](docs/user-guide.en.md) · [Instruments and notes (Chinese)](docs/instruments.md) · [Development and deployment](docs/development.md)**
 
-No account is required. Synthesis, mixing and export run on your device. Factory sounds download on demand; imported audio, video and personal projects are not uploaded. Drafts and My sounds stay in the current browser. Download project files to back up or transfer your work.
+No account is required. Synthesis, mixing and export run on your device. Factory sounds download on demand; imported audio, video and personal projects are not uploaded. Work drafts stay in the browser. Personal recordings, synthesizers, instrument definitions and music/sound resources live in a user-selected folder; exported resources and projects carry their dependencies.
 
 ![Momo Sound Forge: sound library, note tracks and layer inspector](docs/images/workspace.png)
 
@@ -31,13 +31,13 @@ SoundForge registers its own Sound night · Violet & cyan theme with Workbench: 
 
 ## First use
 
-1. Search or audition a sound in **Basic sounds**. Choose **Add** for the current work, or **Edit** to open it separately.
+1. Search and preview in **Sound resources**. Use **Create with synthesizer**, **Write notes with instrument** or **Add to work** for the selected resource.
 2. Drag clips in the center to arrange their timing. Each track has an individual audition button.
 3. Adjust the selected sound in the inspector. Choose **Notes** on an instrument track to expand the piano roll, or add notes and import note JSON in the inspector.
 4. Audition the full work. Use **Keep full sound** to retain effect tails.
 5. **Save project** keeps editable content and samples. **Export…** produces audio for your game.
 
-**Basic sounds** supplies building blocks, **Examples** provides complete editable arrangements, and **My sounds** holds reusable creations. Inserting a sound creates an independent copy; editing it does not change the original.
+**Sound resources → Manage resources** provides folder connections, new synthesizers, instrument mappings, audio uploads and imports. Factory and local resources share browsing and use flows. Work instances are independent. See [Sound resources and local libraries](docs/sound-resources.en.md).
 
 ## Common controls
 
@@ -67,6 +67,7 @@ Run `npm run ai:build` to build the portable skill ZIP, or `npm run ai:serve -- 
 
 ## Documentation and examples
 
+- [Current development handoff](docs/handoff-sound-resources.md) (Chinese): agreed resource design, branch, code entry points, verification and remaining work.
 - [User guide](docs/user-guide.en.md): library, timeline, groups, processing, saving and video reference.
 - [Instruments and notes (Chinese)](docs/instruments.md): sample ranges, velocity layers, articulations, note JSON and portable instrument packages.
 - [Flute example](examples/instruments/flute/): editable project, instrument package and note data.

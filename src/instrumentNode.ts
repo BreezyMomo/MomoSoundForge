@@ -27,7 +27,7 @@ export function appendInstrumentNode(
   }
   for (const instrument of layer.player.score.instruments)
     for (const region of instrument.regions) {
-      region.assetId = replacements[region.assetId];
+      if (!region.synth) region.assetId = replacements[region.assetId];
       if (region.releaseAssetId)
         region.releaseAssetId = replacements[region.releaseAssetId];
     }

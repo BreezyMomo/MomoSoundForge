@@ -14,7 +14,8 @@ import { SupportDialog } from "./SupportDialog";
 import { AITools } from "./AITools";
 import { useAIEditor } from "./useAIEditor";
 import { ContentReplacementDialog } from "./ContentReplacementDialog";
-import { DefinitionEditor } from "./DefinitionEditor";
+import { ResourceManager } from "./SoundLibrary";
+import { readSavedSound } from "./localSoundStorage";
 import { bindDefinition, synthFromPlayer, parseDefinition, type SoundDefinition } from "./soundDefinitions";
 import { localContentCandidate } from "./contentReplacement";
 import { generateVariants } from "./aiCapabilities";
@@ -122,7 +123,6 @@ import { AudioPlayer, createRenderer } from "./audio";
 import {
   download,
   readDraft,
-  readSavedSound,
   safeFilename,
   writeDraft,
 } from "./storage";
@@ -1497,48 +1497,23 @@ export default function App() {
     !!result &&
     fullContentEnd > history.project.duration + 1 / result.sampleRate;
   const compareName = project.inputs.find((l) => l.id === selected)?.name ?? "";
-  const library = (
-    <SoundLibrary
-      project={history.project}
-      ready={ready && !ioBusy}
-      playback={playing ?? pendingPlayback}
-      pendingPlayback={pendingPlayback}
-      onPreset={setPreset}
-      onBuiltinOpen={openBuiltinSound}
-      onBuiltinInsert={insertBuiltinSound}
-      onBuiltinPlay={(id) =>
-        void play(
-          async () => renderer.current!.render(await readBuiltinSound(id)),
-          `builtin-${id}`,
-        )
-      }
-      saveHost={librarySaveHost}
-      onPresetInsert={(id) =>
-        insertSound(
-          fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`)),
-        )
-      }
-      onPresetPlay={(id) =>
-        void play(
-          () =>
-            renderer.current!.render(
-              fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`)),
-            ),
-          `preset-${id}`,
-        )
-      }
-      onOpen={openLibrarySound}
-      onInsert={insertLibrarySound}
-      onPlay={(id) =>
-        void play(
-          async () => renderer.current!.render(await readSavedSound(id)),
-          `library-${id}`,
-        )
-      }
-      onRender={(p) => renderer.current!.render(p)}
-      onMessage={flash}
-    />
-  );
+  const openResourceProject = (next: Project) => {
+    stop(); editRoot(() => nodeDocument(next)); scopeEpoch.current++;
+    setEditPath([]); setTimelinePath([]); setSelected(next.inputs[0]?.id ?? "");
+    updateCue(0); setVariations([]); manager.current?.show("editor");
+  };
+  const resourceProps = {
+    project: history.project, ready: ready && !ioBusy, playback: playing ?? pendingPlayback,
+    currentAssets: project.assets,
+    onInsert: insertSound, onOpen: openResourceProject,
+    onPreview: (p: Project, key: string) => { void play(() => renderer.current!.render(p), key); },
+    onStop: stop, onRender: (p: Project) => renderer.current!.render(p),
+    onImportAudio: async (file: File): Promise<Project> => {
+      const c = await importReplacement(file);
+      return {...makeProject(c.name), duration:c.duration, assets:c.assets, inputs:[makeLayer({name:c.name, player:c.player, gain:1})]};
+    },
+  };
+  const library = <SoundLibrary {...resourceProps} saveHost={librarySaveHost}/>;
   const editor = (
     <div className="editor-content">
       {timelineScope.path.length > 0 && (
@@ -1772,10 +1747,10 @@ export default function App() {
           <button
             className="text-button"
             disabled={project.inputs.length >= 16}
-            onClick={addSynth}
+            onClick={() => { stop(); setDefinitionEditor({ base: rootCurrent.current, path: [...pathRef.current] }); }}
           >
             <Plus size={15} />
-            {t("action.add")}
+            {t("resources.use")}
           </button>
           <button
             className="text-button"
@@ -2172,7 +2147,7 @@ export default function App() {
         <div className="header-right">
           <button disabled={!ready || ioBusy} onClick={() => {
             stop(); setDefinitionEditor({ base: rootCurrent.current, path: [...pathRef.current] });
-          }}>{t("definition.title")}</button>
+          }}>{t("resources.title")}</button>
           <div ref={menu} className="layout-menu" />
           <AppearancePreferences />
           <LanguagePreferences />
@@ -2281,15 +2256,15 @@ export default function App() {
             inspector: (
               <Inspector
                 definitionControl={selectedLayer && (selectedLayer.player.type === "synth" || selectedLayer.player.type === "instrument") ? (
-                  <section className="property-section">
-                    <p>{selectedLayer.player.type === "synth" ? (selectedLayer.player.synth?.id === "builtin.oscillator" ? t("definition.defaultSynth") : selectedLayer.player.synth?.name) : selectedLayer.player.score?.instruments.map(i => i.name).join(" · ")}</p>
+                  <div className="inspector-definition">
+                    <p className="inspector-resource-name">{selectedLayer.player.type === "synth" ? (selectedLayer.player.synth?.id === "builtin.oscillator" ? t("definition.defaultSynth") : selectedLayer.player.synth?.name) : selectedLayer.player.score?.instruments.map(i => i.name).join(" · ")}</p>
                     <button onClick={() => {
                       stop();
                       const initial = selectedLayer.player.type === "synth" ? synthFromPlayer(project, selectedLayer.id)
                         : selectedLayer.player.score?.instruments[0] ? parseDefinition({ schema: "momo.instrument/v1", instrument: selectedLayer.player.score.instruments[0], assets: project.assets }) : undefined;
                       setDefinitionEditor({ base: rootCurrent.current, path: [...pathRef.current], id: selectedLayer.id, initial, type: selectedLayer.player.type as "synth" | "instrument" });
-                    }}>{t("definition.choose")}</button>
-                  </section>
+                    }} className="secondary">{t(`inspector.choose.${selectedLayer.player.type}`)}</button>
+                  </div>
                 ) : undefined}
                 onReplaceContent={
                   ready && !ioBusy
@@ -2321,6 +2296,7 @@ export default function App() {
                 postProcessing={
                   selectedLayer && (
                     <SoundPolish
+                      embedded
                       node={selectedLayer}
                       onChange={(effects) => changeLayer("effects", effects)}
                       original={originalAudition}
@@ -2453,22 +2429,20 @@ export default function App() {
           }}
         />
       )}
-      {definitionEditor && <DefinitionEditor
-        initial={definitionEditor.initial} bindingType={definitionEditor.type}
-        currentAssets={nodeParent(definitionEditor.base, definitionEditor.path).assets}
+      {definitionEditor && <ResourceManager
+        {...resourceProps} bindingType={definitionEditor.type}
+        initialDefinition={definitionEditor.initial}
         stale={history.project !== definitionEditor.base}
-        onClose={() => setDefinitionEditor(undefined)} onStop={stop}
-        onPlay={p => void play(() => renderer.current!.render(p), "definition-preview")}
-        onImportAudio={async file => Object.values((await importReplacement(file)).assets)[0]}
-        onAdd={p => {
+        onClose={() => setDefinitionEditor(undefined)}
+        onInsert={p => {
           if (rootCurrent.current !== definitionEditor.base) throw Error("error.scopeChanged");
           insertSound(p); setDefinitionEditor(undefined);
         }}
-        onBind={d => {
-          if (rootCurrent.current !== definitionEditor.base || !definitionEditor.id) throw Error("error.scopeChanged");
+        onBind={definitionEditor.id ? d => {
+          if (rootCurrent.current !== definitionEditor.base) throw Error("error.scopeChanged");
           const next = updateProjectAtPath(definitionEditor.base, definitionEditor.path, p => bindDefinition(p, definitionEditor.id!, d));
           assertProjectLimits(next); editRoot(() => next); setDefinitionEditor(undefined);
-        }}
+        } : undefined}
       />}
     </div>
   );

@@ -1,4 +1,5 @@
 import { CONTENT_KEYS, patchLayer, type LayerPatch } from "./model";
+import { RESOURCE_SCHEMA } from './resourceSchema';
 import {
   makeLayer,
   withLayerValue,
@@ -280,6 +281,7 @@ export function projectScoreIssues(
 }
 export const AUTHORING_SCHEMA = {
   schema: "momo.soundforge.ai/v1",
+  resources: RESOURCE_SCHEMA,
   projectDefaults: makeProject("Untitled"),
   layerDefaults: { ...makeLayer(), id: "<unique id>" },
   playerPatchKeys: [...CONTENT_KEYS, "duration"].filter(

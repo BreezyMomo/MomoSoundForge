@@ -51,3 +51,19 @@ it('builds every included original lesson recipe as a valid native project', asy
     expect(p.root.mix.inputs.length).toBe(recipe.notes.length);
   }
 }, 30000);
+
+it('packages an AI-authored algorithm outside the repository and preserves it through native projects', async () => {
+  const schema=JSON.parse((await run('schema')).stdout),synth=schema.resources.synth;
+  await writeFile(join(root,'custom.sfsynth'),JSON.stringify(synth));
+  expect(JSON.parse((await run('resource-validate','--input','custom.sfsynth')).stdout).valid).toBe(true);
+  await run('resource-pack','--input','custom.sfsynth','--out','custom.sfresource');
+  await run('resource-render','--input','custom.sfresource','--out','custom-preview.wav');
+  await run('resource-project','--input','custom.sfresource','--out','custom.soundforge');
+  await run('render','--input','custom.soundforge','--out','custom-native.wav');
+  expect(await readFile(join(root,'custom-preview.wav'))).toEqual(await readFile(join(root,'custom-native.wav')));
+  const project=JSON.parse(await readFile(join(root,'custom.soundforge'),'utf8'));
+  expect(project.root.mix.inputs[0].player.synth.program.expression).toBe(synth.program.expression);
+  await expect(run('resource-pack','--input','custom.sfsynth','--out','custom.sfresource')).rejects.toThrow();
+  synth.program.expression='globalThis.process.exit(0)';await writeFile(join(root,'invalid.sfsynth'),JSON.stringify(synth));
+  await expect(run('resource-validate','--input','invalid.sfsynth')).rejects.toThrow();
+});

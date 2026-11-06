@@ -1,4 +1,5 @@
 import { definitionId, definitionName, parseDefinition, type SoundDefinition } from "./soundDefinitions";
+// Legacy browser records: retained for migration/backup only. New resource editing uses folderLibrary.
 export type DefinitionIndex = { id: string; name: string; schema: SoundDefinition["schema"]; updatedAt: number };
 function database() {
   return new Promise<IDBDatabase>((resolve, reject) => {

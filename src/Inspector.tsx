@@ -10,6 +10,10 @@ import {
   WorkbenchSlider,
   Field,
   FieldLabel,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from "@momo/workbench/react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useId } from "react";
@@ -24,6 +28,8 @@ import {
   type Parameter,
   type AutomationKey,
 } from "./advanced";
+import { InspectorSection, useInspectorTab, type InspectorTab } from "./InspectorSection";
+import "./inspector.css";
 export function CommitText({
   value,
   onCommit,
@@ -143,18 +149,8 @@ export function Range({
   );
 }
 export function Inspector({
-  layer,
-  project,
-  onChange,
-  onDuplicate,
-  onDelete,
-  onEnter,
-  onExpose,
-  postProcessing,
-  sourceEditor,
-  onReplaceContent,
-  onFitRange,
-  definitionControl,
+  layer, project, onChange, onDuplicate, onDelete, onEnter, onExpose,
+  postProcessing, sourceEditor, onReplaceContent, onFitRange, definitionControl,
 }: {
   postProcessing?: ReactNode;
   sourceEditor?: ReactNode;
@@ -169,279 +165,166 @@ export function Inspector({
   onEnter: () => void;
   onExpose: (key: Parameter) => void;
 }) {
-  const contentEditor = useRef<HTMLDivElement>(null);
-  if (!layer)
-    return (
-      <div className="empty-state">
-        <SlidersHorizontal size={26} />
-        <p>{t("prop.empty")}</p>
-      </div>
-    );
-  const effective =
-    resolveControls(project).inputs.find((l) => l.id === layer.id) ?? layer;
-  const range = (
-    key: LayerField,
-    label: string,
-    min: number,
-    max: number,
-    step: number,
-    unit = "",
-  ) => {
-    const driver = boundControl(project, layer.id, key),
-      curve = layer.automation?.[key as AutomationKey]?.length;
+  const [tab, setTab] = useInspectorTab();
+  if (!layer) return (
+    <div className="empty-state"><SlidersHorizontal size={26} /><p>{t("prop.empty")}</p></div>
+  );
+  const effective = resolveControls(project).inputs.find(l => l.id === layer.id) ?? layer;
+  const type = layer.player.type;
+  const sourceKind = type === "synth" ? `synth:${layer.player.synth?.algorithm ?? "oscillator-v1"}` : type;
+  const range = (key: LayerField, label: string, min: number, max: number, step: number, unit = "") => {
+    const driver = boundControl(project, layer.id, key);
+    const curve = layer.automation?.[key as AutomationKey]?.length;
     return (
       <div key={key} className="exposable-field">
-        <Range
-          label={t(label)}
-          value={layerValue(effective, key) as number}
-          min={min}
-          max={max}
-          step={step}
-          unit={unit}
+        <Range label={t(label)} value={layerValue(effective, key) as number}
+          min={min} max={max} step={step} unit={unit}
           unbounded={key === "start" || key === "duration" || key === "sourceEnd"}
-          disabled={!!driver || !!curve}
-          onChange={(v) => onChange(key, v)}
-        />
-        {driver ? (
-          <small>{t("pro.controlled", driver.name)}</small>
-        ) : curve ? (
-          <small>{t("pro.curveControlled")}</small>
-        ) : key in PARAMS ? (
-          <button
-            className="expose-button"
-            title={t("pro.exposeHint")}
-            onClick={() => onExpose(key as Parameter)}
-          >
-            {t("pro.expose")}
-          </button>
-        ) : null}
+          disabled={!!driver || !!curve} onChange={v => onChange(key, v)} />
+        {driver ? <small>{t("pro.controlled", driver.name)}</small>
+          : curve ? <small>{t("pro.curveControlled")}</small>
+          : key in PARAMS ? <button className="expose-button" title={t("pro.exposeHint")}
+            onClick={() => onExpose(key as Parameter)}>{t("pro.expose")}</button> : null}
       </div>
     );
   };
+  const sample = type === "sample" ? project.assets[layer.player.assetId!] : undefined;
   return (
-    <div className="inspector-content">
-      <div className="inspector-title">
-        <div>
-          <span className="eyebrow">
-            {t(
-              layer.player.type === "sample"
-                ? "editor.sample"
-                : layer.player.type === "instrument"
-                  ? "score.title"
-                  : layer.player.type === "composition"
-                    ? "editor.composition"
-                    : "editor.synth",
-            )}
-          </span>
-          <h2>{layer.name}</h2>
+    <div className="inspector-content sound-properties">
+      <Tabs value={tab} onValueChange={value => setTab(value as InspectorTab)} className="inspector-tabs">
+      <div className="inspector-heading">
+      <header className="inspector-context">
+        <div className="inspector-title">
+          <div className="inspector-identity">
+            <span className="eyebrow">{t(`inspector.source.${type}`)}</span>
+            <CommitText className="inspector-name" label={t("prop.name")} value={layer.name}
+              onCommit={v => onChange("name", v)} />
+          </div>
+          <div className="button-group">
+            <button className="icon-button" title={t("action.duplicate")} aria-label={t("action.duplicate")}
+              disabled={project.inputs.length >= 16} onClick={onDuplicate}><Copy size={15} /></button>
+            <button className="icon-button" title={t("action.delete")} aria-label={t("action.delete")}
+              onClick={onDelete}><Trash2 size={15} /></button>
+          </div>
         </div>
-        <div className="button-group">
-          <button
-            className="icon-button"
-            title={t("action.duplicate")}
-            aria-label={t("action.duplicate")}
-            disabled={project.inputs.length >= 16}
-            onClick={onDuplicate}
-          >
-            <Copy size={15} />
-          </button>
-          <button
-            className="icon-button"
-            title={t("action.delete")}
-            aria-label={t("action.delete")}
-            onClick={onDelete}
-          >
-            <Trash2 size={15} />
-          </button>
-        </div>
+        <p className="inspector-path" title={project.name}>{t("inspector.scope", project.name)}</p>
+      </header>
+        <TabsList variant="line" aria-label={t("inspector.tabs")} className="inspector-tab-list">
+          {(["sound", "playback", "mix", "automation"] as const).map(value => (
+            <TabsTrigger key={value} value={value}>{t(`inspector.tab.${value}`)}</TabsTrigger>
+          ))}
+        </TabsList>
       </div>
-      <label className="text-field">
-        <span>{t("prop.name")}</span>
-        <CommitText
-          label={t("prop.name")}
-          value={layer.name}
-          onCommit={(v) => onChange("name", v)}
-        />
-      </label>
-      <div className="replacement-entry">
-        <span>{t(`content.${layer.player.type}`)}</span>
-        <button
-          className="secondary"
-          onClick={() =>
-            layer.player.type === "composition"
-              ? onEnter()
-              : contentEditor.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                })
-          }
-        >
-          {t("content.edit")}
-        </button>
-        <button
-          className="secondary"
-          disabled={!onReplaceContent}
-          onClick={onReplaceContent}
-        >
-          {t("replace.title")}
-        </button>
-      </div>
-      {layer.player.type === "composition" && (
-        <section className="property-section">
-          <h3>{t("pro.controls")}</h3>
-          <p className="field-help">
-            {t(
-              "composition.sourceInfo",
-              layer.player.mix?.inputs.length ?? 0,
-              layer.player.mix?.duration.toFixed(2) ?? "0",
-            )}
-          </p>
-          {layer.player.mix?.controls
-            ?.filter((c) => !c.hidden && c.mappings.length > 0)
-            .map((c) => {
-              const driver = project.controls?.find((x) =>
-                x.mappings.some(
-                  (m) =>
-                    m.layerId === layer.id &&
-                    m.parameter === "control" &&
-                    m.controlId === c.id,
-                ),
-              );
-              return (
-                <div key={c.id}>
-                  <Range
-                    label={c.name}
-                    value={
-                      effective.player.controlValues?.[c.id] ??
-                      layer.player.mix?.controlValues?.[c.id] ??
-                      c.defaultValue
-                    }
-                    min={c.min}
-                    max={c.max}
-                    step={(c.max - c.min) / 1000}
-                    disabled={!!driver}
-                    onChange={(v) =>
-                      onChange("controlValues", {
-                        ...layer.player.controlValues,
-                        [c.id]: v,
-                      })
-                    }
-                  />
-                  {driver && <small>{t("pro.controlled", driver.name)}</small>}
-                </div>
-              );
-            })}
-        </section>
-      )}
-      <section className="property-section">
-        <h3>{t("content.outer")}</h3>
-        {range(
-          "start",
-          "prop.start",
-          0,
-          Math.max(project.duration, layer.start),
-          0.01,
-          "s",
-        )}
-        {range("gain", "prop.volume", 0, 1.5, 0.01)}
-        {range("pan", "prop.pan", -1, 1, 0.01)}
-      </section>
-      <h3>{t("player.ownEffects")}</h3>
-      {postProcessing}
-      <div ref={contentEditor}>
-        {definitionControl}
-        {sourceEditor}
-        <section className="property-section">
-          <h3>{t("prop.source")}</h3>
-          {layer.player.type === "synth" ? (
-            <label className="text-field">
+        <TabsContent value="sound" keepMounted className="inspector-tab-content">
+          <p className="inspector-tab-hint">{t("inspector.soundHint")}</p>
+          <InspectorSection key={`source:${sourceKind}`} id={`source:${sourceKind}`}
+            title={t(`inspector.source.${type}`)} scope={t("inspector.contentScope")}>
+            {definitionControl}
+            {type === "sample" && <>
+              <p className="inspector-resource-name">{sample?.name}</p>
+              {sample?.source && <p className="field-help">
+                {t(sample.source.quality === "preview" ? "ai.samplePreview" : "ai.sampleOriginal")}
+                {" · "}{sample.source.license}{" · "}
+                <a href={sample.source.url} target="_blank" rel="noopener noreferrer">
+                  {t("ai.sampleSource")}: {sample.source.provider} / {sample.source.author}
+                </a>
+              </p>}
+            </>}
+            {type === "composition" && <>
+              <p className="inspector-resource-name">{layer.player.mix?.name}</p>
+              <p className="field-help">{t("composition.sourceInfo", layer.player.mix?.inputs.length ?? 0,
+                layer.player.mix?.duration.toFixed(2) ?? "0")}</p>
+            </>}
+            <div className="inspector-source-actions">
+              {type === "composition" && <button className="secondary" onClick={onEnter}>{t("content.edit")}</button>}
+              <button className="secondary" disabled={!onReplaceContent} onClick={onReplaceContent}>{t("replace.title")}</button>
+            </div>
+          </InspectorSection>
+          {type === "synth" && <InspectorSection key={`synthesis:${sourceKind}`} id={`synthesis:${sourceKind}`}
+            title={t("inspector.synthesis")}>
+            {layer.player.synth?.algorithm !== "expression-v1" && <label className="text-field">
               <span>{t("prop.wave")}</span>
-              <select
-                value={layer.player.wave}
-                onChange={(e) => onChange("wave", e.target.value)}
-              >
-                {["sine", "triangle", "saw", "square", "noise"].map((w) => (
-                  <option value={w} key={w}>
-                    {t(`wave.${w}`)}
-                  </option>
-                ))}
+              <select value={layer.player.wave} onChange={e => onChange("wave", e.target.value)}>
+                {["sine", "triangle", "saw", "square", "noise"].map(w => <option value={w} key={w}>{t(`wave.${w}`)}</option>)}
               </select>
-            </label>
-          ) : (
-            <>
-              <div className="asset-name">
-                {layer.player.type === "instrument"
-                  ? t("score.editHint")
-                  : layer.player.type === "composition"
-                    ? layer.player.mix?.name
-                    : project.assets[layer.player.assetId!]?.name}
-              </div>
-              {layer.player.type === "sample" &&
-                project.assets[layer.player.assetId!]?.source &&
-                (() => {
-                  const source =
-                    project.assets[layer.player.assetId!]!.source!;
-                  return (
-                    <p className="field-help">
-                      {t(
-                        source.quality === "preview"
-                          ? "ai.samplePreview"
-                          : "ai.sampleOriginal",
-                      )}{" "}
-                      · {source.license}
-                      {" · "}
-                      <a
-                        href={source.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {t("ai.sampleSource")}: {source.provider} /{" "}
-                        {source.author}
-                      </a>
-                    </p>
-                  );
-                })()}
-            </>
-          )}
-          {layer.player.type === "synth" && range("generatorDuration", "prop.duration", 0.01, Math.max(10, layer.player.duration), 0.01, "s")}
-          {layer.player.type === "synth" && layer.player.wave !== "noise" && (
-            <>
+            </label>}
+            {layer.player.synth?.program?.parameters.map(p => <label className="text-field" key={p.variable}>
+              <span>{p.name}</span>
+              <WorkbenchNumberInput label={p.name} value={layer.player.synthValues?.[p.variable] ?? p.default}
+                min={p.min} max={p.max} step={p.step}
+                onValueCommit={value => onChange("synthValues", { ...layer.player.synthValues, [p.variable]: value })} />
+            </label>)}
+            {range("generatorDuration", "inspector.generatorDuration", 0.01, Math.max(10, layer.player.duration), 0.01, "s")}
+            {(layer.player.synth?.algorithm === "expression-v1" || layer.player.wave !== "noise") && <>
               {range("frequency", "prop.frequency", 20, 20000, 1, "Hz")}
               {range("endFrequency", "prop.endFrequency", 20, 20000, 1, "Hz")}
-            </>
-          )}
-        </section>
-        <section className="property-section">
-          <h3>{t("prop.timing")}</h3>
-          <p className="field-help">{t("player.outputDuration", playerDuration(layer.player).toFixed(3))}</p>
-          {range("sourceStart", "player.readStart", 0, Math.max(0, layer.sourceEnd - 0.001), 0.001, "s")}
-          {range("sourceEnd", "player.readEnd", layer.sourceStart + 0.001, Math.max(layer.sourceEnd, playerDuration(layer.player)), 0.001, "s")}
-          {range("speed", "prop.rate", 0.1, 4, 0.01, "×")}
-          <p className="field-help">{t("prop.speedHint")}</p>
-          <label className="check-field"><input type="checkbox" checked={layer.loop} onChange={e => onChange("loop", e.target.checked)} />{t("player.loop")}</label>
-          {range("duration", "player.playLength", 0.01, Math.max(project.duration, layer.duration), 0.01, "s")}
-          <label className="check-field"><input type="checkbox" checked={layer.reverse} onChange={e => onChange("reverse", e.target.checked)} />{t("prop.reverse")}</label>
-          {hasReadOverflow(layer) && <div role="status"><p className="field-help">{t("player.overflow")}</p><button onClick={onFitRange}>{t("player.fit")}</button></div>}
-          {layer.player.type !== "composition" && <>
-            {range("attack", "prop.attack", 0, Math.min(3, layer.player.duration), 0.001, "s")}
-            {range("release", "prop.release", 0, Math.min(5, layer.player.duration), 0.001, "s")}
-            {range("decay", "prop.decay", 0, 10, 0.1)}
+            </>}
+          </InspectorSection>}
+          {type === "instrument" && sourceEditor && <InspectorSection id="notes" title={t("inspector.notes")}>
+            {sourceEditor}
+          </InspectorSection>}
+          {type === "composition" && !!layer.player.mix?.controls?.some(c => !c.hidden && c.mappings.length) &&
+            <InspectorSection id="composition-controls" title={t("inspector.compositionControls")}>
+              {layer.player.mix.controls.filter(c => !c.hidden && c.mappings.length).map(c => {
+                const driver = project.controls?.find(x => x.mappings.some(m =>
+                  m.layerId === layer.id && m.parameter === "control" && m.controlId === c.id));
+                return <div key={c.id}>
+                  <Range label={c.name} value={effective.player.controlValues?.[c.id] ?? layer.player.mix?.controlValues?.[c.id] ?? c.defaultValue}
+                    min={c.min} max={c.max} step={(c.max - c.min) / 1000} disabled={!!driver}
+                    onChange={v => onChange("controlValues", { ...layer.player.controlValues, [c.id]: v })} />
+                  {driver && <small>{t("pro.controlled", driver.name)}</small>}
+                </div>;
+              })}
+            </InspectorSection>}
+          {type !== "composition" && <>
+            <InspectorSection id="envelope" title={t("inspector.envelope")} defaultOpen={false}>
+              {range("attack", "prop.attack", 0, Math.min(3, layer.player.duration), 0.001, "s")}
+              {range("release", "prop.release", 0, Math.min(5, layer.player.duration), 0.001, "s")}
+              {range("decay", "prop.decay", 0, 10, 0.1)}
+            </InspectorSection>
+            <InspectorSection id="timbre" title={t("prop.timbre")} defaultOpen={false}>
+              {range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
+              {range("drive", "prop.drive", 0, 10, 0.1)}
+            </InspectorSection>
           </>}
-        </section>
-        <section className="property-section">
-          <h3>{t("prop.timbre")}</h3>
-          {layer.player.type !== "composition" &&
-            range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
-          {layer.player.type !== "composition" &&
-            range("drive", "prop.drive", 0, 10, 0.1)}
-        </section>
-      </div>
-      <AutomationEditor
-        key={`automation-${layer.id}`}
-        layer={layer}
-        project={project}
-        onChange={(v) => onChange("automation", v)}
-      />
+        </TabsContent>
+        <TabsContent value="playback" keepMounted className="inspector-tab-content">
+          <p className="inspector-tab-hint">{t("inspector.playbackHint")}</p>
+          <InspectorSection id="placement" title={t("inspector.placement")} scope={t("inspector.placementScope")}>
+            {range("start", "prop.start", 0, Math.max(project.duration, layer.start), 0.01, "s")}
+            {range("duration", "player.playLength", 0.01, Math.max(project.duration, layer.duration), 0.01, "s")}
+          </InspectorSection>
+          <InspectorSection id="read-range" title={t("inspector.readRange")} scope={t("inspector.contentScope")}>
+            <p className="field-help">{t("player.outputDuration", playerDuration(layer.player).toFixed(3))}</p>
+            {range("sourceStart", "player.readStart", 0, Math.max(0, layer.sourceEnd - 0.001), 0.001, "s")}
+            {range("sourceEnd", "player.readEnd", layer.sourceStart + 0.001, Math.max(layer.sourceEnd, playerDuration(layer.player)), 0.001, "s")}
+            {hasReadOverflow(layer) && <div role="status"><p className="field-help">{t("player.overflow")}</p>
+              <button onClick={onFitRange}>{t("player.fit")}</button></div>}
+          </InspectorSection>
+          <InspectorSection id="playback-mode" title={t("inspector.readMode")}>
+            {range("speed", "prop.rate", 0.1, 4, 0.01, "×")}
+            <p className="field-help">{t("prop.speedHint")}</p>
+            <label className="check-field"><input type="checkbox" checked={layer.loop} onChange={e => onChange("loop", e.target.checked)} />{t("player.loop")}</label>
+            <label className="check-field"><input type="checkbox" checked={layer.reverse} onChange={e => onChange("reverse", e.target.checked)} />{t("prop.reverse")}</label>
+          </InspectorSection>
+        </TabsContent>
+        <TabsContent value="mix" keepMounted className="inspector-tab-content">
+          <p className="inspector-tab-hint">{t("inspector.mixHint")}</p>
+          <InspectorSection id="balance" title={t("inspector.balance")} scope={t("inspector.placementScope")}>
+            {range("gain", "prop.volume", 0, 1.5, 0.01)}
+            {range("pan", "prop.pan", -1, 1, 0.01)}
+          </InspectorSection>
+          <InspectorSection id="effects" title={t("inspector.effects")} scope={t("inspector.contentScope")}>
+            <p className="field-help">{t("inspector.effectsHint")}</p>
+            {postProcessing}
+          </InspectorSection>
+        </TabsContent>
+        <TabsContent value="automation" keepMounted className="inspector-tab-content">
+          <p className="inspector-tab-hint">{t("inspector.automationHint")}</p>
+          <AutomationEditor key={`automation-${layer.id}-${type}`} embedded layer={layer} project={project}
+            onChange={v => onChange("automation", v)} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

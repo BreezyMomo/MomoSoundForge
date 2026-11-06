@@ -1,5 +1,5 @@
 import { effectTail } from "./nodeEffects";
-import { BASIC_SYNTH, parseSynth, type SynthDefinition } from "./synthesizers";
+import { BASIC_SYNTH, parseSynth, synthValues, type SynthDefinition } from "./synthesizers";
 import { playerDuration } from "./playerPlayback";
 import { validateVideoReference, type VideoReference } from "./videoReference";
 import { validateSampleSource, type SampleSource } from "./sampleSource";
@@ -56,6 +56,7 @@ export type PlayerInput = {
 /** Source-specific playback and shaping; never copied from the old player across replacement. */
 export type Player = {
   synth?: SynthDefinition;
+  synthValues?: Record<string, number>;
   type: "synth" | "sample" | "composition" | "instrument";
   wave: Wave;
   noiseSeed: number;
@@ -76,6 +77,7 @@ export type Player = {
 };
 export const CONTENT_KEYS = [
   "synth",
+  "synthValues",
   "effects",
   "level",
   "type",
@@ -205,8 +207,8 @@ export function makeLayer(patch: LayerInit = {}): PlayerInput {
     ),
     ...patch.player,
   };
-  if (player.type === "synth") player.synth = parseSynth(player.synth ?? BASIC_SYNTH);
-  else delete player.synth;
+  if (player.type === "synth") { player.synth = parseSynth(player.synth ?? BASIC_SYNTH); if (player.synth.algorithm === 'expression-v1') player.synthValues = synthValues(player.synth,player.synthValues); }
+  else { delete player.synth; delete player.synthValues; }
   const outer = Object.fromEntries(
     Object.entries(patch).filter(
       ([key]) =>
@@ -471,8 +473,8 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       ]),
     ) as unknown as Player;
     player.duration = l.player.duration;
-    if (player.type === "synth") player.synth = parseSynth(l.player.synth ?? BASIC_SYNTH);
-    else delete player.synth;
+    if (player.type === "synth") { player.synth = parseSynth(l.player.synth ?? BASIC_SYNTH); if (player.synth.algorithm === 'expression-v1') player.synthValues = synthValues(player.synth,player.synthValues); else delete player.synthValues; }
+    else { delete player.synth; delete player.synthValues; }
     if (l.player.effects) player.effects = structuredClone(l.player.effects);
     if (player.type !== "sample") delete player.assetId;
     if (player.type !== "instrument") delete player.score;

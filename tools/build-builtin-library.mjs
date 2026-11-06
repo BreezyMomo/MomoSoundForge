@@ -86,8 +86,8 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts", "src/playerPlayback.ts", "src/effectTypes.ts", "src/synthesizers.ts",
-  `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
+  "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts", "src/playerPlayback.ts", "src/effectTypes.ts", "src/synthesizers.ts", "src/synthExpression.ts",
+  "src/recordingSources.ts", `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   `${expandedRoot}/manifest.json`,
   `${gameRoot}/manifest.json`, ...game.sources.map(s => `${gameRoot}/${s.includedLicenseFile}`),
@@ -115,6 +115,7 @@ try {
   const { makeLayer: makeInput, stableHash, encodeSamples, decodeSamples, parseProject, projectForSave, projectDocument } = await server.ssrLoadModule("/src/model.ts");
   const { renderProject } = await server.ssrLoadModule("/src/engine.ts");
   const { instrumentPlaybackRange } = await server.ssrLoadModule("/src/sampleTail.ts");
+  const { recordingSummaries } = await server.ssrLoadModule("/src/recordingSources.ts");
   // Preserve the curated seeds while playback instances become independent of placement IDs.
   const makeLayer = patch => {
     const input = makeInput(patch);
@@ -220,6 +221,7 @@ try {
     await writeFile(path.join(output, file), compressed);
     const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback } = job;
     sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback,
+      ...(kind==='instrument'?{recordings:recordingSummaries({schema:'momo.instrument/v1',instrument:project.inputs[0].player.score.instruments[0],assets:project.assets})}:{}),
       duration: project.duration, file, compressedBytes: compressed.length, projectBytes: json.length, sha256: digest, waveform });
   }
   const catalog = JSON.stringify({ schema: "momo.builtin-library/v1", sounds }, null, 2) + "\n";

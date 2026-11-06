@@ -413,10 +413,12 @@ export function AutomationEditor({
   layer,
   project,
   onChange,
+  embedded = false,
 }: {
   layer: PlayerInput;
   project: Project;
   onChange: (automation: PlayerInput["automation"]) => void;
+  embedded?: boolean;
 }) {
   const [key, setKey] = useState<AutomationKey>("gain"),
     [draft, setDraft] = useState<CurvePoint[] | null>(null),
@@ -437,9 +439,10 @@ export function AutomationEditor({
     logarithmic ? min * Math.pow(max / min, u) : min + (max - min) * u;
   const commit = (p: CurvePoint[]) =>
     onChange({ ...layer.automation, [key]: p });
+  const Container = embedded ? "section" : "details";
   return (
-    <details className="pro-section">
-      <summary>{t("pro.automation")}</summary>
+    <Container className={`pro-section${embedded ? " inspector-automation" : ""}`} aria-label={t("pro.automation")}>
+      {!embedded && <summary>{t("pro.automation")}</summary>}
       <select
         aria-label={t("pro.curveParameter")}
         value={key}
@@ -641,6 +644,6 @@ export function AutomationEditor({
           </button>
         </>
       )}
-    </details>
+    </Container>
   );
 }

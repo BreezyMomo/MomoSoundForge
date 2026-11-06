@@ -1,0 +1,29 @@
+{
+  "schema": "momo.synth/v1",
+  "id": "example-fm-bell",
+  "name": "FM Bell",
+  "algorithm": "expression-v1",
+  "defaults": {
+    "wave": "sine",
+    "frequency": 440,
+    "endFrequency": 440,
+    "attack": 0.003,
+    "release": 0.15,
+    "decay": 2,
+    "cutoff": 18000,
+    "drive": 0
+  },
+  "program": {
+    "expression": "sin(2*pi*phase + brightness*sin(6*pi*phase)*exp(-3*t))",
+    "parameters": [
+      {
+        "variable": "brightness",
+        "name": "Brightness",
+        "min": 0,
+        "max": 3,
+        "step": 0.01,
+        "default": 0.7
+      }
+    ]
+  }
+}

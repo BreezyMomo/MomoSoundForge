@@ -15,21 +15,24 @@ export function SoundPolish({
   original,
   onCompare,
   busy,
+  embedded = false,
 }: {
   node: PlayerInput;
   onChange: (effects: Effects | undefined) => void;
   original: boolean;
   onCompare: (original: boolean) => void;
   busy: boolean;
+  embedded?: boolean;
 }) {
   const effects = node.player.effects ?? DEFAULT_EFFECTS;
   const change = (key: EffectParameter, value: number) =>
     onChange({ ...effects, [key]: value });
   const groups = POLISH_GROUPS, ranges = POLISH_RANGES;
+  const Container = embedded ? "div" : "details";
   return (
-    <details className="pro-section sound-polish" open>
-      <summary>{t("tree.post")}</summary>
-      <p className="node-post-target">{t("tree.target", node.name)}</p>
+    <Container className={`pro-section sound-polish${embedded ? " inspector-polish" : ""}`} open={embedded ? undefined : true}>
+      {!embedded && <><summary>{t("tree.post")}</summary>
+        <p className="node-post-target">{t("tree.target", node.name)}</p></>}
       <div className="polish-toolbar">
         <div
           className="button-group"
@@ -152,6 +155,6 @@ export function SoundPolish({
       <button className="secondary" onClick={() => onChange(undefined)}>
         {t("pro.resetEffects")}
       </button>
-    </details>
+    </Container>
   );
 }

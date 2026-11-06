@@ -2,6 +2,7 @@ import catalog from "./data/builtin-catalog.json";
 import { parseProject, type Project } from "./model";
 import type { SoundCategory } from "./libraryPreferences";
 import { t } from "./i18n";
+import type { RecordingSummary } from "./recordingSources";
 
 export type BuiltinSound = {
   id: string;
@@ -24,6 +25,7 @@ export type BuiltinSound = {
   keyHigh?: number;
   maxSourceSeconds?: number;
   recordingIds?: string[];
+  recordings?: RecordingSummary[];
   recordingGroup?: string;
   recording?: number;
   playback?: "loop" | "one-shot";

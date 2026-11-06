@@ -62,7 +62,7 @@ Pages sites are limited to 1 GB. The build check fails at that limit. Verify the
 
 - 空白页面或音源加载失败：检查 assets、wasm 和 soundforge.bin 是否完整。不要为 soundforge.bin 自动设置 Content-Encoding: gzip，它由应用解压。
 - Blank page or failed sounds: verify deployed resources. Do not serve soundforge.bin with automatic gzip content encoding; the app decompresses it.
-- 本地与线上使用独立浏览器存储；保存 soundforge 工程后在另一地址打开即可迁移。
-- Local and online origins have separate storage. Transfer work using downloaded project files.
+- 不同地址使用独立草稿与文件夹连接；重新打开同一本地库文件夹可读取相同资源，作品通过 soundforge 文件转移。
+- Origins have separate drafts and folder connections. Reopen the same local library folder to read its resources; transfer works using project files.
 - 压缩音频导出首次按需加载约 32 MB 编码器；WAV 不需要额外编码器。生成速度取决于用户设备。
 - Compressed export downloads an approximately 32 MB encoder on first use. WAV needs no extra encoder. Rendering speed depends on the user's device.

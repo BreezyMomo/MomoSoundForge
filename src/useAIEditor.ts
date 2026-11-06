@@ -6,7 +6,11 @@ import { createRenderer } from './audio';
 import { encodeWav } from './engine';
 import { builtinSoundName, BUILTIN_SOUNDS, loadBuiltinSound } from './builtinLibrary';
 import { PRESETS, fromPreset } from './presets';
-import { listSavedSounds, readSavedSound, saveSoundToLibrary, download, safeFilename } from './storage';
+import { download, safeFilename } from './storage';
+import { listSavedSounds, readSavedSound, saveSoundToLibrary } from './localSoundStorage';
+import { folderLibrary, libraryReady } from './folderLibrary';
+import { importResource, resourceFromDefinition, resourceFromProject, resourceFromRecording, resourceProject, RESOURCE_BYTES } from './soundResources';
+import { BASIC_SYNTH } from './synthesizers';
 import { makeProject, makeLayer, encodeSamples, MAX_ASSET_BYTES, MAX_SAMPLE_FRAMES, uid, parseProject, projectForSave, updateProjectAtPath, type Project, type RenderResult } from './model';
 import { isolatedNode, nodeParent, normalizeGroups } from './nodeTree';
 import { reconcileAdvanced } from './advanced';
@@ -18,6 +22,8 @@ import { beforeSoundPolish } from './polishAudition';
 import JSZip from 'jszip';
 import { validateSampleSource } from './sampleSource';
 import { t } from './i18n';
+import { recordingResource } from './recordingSources';
+import { pitchName } from './noteEditing';
 
 export function bytesBase64(bytes: Uint8Array) {
   let value = ''; for (let i = 0; i < bytes.length; i += 8192) value += String.fromCharCode(...bytes.subarray(i, i + 8192));
@@ -77,6 +83,45 @@ export function useAIEditor(props: Props) {
       };
       if (op === 'capture') return capture();
       if (op === 'schema') return { ...AUTHORING_SCHEMA, currentExportSettings: latest.current.exportSettings };
+      if (op === 'resources') {
+        await libraryReady;
+        const local=args.scope==='local';
+        if(args.resourceId) {
+          const id=String(args.resourceId);
+          if(local){if(!id.startsWith('local:'))throw Error('resources.invalid');return {resource:await folderLibrary.load(id.slice(6)),destination:folderLibrary.destination};}
+          if(id==='generator:oscillator')return {resource:resourceFromDefinition(BASIC_SYNTH,'builtin-synth-oscillator')};
+          if(id.startsWith('preset:'))return {resource:resourceFromProject(fromPreset(id.slice(7),id.slice(7),k=>k),[],'builtin-preset-'+id.slice(7))};
+          const recording=id.startsWith('recording:')?BUILTIN_SOUNDS.flatMap(s=>(s.recordings??[]).map(r=>({sound:s,recording:r}))).find(r=>'recording:'+r.recording.id===id):undefined;
+          const entry=recording?.sound??BUILTIN_SOUNDS.find(s=>'builtin:'+s.id===id);if(!entry)throw Error('resources.missing');
+          const p=await loadBuiltinSound(entry.id,builtinSoundName(entry));
+          if(entry.kind==='instrument'){
+            const parent=resourceFromDefinition({schema:'momo.instrument/v1',instrument:p.inputs[0].player.score!.instruments[0],assets:p.assets},'builtin-'+entry.id);
+            return {resource:recording?recordingResource(parent,recording.recording.id,t('resources.recordingTitle',builtinSoundName(entry,t,true),pitchName(recording.recording.rootMidi),recording.recording.velocityLow,recording.recording.velocityHigh,recording.recording.variant)):parent};
+          }
+          if(entry.kind==='sample'){
+            const audio=await render.current!.render(p),assetId='builtin-'+entry.id;
+            return {resource:resourceFromRecording({id:assetId,name:builtinSoundName(entry),sampleRate:audio.sampleRate,channels:[encodeSamples(audio.left),encodeSamples(audio.right)]},null,assetId)};
+          }
+          return {resource:resourceFromProject(p,[],'builtin-'+entry.id)};
+        }
+        const items=local?(await folderLibrary.list()).map(e=>({...e,id:'local:'+e.id})): [
+          {id:'generator:oscillator',name:t('resources.oscillator'),kind:'synth',category:'uncategorized'},
+          ...PRESETS.map(p=>({id:'preset:'+p.id,name:t('preset.'+p.id),kind:'sound',category:p.category})),
+          ...BUILTIN_SOUNDS.map(s=>({id:'builtin:'+s.id,name:builtinSoundName(s),kind:s.kind==='instrument'?'instrument':s.kind==='sample'?'recording':'sound',category:s.category})),
+          ...[...new Map(BUILTIN_SOUNDS.flatMap(s=>(s.recordings??[]).map(r=>[r.id,{id:'recording:'+r.id,name:t('resources.recordingTitle',builtinSoundName(s,t,true),pitchName(r.rootMidi),r.velocityLow,r.velocityHigh,r.variant),kind:'recording',category:s.category} as const] as const))).values()],
+        ];
+        const q=String(args.query??'').toLowerCase(),filtered=items.filter(e=>(!args.kind||e.kind===args.kind)&&JSON.stringify(e).toLowerCase().includes(q));
+        const offset=Math.max(0,Number(args.offset)||0);
+        return {total:filtered.length,entries:filtered.slice(offset,offset+40),nextOffset:offset+40<filtered.length?offset+40:null,
+          ...(local?{destination:folderLibrary.destination,connected:folderLibrary.connected,libraryName:folderLibrary.name}:{})};
+      }
+      if (op === 'import_resource') {
+        fresh();await libraryReady;
+        if(new TextEncoder().encode(JSON.stringify(args.resource)).length>RESOURCE_BYTES)throw Error('resources.budget');
+        const r=importResource(args.resource);r.id=uid();r.version=1;fresh();
+        const entry=await folderLibrary.save(r,undefined,args.destination,()=>{try{fresh();return active();}catch{return false;}});
+        return {saved:true,id:'local:'+entry.id,version:entry.version,scope:'local-library-only',workChanged:false};
+      }
       if (op === 'variants') {
         const root = fresh(), path = args.path ?? [], base = nodeParent(root, path);
         const epoch = ++variantEpoch.current;
@@ -121,6 +166,8 @@ export function useAIEditor(props: Props) {
             action.project = await loadBuiltinSound(id, builtinSoundName(entry));
           } else if (source === 'preset' && PRESETS.some(s => s.id === id)) action.project = fromPreset(id, t(`preset.${id}`), key => t(`layer.${key}`));
           else if (source === 'saved') action.project = await readSavedSound(id);
+          else if (source === 'local') action.project = resourceProject(await folderLibrary.load(id));
+          else if (source === 'generator' && id === 'oscillator') action.project=resourceProject(resourceFromDefinition(BASIC_SYNTH,'builtin-synth-oscillator'));
           else throw Error('ai.missingNode');
         }
         const base = args.mode === 'create' ? makeProject(args.name || 'Untitled') : old;

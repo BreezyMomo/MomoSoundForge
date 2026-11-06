@@ -18,6 +18,8 @@ export type SavedSound = {
   deleted: boolean;
   category?: SoundCategory;
 };
+// The sounds/sound-index stores below are legacy migration backups. Application and AI
+// resource writes use localSoundStorage/folderLibrary; drafts still belong to this database.
 const database = () =>
   new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open("momo-sound-forge", 2);
