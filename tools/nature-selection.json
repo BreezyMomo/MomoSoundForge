@@ -1,0 +1,468 @@
+{
+  "schema": "momo.nature-selection/v1",
+  "sources": [
+    {
+      "id": "park",
+      "pageSlug": "park-ambiences",
+      "sourceUrl": "https://opengameart.org/content/park-ambiences",
+      "author": "Thimras",
+      "title": "Park ambiences",
+      "note": "Field recordings; river includes distant birds and wildlife."
+    },
+    {
+      "id": "bird",
+      "pageSlug": "bird-chirping-sounds",
+      "sourceUrl": "https://opengameart.org/content/bird-chirping-sounds",
+      "author": "syncopika",
+      "title": "Bird chirping sounds",
+      "note": "Backyard field recording."
+    },
+    {
+      "id": "birds",
+      "pageSlug": "ambient-bird-sounds",
+      "sourceUrl": "https://opengameart.org/content/ambient-bird-sounds",
+      "author": "isaiah658",
+      "title": "Ambient Bird Sounds",
+      "note": "Camera recording cleaned up by publisher."
+    },
+    {
+      "id": "insects",
+      "pageSlug": "random-sounds-samples",
+      "sourceUrl": "https://opengameart.org/content/random-sounds-samples",
+      "author": "Augmentality (Brandon Morris)",
+      "title": "Random Sounds Samples",
+      "note": "Microphone recording, EQ and stereo processing by publisher; CC0 selected from dual license."
+    },
+    {
+      "id": "backyard",
+      "pageSlug": "cricket-sounds",
+      "sourceUrl": "https://opengameart.org/content/cricket-sounds",
+      "author": "syncopika",
+      "title": "cricket sounds",
+      "note": "Netbook microphone recording; background noise remains and is not represented as studio quality."
+    },
+    {
+      "id": "rain-puddle",
+      "provider": "BigSoundBank",
+      "pageSlug": "bigsoundbank-1290",
+      "sourceUrl": "https://bigsoundbank.com/rain-on-puddle-s1290.html",
+      "author": "Joseph SARDIN",
+      "title": "Rain on puddle",
+      "pageSnapshotKind": "rendered main text",
+      "note": "Big drops of rain on small puddles of water. No thunder layer is added. Publisher WAV: mono, 48 kHz, 24 bit; SoundDevices MixPre-3 + Sennheiser ME66."
+    },
+    {
+      "id": "rain-concrete",
+      "provider": "BigSoundBank",
+      "pageSlug": "bigsoundbank-1289",
+      "sourceUrl": "https://bigsoundbank.com/rain-on-concrete-s1289.html",
+      "author": "Joseph SARDIN",
+      "title": "Rain on concrete",
+      "pageSnapshotKind": "rendered main text",
+      "note": "Big drops of rain on a small slab of concrete. No thunder layer is added. Publisher WAV: mono, 48 kHz, 24 bit; SoundDevices MixPre-3 + Sennheiser ME66."
+    },
+    {
+      "id": "thunder-clean-2",
+      "provider": "BigSoundBank",
+      "pageSlug": "bigsoundbank-3113",
+      "sourceUrl": "https://bigsoundbank.com/sound-3113-tonnerre-2.html",
+      "author": "Joseph SARDIN & Axeline T.",
+      "title": "Thunder #2",
+      "pageSnapshotKind": "rendered main DOM",
+      "note": "Publisher description: a single short thunderclap, without rain. Publisher WAV: mono, 48 kHz, 24 bit; SoundDevices MixPre-3 + Sennheiser ME66."
+    },
+    {
+      "id": "thunder-clean-3",
+      "provider": "BigSoundBank",
+      "pageSlug": "bigsoundbank-3114",
+      "sourceUrl": "https://bigsoundbank.com/sound-3114-tonnerre-3.html",
+      "author": "Joseph SARDIN & Axeline T.",
+      "title": "Thunder #3",
+      "pageSnapshotKind": "rendered main text",
+      "note": "Publisher description: a single thunderclap, without rain. Publisher WAV: mono, 48 kHz, 24 bit; SoundDevices MixPre-3 + Sennheiser ME66."
+    },
+    {
+      "id": "thunder-clean-6",
+      "provider": "BigSoundBank",
+      "pageSlug": "bigsoundbank-3179",
+      "sourceUrl": "https://bigsoundbank.com/thunder-6-s3179.html",
+      "author": "Joseph SARDIN & Axeline T.",
+      "title": "Thunder #6",
+      "pageSnapshotKind": "rendered main DOM",
+      "note": "Publisher description: a single thunderclap, without rain. Publisher WAV: mono, 48 kHz, 24 bit; SoundDevices MixPre-3 + Sennheiser ME66."
+    }
+  ],
+  "files": [
+    {
+      "id": "wind-field",
+      "sourceId": "park",
+      "cacheFile": "park-wind.wav",
+      "downloadUrl": "https://opengameart.org/sites/default/files/park_ambience_wind.wav",
+      "sha256": "5c381856745b4706e7eba55eb9271a61a530e90c05df8126adb2db89ecfa6c5a"
+    },
+    {
+      "id": "river-field",
+      "sourceId": "park",
+      "cacheFile": "park-river.wav",
+      "downloadUrl": "https://opengameart.org/sites/default/files/park_ambience_river.wav",
+      "sha256": "da0c0c9b1249a83a1611cc116d5737b0864a8db9f45f1ae8dcc079d0f7c0bbbf"
+    },
+    {
+      "id": "bird-backyard",
+      "sourceId": "bird",
+      "cacheFile": "bird-chirping.wav",
+      "downloadUrl": "https://opengameart.org/sites/default/files/birdchirping071414.wav",
+      "sha256": "bc6e28bd823b653b2abf3384d4147718603af6bcd98e26166345df71a61eeb08"
+    },
+    {
+      "id": "birds-field",
+      "sourceId": "birds",
+      "cacheFile": "birds-ambient.ogg",
+      "downloadUrl": "https://opengameart.org/sites/default/files/birds-isaiah658_0.ogg",
+      "sha256": "359e4e3f9da9d75aac64cede511c7e3ef8b461f9d9f8c230f8f80e44c4b3e35f"
+    },
+    {
+      "id": "crickets-field",
+      "sourceId": "insects",
+      "cacheFile": "cricket-ambience.ogg",
+      "downloadUrl": "https://opengameart.org/sites/default/files/cricket%20ambienc276.ogg",
+      "sha256": "0d672c93843afc5785cbf4eeb6df696a73188016724ff59bcbd9c623b8d223bf"
+    },
+    {
+      "id": "crickets-backyard",
+      "sourceId": "backyard",
+      "cacheFile": "crickets-backyard.wav",
+      "downloadUrl": "https://opengameart.org/sites/default/files/cricketsounds090613.wav",
+      "sha256": "ecc088a3d1ab967202b63a92836dadc47bd08c8ab3f17d8527f620264aa5faf9"
+    },
+    {
+      "id": "rain-puddle",
+      "sourceId": "rain-puddle",
+      "cacheFile": "rain-puddle.wav",
+      "sourceUrl": "https://bigsoundbank.com/rain-on-puddle-s1290.html",
+      "downloadMethod": "publisher WAV download form",
+      "sha256": "412c59465f8b2c1e0d6f5d44b5a38d3b916347d2de2f38f4c2c360cf6788c06c"
+    },
+    {
+      "id": "rain-concrete",
+      "sourceId": "rain-concrete",
+      "cacheFile": "rain-concrete.wav",
+      "sourceUrl": "https://bigsoundbank.com/rain-on-concrete-s1289.html",
+      "downloadMethod": "publisher WAV download form",
+      "sha256": "e4876e37514c40728637c6caaed6068209c00f77b80557752f237bb02c7bdbef"
+    },
+    {
+      "id": "thunder-clean-2",
+      "sourceId": "thunder-clean-2",
+      "cacheFile": "thunder-clean-2.wav",
+      "sourceUrl": "https://bigsoundbank.com/sound-3113-tonnerre-2.html",
+      "downloadMethod": "publisher WAV download form",
+      "sha256": "88b9cc1944d63662da3989114683ac616b0e93480d8b5fe4547fca7f52de17c2"
+    },
+    {
+      "id": "thunder-clean-3",
+      "sourceId": "thunder-clean-3",
+      "cacheFile": "thunder-clean-3.wav",
+      "sourceUrl": "https://bigsoundbank.com/sound-3114-tonnerre-3.html",
+      "downloadMethod": "publisher WAV download form",
+      "sha256": "448d45edf4022a0ac979a076e997321abcef3807cc8f41dcae2be2e317360255"
+    },
+    {
+      "id": "thunder-clean-6",
+      "sourceId": "thunder-clean-6",
+      "cacheFile": "thunder-clean-6.wav",
+      "sourceUrl": "https://bigsoundbank.com/thunder-6-s3179.html",
+      "downloadMethod": "publisher WAV download form",
+      "sha256": "1fdd78bec376bd36c13ad2463f05356ce83fdcf4d1fecbc18d421fcfa5aa51f2"
+    }
+  ],
+  "groups": [
+    {
+      "id": "wind",
+      "name": [
+        "野外风声",
+        "Open-field wind"
+      ],
+      "category": "weather",
+      "mode": "loop",
+      "clips": [
+        {
+          "sourceFile": "wind-field",
+          "start": 30,
+          "duration": 10
+        },
+        {
+          "sourceFile": "wind-field",
+          "start": 110,
+          "duration": 10
+        },
+        {
+          "sourceFile": "wind-field",
+          "start": 210,
+          "duration": 10
+        }
+      ],
+      "keywords": "wind breeze gust outdoor air 野外风 微风 阵风 空气",
+      "highpassHz": 60
+    },
+    {
+      "id": "rain-water",
+      "name": [
+        "雨落水面",
+        "Rain on water"
+      ],
+      "category": "weather",
+      "mode": "loop",
+      "highpassHz": 35,
+      "keywords": "rain puddle water drops weather 雨声 水面 水洼 雨滴",
+      "clips": [
+        {
+          "sourceFile": "rain-puddle",
+          "start": 10,
+          "duration": 12
+        },
+        {
+          "sourceFile": "rain-puddle",
+          "start": 40,
+          "duration": 12
+        }
+      ]
+    },
+    {
+      "id": "rain-ground",
+      "name": [
+        "雨落地面",
+        "Rain on ground"
+      ],
+      "category": "weather",
+      "mode": "loop",
+      "highpassHz": 35,
+      "keywords": "rain concrete ground drops weather 雨声 地面 混凝土 雨滴",
+      "clips": [
+        {
+          "sourceFile": "rain-concrete",
+          "start": 12,
+          "duration": 12
+        },
+        {
+          "sourceFile": "rain-concrete",
+          "start": 44,
+          "duration": 12
+        }
+      ]
+    },
+    {
+      "id": "thunder-clean",
+      "name": [
+        "独立雷鸣",
+        "Isolated thunder"
+      ],
+      "category": "weather",
+      "mode": "one-shot",
+      "highpassHz": 20,
+      "keywords": "thunder clap rumble without rain weather 雷鸣 雷声 无雨 独立",
+      "clips": [
+        {
+          "sourceFile": "thunder-clean-2",
+          "start": 0,
+          "duration": null
+        },
+        {
+          "sourceFile": "thunder-clean-3",
+          "start": 0,
+          "duration": null
+        },
+        {
+          "sourceFile": "thunder-clean-6",
+          "start": 0,
+          "duration": null
+        }
+      ]
+    },
+    {
+      "id": "bird-calls",
+      "name": [
+        "短鸟鸣",
+        "Bird calls"
+      ],
+      "category": "nature",
+      "mode": "one-shot",
+      "clips": [
+        {
+          "sourceFile": "bird-backyard",
+          "start": 0,
+          "duration": 3
+        },
+        {
+          "sourceFile": "birds-field",
+          "start": 10.8,
+          "duration": 2.8
+        },
+        {
+          "sourceFile": "birds-field",
+          "start": 24.2,
+          "duration": 2.8
+        }
+      ],
+      "keywords": "bird chirp call tweet forest 鸟鸣 啁啾 小鸟 清晨",
+      "highpassHz": 90
+    },
+    {
+      "id": "birds",
+      "name": [
+        "鸟鸣环境",
+        "Bird ambience"
+      ],
+      "category": "nature",
+      "mode": "loop",
+      "clips": [
+        {
+          "sourceFile": "birds-field",
+          "start": 1,
+          "duration": 12
+        },
+        {
+          "sourceFile": "birds-field",
+          "start": 17,
+          "duration": 12
+        }
+      ],
+      "keywords": "birds forest garden dawn outdoor 鸟群 林间 庭院 清晨",
+      "highpassHz": 70
+    },
+    {
+      "id": "stream",
+      "name": [
+        "溪流环境",
+        "Stream ambience"
+      ],
+      "category": "nature",
+      "mode": "loop",
+      "clips": [
+        {
+          "sourceFile": "river-field",
+          "start": 45,
+          "duration": 12
+        },
+        {
+          "sourceFile": "river-field",
+          "start": 210,
+          "duration": 12
+        },
+        {
+          "sourceFile": "river-field",
+          "start": 420,
+          "duration": 12
+        }
+      ],
+      "keywords": "river water stream wildlife brook 流水 小溪 河流 水声 远处鸟鸣",
+      "highpassHz": 40
+    },
+    {
+      "id": "insects",
+      "name": [
+        "虫鸣环境",
+        "Cricket ambience"
+      ],
+      "category": "nature",
+      "mode": "loop",
+      "clips": [
+        {
+          "sourceFile": "crickets-field",
+          "start": 0.5,
+          "duration": 10
+        },
+        {
+          "sourceFile": "crickets-backyard",
+          "start": 12,
+          "duration": 10
+        }
+      ],
+      "keywords": "cricket insect night backyard chirp 蟋蟀 虫鸣 夜晚 庭院",
+      "highpassHz": 100
+    }
+  ],
+  "excluded": [
+    {
+      "source": "forest-bird-sounds",
+      "reason": "8 kHz mono source; not promoted by resampling."
+    },
+    {
+      "source": "thunder-rain-and-wind",
+      "reason": "GPL, outside this CC0 collection."
+    },
+    {
+      "source": "birdcricketfrog-and-mosquito-sounds",
+      "reason": "as3sfxr synthesis; not used as a real nature recording."
+    },
+    {
+      "sourceUrl": "https://opengameart.org/content/rain-loopable",
+      "reason": "Rejected after user audition: mixed ambience is unsuitable as a clean basic rain/thunder source.",
+      "originals": [
+        {
+          "id": "rain-1",
+          "sha256": "4f659f68cf5219007d0bb0969a1862491ceee4057fda4c491c6001e8608fa2cb"
+        },
+        {
+          "id": "rain-2",
+          "sha256": "204bbdba67bd69f744bbb07d81155d0ee775960b979abd0a9b662b23dbc124fd"
+        },
+        {
+          "id": "rain-3",
+          "sha256": "73a0f5ef19ed9f64599c0425b1fb52d857acfc42c0fd5eab85c4577ace18f0ed"
+        },
+        {
+          "id": "rain-4",
+          "sha256": "de24aeefd113daf0d12769c61adb1a262606e7df683e3bb52a27c4d0ff356549"
+        }
+      ],
+      "retiredClipIds": [
+        "nature-rain-01",
+        "nature-rain-02",
+        "nature-rain-03",
+        "nature-rain-04"
+      ]
+    },
+    {
+      "sourceUrl": "https://opengameart.org/content/rain-gutter-loop",
+      "reason": "Rejected after user audition: mixed ambience is unsuitable as a clean basic rain/thunder source.",
+      "originals": [
+        {
+          "id": "roof-rain",
+          "sha256": "216f57eebace492b1d56226c13a728582735de7282c5cca43059cd3c960f083e"
+        }
+      ],
+      "retiredClipIds": [
+        "nature-roof-rain-01",
+        "nature-roof-rain-02"
+      ]
+    },
+    {
+      "sourceUrl": "https://opengameart.org/content/rain-and-thunders",
+      "reason": "Rejected after user audition: mixed ambience is unsuitable as a clean basic rain/thunder source.",
+      "originals": [
+        {
+          "id": "storm-field",
+          "sha256": "115c233f9f8bc793f12723030aaae6cfda923e565c32a8e54bb274b2a8199ee1"
+        }
+      ],
+      "retiredClipIds": [
+        "nature-thunder-rain-01",
+        "nature-thunder-rain-02"
+      ]
+    },
+    {
+      "sourceUrl": "https://opengameart.org/content/100-cc0-sfx-2",
+      "reason": "Rejected after user audition: mixed ambience is unsuitable as a clean basic rain/thunder source.",
+      "originals": [
+        {
+          "id": "thunder-hit",
+          "sha256": "8a4f1dee999546b363f989eff92174375eeae7c241dc9beaa0892fb131ef12a9"
+        }
+      ],
+      "retiredClipIds": [
+        "nature-thunder-01"
+      ]
+    }
+  ]
+}

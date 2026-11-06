@@ -17,7 +17,7 @@ No account is required. Synthesis, mixing and export run on your device. Factory
 ## What you can create
 
 - **Game effects:** confirm, deny, pickup, impact, laser, charge, whoosh and explosion presets, plus recorded impacts, liquids, cloth and other sounds.
-- **A basic sound library:** 100 choices covering 48 instrument/articulation combinations, 44 CC0 sound-effect groups and eight synth presets. Instruments use 725 distinct recordings and effects use 106, with search, audition, favorites, range and recording selection.
+- **A basic sound library:** 108 choices covering 48 instrument/articulation combinations, 52 CC0 sound-effect groups and eight synth presets. Instruments use 725 distinct recordings and effects provide 126 selectable clips, with search, audition, favorites, range and recording selection.
 - **Instrument parts:** piano, strings, woodwinds, brass and percussion. Edit pitch, beat timing and velocity, with sample mappings for ranges, dynamics and articulations.
 - **Multitrack arrangement:** move selected tracks together, resize, crop non-destructively, fade, mute and solo. Compact note contours expand into an editable piano roll.
 - **Compositions and reuse:** groups, nested projects, editable examples, a local library and macro controls that adjust several parameters together.

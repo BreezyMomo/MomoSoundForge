@@ -24,8 +24,8 @@ function resource(raw: unknown = fixture()) {
 it("indexes all collected samples and examples with matching categories, semantic names and final-render thumbnails", () => {
   expect(new Set(BUILTIN_SOUNDS.map(x => x.id)).size).toBe(BUILTIN_SOUNDS.length);
   expect(BUILTIN_SOUNDS.filter(x => x.kind === "instrument" && !x.tone)).toHaveLength(43);
-  expect(BUILTIN_SOUNDS.filter(x => x.kind === "sample")).toHaveLength(106);
-  expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(24);
+  expect(BUILTIN_SOUNDS.filter(x => x.kind === "sample")).toHaveLength(126);
+  expect(BUILTIN_SOUNDS.filter(x => x.kind === "example")).toHaveLength(27);
   for (const sound of BUILTIN_SOUNDS) {
     expect(SOUND_CATEGORIES).toContain(sound.category);
     expect(sound.duration).toBeGreaterThanOrEqual(.1);
@@ -55,7 +55,7 @@ it("organizes old and new effects by action while retaining every selectable rec
   const starter = JSON.parse(readFileSync("samples/cc0-starter-20261104/manifest.json", "utf8"));
   const legacy = effects.filter(s => s.id.startsWith("fx-"));
   expect(new Set(legacy.map(s => s.id))).toEqual(new Set(starter.samples.map((s: {id: string}) => `fx-${s.id}`)));
-  expect(new Set(effects.map(builtinToneKey)).size).toBe(44);
+  expect(new Set(effects.map(builtinToneKey)).size).toBe(52);
   for (const [key, count] of Object.entries({ cloth: 4, paper: 2, swish: 2, bubble: 3, slime: 4, splash: 3, bell: 2, camera: 2, "lock-door": 2 })) {
     const choices = legacy.filter(s => builtinToneKey(s) === `fx-${key}`);
     expect(choices, key).toHaveLength(count);

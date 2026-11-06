@@ -26,6 +26,7 @@ export type BuiltinSound = {
   recordingIds?: string[];
   recordingGroup?: string;
   recording?: number;
+  playback?: "loop" | "one-shot";
 };
 export const BUILTIN_SOUNDS = catalog.sounds as BuiltinSound[];
 type Translate = (key: string, ...values: unknown[]) => string;
@@ -55,6 +56,7 @@ export function builtinSoundName(sound: BuiltinSound, translate: Translate = t, 
     : translate("builtin.unpitchedVariant", name, sound.velocity, sound.variant);
 }
 export function builtinSoundDescription(sound: BuiltinSound, translate: Translate = t) {
+  if (sound.playback) return translate(sound.playback === "loop" ? "builtin.natureLoopDetails" : "builtin.natureEventDetails");
   if (sound.tone) return translate("builtin.toneDetails", sound.recordingIds?.length ?? 0, sound.maxSourceSeconds);
   return sound.kind === "instrument"
     ? translate("builtin.instrumentDetails", translate(`builtin.articulation.${sound.articulation}`), sound.velocity, sound.variant)
@@ -140,8 +142,8 @@ export function createBuiltinLoader(
       const project = parseProject(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(json)));
       if (name) {
         project.name = name.slice(0, 120);
-        for (const layer of project.layers) if (layer.name.startsWith("builtin.game")) layer.name = t(layer.name);
-        for (const control of project.controls ?? []) if (control.name.startsWith("builtin.gameControl.")) control.name = t(control.name);
+        for (const layer of project.layers) if (layer.name.startsWith("builtin.game") || layer.name.startsWith("builtin.nature.")) layer.name = t(layer.name);
+        for (const control of project.controls ?? []) if (control.name.startsWith("builtin.gameControl.") || control.name.startsWith("builtin.natureControl.")) control.name = t(control.name);
         if (sound.kind === "instrument") for (const layer of project.layers) {
           layer.name = project.name;
           for (const instrument of layer.score?.instruments ?? []) instrument.name = t(sound.nameKey);
