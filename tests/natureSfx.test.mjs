@@ -81,8 +81,8 @@ it('opens localized editable scenes with portable provenance and repeatable engi
   const bytes = readFileSync(`public/sound-library/${sound.file}`);
   const load = createBuiltinLoader([sound], async () => new Response(Uint8Array.from(bytes)), '/');
   const project = await load(sound.id, '林间清晨');
-  expect(project.layers).toHaveLength(4);
-  expect(project.layers.every(layer => !layer.name.startsWith('builtin.'))).toBe(true);
+  expect(project.inputs).toHaveLength(4);
+  expect(project.inputs.every(layer => !layer.name.startsWith('builtin.'))).toBe(true);
   expect(project.controls[0].name).not.toContain('builtin.');
   const reopened = parseProject(JSON.parse(JSON.stringify(projectForSave(project))));
   expect(reopened.assets).toEqual(project.assets);

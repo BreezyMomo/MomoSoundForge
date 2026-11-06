@@ -1,4 +1,5 @@
-import { clamp, type Layer } from "./model";
+import { sourceTime } from "./playerPlayback";
+import { clamp, type PlayerInput } from "./model";
 import { beatsToSeconds, secondsToBeats, type NoteEvent } from "./instruments";
 
 export const pitchName = (midi: number) =>
@@ -38,47 +39,18 @@ export function noteGridTicks(totalBeats: number) {
 }
 
 /** Normalized positions inside the rendered clip, including playback transforms. */
-/** Normalized positions inside the rendered clip, including playback transforms. */
-export function noteSpan(layer: Layer, note: NoteEvent) {
-  const source = layer.content.sourceDuration ?? layer.duration;
-  const rate = layer.content.frequency / 440;
-  const start = beatsToSeconds(note.start, layer.content.score!.bpm);
-  const end = beatsToSeconds(
-    note.start + note.duration,
-    layer.content.score!.bpm,
-  );
-  return {
-    start:
-      ((layer.content.reverse ? source - end : start) - layer.content.trim) /
-      rate /
-      source,
-    width: (end - start) / rate / source,
-  };
+export function noteSpan(layer: PlayerInput, note: NoteEvent) {
+  const start = beatsToSeconds(note.start, layer.player.score!.bpm);
+  const end = beatsToSeconds(note.start + note.duration, layer.player.score!.bpm);
+  return { start: (layer.reverse ? layer.sourceEnd - end : start - layer.sourceStart) / layer.speed / layer.duration,
+    width: (end - start) / layer.speed / layer.duration };
 }
-
-/** Map the shared project clock to the untransformed score and back. */
-/** Map the shared project clock to the untransformed score and back. */
-export function scoreBeatAtTime(layer: Layer, time: number, offset = 0) {
-  const source = layer.content.sourceDuration ?? layer.duration;
-  const position =
-    layer.content.trim +
-    (((time - offset - layer.start) * source) / layer.duration) *
-      (layer.content.frequency / 440);
-  return secondsToBeats(
-    layer.content.reverse ? source - position : position,
-    layer.content.score!.bpm,
-  );
+export function scoreBeatAtTime(layer: PlayerInput, time: number, offset = 0) {
+  const local = time - offset - layer.start;
+  const position = sourceTime(layer, local) ?? (layer.reverse ? layer.sourceEnd - local * layer.speed : layer.sourceStart + local * layer.speed);
+  return secondsToBeats(position, layer.player.score!.bpm);
 }
-export function scoreTimeAtBeat(layer: Layer, beat: number, offset = 0) {
-  const source = layer.content.sourceDuration ?? layer.duration;
-  const position = beatsToSeconds(beat, layer.content.score!.bpm);
-  return (
-    offset +
-    layer.start +
-    ((((layer.content.reverse ? source - position : position) -
-      layer.content.trim) /
-      (layer.content.frequency / 440)) *
-      layer.duration) /
-      source
-  );
+export function scoreTimeAtBeat(layer: PlayerInput, beat: number, offset = 0) {
+  const position = beatsToSeconds(beat, layer.player.score!.bpm);
+  return offset + layer.start + (layer.reverse ? layer.sourceEnd - position : position - layer.sourceStart) / layer.speed;
 }

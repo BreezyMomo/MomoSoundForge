@@ -59,9 +59,9 @@ A work contains layers. Each layer has outer settings and replaceable content: s
 
 Choose **Edit content** or **Replace content** in layer properties. Replacement accepts built-in recordings, combination examples, current group assets and local audio. A whole combination can become an audio clip, and an audio clip can become an editable combination. Synth and instrument layers can also receive those contents.
 
-Replacement retains name, placement, volume, pan, mute/solo, variation lock, outer effects and volume/pan curves. It replaces old child layers, notes, synthesis, trim and stretch settings, removes old content-control bindings and filter automation, and displays the affected bindings and duration change. The work window stays fixed.
+Replacement retains name, placement, read range, speed, loop, playback length, volume, pan, mute/solo, variation lock and volume/pan curves. The new player replaces the old sound, children, notes and own effects; parent mix effects stay. Old content bindings and filter automation are removed. Out-of-range reads play silence without shortening the loop period. Fit to new sound length is an explicit action and preserves loop playback length. The work window stays fixed.
 
-Audition in the full work before confirming. Cancel makes no document change; confirmation is one undoable edit. Group multiple layers before replacing them as a whole. Native documents use v3; unpublished older formats are not supported. Built-in resources have been updated.
+Audition in the full work before confirming. Cancel makes no document change; confirmation is one undoable edit. Group multiple layers before replacing them as a whole. Native documents use v4 with a root player; unpublished older formats are not supported. Built-in resources have been updated.
 
 ## Workflow
 
@@ -109,7 +109,7 @@ The layer area is an expandable node tree. Select siblings with Ctrl / Shift and
 
 Each sound and group has **Post-processing**. Children are processed first, mixed, then processed by their group. Group all nodes when you want a shared effect. The document root is neutral; final peak protection runs once. Before/after audition bypasses only the selected node, retaining child effects and leaving exports unchanged.
 
-Group durations follow child content. Groups can be moved; stretch and crop individual sound nodes. Pale extensions represent automatic effect tails, included in audition and default export. Each effect tail is limited to four seconds with a fade and notice at the limit; overall rendering also has length and resource budgets.
+Groups also support crop, speed, loop and reverse. Edit a transformed group on its local timeline using Edit content. A full read includes the child’s effect tail; an explicit crop may truncate it. Each effect tail is limited to four seconds with a fade and notice at the limit; overall rendering also has length and resource budgets.
 
 Row playback starts at the node and includes its descendants and effects, excluding ancestors. Top playback and export always use the complete work. Playheads, snapping, multiselection movement, undo and variation locks remain available. Collapse and before/after states are not saved or recorded in undo.
 
@@ -140,7 +140,7 @@ The unified sound list supports search, All / Favorites / Recent filters, collap
 
 Use **Display → Sound variants** to choose **Grouped** or **Expanded**. Grouped mode puts ranges or recordings of the same sound in one card; Expanded mode gives each option its own card for playback, favorites and insertion. This setting is saved in the current browser, outside the project and undo history.
 
-Outer clip edges stretch the complete waveform with a corresponding pitch change. Enable Crop above the layers to reveal two internal handles on the selected clip. Cropped regions remain visible in gray and contribute no audio; the clip frame and later layers stay in place. Drag the handles back or choose Restore full clip to recover the content. Stretching preserves crop proportions. Both operations support undo and are saved with projects and library snapshots.
+Outer clip edges change playback speed and pitch. Enable Crop to edit the read range and occupied time using the lower handles; the original source and other layers remain intact. Read from/to in properties use seconds. Restore full clip reads the entire child output. For loops, the right crop handle changes occupied playback length; properties define the repeated read interval. Both operations support undo and persist in projects and library snapshots.
 
 ## Sample instruments and note parts
 

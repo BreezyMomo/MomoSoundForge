@@ -188,7 +188,7 @@ export function useNodeReorder(
       const { address, mode } = landing;
       const destination =
         mode === "inside" ? [...address.path, address.id] : address.path;
-      const siblings = nodeParent(root, address.path).layers;
+      const siblings = nodeParent(root, address.path).inputs;
       const index = siblings.findIndex((l) => l.id === address.id);
       const before =
         mode === "inside"

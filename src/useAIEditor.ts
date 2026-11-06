@@ -1,3 +1,4 @@
+import { projectDocument } from './model';
 import { useEffect, useRef, useState } from 'react';
 import { createAIConnection, type ConnectionStatus } from './aiConnection';
 import { applyEdits, AUTHORING_SCHEMA, describeProject, projectScoreIssues, type EditOperation } from './aiAuthoring';
@@ -69,7 +70,7 @@ export function useAIEditor(props: Props) {
       const target = (compare = false) => {
         let p = args.variant ? candidate(args.variant.setId, args.variant.index) : snapshot().project;
         if (compare && args.beforePolish) {
-          if (!nodeParent(p, args.beforePolish.path).layers.some(l => l.id === args.beforePolish.id)) throw Error('ai.missingNode');
+          if (!nodeParent(p, args.beforePolish.path).inputs.some(l => l.id === args.beforePolish.id)) throw Error('ai.missingNode');
           p = beforeSoundPolish(p, args.beforePolish);
         }
         return args.node ? isolatedNode(p, args.node) : p;
@@ -84,7 +85,7 @@ export function useAIEditor(props: Props) {
         for (const project of projects) {
           const result = await render.current!.render(project); fresh();
           if (epoch !== variantEpoch.current) throw Error('ai.stale');
-          bytes += [...new Set([result.left, result.right, ...Object.values(result.layers), ...Object.values(result.processedLayers ?? {})])].reduce((n, a) => n + a.byteLength, 0);
+          bytes += [...new Set([result.left, result.right, ...Object.values(result.inputs), ...Object.values(result.processedLayers ?? {})])].reduce((n, a) => n + a.byteLength, 0);
           if (bytes > 64 * 1024 * 1024) throw Error('ai.variantBudget');
           items.push({ project, result });
         }
@@ -150,7 +151,7 @@ export function useAIEditor(props: Props) {
             if (bytes.byteLength > 8 * 1024 * 1024) throw Error('ai.previewBudget');
             return { audio: bytesBase64(bytes), mimeType: AUDIO_MIME[settings.format], settings, snapshotId: args.snapshotId, duration: audio.left.length / audio.sampleRate, metrics: { peak: audio.peak, rms: audio.rms, gainReduction: audio.gainReduction }, metricsScope: 'prepared audio before codec encoding; returned audio is encoded export', instrumentIssues: projectScoreIssues(project) };
           }
-          const document = args.includeProject !== false ? JSON.stringify(projectForSave(project)) : undefined;
+          const document = args.includeProject !== false ? JSON.stringify(projectDocument(project)) : undefined;
           totalBytes += bytes.byteLength + (document?.length ?? 0) * 2;
           if (totalBytes > 128 * 1024 * 1024) throw Error('ai.exportBudget');
           if (zip) {
@@ -187,7 +188,7 @@ export function useAIEditor(props: Props) {
         return { audio: bytesBase64(new Uint8Array(encodeWav({ ...audio, left: audio.left.slice(a, b), right: audio.right.slice(a, b) }))), mimeType: 'audio/wav',
           snapshotId: args.snapshotId, start, end, instrumentIssues: projectScoreIssues(project), metrics: { peak: audio.peak, sourcePeak: audio.sourcePeak, rms: audio.rms, gainReduction: audio.gainReduction, tailLimited: audio.tailLimited }, metricsScope: 'whole requested project or node; listening still required' };
       }
-      if (op === 'project') return { project: projectForSave(target()) };
+      if (op === 'project') return { project: projectDocument(target()) };
       if (op === 'import-audio') {
         const old = fresh();
         if (typeof args.base64 !== 'string' || args.base64.length > 16 * 1024 * 1024) throw Error('error.fileSize');
@@ -199,7 +200,7 @@ export function useAIEditor(props: Props) {
         const project = makeProject(name);
         project.duration = Math.max(0.1, buffer.duration);
         project.assets[id] = { id, name, sampleRate: buffer.sampleRate, source, channels: Array.from({ length: Math.min(2, buffer.numberOfChannels) }, (_, i) => encodeSamples(buffer.getChannelData(i))) };
-        project.layers = [makeLayer({ name, type: 'sample', assetId: id, duration: Math.max(0.01, buffer.duration), frequency: 440, endFrequency: 440, decay: 0, gain: 0.8, attack: 0.002, release: 0.02 })];
+        project.inputs = [makeLayer({ name, type: 'sample', assetId: id, duration: Math.max(0.01, buffer.duration), frequency: 440, endFrequency: 440, decay: 0, gain: 0.8, attack: 0.002, release: 0.02 })];
         const next = applyEdits(old, [{ op: 'insert', project: parseProject(project), start: args.start ?? 0, path: args.path ?? [] }]);
         fresh(); latest.current.commit(old, next); return capture();
       }

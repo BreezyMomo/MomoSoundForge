@@ -2,7 +2,7 @@ import { layerValue } from "./model";
 import { useState, useRef } from "react";
 import { Range } from "./Inspector";
 import { t } from "./i18n";
-import { uid, type Layer, type Project } from "./model";
+import { uid, type PlayerInput, type Project } from "./model";
 import {
   PARAMS,
   boundControl,
@@ -15,7 +15,7 @@ import {
 
 export function exposeParameter(
   project: Project,
-  layer: Layer,
+  layer: PlayerInput,
   key: Parameter,
 ): Project {
   if (
@@ -238,8 +238,8 @@ export function MacroEditor({
             </button>
           </div>
           {c.mappings.map((m, i) => {
-            const layer = project.layers.find((l) => l.id === m.layerId),
-              child = layer?.content.project?.controls?.find(
+            const layer = project.inputs.find((l) => l.id === m.layerId),
+              child = layer?.player.mix?.controls?.find(
                 (c) => c.id === m.controlId,
               ),
               range = child
@@ -347,8 +347,8 @@ export function MacroEditor({
                   setError("pro.alreadyBound");
                   return;
                 }
-                const layer = project.layers.find((l) => l.id === layerId)!;
-                const child = layer.content.project?.controls?.find(
+                const layer = project.inputs.find((l) => l.id === layerId)!;
+                const child = layer.player.mix?.controls?.find(
                     (x) => x.id === controlId,
                   ),
                   range =
@@ -373,13 +373,13 @@ export function MacroEditor({
               }}
             >
               <option value="">{t("pro.chooseParameter")}</option>
-              {project.layers.map((l) => (
+              {project.inputs.map((l) => (
                 <optgroup key={l.id} label={l.name}>
                   {(Object.keys(PARAMS) as Parameter[])
                     .filter(
                       (k) =>
                         !l.automation?.[k as AutomationKey]?.length &&
-                        (l.content.type !== "composition" ||
+                        (l.player.type !== "composition" ||
                           ["start", "gain", "pan"].includes(k)),
                     )
                     .map((k) => (
@@ -391,7 +391,7 @@ export function MacroEditor({
                         {t(`pro.param.${k}`)}
                       </option>
                     ))}
-                  {l.content.project?.controls?.map((child) => (
+                  {l.player.mix?.controls?.map((child) => (
                     <option
                       key={child.id}
                       value={JSON.stringify([l.id, "control", child.id])}
@@ -414,9 +414,9 @@ export function AutomationEditor({
   project,
   onChange,
 }: {
-  layer: Layer;
+  layer: PlayerInput;
   project: Project;
-  onChange: (automation: Layer["automation"]) => void;
+  onChange: (automation: PlayerInput["automation"]) => void;
 }) {
   const [key, setKey] = useState<AutomationKey>("gain"),
     [draft, setDraft] = useState<CurvePoint[] | null>(null),
@@ -451,7 +451,7 @@ export function AutomationEditor({
         }}
       >
         {(["gain", "pan", "cutoff"] as const)
-          .filter((k) => layer.content.type !== "composition" || k !== "cutoff")
+          .filter((k) => layer.player.type !== "composition" || k !== "cutoff")
           .map((k) => (
             <option key={k} value={k}>
               {t(`pro.param.${k}`)}

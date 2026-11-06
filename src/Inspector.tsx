@@ -1,3 +1,4 @@
+import { hasReadOverflow, playerDuration } from "./playerPlayback";
 import {
   layerValue,
   withLayerValue,
@@ -13,7 +14,7 @@ import {
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useId } from "react";
 import { Copy, Trash2, SlidersHorizontal } from "lucide-react";
-import type { Layer, Project } from "./model";
+import type { PlayerInput, Project } from "./model";
 import { t } from "./i18n";
 import { AutomationEditor } from "./AuthoringTools";
 import {
@@ -152,11 +153,13 @@ export function Inspector({
   postProcessing,
   sourceEditor,
   onReplaceContent,
+  onFitRange,
 }: {
   postProcessing?: ReactNode;
   sourceEditor?: ReactNode;
   onReplaceContent?: () => void;
-  layer?: Layer;
+  onFitRange?: () => void;
+  layer?: PlayerInput;
   project: Project;
   onChange: (key: LayerField, value: LayerValue) => void;
   onDuplicate: () => void;
@@ -173,7 +176,7 @@ export function Inspector({
       </div>
     );
   const effective =
-    resolveControls(project).layers.find((l) => l.id === layer.id) ?? layer;
+    resolveControls(project).inputs.find((l) => l.id === layer.id) ?? layer;
   const range = (
     key: LayerField,
     label: string,
@@ -193,7 +196,7 @@ export function Inspector({
           max={max}
           step={step}
           unit={unit}
-          unbounded={key === "start" || key === "duration" || key === "trim"}
+          unbounded={key === "start" || key === "duration" || key === "sourceEnd"}
           disabled={!!driver || !!curve}
           onChange={(v) => onChange(key, v)}
         />
@@ -219,11 +222,11 @@ export function Inspector({
         <div>
           <span className="eyebrow">
             {t(
-              layer.content.type === "sample"
+              layer.player.type === "sample"
                 ? "editor.sample"
-                : layer.content.type === "instrument"
+                : layer.player.type === "instrument"
                   ? "score.title"
-                  : layer.content.type === "composition"
+                  : layer.player.type === "composition"
                     ? "editor.composition"
                     : "editor.synth",
             )}
@@ -235,7 +238,7 @@ export function Inspector({
             className="icon-button"
             title={t("action.duplicate")}
             aria-label={t("action.duplicate")}
-            disabled={project.layers.length >= 16}
+            disabled={project.inputs.length >= 16}
             onClick={onDuplicate}
           >
             <Copy size={15} />
@@ -259,11 +262,11 @@ export function Inspector({
         />
       </label>
       <div className="replacement-entry">
-        <span>{t(`content.${layer.content.type}`)}</span>
+        <span>{t(`content.${layer.player.type}`)}</span>
         <button
           className="secondary"
           onClick={() =>
-            layer.content.type === "composition"
+            layer.player.type === "composition"
               ? onEnter()
               : contentEditor.current?.scrollIntoView({
                   behavior: "smooth",
@@ -281,17 +284,17 @@ export function Inspector({
           {t("replace.title")}
         </button>
       </div>
-      {layer.content.type === "composition" && (
+      {layer.player.type === "composition" && (
         <section className="property-section">
           <h3>{t("pro.controls")}</h3>
           <p className="field-help">
             {t(
               "composition.sourceInfo",
-              layer.content.project?.layers.length ?? 0,
-              layer.content.project?.duration.toFixed(2) ?? "0",
+              layer.player.mix?.inputs.length ?? 0,
+              layer.player.mix?.duration.toFixed(2) ?? "0",
             )}
           </p>
-          {layer.content.project?.controls
+          {layer.player.mix?.controls
             ?.filter((c) => !c.hidden && c.mappings.length > 0)
             .map((c) => {
               const driver = project.controls?.find((x) =>
@@ -307,8 +310,8 @@ export function Inspector({
                   <Range
                     label={c.name}
                     value={
-                      effective.content.controlValues?.[c.id] ??
-                      layer.content.project?.controlValues?.[c.id] ??
+                      effective.player.controlValues?.[c.id] ??
+                      layer.player.mix?.controlValues?.[c.id] ??
                       c.defaultValue
                     }
                     min={c.min}
@@ -317,7 +320,7 @@ export function Inspector({
                     disabled={!!driver}
                     onChange={(v) =>
                       onChange("controlValues", {
-                        ...layer.content.controlValues,
+                        ...layer.player.controlValues,
                         [c.id]: v,
                       })
                     }
@@ -341,16 +344,17 @@ export function Inspector({
         {range("gain", "prop.volume", 0, 1.5, 0.01)}
         {range("pan", "prop.pan", -1, 1, 0.01)}
       </section>
+      <h3>{t("player.ownEffects")}</h3>
       {postProcessing}
       <div ref={contentEditor}>
         {sourceEditor}
         <section className="property-section">
           <h3>{t("prop.source")}</h3>
-          {layer.content.type === "synth" ? (
+          {layer.player.type === "synth" ? (
             <label className="text-field">
               <span>{t("prop.wave")}</span>
               <select
-                value={layer.content.wave}
+                value={layer.player.wave}
                 onChange={(e) => onChange("wave", e.target.value)}
               >
                 {["sine", "triangle", "saw", "square", "noise"].map((w) => (
@@ -363,17 +367,17 @@ export function Inspector({
           ) : (
             <>
               <div className="asset-name">
-                {layer.content.type === "instrument"
+                {layer.player.type === "instrument"
                   ? t("score.editHint")
-                  : layer.content.type === "composition"
-                    ? layer.content.project?.name
-                    : project.assets[layer.content.assetId!]?.name}
+                  : layer.player.type === "composition"
+                    ? layer.player.mix?.name
+                    : project.assets[layer.player.assetId!]?.name}
               </div>
-              {layer.content.type === "sample" &&
-                project.assets[layer.content.assetId!]?.source &&
+              {layer.player.type === "sample" &&
+                project.assets[layer.player.assetId!]?.source &&
                 (() => {
                   const source =
-                    project.assets[layer.content.assetId!]!.source!;
+                    project.assets[layer.player.assetId!]!.source!;
                   return (
                     <p className="field-help">
                       {t(
@@ -394,41 +398,10 @@ export function Inspector({
                     </p>
                   );
                 })()}
-              {layer.content.type !== "composition" && (
-                <>
-                  <Range
-                    label={t("prop.rate")}
-                    min={0.1}
-                    max={4}
-                    step={0.01}
-                    value={effective.content.frequency / 440}
-                    disabled={!!boundControl(project, layer.id, "frequency")}
-                    unit="×"
-                    onChange={(v) => onChange("frequency", v * 440)}
-                  />
-                  {!boundControl(project, layer.id, "frequency") && (
-                    <button
-                      className="expose-button"
-                      onClick={() => onExpose("frequency")}
-                    >
-                      {t("pro.expose")}
-                    </button>
-                  )}
-                  <p className="field-help">{t("prop.speedHint")}</p>
-                  {range("trim", "prop.trim", 0, 30, 0.01, "s")}
-                  <label className="check-field">
-                    <input
-                      type="checkbox"
-                      checked={layer.content.reverse}
-                      onChange={(e) => onChange("reverse", e.target.checked)}
-                    />
-                    {t("prop.reverse")}
-                  </label>
-                </>
-              )}
             </>
           )}
-          {layer.content.type === "synth" && layer.content.wave !== "noise" && (
+          {layer.player.type === "synth" && range("generatorDuration", "prop.duration", 0.01, Math.max(10, layer.player.duration), 0.01, "s")}
+          {layer.player.type === "synth" && layer.player.wave !== "noise" && (
             <>
               {range("frequency", "prop.frequency", 20, 20000, 1, "Hz")}
               {range("endFrequency", "prop.endFrequency", 20, 20000, 1, "Hz")}
@@ -437,71 +410,26 @@ export function Inspector({
         </section>
         <section className="property-section">
           <h3>{t("prop.timing")}</h3>
-          {layer.content.type !== "composition" && (
-            <>
-              {range(
-                "duration",
-                "prop.duration",
-                0.01,
-                Math.max(project.duration, layer.duration),
-                0.01,
-                "s",
-              )}
-              {range(
-                "attack",
-                "prop.attack",
-                0,
-                Math.min(3, layer.duration),
-                0.001,
-                "s",
-              )}
-              {range(
-                "release",
-                "prop.release",
-                0,
-                Math.min(5, layer.duration),
-                0.001,
-                "s",
-              )}
-              {range("decay", "prop.decay", 0, 10, 0.1)}
-              <Range
-                label={t("pro.cropStart")}
-                min={0}
-                max={Math.max(
-                  0,
-                  (layer.content.cropEnd ?? 1) * layer.duration - 0.001,
-                )}
-                step={0.001}
-                unit="s"
-                value={(layer.content.cropStart ?? 0) * layer.duration}
-                onChange={(v) => onChange("cropStart", v / layer.duration)}
-              />
-              <Range
-                label={t("pro.cropEnd")}
-                min={(layer.content.cropStart ?? 0) * layer.duration + 0.001}
-                max={layer.duration}
-                step={0.001}
-                unit="s"
-                value={(layer.content.cropEnd ?? 1) * layer.duration}
-                onChange={(v) => onChange("cropEnd", v / layer.duration)}
-              />
-              <p className="field-help">
-                {t(
-                  "pro.speed",
-                  (
-                    (layer.content.sourceDuration ?? layer.duration) /
-                    layer.duration
-                  ).toFixed(3),
-                )}
-              </p>
-            </>
-          )}
+          <p className="field-help">{t("player.outputDuration", playerDuration(layer.player).toFixed(3))}</p>
+          {range("sourceStart", "player.readStart", 0, Math.max(0, layer.sourceEnd - 0.001), 0.001, "s")}
+          {range("sourceEnd", "player.readEnd", layer.sourceStart + 0.001, Math.max(layer.sourceEnd, playerDuration(layer.player)), 0.001, "s")}
+          {range("speed", "prop.rate", 0.1, 4, 0.01, "×")}
+          <p className="field-help">{t("prop.speedHint")}</p>
+          <label className="check-field"><input type="checkbox" checked={layer.loop} onChange={e => onChange("loop", e.target.checked)} />{t("player.loop")}</label>
+          {range("duration", "player.playLength", 0.01, Math.max(project.duration, layer.duration), 0.01, "s")}
+          <label className="check-field"><input type="checkbox" checked={layer.reverse} onChange={e => onChange("reverse", e.target.checked)} />{t("prop.reverse")}</label>
+          {hasReadOverflow(layer) && <div role="status"><p className="field-help">{t("player.overflow")}</p><button onClick={onFitRange}>{t("player.fit")}</button></div>}
+          {layer.player.type !== "composition" && <>
+            {range("attack", "prop.attack", 0, Math.min(3, layer.player.duration), 0.001, "s")}
+            {range("release", "prop.release", 0, Math.min(5, layer.player.duration), 0.001, "s")}
+            {range("decay", "prop.decay", 0, 10, 0.1)}
+          </>}
         </section>
         <section className="property-section">
           <h3>{t("prop.timbre")}</h3>
-          {layer.content.type !== "composition" &&
+          {layer.player.type !== "composition" &&
             range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
-          {layer.content.type !== "composition" &&
+          {layer.player.type !== "composition" &&
             range("drive", "prop.drive", 0, 10, 0.1)}
         </section>
       </div>

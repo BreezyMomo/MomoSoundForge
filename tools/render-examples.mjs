@@ -8,7 +8,7 @@ try {
   const { fromPreset } = await server.ssrLoadModule("/src/presets.ts");
   const { renderProject, encodeWav } =
     await server.ssrLoadModule("/src/engine.ts");
-  const { makeLayer, encodeSamples } =
+  const { makeLayer, encodeSamples, projectDocument } =
     await server.ssrLoadModule("/src/model.ts");
   await mkdir("test-results/audio", { recursive: true });
   for (const id of ["ice", "confirm", "laser", "explosion"]) {
@@ -16,7 +16,7 @@ try {
     const r = renderProject(p);
     await writeFile(`test-results/audio/${id}.wav`, Buffer.from(encodeWav(r)));
     if (id === "ice")
-      await writeFile("test-results/audio/ice.soundforge", JSON.stringify(p));
+      await writeFile("test-results/audio/ice.soundforge", JSON.stringify(projectDocument(p)));
   }
   const child = fromPreset("confirm", "QA Sample Child", (key) => key);
   const samples = Float32Array.from(
@@ -31,7 +31,7 @@ try {
       channels: [encodeSamples(samples)],
     },
   };
-  child.layers.push(
+  child.inputs.push(
     makeLayer({
       id: "fixture-layer",
       name: "Generated sample",
@@ -45,7 +45,7 @@ try {
   );
   await writeFile(
     "test-results/audio/sample-content.soundforge",
-    JSON.stringify(child),
+    JSON.stringify(projectDocument(child)),
   );
   console.log("Examples rendered to test-results/audio/");
 } finally {

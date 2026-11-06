@@ -16,37 +16,37 @@ describe("individual layer audition", () => {
   it("starts a delayed layer immediately and stops at its own duration without editing the project", () => {
     const project = fromPreset("charge", "charge", (x) => x),
       before = JSON.stringify(project);
-    const layer = project.layers[2];
+    const layer = project.inputs[2];
     expect(layer.start).toBe(1.9);
     const preview = createLayerPreviewProject(project, layer.id),
       render = renderProject(preview);
-    expect(preview.layers).toHaveLength(1);
-    expect(preview.layers[0].start).toBe(0);
+    expect(preview.inputs).toHaveLength(1);
+    expect(preview.inputs[0].start).toBe(0);
     expect(preview.duration).toBe(0.35);
     expect(render.left.length).toBe(16800);
     expect(render.left.subarray(0, 480).some((x) => Math.abs(x) > 0.01)).toBe(
       true,
     );
-    expect(preview.layers[0].content.noiseSeed).toBe(layer.content.noiseSeed);
+    expect(preview.inputs[0].player.noiseSeed).toBe(layer.player.noiseSeed);
     expect(preview.master).toBe(1);
     expect(preview.echo).toBe(0);
     expect(JSON.stringify(project)).toBe(before);
   });
-  it("auditions a muted layer independently of other solo layers, even outside the project window", () => {
+  it("auditions a muted layer independently of other solo inputs, even outside the project window", () => {
     const project = preset();
-    project.layers[0].solo = true;
-    project.layers[1] = {
-      ...project.layers[1],
+    project.inputs[0].solo = true;
+    project.inputs[1] = {
+      ...project.inputs[1],
       muted: true,
       start: 8,
       duration: 0.45,
     };
-    const preview = createLayerPreviewProject(project, project.layers[1].id);
-    expect(preview.layers[0].muted).toBe(false);
-    expect(preview.layers[0].solo).toBe(false);
+    const preview = createLayerPreviewProject(project, project.inputs[1].id);
+    expect(preview.inputs[0].muted).toBe(false);
+    expect(preview.inputs[0].solo).toBe(false);
     expect(renderProject(preview).peak).toBeGreaterThan(0.01);
-    expect(project.layers[1].muted).toBe(true);
-    expect(project.layers[0].solo).toBe(true);
+    expect(project.inputs[1].muted).toBe(true);
+    expect(project.inputs[0].solo).toBe(true);
     expect(() => createLayerPreviewProject(project, "missing")).toThrow();
   });
 });
@@ -64,34 +64,34 @@ describe("deterministic rendering and delivery", () => {
       expect(Math.abs(r.left.at(-1)!)).toBe(0);
     }
   });
-  it("reproduces seeded noise and varies only unlocked layers", () => {
+  it("reproduces seeded noise and varies only unlocked inputs", () => {
     const p = preset();
-    p.layers[0].locked = true;
+    p.inputs[0].locked = true;
     const a = renderProject(p),
       b = renderProject(p);
     expect(a.left).toEqual(b.left);
     const varied = varyProject(p, 999, 0.5);
-    expect(varied.layers[0]).toEqual(p.layers[0]);
-    expect(varied.layers[1].duration).not.toBe(p.layers[1].duration);
+    expect(varied.inputs[0]).toEqual(p.inputs[0]);
+    expect(varied.inputs[1].duration).not.toBe(p.inputs[1].duration);
     expect(varyProject(p, 999, 0.5)).toEqual(varied);
     expect(renderProject(varied).left).not.toEqual(a.left);
   });
   it("honors mute, solo, hard pan and silent projects", () => {
     const p = preset();
-    p.layers = p.layers.map((l) => ({ ...l, muted: true }));
+    p.inputs = p.inputs.map((l) => ({ ...l, muted: true }));
     expect(renderProject(p).peak).toBe(0);
     const only = makeLayer({ id: "mono", pan: -1 });
-    p.layers = [only];
+    p.inputs = [only];
     p.echo = 0;
     const hardLeft = renderProject(p);
     expect(hardLeft.left.some((x) => Math.abs(x) > 0.01)).toBe(true);
     expect(hardLeft.right.every((x) => Math.abs(x) < 1e-7)).toBe(true);
     const solo = { ...only, solo: true };
-    p.layers = [solo, makeLayer({ id: "other", frequency: 800 })];
+    p.inputs = [solo, makeLayer({ id: "other", frequency: 800 })];
     expect(renderProject(p).left).toEqual(
-      renderProject({ ...p, layers: [solo] }).left,
+      renderProject({ ...p, inputs: [solo] }).left,
     );
-    expect(renderProject({ ...p, layers: [] }).peak).toBe(0);
+    expect(renderProject({ ...p, inputs: [] }).peak).toBe(0);
   });
   it("writes PCM16 stereo with exact sample rate, length and sample values", () => {
     const r = renderProject(preset()),
@@ -109,10 +109,10 @@ describe("deterministic rendering and delivery", () => {
       Math.round(x * (x < 0 ? 32768 : 32767)),
     );
   });
-  it("applies linked headroom protection for loud mixed layers", () => {
+  it("applies linked headroom protection for loud mixed inputs", () => {
     const p = preset();
     p.master = 1.5;
-    p.layers = Array.from({ length: 10 }, (_, i) =>
+    p.inputs = Array.from({ length: 10 }, (_, i) =>
       makeLayer({
         id: `loud${i}`,
         frequency: 100,
@@ -127,10 +127,10 @@ describe("deterministic rendering and delivery", () => {
   });
   it("keeps locked noise identical and zero-amount variations audibly identical", () => {
     const p = preset();
-    p.layers[1].locked = true;
+    p.inputs[1].locked = true;
     const r = renderProject(p),
       v = renderProject(varyProject(p, 78, 0.8));
-    expect(v.layers[p.layers[1].id]).toEqual(r.layers[p.layers[1].id]);
+    expect(v.inputs[p.inputs[1].id]).toEqual(r.inputs[p.inputs[1].id]);
     expect(renderProject(varyProject(p, 78, 0)).left).toEqual(r.left);
   });
 });
@@ -149,7 +149,7 @@ describe("portable sample projects", () => {
         channels: [encodeSamples(data)],
       },
     };
-    p.layers = [
+    p.inputs = [
       makeLayer({
         id: "sample",
         type: "sample",
@@ -175,9 +175,9 @@ describe("portable sample projects", () => {
   it("respects source trimming and reverse playback", () => {
     const p = sampleProject(),
       original = renderProject(p).left;
-    p.layers[0].content.reverse = true;
+    p.inputs[0].reverse = true;
     expect(renderProject(p).left).not.toEqual(original);
-    p.layers[0].content.trim = 2;
+    p.inputs[0].sourceStart = 2;
     expect(renderProject(p).peak).toBe(0);
   });
   it("preserves phase-inverted stereo through filtering and draws nonempty layer data", () => {
@@ -190,7 +190,7 @@ describe("portable sample projects", () => {
     ];
     const r = renderProject(p);
     expect(r.peak).toBeGreaterThan(0.1);
-    expect(r.layers.sample.some((x) => Math.abs(x) > 0.1)).toBe(true);
+    expect(r.inputs.sample.some((x) => Math.abs(x) > 0.1)).toBe(true);
     for (let i = 0; i < r.left.length; i += 71)
       expect(r.left[i]).toBeCloseTo(-r.right[i], 6);
   });
@@ -201,7 +201,7 @@ describe("portable sample projects", () => {
     expect(() => parseProject({ ...p, duration: Infinity })).toThrow();
     expect(() => parseProject({ ...p, assets: {} })).toThrow();
     expect(() =>
-      parseProject({ ...p, layers: [{ ...p.layers[0], gain: NaN }] }),
+      parseProject({ ...p, inputs: [{ ...p.inputs[0], gain: NaN }] }),
     ).toThrow();
     expect(() =>
       parseProject({

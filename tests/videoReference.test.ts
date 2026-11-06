@@ -22,6 +22,6 @@ describe('video reference', () => {
     const p={...fromPreset('ice','Ice',k=>k),videoReference:reference()};
     const saved=parseProject(JSON.parse(JSON.stringify(projectForSave(p))));
     expect(saved.videoReference).toEqual(reference());
-    expect(saved.layers).toEqual(p.layers);
+    expect(saved.inputs).toEqual(p.inputs);
   });
 });

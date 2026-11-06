@@ -57,7 +57,7 @@ export function gameSfxJobs(manifest, root) {
 }
 
 export async function gameSfxProject(job, root, collectionRoot, { makeLayer, encodeSamples }) {
-  const assets = {}, layers = [];
+  const assets = {}, inputs = [];
   const add = async (sample, start = 0, gain = 1) => {
     if (!assets[sample.id]) {
       const bytes = await readFile(path.join(root, collectionRoot, sample.wavFile));
@@ -80,8 +80,8 @@ export async function gameSfxProject(job, root, collectionRoot, { makeLayer, enc
       assets[sample.id] = { id: sample.id, name: path.basename(sample.wavFile), sampleRate: 48000,
         channels: channels.map(channel => encodeSamples(Float32Array.from(channel, x => x * .65 / peak))) };
     }
-    layers.push(makeLayer({ id: `layer-${layers.length}-${sample.id}`, name: sample.nameKey,
-      type: "sample", assetId: sample.id, start, gain, trim: sample.playback.trim,
+    inputs.push(makeLayer({ id: `layer-${inputs.length}-${sample.id}`, name: sample.nameKey,
+      type: "sample", assetId: sample.id, start, gain, sourceStart: sample.playback.trim, sourceEnd: sample.playback.trim + sample.playback.duration, player: { duration: sample.playback.trim + sample.playback.duration },
       duration: sample.playback.duration, frequency: 440, endFrequency: 440,
       attack: .001, release: Math.min(.025, sample.playback.duration / 4), decay: 0,
       cutoff: 22000, noiseSeed: 2048 }));
@@ -89,30 +89,30 @@ export async function gameSfxProject(job, root, collectionRoot, { makeLayer, enc
   if (!job.scene) await add(job.sample);
   else {
     for (const [i, [, , start, gain]] of job.scene.clips.entries()) await add(job.samples[i], start, gain);
-    if (job.scene.bass) layers.push(makeLayer({ id: "layer-weight", name: "builtin.gameLayer.weight",
+    if (job.scene.bass) inputs.push(makeLayer({ id: "layer-weight", name: "builtin.gameLayer.weight",
       wave: "sine", frequency: 85, endFrequency: 38, start: .02, duration: .18,
       gain: .22, attack: .002, release: .08, decay: 5, cutoff: 800, noiseSeed: 2048 }));
-    if (job.scene.motor) layers.push(makeLayer({ id: "layer-motor", name: "builtin.gameLayer.motor",
+    if (job.scene.motor) inputs.push(makeLayer({ id: "layer-motor", name: "builtin.gameLayer.motor",
       wave: "saw", frequency: 70, endFrequency: 180, start: .09, duration: .32,
       gain: .12, attack: .02, release: .14, decay: 1, cutoff: 900, noiseSeed: 2048 }));
   }
-  const project = { schema: "momo.soundforge/v3", name: job.nameKey, seed: 2048, master: .5, echo: 0,
-    duration: Math.max(.1, ...layers.map(layer => layer.start + layer.duration)), assets, layers };
+  const project = { schema: "momo.soundforge/v4", name: job.nameKey, seed: 2048, master: .5, echo: 0,
+    duration: Math.max(.1, ...inputs.map(layer => layer.start + layer.duration)), assets, inputs };
   if (job.scene?.control) {
     const [name, group, low, high] = job.scene.control;
     project.controls = [{ id: `control-${name}`, name: `builtin.gameControl.${name}`,
       min: 0, max: 1, defaultValue: .5,
-      mappings: layers.filter(layer => layer.content.assetId && job.samples.some(s => s.id === layer.content.assetId && s.groupId === `game-${group}`))
+      mappings: inputs.filter(layer => layer.player.assetId && job.samples.some(s => s.id === layer.player.assetId && s.groupId === `game-${group}`))
         .map(layer => ({ layerId: layer.id, parameter: "gain", low, high })) }];
   }
   if (job.scene?.quick) {
     const { frequency, detail } = job.scene.quick;
-    const body = layers[0];
+    const body = inputs[0];
     body.name = 'builtin.gameLayer.body';
-    Object.assign(body.content, { cutoff: 16000, release: .015 });
-    layers.push(makeLayer({ id: 'layer-weight', name: 'builtin.gameLayer.weight', frequency, endFrequency: 42,
+    Object.assign(body.player, { cutoff: 16000, release: .015 });
+    inputs.push(makeLayer({ id: 'layer-weight', name: 'builtin.gameLayer.weight', frequency, endFrequency: 42,
       duration: .16, gain: .2, attack: .002, release: .055, decay: 4, cutoff: 500 }));
-    layers.push(makeLayer({ id: 'layer-detail', name: 'builtin.gameLayer.detail', wave: detail,
+    inputs.push(makeLayer({ id: 'layer-detail', name: 'builtin.gameLayer.detail', wave: detail,
       frequency: detail === 'triangle' ? 1700 : 440, endFrequency: detail === 'triangle' ? 1100 : 440,
       start: .018, duration: detail === 'triangle' ? .25 : .1, gain: .06, attack: .005, release: .06, decay: 4, cutoff: 8500 }));
     project.controls = [
@@ -124,7 +124,7 @@ export async function gameSfxProject(job, root, collectionRoot, { makeLayer, enc
         mappings: [{ layerId: 'layer-detail', parameter: 'gain', low: 0, high: .15 }] },
     ];
     project.master = 1;
-    project.duration = Math.max(.1, ...layers.map(l => l.start + l.duration));
+    project.duration = Math.max(.1, ...inputs.map(l => l.start + l.duration));
   }
   return project;
 }

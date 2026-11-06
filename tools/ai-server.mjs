@@ -129,9 +129,9 @@ export async function startAIServer({ port = 8799, origins = ['http://127.0.0.1:
         server.setRequestHandler(CallToolRequestSchema, async request => {
           try {
             const result = await call(request.params.name, request.params.arguments ?? {});
-            if (result?.audio) { const { audio, mimeType, ...meta } = result; return { content: [{ type: 'text', text: JSON.stringify(meta) }, { type: 'audio', mimeType, data: audio }] }; }
-            return { content: [{ type: 'text', text: JSON.stringify(result) }] };
-          } catch (error) { return { isError: true, content: [{ type: 'text', text: error.message }] }; }
+            if (result?.audio) { const { audio, mimeType, ...meta } = result; return { player: [{ type: 'text', text: JSON.stringify(meta) }, { type: 'audio', mimeType, data: audio }] }; }
+            return { player: [{ type: 'text', text: JSON.stringify(result) }] };
+          } catch (error) { return { isError: true, player: [{ type: 'text', text: error.message }] }; }
         });
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
         await server.connect(transport);

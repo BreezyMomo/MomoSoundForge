@@ -28,14 +28,14 @@ import {
 } from "../src/exportAudio";
 import { boundedSelection, snapTime } from "../src/timeline";
 const fixture = (): Project => ({
-  schema: "momo.soundforge/v3",
+  schema: "momo.soundforge/v4",
   name: "test",
   seed: 1,
   duration: 1,
   master: 0.5,
   echo: 0,
   assets: {},
-  layers: [
+  inputs: [
     makeLayer({
       id: "a",
       duration: 0.5,
@@ -116,26 +116,26 @@ describe("composition controls", () => {
       },
     ];
     const resolved = resolveControls(p);
-    expect(resolved.layers[0].gain).toBe(0.5);
-    expect(resolved.layers[0].content.frequency).toBe(1000);
-    expect(p.layers[0].gain).toBe(0.4);
+    expect(resolved.inputs[0].gain).toBe(0.5);
+    expect(resolved.inputs[0].player.frequency).toBe(1000);
+    expect(p.inputs[0].gain).toBe(0.4);
   });
   it("preserves nested defaults and independent instance overrides across save/load", () => {
     const child = fixture();
     child.controls = [macro()];
     child.controlValues = { m: 80 };
     const p = fixture();
-    p.layers = [
+    p.inputs = [
       makeLayer({
         id: "child1",
         type: "composition",
-        project: child,
+        mix: child,
         controlValues: { m: 10 },
       }),
       makeLayer({
         id: "child2",
         type: "composition",
-        project: child,
+        mix: child,
         controlValues: { m: 90 },
       }),
     ];
@@ -154,9 +154,9 @@ describe("composition controls", () => {
       },
     ];
     const saved = parseProject(projectForSave(p));
-    expect(resolveControls(saved).layers[0].content.controlValues?.m).toBe(50);
-    expect(saved.layers[1].content.controlValues?.m).toBe(90);
-    expect(resolveControls(child, {}).layers[0].gain).toBe(0.8);
+    expect(resolveControls(saved).inputs[0].player.controlValues?.m).toBe(50);
+    expect(saved.inputs[1].player.controlValues?.m).toBe(90);
+    expect(resolveControls(child, {}).inputs[0].gain).toBe(0.8);
     expect(renderProject(saved, 4000).left).toEqual(
       renderProject(saved, 4000).left,
     );
@@ -168,7 +168,7 @@ describe("composition controls", () => {
     const wrapped = wrapProject(p);
     expect(wrapped.effects).toBeUndefined();
     expect(wrapped.controls).toBeUndefined();
-    expect(wrapped.layers[0].content.project?.effects).toEqual(p.effects);
+    expect(wrapped.inputs[0].player.mix?.effects).toEqual(p.effects);
     expect(() => parseProject(projectForSave(wrapped))).not.toThrow();
     const a = renderProject(p, 4000),
       b = renderProject(wrapped, 4000);
@@ -187,8 +187,8 @@ describe("composition controls", () => {
       },
     ];
     const preview = createLayerPreviewProject(p, "a");
-    expect(preview.layers[0].start).toBe(0);
-    expect(preview.layers[0].gain).toBe(0.5);
+    expect(preview.inputs[0].start).toBe(0);
+    expect(preview.inputs[0].gain).toBe(0.5);
     expect(preview.controls).toBeUndefined();
   });
   it("rejects duplicate drivers, unknown targets, invalid ranges and macro/curve conflicts", () => {
@@ -197,7 +197,7 @@ describe("composition controls", () => {
       (p: Project) => (p.controls![0].mappings[0].layerId = "missing"),
       (p: Project) => (p.controls![0].min = 100),
       (p: Project) =>
-        (p.layers[0].automation = { gain: [{ time: 0, value: 0.1 }] }),
+        (p.inputs[0].automation = { gain: [{ time: 0, value: 0.1 }] }),
     ]) {
       const p = fixture();
       p.controls = [macro()];
@@ -209,11 +209,11 @@ describe("composition controls", () => {
     const child = fixture();
     child.controls = [macro()];
     const p = fixture();
-    p.layers = [
+    p.inputs = [
       makeLayer({
         id: "child",
         type: "composition",
-        project: child,
+        mix: child,
         controlValues: { m: 90 },
       }),
     ];
@@ -233,7 +233,7 @@ describe("composition controls", () => {
     ];
     child.controls[0].max = 60;
     const repaired = reconcileAdvanced(p);
-    expect(repaired.layers[0].content.controlValues?.m).toBe(60);
+    expect(repaired.inputs[0].player.controlValues?.m).toBe(60);
     expect(repaired.controls![0].mappings[0].high).toBe(60);
     child.controls = [];
     expect(reconcileAdvanced(p).controls![0].mappings).toEqual([]);
@@ -274,7 +274,7 @@ describe("automation and processing", () => {
   });
   it("renders stereo pan and gain curves deterministically, and preserves full previews through crop", () => {
     const p = fixture();
-    p.layers[0].automation = {
+    p.inputs[0].automation = {
       gain: [
         { time: 0, value: 0 },
         { time: 1, value: 1 },
@@ -291,15 +291,15 @@ describe("automation and processing", () => {
     const before = renderProject(p, 4000);
     expect(before.left).toEqual(renderProject(p, 4000).left);
     expect(before.left).not.toEqual(before.right);
-    p.layers[0].content.cropStart = 0.5;
+    p.inputs[0].sourceStart = 0.25;
     const cropped = renderProject(p, 4000);
-    expect(cropped.layers.a).toEqual(before.layers.a);
-    expect(cropped.left.slice(0, 1400).every((x) => x === 0)).toBe(true);
+    expect(cropped.inputs.a).not.toEqual(before.inputs.a);
+    expect(cropped.left.slice(1800).every((x) => x === 0)).toBe(true);
     expect(() => parseProject(projectForSave(p))).not.toThrow();
   });
   it("keeps delay and reverb tails and respects limiter ceiling", () => {
     const p = fixture();
-    p.layers[0].duration = 0.1;
+    p.inputs[0].duration = 0.1;
     p.effects = {
       ...DEFAULT_EFFECTS,
       delayTime: 0.2,
@@ -332,7 +332,7 @@ describe("automation and processing", () => {
       { automation: { cutoff: [{ time: NaN, value: 400 }] } },
     ]) {
       const p = fixture();
-      Object.assign(p.layers[0], patch);
+      Object.assign(p.inputs[0], patch);
       expect(() => parseProject(p)).toThrow();
     }
     expect(() =>
@@ -457,18 +457,18 @@ describe("loop and export", () => {
   });
 });
 describe("multi-layer timeline", () => {
-  const layers = () => [
+  const inputs = () => [
     makeLayer({
       id: "a",
       start: 0.1,
       duration: 0.2,
-      cropStart: 0.1,
-      cropEnd: 0.9,
+      sourceStart: 0.1,
+      sourceEnd: 0.3,
     }),
     makeLayer({ id: "b", start: 0.4, duration: 0.1 }),
   ];
   it("moves, scales from the active edge, and preserves non-destructive crops", () => {
-    const ls = layers(),
+    const ls = inputs(),
       moved = boundedSelection(ls, ["a", "b"], ls[0], { start: 0.3 }, 1);
     expect(moved[1].start).toBeCloseTo(0.6);
     const scaled = boundedSelection(
@@ -480,15 +480,15 @@ describe("multi-layer timeline", () => {
     );
     expect(scaled[1].start).toBeCloseTo(0.7);
     expect(scaled[1].duration).toBe(0.2);
-    expect(scaled[0].content.sourceDuration).toBe(0.2);
-    expect(scaled[0].content.cropStart).toBe(0.1);
+    expect(scaled[0].player.duration).toBe(0.2);
+    expect(scaled[0].sourceStart).toBe(0.1);
     expect(
-      boundedSelection(ls, ["a"], ls[0], { duration: 0.4 }, 1)[0].content
-        .sourceDuration,
+      boundedSelection(ls, ["a"], ls[0], { duration: 0.4 }, 1)[0].player
+        .duration,
     ).toBe(0.2);
   });
   it("rejects out-of-bounds scaling and edits crop/fade only on the active clip", () => {
-    const ls = layers();
+    const ls = inputs();
     expect(boundedSelection(ls, ["a", "b"], ls[0], { duration: 1 }, 1)).toBe(
       ls,
     );
@@ -497,19 +497,18 @@ describe("multi-layer timeline", () => {
       ["a", "b"],
       ls[0],
       {
-        content: {
-          cropStart: 0.2,
+        sourceStart: 0.2, player: {
           attack: 0.1,
         },
       },
       1,
     );
-    expect(edited[0].content.cropStart).toBe(0.2);
+    expect(edited[0].sourceStart).toBe(0.2);
     expect(edited[1]).toBe(ls[1]);
   });
   it("stops a dragged set at either boundary without changing gaps or durations", () => {
     const ls = [
-      ...layers(),
+      ...inputs(),
       makeLayer({ id: "untouched", start: 0, duration: 0.1 }),
     ];
     for (const active of ls.slice(0, 2)) {
@@ -541,7 +540,7 @@ describe("multi-layer timeline", () => {
     }
   });
   it("moves smoothly back from an overshoot using the original gesture snapshot", () => {
-    const ls = layers();
+    const ls = inputs();
     const positions = [0.2, 0.7, 0.8, 0.3].map(
       (delta) =>
         boundedSelection(

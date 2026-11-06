@@ -13,7 +13,7 @@ class WorkerStub {
     this.onmessage?.({ data: { id: this.messages.at(-1)!.id, ...data } });
   }
 }
-const result = (): RenderResult => ({ left: new Float32Array(100), right: new Float32Array(100), layers: {}, sampleRate: 100,
+const result = (): RenderResult => ({ left: new Float32Array(100), right: new Float32Array(100), inputs: {}, sampleRate: 100,
   peak: 0, rms: 0, sourcePeak: 0, gainReduction: 1 });
 afterEach(() => { vi.unstubAllGlobals(); WorkerStub.instances = []; });
 it("cancels an obsolete preview while keeping a queued export runnable", async () => {

@@ -1,3 +1,4 @@
+import { hasTimeTransform } from "./playerPlayback";
 import { patchLayer, type LayerPatch } from "./model";
 import { createPortal } from "react-dom";
 import { useState, type ReactNode } from "react";
@@ -12,9 +13,9 @@ import {
   Unlock,
   Trash2,
 } from "lucide-react";
-import type { Layer, Project, RenderResult } from "./model";
+import type { PlayerInput, Project, RenderResult } from "./model";
 import { useNodeReorder } from "./useNodeReorder";
-import { nodeKey, type NodeAddress } from "./nodeTree";
+import { nodeKey, nodeParent, type NodeAddress } from "./nodeTree";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { boundedSelection } from "./timeline";
 import { TimelineClip } from "./TimelineClip";
@@ -25,6 +26,7 @@ import { t } from "./i18n";
 import "./node-tree.css";
 export function TreeTimeline({
   root,
+  viewPath = [],
   selected,
   ids,
   result,
@@ -54,6 +56,7 @@ export function TreeTimeline({
   renderToolbar,
 }: {
   root: Project;
+  viewPath?: string[];
   selected: NodeAddress;
   ids: string[];
   result: RenderResult | null;
@@ -111,10 +114,10 @@ export function TreeTimeline({
   );
   const [draft, setDraft] = useState<{
     path: string[];
-    layers: Layer[];
+    inputs: PlayerInput[];
   } | null>(null);
   const rows: {
-    layer: Layer;
+    layer: PlayerInput;
     address: NodeAddress;
     offset: number;
     parent: Project;
@@ -130,26 +133,26 @@ export function TreeTimeline({
     shown = true,
     prefix = "",
   ) => {
-    for (const layer of p.layers) {
+    for (const layer of p.inputs) {
       const address = { path, id: layer.id },
         key = nodeKey(address);
       if (shown) rows.push({ layer, address, offset, parent: p });
-      if (layer.content.project) {
+      if (layer.player.mix) {
         groups.push({
           path: [...path, layer.id],
           name: `${prefix}${layer.name}`,
         });
         collect(
-          layer.content.project,
+          layer.player.mix,
           [...path, layer.id],
           offset + layer.start,
-          shown && !closed.has(key),
+          shown && !closed.has(key) && !hasTimeTransform(layer),
           `${prefix}${layer.name} / `,
         );
       }
     }
   };
-  collect(root);
+  collect(nodeParent(root, viewPath), viewPath);
   const previewRow = rows.find(
     ({ address }) => playing === `node-${nodeKey(address)}`,
   );
@@ -231,7 +234,7 @@ export function TreeTimeline({
             />
             <span />
           </div>
-          {!!root.videoReference?.markers.length && (
+          {!viewPath.length && !!root.videoReference?.markers.length && (
             <div className="tree-row">
               <span />
               <span />
@@ -258,7 +261,7 @@ export function TreeTimeline({
           )}
           {rows.map(({ layer, address, offset, parent }) => {
             const key = nodeKey(address),
-              group = layer.content.type === "composition";
+              group = layer.player.type === "composition";
             const chosen = selectionAt(address.path) && ids.includes(layer.id);
             const tail = result?.tails?.[key] ?? 0;
             const previewPath = previewRow && [
@@ -279,10 +282,10 @@ export function TreeTimeline({
               );
             const changeNote = (note: NoteEvent) =>
               onPatch(address, {
-                content: {
+                player: {
                   score: {
-                    ...layer.content.score!,
-                    notes: layer.content.score!.notes.map((n) =>
+                    ...layer.player.score!,
+                    notes: layer.player.score!.notes.map((n) =>
                       n.id === note.id ? note : n,
                     ),
                   },
@@ -295,14 +298,14 @@ export function TreeTimeline({
                 data-node-address={key}
                 data-node-group={group ? "true" : "false"}
                 role="treeitem"
-                aria-level={address.path.length + 1}
+                aria-level={address.path.length - viewPath.length + 1}
                 aria-selected={chosen}
-                aria-expanded={group ? !closed.has(key) : undefined}
+                aria-expanded={group ? !closed.has(key) && !hasTimeTransform(layer) : undefined}
               >
                 <div
                   className="tree-identity"
                   style={{
-                    paddingLeft: Math.min(60, address.path.length * 14),
+                    paddingLeft: Math.min(60, (address.path.length - viewPath.length) * 14),
                   }}
                 >
                   <button
@@ -328,17 +331,17 @@ export function TreeTimeline({
                       ) {
                         e.preventDefault();
                         e.stopPropagation();
-                        const index = parent.layers.indexOf(layer);
+                        const index = parent.inputs.indexOf(layer);
                         if (
                           (e.key === "ArrowUp" && index > 0) ||
                           (e.key === "ArrowDown" &&
-                            index < parent.layers.length - 1)
+                            index < parent.inputs.length - 1)
                         )
                           onMove(
                             address.path,
                             [layer.id],
                             address.path,
-                            parent.layers[
+                            parent.inputs[
                               index + (e.key === "ArrowUp" ? -1 : 2)
                             ]?.id,
                           );
@@ -350,8 +353,10 @@ export function TreeTimeline({
                   {group ? (
                     <button
                       className="icon-button"
+                      disabled={hasTimeTransform(layer)}
+                      title={hasTimeTransform(layer) ? t("player.editGroup") : undefined}
                       aria-label={t(
-                        closed.has(key) ? "tree.expand" : "tree.collapse",
+                        closed.has(key) || hasTimeTransform(layer) ? "tree.expand" : "tree.collapse",
                         layer.name,
                       )}
                       onClick={() =>
@@ -362,7 +367,7 @@ export function TreeTimeline({
                         })
                       }
                     >
-                      {closed.has(key) ? (
+                      {closed.has(key) || hasTimeTransform(layer) ? (
                         <ChevronRight size={13} />
                       ) : (
                         <ChevronDown size={13} />
@@ -383,15 +388,15 @@ export function TreeTimeline({
                           ? beforeKey === key
                             ? "tree.groupBefore"
                             : "tree.groupProcessed"
-                          : layer.content.type === "instrument"
+                          : layer.player.type === "instrument"
                             ? "score.title"
-                            : layer.content.type === "sample"
+                            : layer.player.type === "sample"
                               ? "editor.sample"
                               : "editor.synth",
                       )}
                     </small>
                   </button>
-                  {layer.content.type === "instrument" && (
+                  {layer.player.type === "instrument" && (
                     <button
                       className="tree-note-toggle"
                       aria-label={t("roll.toggle", layer.name)}
@@ -427,16 +432,16 @@ export function TreeTimeline({
                   offset={offset}
                   projectDuration={duration}
                   position={cue}
-                  cropMode={!group && cropMode && chosen}
+                  cropMode={cropMode && chosen}
                   data={
                     cropMode && chosen
-                      ? result?.layers[key]
-                      : (result?.processedLayers?.[key] ?? result?.layers[key])
+                      ? result?.inputs[key]
+                      : (result?.processedLayers?.[key] ?? result?.inputs[key])
                   }
                   tail={tail}
                   sampleRate={result?.sampleRate}
                   tailData={result?.processedLayers?.[key]}
-                  moveOnly={group}
+                  moveOnly={false}
                   onSelect={(event) => onSelect(address, event)}
                   onClearSelection={onClearSelection}
                   onBegin={onBegin}
@@ -463,7 +468,7 @@ export function TreeTimeline({
                       ? [
                           cue,
                           0,
-                          ...(root.videoReference?.markers.map((m) => m.time) ??
+                          ...(!viewPath.length ? root.videoReference?.markers.map((m) => m.time) ?? [] :
                             []),
                           ...rows
                             .filter(
@@ -482,11 +487,11 @@ export function TreeTimeline({
                     draft &&
                     JSON.stringify(draft.path) === JSON.stringify(address.path)
                       ? {
-                          ...(draft.layers.find((l) => l.id === layer.id) ??
+                          ...(draft.inputs.find((l) => l.id === layer.id) ??
                             layer),
                           start:
                             (
-                              draft.layers.find((l) => l.id === layer.id) ??
+                              draft.inputs.find((l) => l.id === layer.id) ??
                               layer
                             ).start + offset,
                         }
@@ -497,8 +502,8 @@ export function TreeTimeline({
                       next
                         ? {
                             path: address.path,
-                            layers: boundedSelection(
-                              parent.layers,
+                            inputs: boundedSelection(
+                              parent.inputs,
                               chosen ? ids : [layer.id],
                               layer,
                               { ...next, start: next.start - offset },
@@ -552,8 +557,8 @@ export function TreeTimeline({
                     <Trash2 size={13} />
                   </button>
                 </div>
-                {layer.content.type === "instrument" &&
-                  layer.content.score &&
+                {layer.player.type === "instrument" &&
+                  layer.player.score &&
                   openScore === key && (
                     <div className="tree-note-editor">
                       <NoteRoll

@@ -1,6 +1,6 @@
 import { Range } from "./Inspector";
 import { t } from "./i18n";
-import type { Layer } from "./model";
+import type { PlayerInput } from "./model";
 import {
   DEFAULT_EFFECTS,
   type EffectParameter,
@@ -16,13 +16,13 @@ export function SoundPolish({
   onCompare,
   busy,
 }: {
-  node: Layer;
+  node: PlayerInput;
   onChange: (effects: Effects | undefined) => void;
   original: boolean;
   onCompare: (original: boolean) => void;
   busy: boolean;
 }) {
-  const effects = node.effects ?? DEFAULT_EFFECTS;
+  const effects = node.player.effects ?? DEFAULT_EFFECTS;
   const change = (key: EffectParameter, value: number) =>
     onChange({ ...effects, [key]: value });
   const groups = POLISH_GROUPS, ranges = POLISH_RANGES;

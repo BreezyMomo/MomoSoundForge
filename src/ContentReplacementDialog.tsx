@@ -1,3 +1,5 @@
+import { fitPlayerRange, hasReadOverflow } from "./playerPlayback";
+import { updateProjectAtPath } from "./model";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Square, Upload, X } from "lucide-react";
 import {
@@ -44,12 +46,13 @@ export function ContentReplacementDialog({
     [source, setSource] = useState<"samples" | "compositions" | "project">(
       "samples",
     );
+  const [adapt, setAdapt] = useState(false);
   const [candidate, setCandidate] = useState<ContentCandidate>(),
     [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(false),
     [error, setError] = useState("");
   const parent = nodeParent(base, address.path),
-    layer = parent.layers.find((l) => l.id === address.id)!;
+    layer = parent.inputs.find((l) => l.id === address.id)!;
   const entries = useMemo(
     () =>
       source !== "project"
@@ -94,16 +97,17 @@ export function ContentReplacementDialog({
   const preview = useMemo(() => {
     if (!candidate) return {};
     try {
-      return { project: replaceContent(base, address, candidate) };
+      const replaced = replaceContent(base, address, candidate);
+      return { project: adapt ? updateProjectAtPath(replaced, address.path, p => ({ ...p, inputs: p.inputs.map(l => l.id === address.id ? fitPlayerRange(l) : l) })) : replaced };
     } catch (e) {
       return {
         error: contentReplacementError(e, "error.replaceProject"),
       };
     }
-  }, [base, address, candidate]);
+  }, [base, address, candidate, adapt]);
   const nextLayer =
     preview.project &&
-    nodeParent(preview.project, address.path).layers.find(
+    nodeParent(preview.project, address.path).inputs.find(
       (l) => l.id === address.id,
     );
   const bindings = contentBindingCount(base, address);
@@ -134,6 +138,7 @@ export function ContentReplacementDialog({
   const choose = async (id: string, load: () => Promise<ContentCandidate>) => {
     const token = ++request.current;
     onStop();
+    setAdapt(false);
     setCandidate(undefined);
     setSelected("");
     setLoading(true);
@@ -249,10 +254,10 @@ export function ContentReplacementDialog({
           <div>
             <span className="field-help">{t("replace.current")}</span>
             <p>
-              {t(`content.${layer.content.type}`)} ·{" "}
-              {layer.content.type === "sample"
-                ? parent.assets[layer.content.assetId!]?.name
-                : (layer.content.project?.name ?? layer.name)}
+              {t(`content.${layer.player.type}`)} ·{" "}
+              {layer.player.type === "sample"
+                ? parent.assets[layer.player.assetId!]?.name
+                : (layer.player.mix?.name ?? layer.name)}
             </p>
           </div>
           <div aria-live="polite">
@@ -261,12 +266,13 @@ export function ContentReplacementDialog({
               {loading
                 ? t("replace.loading")
                 : candidate
-                  ? `${t(`content.${candidate.content.type}`)} · ${candidate.name}`
+                  ? `${t(`content.${candidate.player.type}`)} · ${candidate.name}`
                   : t("replace.select")}
             </p>
           </div>
           <p className="field-help">{t("replace.preserveHelp")}</p>
           <p className="field-help">{t("replace.contentHelp")}</p>
+          {nextLayer && hasReadOverflow(nextLayer) && <div role="status"><p className="field-help">{t("player.overflow")}</p><button onClick={() => setAdapt(true)}>{t("player.fit")}</button></div>}
           {bindings > 0 && (
             <p className="field-help">{t("replace.detach", bindings)}</p>
           )}
@@ -286,7 +292,7 @@ export function ContentReplacementDialog({
             {t("replace.window", base.duration.toFixed(3))}
           </p>
           {(layer.muted ||
-            parent.layers.some((l) => l.solo && l.id !== layer.id)) && (
+            parent.inputs.some((l) => l.solo && l.id !== layer.id)) && (
             <p className="field-help">{t("replace.muted")}</p>
           )}
           {Object.values(candidate?.assets ?? {})

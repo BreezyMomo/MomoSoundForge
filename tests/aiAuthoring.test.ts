@@ -18,10 +18,10 @@ describe("AI authoring transactions", () => {
         { op: "patch", id: "missing", patch: { gain: 0.4 } },
       ]),
     ).toThrow();
-    expect(p.layers).toEqual([]);
+    expect(p.inputs).toEqual([]);
     expect(() => applyEdits(p, [{ op: "add", layer: { gain: 12 } }])).toThrow();
     expect(() =>
-      applyEdits(p, [{ op: "project", patch: { layers: [] } }]),
+      applyEdits(p, [{ op: "project", patch: { inputs: [] } }]),
     ).toThrow();
   });
   it("groups and edits nested nodes without changing timing or rendering", () => {
@@ -32,21 +32,21 @@ describe("AI authoring transactions", () => {
       },
     ]);
     const grouped = applyEdits(p, [{ op: "group", ids: ["a"], name: "Group" }]);
-    expect(grouped.layers[0].start).toBe(0.1);
-    expect(grouped.layers[0].content.project!.layers[0].start).toBe(0);
+    expect(grouped.inputs[0].start).toBe(0.1);
+    expect(grouped.inputs[0].player.mix!.inputs[0].start).toBe(0);
     expect(Buffer.from(encodeWav(renderProject(p)))).toEqual(
       Buffer.from(encodeWav(renderProject(grouped))),
     );
     const next = applyEdits(grouped, [
       {
         op: "patch",
-        path: [grouped.layers[0].id],
+        path: [grouped.inputs[0].id],
         id: "a",
         patch: { gain: 0.2 },
       },
     ]);
-    expect(next.layers[0].content.project!.layers[0].gain).toBe(0.2);
-    expect(grouped.layers[0].content.project!.layers[0].gain).toBe(0.6);
+    expect(next.inputs[0].player.mix!.inputs[0].gain).toBe(0.2);
+    expect(grouped.inputs[0].player.mix!.inputs[0].gain).toBe(0.6);
   });
   it("preserves sample provenance through insertion, save and reopening", () => {
     const source = {
@@ -66,18 +66,18 @@ describe("AI authoring transactions", () => {
       channels: [encodeSamples(new Float32Array([0, 0.1, 0]))],
       source,
     };
-    p.layers = [makeLayer({ type: "sample", assetId: "a" })];
+    p.inputs = [makeLayer({ type: "sample", assetId: "a" })];
     const inserted = applyEdits(makeProject("Parent"), [
       { op: "insert", project: p, start: 0.5 },
     ]);
     const reopened = parseProject(
       JSON.parse(JSON.stringify(projectForSave(inserted))),
     );
-    expect(reopened.layers[0].content.project!.assets.a.source).toEqual(source);
+    expect(reopened.inputs[0].player.mix!.assets.a.source).toEqual(source);
     const summary = describeProject(reopened) as any;
-    expect(summary.layers[0].content.project.assets.a.channels).toBeUndefined();
-    expect(summary.layers[0].content.project.assets.a.frames).toBe(3);
-    expect(summary.layers[0].content.project.assets.a.source.quality).toBe(
+    expect(summary.inputs[0].player.mix.assets.a.channels).toBeUndefined();
+    expect(summary.inputs[0].player.mix.assets.a.frames).toBe(3);
+    expect(summary.inputs[0].player.mix.assets.a.source.quality).toBe(
       "original",
     );
     p.assets.a.source!.url = "file:///private";

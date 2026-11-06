@@ -336,7 +336,7 @@ export function SoundLibrary({
                   await setSavedSoundDeleted(entry.id, false); updateEntry({ ...restored, deleted: false });
                 })}>{t("library.restore")}</button> : <>
                   <div className="saved-sound-actions">
-                    <button className="text-button" aria-label={t("library.insert")} disabled={busy || !ready || project.layers.length >= 16} onClick={() => void action(async () => { if (entry) await onInsert(item.id); else if (item.builtin) await onBuiltinInsert(item.id); else onPresetInsert(item.id); remember(item.key); })}><Plus size={14}/>{t(preferences.view === "grid" ? "library.addShort" : "library.insert")}</button>
+                    <button className="text-button" aria-label={t("library.insert")} disabled={busy || !ready || project.inputs.length >= 16} onClick={() => void action(async () => { if (entry) await onInsert(item.id); else if (item.builtin) await onBuiltinInsert(item.id); else onPresetInsert(item.id); remember(item.key); })}><Plus size={14}/>{t(preferences.view === "grid" ? "library.addShort" : "library.insert")}</button>
                     <button className="text-button" aria-label={t("library.open")} disabled={busy || !ready} onClick={() => void action(async () => { if (entry) await onOpen(item.id); else if (item.builtin) await onBuiltinOpen(item.id); else onPreset(item.id); remember(item.key); })}>{t(preferences.view === "grid" ? "library.editShort" : "library.open")}</button>
                     {entry && <button className="icon-button" aria-label={t("library.more", item.name)} aria-expanded={expanded === entry.id} onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}><MoreHorizontal size={15}/></button>}
                   </div>

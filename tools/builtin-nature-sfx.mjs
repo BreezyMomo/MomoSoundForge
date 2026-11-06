@@ -34,7 +34,7 @@ export function natureSfxJobs(manifest, root) {
 }
 
 export async function natureSfxProject(job, workspace, root, { makeLayer, encodeSamples }) {
-  const assets = {}, layers = [], duration = job.scene ? 12 : job.sample.duration;
+  const assets = {}, inputs = [], duration = job.scene ? 12 : job.sample.duration;
   const add = async (sample, start = 0, gain = 1) => {
     if (!assets[sample.id]) {
       const wav = await readFile(path.join(workspace, root, sample.wavFile));
@@ -48,21 +48,21 @@ export async function natureSfxProject(job, workspace, root, { makeLayer, encode
       assets[sample.id] = { id: sample.id, name: path.basename(sample.wavFile), sampleRate: 48000,
         channels: channels.map(encodeSamples), source: sample.source };
     }
-    layers.push(makeLayer({ id: `nature-layer-${layers.length}-${sample.id}`, name: sample.nameKey,
+    inputs.push(makeLayer({ id: `nature-layer-${inputs.length}-${sample.id}`, name: sample.nameKey,
       type: "sample", assetId: sample.id, start, duration: Math.min(sample.duration, duration - start),
-      frequency: 440, endFrequency: 440, trim: 0, attack: 0, release: 0, decay: 0, cutoff: 22000,
+      frequency: 440, endFrequency: 440, attack: 0, release: 0, decay: 0, cutoff: 22000,
       gain, noiseSeed: 2048 }));
   };
   if (job.scene) for (const [i, [, , start, gain]] of job.scene.clips.entries()) await add(job.samples[i], start, gain);
   else await add(job.sample);
-  const project = { schema: "momo.soundforge/v3", name: job.nameKey, seed: 2048, duration,
-    master: job.scene ? .65 : 1, echo: 0, assets, layers };
+  const project = { schema: "momo.soundforge/v4", name: job.nameKey, seed: 2048, duration,
+    master: job.scene ? .65 : 1, echo: 0, assets, inputs };
   if (job.playback === "loop") project.loopRegion = { start: 0, end: duration, crossfade: 0 };
   if (job.scene?.control) {
     const [name, group, low, high] = job.scene.control;
     project.controls = [{ id: `nature-control-${name}`, name: `builtin.natureControl.${name}`,
       min: 0, max: 1, defaultValue: .5,
-      mappings: layers.filter(layer => job.samples.some(s => s.id === layer.content.assetId && s.groupId === `nature-${group}`))
+      mappings: inputs.filter(layer => job.samples.some(s => s.id === layer.player.assetId && s.groupId === `nature-${group}`))
         .map(layer => ({ layerId: layer.id, parameter: "gain", low, high })) }];
   }
   return project;

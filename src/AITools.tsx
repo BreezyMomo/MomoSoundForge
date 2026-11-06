@@ -149,7 +149,7 @@ export function AITools({
               "No provenance recorded in this project; check the original source.",
           }),
         });
-      for (const l of p.layers) if (l.content.project) walk(l.content.project);
+      for (const l of p.inputs) if (l.player.mix) walk(l.player.mix);
     };
     walk(project);
     download(
@@ -288,7 +288,7 @@ export function AITools({
                       schema: "momo.soundforge.catalog/v1",
                       presets: PRESETS.map((p) => ({
                         ...p,
-                        layers: undefined,
+                        inputs: undefined,
                         id: `preset:${p.id}`,
                       })),
                       sounds: BUILTIN_SOUNDS.map((s) => ({

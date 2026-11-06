@@ -11,14 +11,14 @@ import { adjustCrop, stretchClip } from "../src/timeline";
 
 const project = (type: "synth" | "sample" | "composition"): Project => {
   const child: Project = {
-    schema: "momo.soundforge/v3",
+    schema: "momo.soundforge/v4",
     name: "child",
     seed: 1,
     duration: 1,
     master: 0.5,
     echo: 0,
     assets: {},
-    layers: [
+    inputs: [
       makeLayer({
         id: "tone",
         duration: 1,
@@ -32,7 +32,7 @@ const project = (type: "synth" | "sample" | "composition"): Project => {
     ...child,
     name: "test",
     duration: 2,
-    layers: [
+    inputs: [
       makeLayer({
         id: "clip",
         type,
@@ -43,14 +43,14 @@ const project = (type: "synth" | "sample" | "composition"): Project => {
         wave: "noise",
         ...(type === "composition"
           ? {
-              content: {
-                project: child,
+              player: {
+                mix: child,
               },
             }
           : {}),
         ...(type === "sample"
           ? {
-              content: {
+              player: {
                 assetId: "sample",
               },
             }
@@ -82,72 +82,64 @@ describe("non-destructive crop and whole-clip stretch", () => {
     it(`stretches the complete ${type} waveform instead of truncating it`, () => {
       const p = project(type),
         before = renderProject(p, 6000),
-        layer = p.layers[0];
-      p.layers[0] = {
+        layer = p.inputs[0];
+      p.inputs[0] = {
         ...layer,
         ...stretchClip(layer, { start: 0, duration: 0.5 }),
       };
       expect(parseProject(projectForSave(p))).toEqual(p);
       const after = renderProject(p, 6000);
-      expect(after.layers.clip.length).toBe(3000);
+      expect(after.inputs.clip.length).toBe(3000);
       for (let i = 0; i < 3000; i++)
-        expect(after.layers.clip[i]).toBe(before.layers.clip[i * 2]);
-      p.layers[0] = {
-        ...p.layers[0],
-        ...stretchClip(p.layers[0], { start: 0, duration: 1 }),
+        expect(after.inputs.clip[i]).toBe(before.inputs.clip[i * 2]);
+      p.inputs[0] = {
+        ...p.inputs[0],
+        ...stretchClip(p.inputs[0], { start: 0, duration: 1 }),
       };
       expect(renderProject(p, 6000).left).toEqual(before.left);
     });
-    it(`keeps the full ${type} preview while silencing the cropped regions`, () => {
+    it(`crops the ${type} read range without changing the source`, () => {
       const p = project(type),
         before = renderProject(p, 6000);
-      p.layers[0] = {
-        ...p.layers[0],
-        content: {
-          ...p.layers[0].content,
-          cropStart: 0.2,
-          cropEnd: 0.8,
-        },
+      p.inputs[0] = {
+        ...p.inputs[0],
+        start: 0.2, duration: 0.6, sourceStart: 0.2, sourceEnd: 0.8,
       };
       const cropped = renderProject(p, 6000);
-      expect(cropped.layers.clip).toEqual(before.layers.clip);
+      expect(cropped.inputs.clip.length).toBe(3600);
       expect(cropped.left.slice(0, 1200).every((x) => x === 0)).toBe(true);
       expect(cropped.left.slice(4800).every((x) => x === 0)).toBe(true);
       expect(cropped.left.slice(1200, 4800)).toEqual(
         before.left.slice(1200, 4800),
       );
       expect(parseProject(projectForSave(p))).toEqual(p);
-      p.layers[0] = {
-        ...p.layers[0],
-        content: {
-          ...p.layers[0].content,
-          cropStart: 0,
-          cropEnd: 1,
-        },
+      p.inputs[0] = {
+        ...p.inputs[0],
+        start: 0, duration: 1, sourceStart: 0, sourceEnd: 1,
       };
       expect(renderProject(p, 6000).left).toEqual(before.left);
     });
   }
   it("keeps crop fractions through resizing and constrains internal handles", () => {
-    const l = makeLayer({ duration: 1, cropStart: 0.2, cropEnd: 0.8 });
+    const l = makeLayer({ duration: 1, sourceStart: 0.2, sourceEnd: 0.8 });
     const resized = { ...l, ...stretchClip(l, { start: 0.3, duration: 2 }) };
     expect(resized).toMatchObject({
       duration: 2,
-      content: { sourceDuration: 1, cropStart: 0.2, cropEnd: 0.8 },
+      player: { duration: 1 }, sourceStart: 0.2, sourceEnd: 0.8, speed: 0.5,
     });
-    expect(adjustCrop(l, "cropStart", 20).cropStart).toBeLessThan(0.8);
-    expect(adjustCrop(l, "cropEnd", -20).cropEnd).toBeGreaterThan(0.2);
+    expect(adjustCrop(l, "cropStart", 20).sourceStart).toBeLessThan(0.8);
+    expect(adjustCrop(l, "cropEnd", -20).sourceEnd).toBeGreaterThan(0.2);
   });
   it("rejects invalid stored crop and source durations", () => {
     for (const patch of [
-      { cropStart: 0.9, cropEnd: 0.2 },
-      { cropStart: NaN },
-      { cropEnd: 2 },
-      { sourceDuration: 0 },
-      { sourceDuration: Infinity },
+      { sourceStart: 0.9, sourceEnd: 0.2 },
+      { sourceStart: NaN },
+      { sourceEnd: Infinity },
+      { speed: 0 },
+      { speed: Infinity },
     ]) {
       const p = project("synth");
-      Object.assign(p.layers[0].content, patch);
+      Object.assign(p.inputs[0], patch);
       expect(() => parseProject(p)).toThrow();
     }
   });

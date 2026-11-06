@@ -12,7 +12,7 @@ import {
   FieldLabel,
   WorkbenchChoice,
 } from "@momo/workbench/react";
-import type { Layer } from "./model";
+import type { PlayerInput } from "./model";
 import { secondsToBeats, type NoteEvent } from "./instruments";
 import { editNote, noteSpan, pitchName, noteGridTicks } from "./noteEditing";
 import { t } from "./i18n";
@@ -40,7 +40,7 @@ type Drag = {
   mode: "move" | "resize";
   note: NoteEvent;
   next: NoteEvent;
-  layer: Layer;
+  layer: PlayerInput;
   moved: boolean;
   node: HTMLButtonElement;
 };
@@ -62,7 +62,7 @@ export function NoteRoll({
   onSeekBeat,
   onSeekEnd,
 }: {
-  layer: Layer;
+  layer: PlayerInput;
   compact?: boolean;
   minimumRows?: number;
   onChange: (note: NoteEvent) => void;
@@ -78,7 +78,7 @@ export function NoteRoll({
   onSeekBeat?: (beat: number) => void;
   onSeekEnd?: (beat: number) => void;
 }) {
-  const score = layer.content.score!;
+  const score = layer.player.score!;
   const seeking = useRef<{
     id: number;
     beat: number;
@@ -121,7 +121,7 @@ export function NoteRoll({
   const { low, high } = range;
   const count = high - low + 1;
   const sourceBeats = secondsToBeats(
-    layer.content.sourceDuration ?? layer.duration,
+    layer.player.duration ?? layer.duration,
     score.bpm,
   );
   const totalBeats = Math.min(
@@ -195,9 +195,9 @@ export function NoteRoll({
       width: rect.width,
       rowHeight: rect.height / count,
       beatSpan: compact
-        ? sourceBeats *
-          (layer.content.frequency / 440) *
-          (layer.content.reverse ? -1 : 1)
+        ? secondsToBeats(layer.duration, score.bpm) *
+          layer.speed *
+          (layer.reverse ? -1 : 1)
         : totalBeats,
       mode,
       note,
@@ -644,7 +644,7 @@ export function NoteRoll({
                       />
                     </button>
                     <button
-                      className={`roll-note-resize ${compact && layer.content.reverse ? "reverse" : ""}`}
+                      className={`roll-note-resize ${compact && layer.reverse ? "reverse" : ""}`}
                       aria-label={t("roll.resize", index + 1)}
                       title={t("roll.resize", index + 1)}
                       {...events(original, "resize")}

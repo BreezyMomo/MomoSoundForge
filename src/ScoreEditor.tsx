@@ -19,7 +19,7 @@ import {
   parseProject,
   uid,
   type Project,
-  type Layer,
+  type PlayerInput,
   type SampleAsset,
 } from "./model";
 import {
@@ -100,13 +100,13 @@ export function ScoreEditor({
   onAudition,
 }: {
   project: Project;
-  layer: Layer;
+  layer: PlayerInput;
   onChange: (p: Project) => void;
   onAudition: (note: NoteEvent) => void;
 }) {
   const latestProject = useRef(project);
   latestProject.current = project;
-  const score = layer.content.score ?? emptyScore(),
+  const score = layer.player.score ?? emptyScore(),
     [error, setError] = useState(""),
     [tab, setTab] = useState("notes"),
     [instrumentId, setInstrumentId] = useState(score.instruments[0]?.id ?? ""),
@@ -124,12 +124,12 @@ export function ScoreEditor({
       const p = parseProject({
         ...project,
         assets,
-        layers: project.layers.map((l) =>
+        inputs: project.inputs.map((l) =>
           l.id === layer.id
             ? {
                 ...l,
-                content: {
-                  ...l.content,
+                player: {
+                  ...l.player,
                   score: next,
                 },
               }
@@ -178,11 +178,11 @@ export function ScoreEditor({
         ...project,
         controls: undefined,
         controlValues: undefined,
-        layers: [
+        inputs: [
           {
             ...layer,
-            content: {
-              ...layer.content,
+            player: {
+              ...layer.player,
               score: { ...emptyScore(), instruments: [raw.instrument] },
             },
           },
@@ -251,7 +251,7 @@ export function ScoreEditor({
         selectRegion(
           score.instruments.find((i) => i.id === n.instrumentId),
           n,
-          project.seed ^ layer.content.noiseSeed,
+          layer.player.noiseSeed,
           counters,
         ),
       ]),
@@ -259,8 +259,8 @@ export function ScoreEditor({
   const issues = scoreIssues(
     score,
     project.assets,
-    layer.content.sourceDuration ?? layer.duration,
-    project.seed ^ layer.content.noiseSeed,
+    layer.player.duration ?? layer.duration,
+    layer.player.noiseSeed,
   );
   const quantize = (n: number) => (snap ? Math.round(n / snap) * snap : n);
   const addNote = () => {
@@ -295,14 +295,14 @@ export function ScoreEditor({
     onChange({
       ...project,
       duration: Math.max(project.duration, layer.start + duration),
-      layers: project.layers.map((l) =>
+      inputs: project.inputs.map((l) =>
         l.id === layer.id
           ? {
               ...l,
-              duration,
-              content: {
-                ...l.content,
-                sourceDuration: undefined,
+              duration, sourceStart: 0, sourceEnd: duration, speed: 1,
+              player: {
+                ...l.player,
+                duration,
               },
             }
           : l,

@@ -22,7 +22,7 @@ const empty = (name = "parent"): Project => ({
   duration: 2,
   master: 1,
   echo: 0,
-  layers: [],
+  inputs: [],
   assets: {},
 });
 const difference = (a: Float32Array, b: Float32Array) => {
@@ -35,14 +35,14 @@ const difference = (a: Float32Array, b: Float32Array) => {
 describe("editable audio compositions", () => {
   it("wraps a tuned sound without losing parameters, timing, master effects or stereo", () => {
     const original = fromPreset("ice", "ice", (key) => key);
-    original.layers[1].pan = 0.7;
+    original.inputs[1].pan = 0.7;
     const before = JSON.stringify(original);
     const wrapped = wrapProject(original),
       expected = renderProject(original),
       actual = renderProject(wrapped);
-    expect(wrapped.layers).toHaveLength(1);
-    expect(wrapped.layers[0].content.type).toBe("composition");
-    expect(wrapped.layers[0].content.project).toEqual(original);
+    expect(wrapped.inputs).toHaveLength(1);
+    expect(wrapped.inputs[0].player.type).toBe("composition");
+    expect(wrapped.inputs[0].player.mix).toEqual(original);
     expect(wrapped.master).toBe(1);
     expect(wrapped.echo).toBe(0);
     expect(
@@ -56,7 +56,7 @@ describe("editable audio compositions", () => {
   it("offsets a composition as a whole while retaining internal relative timing", () => {
     const child = sound(),
       layer = makeComposition(child, { id: "nested", start: 0.4 }),
-      parent = { ...empty(), layers: [layer] };
+      parent = { ...empty(), inputs: [layer] };
     const expected = renderProject(child),
       actual = renderProject(parent),
       offset = Math.round(0.4 * 48000);
@@ -67,7 +67,7 @@ describe("editable audio compositions", () => {
         actual.left.slice(offset, offset + expected.left.length),
       ),
     ).toBeLessThan(1e-6);
-    expect(actual.layers.nested.length).toBe(
+    expect(actual.inputs.nested.length).toBe(
       Math.round(child.duration * 48000),
     );
     layer.muted = true;
@@ -76,21 +76,21 @@ describe("editable audio compositions", () => {
   it("updates only the edited instance, leaving a duplicated composition independent", () => {
     const first = makeComposition(sound(), { id: "first" }),
       second = { ...first, id: "second" },
-      root = { ...empty(), layers: [first, second] };
+      root = { ...empty(), inputs: [first, second] };
     const changed = updateProjectAtPath(root, ["second"], (p) => ({
       ...p,
       master: 0,
     }));
-    expect(changed.layers[0]).toBe(first);
-    expect(changed.layers[0].content.project!.master).toBe(0.8);
-    expect(changed.layers[1].content.project!.master).toBe(0);
-    expect(root.layers[1].content.project!.master).toBe(0.8);
+    expect(changed.inputs[0]).toBe(first);
+    expect(changed.inputs[0].player.mix!.master).toBe(0.8);
+    expect(changed.inputs[1].player.mix!.master).toBe(0);
+    expect(root.inputs[1].player.mix!.master).toBe(0.8);
     expect(resolveProjectPath(changed, ["second"]).project.master).toBe(0);
     expect(resolveProjectPath(root, ["second", "missing"]).path).toEqual([
       "second",
     ]);
     expect(
-      resolveProjectPath({ ...root, layers: [first] }, ["second"]).path,
+      resolveProjectPath({ ...root, inputs: [first] }, ["second"]).path,
     ).toEqual([]);
   });
   it("follows child duration changes for untrimmed wrappers and preserves custom windows", () => {
@@ -98,18 +98,18 @@ describe("editable audio compositions", () => {
       root = {
         ...empty(),
         duration: 0.5,
-        layers: [makeComposition(child, { id: "child" })],
+        inputs: [makeComposition(child, { id: "child" })],
       };
     const changed = updateProjectAtPath(root, ["child"], (p) => ({
       ...p,
       duration: 1.2,
     }));
-    expect(changed.layers[0].duration).toBe(1.2);
+    expect(changed.inputs[0].duration).toBe(1.2);
     expect(changed.duration).toBe(1.2);
-    root.layers[0] = { ...root.layers[0], duration: 0.3 };
+    root.inputs[0] = { ...root.inputs[0], duration: 0.3 };
     expect(
       updateProjectAtPath(root, ["child"], (p) => ({ ...p, duration: 1.2 }))
-        .layers[0].duration,
+        .inputs[0].duration,
     ).toBe(0.3);
   });
   it("round-trips nested samples with scoped IDs and prunes unused assets recursively", () => {
@@ -129,7 +129,7 @@ describe("editable audio compositions", () => {
         },
       };
       p.assets.unused = { ...p.assets.shared, id: "unused" };
-      p.layers = [
+      p.inputs = [
         makeLayer({
           id: "sample",
           type: "sample",
@@ -144,13 +144,13 @@ describe("editable audio compositions", () => {
     };
     const root = {
       ...empty(),
-      layers: [
+      inputs: [
         makeComposition(makeSample(200), { id: "a", pan: -1 }),
         makeComposition(makeSample(700), { id: "b", start: 0.4, pan: 1 }),
       ],
     };
     const saved = projectForSave(root);
-    expect(Object.keys(saved.layers[0].content.project!.assets)).toEqual([
+    expect(Object.keys(saved.inputs[0].player.mix!.assets)).toEqual([
       "shared",
     ]);
     const restored = parseProject(JSON.parse(JSON.stringify(saved))),
@@ -172,11 +172,11 @@ describe("editable audio compositions", () => {
     expect(() =>
       parseProject({
         ...empty(),
-        layers: [makeLayer({ type: "composition" })],
+        inputs: [makeLayer({ type: "composition" })],
       }),
     ).toThrow();
     const cycle = empty();
-    cycle.layers = [makeLayer({ type: "composition", project: cycle })];
+    cycle.inputs = [makeLayer({ type: "composition", mix: cycle })];
     expect(() => parseProject(cycle)).toThrow();
     expect(() => renderProject(cycle)).toThrow();
     expect(() => assertProjectLimits(cycle)).toThrow();
@@ -190,13 +190,13 @@ describe("editable audio compositions", () => {
   it("enforces total layer and sample budgets across all nested scopes", () => {
     const child = {
       ...sound(),
-      layers: Array.from({ length: 16 }, (_, i) =>
+      inputs: Array.from({ length: 16 }, (_, i) =>
         makeLayer({ id: `voice-${i}` }),
       ),
     };
     const tooMany = {
       ...empty(),
-      layers: Array.from({ length: 8 }, (_, i) =>
+      inputs: Array.from({ length: 8 }, (_, i) =>
         makeComposition(child, { id: `group-${i}` }),
       ),
     };
@@ -209,11 +209,11 @@ describe("editable audio compositions", () => {
         fake: { id: "fake", name: "fake", sampleRate: 48000, channels: [data] },
       },
     };
-    const assetGroup = makeLayer({ type: "composition", project: withData });
+    const assetGroup = makeLayer({ type: "composition", mix: withData });
     expect(() =>
       assertProjectLimits({
         ...empty(),
-        layers: [assetGroup, { ...assetGroup, id: "another" }],
+        inputs: [assetGroup, { ...assetGroup, id: "another" }],
       }),
     ).toThrow("error.budget");
   });

@@ -1,33 +1,28 @@
 import { patchLayer, type LayerPatch } from "./model";
-import { clamp, type Layer } from "./model";
+import { clamp, type PlayerInput } from "./model";
 export type CropEdit = "cropStart" | "cropEnd";
-export function adjustCrop(layer: Layer, mode: CropEdit, delta: number) {
-  const start = layer.content.cropStart ?? 0,
-    end = layer.content.cropEnd ?? 1;
-  const gap = Math.min(1, 0.001 / layer.duration);
-  return mode === "cropStart"
-    ? {
-        cropStart: clamp(start + delta / layer.duration, 0, end - gap),
-        cropEnd: end,
-      }
-    : {
-        cropStart: start,
-        cropEnd: clamp(end + delta / layer.duration, start + gap, 1),
-      };
+export function adjustCrop(layer: PlayerInput, mode: CropEdit, delta: number): Partial<PlayerInput> {
+  const change = delta * layer.speed;
+  if (mode === 'cropStart') {
+    if (layer.reverse) {
+      const sourceEnd = clamp(layer.sourceEnd - change, Math.max(layer.sourceStart + 0.01 * layer.speed, layer.sourceEnd - (layer.duration - 0.01) * layer.speed), layer.sourceEnd + layer.start * layer.speed);
+      const shift = (layer.sourceEnd - sourceEnd) / layer.speed;
+      return { sourceEnd, start: layer.start + shift, duration: Math.max(0.01, layer.duration - shift) };
+    }
+    const sourceStart = clamp(layer.sourceStart + change, Math.max(0, layer.sourceStart - layer.start * layer.speed), Math.min(layer.sourceEnd - 0.01 * layer.speed, layer.sourceStart + (layer.duration - 0.01) * layer.speed));
+    const shift = (sourceStart - layer.sourceStart) / layer.speed;
+    return { sourceStart, start: layer.start + shift, duration: Math.max(0.01, layer.duration - shift) };
+  }
+  if (layer.loop) return { duration: Math.max(0.01, layer.duration + delta) };
+  if (layer.reverse) {
+    const sourceStart = clamp(layer.sourceStart - change, 0, layer.sourceEnd - 0.01 * layer.speed);
+    return { sourceStart, duration: (layer.sourceEnd - sourceStart) / layer.speed };
+  }
+  const sourceEnd = Math.max(layer.sourceStart + 0.01 * layer.speed, layer.sourceEnd + change);
+  return { sourceEnd, duration: (sourceEnd - layer.sourceStart) / layer.speed };
 }
-export function stretchClip(layer: Layer, timing: ClipTiming): Partial<Layer> {
-  if (layer.content.type === "composition") return { start: timing.start };
-  return {
-    ...timing,
-    ...(Math.abs(layer.duration - timing.duration) > 1e-6
-      ? {
-          content: {
-            ...layer.content,
-            sourceDuration: layer.content.sourceDuration ?? layer.duration,
-          },
-        }
-      : {}),
-  };
+export function stretchClip(layer: PlayerInput, timing: ClipTiming): Partial<PlayerInput> {
+  return { ...timing, speed: layer.speed * layer.duration / timing.duration };
 }
 export type ClipTiming = { start: number; duration: number };
 export type ClipEdit = "move" | "start" | "end";
@@ -96,15 +91,21 @@ export const timingChanged = (a: ClipTiming, b: ClipTiming) =>
   Math.abs(a.duration - b.duration) > 1e-6;
 
 export function transformSelection(
-  layers: Layer[],
+  inputs: PlayerInput[],
   ids: string[],
-  active: Layer,
+  active: PlayerInput,
   next: LayerPatch,
-): Layer[] {
-  const chosen = layers.filter((l) => ids.includes(l.id));
-  if (!chosen.length) return layers;
+): PlayerInput[] {
+  const chosen = inputs.filter((l) => ids.includes(l.id));
+  if (!chosen.length) return inputs;
   const duration = next.duration ?? active.duration,
     scale = duration / active.duration;
+  const editsReadRange =
+    (next.sourceStart !== undefined && next.sourceStart !== active.sourceStart) ||
+    (next.sourceEnd !== undefined && next.sourceEnd !== active.sourceEnd) ||
+    (Math.abs(scale - 1) > 1e-6 && next.speed === active.speed);
+  if (editsReadRange)
+    return inputs.map(l => l.id === active.id ? patchLayer(l, next) : l);
   const anchor =
     Math.abs((next.start ?? active.start) - active.start) > 1e-6 &&
     Math.abs(scale - 1) > 1e-6
@@ -112,8 +113,8 @@ export function transformSelection(
       : active.start;
   const delta = (next.start ?? active.start) - active.start;
   if (Math.abs(scale - 1) < 1e-6 && Math.abs(delta) < 1e-6)
-    return layers.map((l) => (l.id === active.id ? patchLayer(l, next) : l));
-  return layers.map((l) =>
+    return inputs.map((l) => (l.id === active.id ? patchLayer(l, next) : l));
+  return inputs.map((l) =>
     !ids.includes(l.id)
       ? l
       : l.id === active.id && ids.length === 1
@@ -122,10 +123,7 @@ export function transformSelection(
             ...patchLayer(l, next),
             ...(Math.abs(scale - 1) > 1e-6
               ? {
-                  content: {
-                    ...l.content,
-                    sourceDuration: l.content.sourceDuration ?? l.duration,
-                  },
+                  speed: next.speed ?? l.speed / scale,
                 }
               : {}),
           }
@@ -134,18 +132,15 @@ export function transformSelection(
               ...l,
               start: anchor + (l.start - anchor) * scale,
               duration: l.duration * scale,
-              content: {
-                ...l.content,
-                sourceDuration: l.content.sourceDuration ?? l.duration,
-              },
+              speed: l.speed / scale,
             }
           : { ...l, start: l.start + delta },
   );
 }
 export function boundedSelection(
-  layers: Layer[],
+  inputs: PlayerInput[],
   ids: string[],
-  active: Layer,
+  active: PlayerInput,
   next: LayerPatch,
   duration: number,
 ) {
@@ -155,26 +150,21 @@ export function boundedSelection(
     Math.abs((next.duration ?? active.duration) - active.duration) < 1e-6 &&
     Math.abs((next.start ?? active.start) - active.start) > 1e-6
   ) {
-    const chosen = layers.filter((layer) => ids.includes(layer.id));
-    if (!chosen.length) return layers;
+    const chosen = inputs.filter((layer) => ids.includes(layer.id));
+    if (!chosen.length) return inputs;
     const minDelta = -Math.min(...chosen.map((layer) => layer.start));
     const maxDelta =
       duration -
       Math.max(...chosen.map((layer) => layer.start + layer.duration));
-    if (minDelta > maxDelta) return layers;
+    if (minDelta > maxDelta) return inputs;
     const delta = Math.max(
       minDelta,
       Math.min(maxDelta, next.start! - active.start),
     );
-    if (Math.abs(delta) < 1e-6) return layers;
+    if (Math.abs(delta) < 1e-6) return inputs;
     next = { ...next, start: active.start + delta };
   }
-  if (
-    Math.abs((next.duration ?? active.duration) - active.duration) > 1e-6 &&
-    layers.some((l) => ids.includes(l.id) && l.content.type === "composition")
-  )
-    return layers;
-  const transformed = transformSelection(layers, ids, active, next);
+  const transformed = transformSelection(inputs, ids, active, next);
   if (
     Math.abs((next.start ?? active.start) - active.start) < 1e-6 &&
     Math.abs((next.duration ?? active.duration) - active.duration) < 1e-6
@@ -187,7 +177,7 @@ export function boundedSelection(
         l.duration < 0.01 ||
         l.start + l.duration > duration + 0.000001),
   )
-    ? layers
+    ? inputs
     : transformed;
 }
 export function snapTime(value: number, targets: number[], tolerance: number) {

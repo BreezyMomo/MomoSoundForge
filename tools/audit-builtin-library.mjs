@@ -54,7 +54,7 @@ async function audit() {
           const digest = createHash('sha256').update(asset.channels.join(':')).digest('hex');
           if (!recordings.has(digest)) recordings.set(digest, { name: asset.name, ...levels(asset.channels.map(decodeSamples), asset.sampleRate) });
         }
-        for (const layer of p.layers) if (layer.content.type === 'composition' && layer.content.project) visit(layer.content.project);
+        for (const layer of p.inputs) if (layer.player.type === 'composition' && layer.player.mix) visit(layer.player.mix);
       };
       visit(project);
       if (entries.length % 25 === 0) console.log(`Audited ${entries.length}/${catalog.sounds.length}`);
@@ -64,7 +64,7 @@ async function audit() {
       standaloneActive100msRmsTargetDb: -20, standalonePeakCeilingDb: -6 },
       entryCount: entries.length, uniqueEmbeddedRecordings: raw.length,
       issues: entries.filter(e => e.status !== 'ok'), silentRecordings: raw.filter(e => e.status === 'silent'),
-      // Raw weak layers are informational: region gain and note velocity determine playback.
+      // Raw weak inputs are informational: region gain and note velocity determine playback.
       quietRawRecordings: raw.filter(e => e.status === 'quiet'), entries };
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, JSON.stringify(report, null, 2) + '\n');

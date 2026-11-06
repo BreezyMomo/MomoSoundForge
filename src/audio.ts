@@ -6,13 +6,13 @@ function audioIdentity(project: Project): unknown {
     ...project,
     name: undefined,
     videoReference: undefined,
-    layers: project.layers.map((layer) => ({
+    inputs: project.inputs.map((layer) => ({
       ...layer,
       name: undefined,
-      content: {
-        ...layer.content,
-        project: layer.content.project
-          ? audioIdentity(layer.content.project)
+      player: {
+        ...layer.player,
+        mix: layer.player.mix
+          ? audioIdentity(layer.player.mix)
           : undefined,
       },
     })),
@@ -54,7 +54,7 @@ export function createRenderer() {
           const arrays = new Set([
             result.left,
             result.right,
-            ...Object.values(result.layers),
+            ...Object.values(result.inputs),
             ...Object.values(result.processedLayers ?? {}),
           ]);
           const bytes = [...arrays].reduce((n, a) => n + a.byteLength, 0);

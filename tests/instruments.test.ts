@@ -71,14 +71,14 @@ const score = (): Score => ({
   notes: [note()],
 });
 const fixture = (): Project => ({
-  schema: "momo.soundforge/v3",
+  schema: "momo.soundforge/v4",
   name: "Instrument fixture",
   seed: 123,
   duration: 1,
   master: 1,
   echo: 0,
   assets: { soft: asset("soft"), hard: asset("hard", 0.6) },
-  layers: [
+  inputs: [
     makeLayer({
       id: "part",
       type: "instrument",
@@ -106,8 +106,8 @@ it.each([
   "preserves round-robin audio when locked=$locked, amount=$amount",
   ({ locked, amount }) => {
     const p = fixture();
-    p.layers[0].locked = locked;
-    p.layers[0].content.score!.instruments[0].regions = [
+    p.inputs[0].locked = locked;
+    p.inputs[0].player.score!.instruments[0].regions = [
       region({ id: "a", assetId: "soft", roundRobin: 0 }),
       region({ id: "b", assetId: "hard", roundRobin: 1 }),
     ];
@@ -121,8 +121,8 @@ it.each([
       expect(actual.left).toEqual(expected.left);
       expect(actual.right).toEqual(expected.right);
     }
-    const nested = varyProject(wrapProject(p), 124, amount).layers[0].content
-      .project!;
+    const nested = varyProject(wrapProject(p), 124, amount).inputs[0].player
+      .mix!;
     expect(renderProject(nested, sr).left).toEqual(expected.left);
     expect(renderProject(nested, sr).right).toEqual(expected.right);
     expect(p).toEqual(original);
@@ -226,9 +226,9 @@ it("roundtrips portable assets and renders identically through nested project, s
   expect(encodeWav(a)).toEqual(encodeWav(b));
   const nested = wrapProject(reopened);
   expect(
-    parseProject(nested).layers[0].content.project?.layers[0].content.score
+    parseProject(nested).inputs[0].player.mix?.inputs[0].player.score
       ?.notes,
-  ).toEqual(p.layers[0].content.score!.notes);
+  ).toEqual(p.inputs[0].player.score!.notes);
 });
 it("converts melody-design seconds explicitly to beats", () => {
   const s = score();
@@ -287,18 +287,18 @@ describe("rejects unsafe scores", () => {
   }))
     it(name, () => {
       const p = fixture();
-      mutate(p.layers[0].content.score!);
+      mutate(p.inputs[0].player.score!);
       expect(() => parseProject(p)).toThrow();
     });
 });
 it("bounds total notes across nested projects", () => {
   let p = fixture();
-  p.layers[0].content.score!.notes = Array.from({ length: 256 }, (_, i) =>
+  p.inputs[0].player.score!.notes = Array.from({ length: 256 }, (_, i) =>
     note({ id: String(i), duration: 0.005 }),
   );
   const child = projectForSave(p);
-  p.layers = Array.from({ length: 5 }, (_, i) =>
-    makeLayer({ id: String(i), type: "composition", project: child }),
+  p.inputs = Array.from({ length: 5 }, (_, i) =>
+    makeLayer({ id: String(i), type: "composition", mix: child }),
   );
   expect(() => parseProject(p)).toThrow();
 });
@@ -346,7 +346,7 @@ it("preserves stereo and pitch-shifts a root recording by an octave", () => {
 });
 it("preserves recorded release assets during save and reopens them", () => {
   const p = fixture();
-  p.layers[0].content.score!.instruments[0].regions[0].releaseAssetId = "hard";
+  p.inputs[0].player.score!.instruments[0].regions[0].releaseAssetId = "hard";
   expect(parseProject(projectForSave(p)).assets.hard).toBeDefined();
 });
 it("does not flag nonexistent tails of short unlooped recordings", () => {
@@ -377,25 +377,25 @@ it("rejects reversed loops, missing release assets, unknown schema and excess in
       }))),
   ]) {
     const p = fixture();
-    change(p.layers[0].content.score!);
+    change(p.inputs[0].player.score!);
     expect(() => parseProject(p)).toThrow();
   }
 });
 
 it("inserts library instruments as independent leaves with portable assets", () => {
   const source = fixture();
-  source.layers[0].content.score!.instruments[0].regions[0].releaseAssetId =
+  source.inputs[0].player.score!.instruments[0].regions[0].releaseAssetId =
     "hard";
   const snapshot = structuredClone(source);
-  const parent = { ...fixture(), layers: [] };
+  const parent = { ...fixture(), inputs: [] };
   const first = appendInstrumentNode(parent, source, "first");
   const second = appendInstrumentNode(first, source, "second");
-  expect(second.layers.map((l) => l.content.type)).toEqual([
+  expect(second.inputs.map((l) => l.player.type)).toEqual([
     "instrument",
     "instrument",
   ]);
-  const a = second.layers[0].content.score!.instruments[0].regions[0];
-  const b = second.layers[1].content.score!.instruments[0].regions[0];
+  const a = second.inputs[0].player.score!.instruments[0].regions[0];
+  const b = second.inputs[1].player.score!.instruments[0].regions[0];
   expect(a.assetId).not.toBe(b.assetId);
   expect(a.releaseAssetId).not.toBe(b.releaseAssetId);
   expect(second.assets.soft).toEqual(parent.assets.soft);
@@ -404,19 +404,19 @@ it("inserts library instruments as independent leaves with portable assets", () 
   expect(renderProject(portable, sr).left).toEqual(
     renderProject(source, sr).left,
   );
-  second.layers[1].content.score!.notes[0].midi = 65;
-  expect(second.layers[0].content.score!.notes[0].midi).toBe(60);
+  second.inputs[1].player.score!.notes[0].midi = 65;
+  expect(second.inputs[0].player.score!.notes[0].midi).toBe(60);
 });
 
 it("keeps boosted instrument presets valid, equally loud and replaceable", () => {
   const source = fixture();
   source.master = 1.5;
-  source.layers[0].gain = 1.26;
-  source.layers[0].content.level = 0.7;
-  const parent = { ...fixture(), layers: [], assets: {} };
+  source.inputs[0].gain = 1.26;
+  source.inputs[0].player.level = 0.7;
+  const parent = { ...fixture(), inputs: [], assets: {} };
   const inserted = appendInstrumentNode(parent, source, "boosted");
-  expect(inserted.layers[0].gain).toBe(1.26);
-  expect(inserted.layers[0].content.level).toBeCloseTo(1.05);
+  expect(inserted.inputs[0].gain).toBe(1.26);
+  expect(inserted.inputs[0].player.level).toBeCloseTo(1.05);
   const reopened = parseProject(projectForSave(inserted));
   const before = renderProject(source, sr), after = renderProject(reopened, sr);
   for (const channel of ["left", "right"] as const)
@@ -424,6 +424,6 @@ it("keeps boosted instrument presets valid, equally loud and replaceable", () =>
       expect(Math.abs(before[channel][i] - after[channel][i])).toBeLessThan(1e-6);
   const next = replaceContent(reopened, { path: [], id: "boosted" },
     localContentCandidate(asset("rain"), 0.5));
-  expect(next.layers[0].content.type).toBe("sample");
-  expect(next.layers[0].gain).toBe(1.26);
+  expect(next.inputs[0].player.type).toBe("sample");
+  expect(next.inputs[0].gain).toBe(1.26);
 });

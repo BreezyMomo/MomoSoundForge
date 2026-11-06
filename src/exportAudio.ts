@@ -80,7 +80,7 @@ export function audioResult(
     sourcePeak: peak,
     gainReduction: 1,
     rms: Math.sqrt(sum / Math.max(1, left.length * 2)),
-    layers: {},
+    inputs: {},
   };
 }
 export function makeLoop(
@@ -119,23 +119,23 @@ export function makeLoop(
 export function contentRange(project: Project, result: RenderResult) {
   const resolved = resolveControls(project);
   const hasSolo = (p: Project): boolean =>
-    p.layers.some(
+    p.inputs.some(
       (l) =>
         !l.muted &&
-        (l.solo || (!!l.content.project && hasSolo(l.content.project))),
+        (l.solo || (!!l.player.mix && hasSolo(l.player.mix))),
     );
   const solo = hasSolo(resolved);
-  const audible = resolved.layers.filter(
+  const audible = resolved.inputs.filter(
     (l) =>
       !l.muted &&
-      (!solo || l.solo || (!!l.content.project && hasSolo(l.content.project))),
+      (!solo || l.solo || (!!l.player.mix && hasSolo(l.player.mix))),
   );
   const contentEnd = Math.max(0, ...audible.map((l) => l.start + l.duration));
   const layerEnd = Math.max(
     0,
     ...audible.map(
       (l) =>
-        l.start + l.duration + (result.tails?.[l.id] ?? effectTail(l.effects)),
+        l.start + l.duration + (result.tails?.[l.id] ?? 0),
     ),
   );
   const echoTail =

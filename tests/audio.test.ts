@@ -52,7 +52,7 @@ describe("audition cancellation", () => {
         sourcePeak: 0,
         gainReduction: 1,
         rms: 0,
-        layers: {},
+        inputs: {},
       };
     await player.play(
       result,
@@ -146,7 +146,7 @@ describe("audition cancellation", () => {
         sourcePeak: 0,
         gainReduction: 1,
         rms: 0,
-        layers: {},
+        inputs: {},
       };
     expect(await player.play(result, false, 0.7, () => {})).toBe(true);
     let release!: () => void;

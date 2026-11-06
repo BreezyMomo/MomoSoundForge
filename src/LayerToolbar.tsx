@@ -26,7 +26,7 @@ export function LayerToolbar({ groups, canCollapseNotes, onCollapseNotes, path, 
   const targets = groups.filter(group => !ids.some(id => [...path, id].every((part, i) => group.path[i] === part)));
   const target = targets.some(group => JSON.stringify(group.path) === destination) ? destination : "[]";
   const close = () => setOpen(null);
-  const popover = (kind: "selection" | "view" | "help", label: string, content: ReactNode) => (
+  const popover = (kind: "selection" | "view" | "help", label: string, player: ReactNode) => (
     <Popover open={open === kind} onOpenChange={value => setOpen(value ? kind : null)}>
       <PopoverTrigger render={<Button variant="outline" />}>
         {label}<ChevronDown size={12} />
@@ -35,7 +35,7 @@ export function LayerToolbar({ groups, canCollapseNotes, onCollapseNotes, path, 
         <div className="layer-tool-heading"><PopoverTitle>{label}</PopoverTitle>
           <Button variant="ghost" size="icon-sm" aria-label={t("action.close")} onClick={close}><X size={14} /></Button>
         </div>
-        {content}
+        {player}
       </PopoverContent>
     </Popover>
   );
@@ -66,7 +66,7 @@ export function LayerToolbar({ groups, canCollapseNotes, onCollapseNotes, path, 
         <Button variant="outline" onClick={() => onZoom(1)}>{t("pro.fit")}</Button>
         <Button variant="outline" disabled={!canCollapseNotes} onClick={onCollapseNotes}>{t("roll.collapseAll")}</Button>
       </>)}
-      {popover("help", t("tree.operationHelp"), <div className="layer-help-content">
+      {popover("help", t("tree.operationHelp"), <div className="layer-help-player">
         <p>{t("pro.selectHelp")}</p><p>{t("tree.deleteHelp")}</p><p>{t("editor.stretchHelp")}</p><p>{t("editor.cropHelp")}</p>
         <p>{t("tree.dragHelp")}</p><p>{t("roll.overviewHint")}</p><p>{waveformHelp}</p>
         <p>{t("tree.tailHelp")}{tailLimited && ` ${t("tree.tailLimited")}`}</p>

@@ -5,17 +5,19 @@ import {
   makeProject,
   parseProject,
   projectForSave,
+  reusableInput,
   updateProjectAtPath,
   uid,
   type Project,
   type SampleAsset,
-  type SoundContent,
+  type Player,
 } from "./model";
 import { nodeParent, normalizeGroups, type NodeAddress } from "./nodeTree";
+import { playerDuration } from "./playerPlayback";
 
 export type ContentCandidate = {
   name: string;
-  content: SoundContent;
+  player: Player;
   duration: number;
   assets: Project["assets"];
 };
@@ -27,32 +29,44 @@ export function contentReplacementError(error: unknown, fallback: string): strin
     : fallback;
 }
 
-/** Candidate audio settings belong inside the new content; the destination keeps its outer mix. */
+/** Candidate audio settings belong inside the new player; the destination keeps its outer mix. */
 export function contentCandidate(
   source: Project,
   asComposition = false,
 ): ContentCandidate {
   const p = parseProject(projectForSave(source));
-  const layer = resolveControls(p).layers[0];
+  const layer = resolveControls(p).inputs[0];
+  // Reusing a neutral root adds no extra audio-processing boundary.
+  if (p.inputs.length === 1 && p.master === 1 && !p.echo && !p.effects && !p.controls?.length &&
+      !layer.muted && !layer.automation && layer.gain === 1 && layer.pan === 0 &&
+      layer.start === 0 && layer.sourceStart === 0 && !layer.loop && !layer.reverse && layer.speed === 1 &&
+      Math.abs(layer.duration - playerDuration(layer.player)) < 1e-6 &&
+      Math.abs(layer.sourceEnd - layer.duration) < 1e-6 && Math.abs(p.duration - layer.duration) < 1e-6) {
+    const { input, assets } = reusableInput(p);
+    return { name: p.name, player: input.player, duration: playerDuration(input.player), assets };
+  }
   if (
     !asComposition &&
-    p.layers.length === 1 &&
-    layer.content.type === "sample" &&
+    p.inputs.length === 1 &&
+    layer.player.type === "sample" &&
     !p.effects &&
     !p.echo &&
-    !layer.effects &&
+    !layer.muted &&
+    layer.sourceStart === 0 && !layer.loop && layer.speed === 1 && !layer.reverse && layer.start === 0 &&
+    Math.abs(layer.sourceEnd - layer.player.duration) < 1e-6 &&
+    !layer.player.effects &&
     !layer.automation &&
     layer.pan === 0
   ) {
-    const asset = p.assets[layer.content.assetId!];
+    const asset = p.assets[layer.player.assetId!];
     const id = uid();
     return {
       name: p.name,
       duration: layer.duration,
-      content: {
-        ...layer.content,
+      player: {
+        ...layer.player,
         assetId: id,
-        level: layer.content.level * layer.gain * p.master,
+        level: layer.player.level * layer.gain * p.master,
       },
       assets: { [id]: { ...asset, id } },
     };
@@ -61,7 +75,7 @@ export function contentCandidate(
   const group = makeComposition(p);
   return {
     name: p.name,
-    content: group.content,
+    player: group.player,
     duration: group.duration,
     assets: {},
   };
@@ -75,7 +89,7 @@ export function localContentCandidate(
     ...makeProject(asset.name),
     duration,
     assets: { [asset.id]: asset },
-    layers: [
+    inputs: [
       makeLayer({
         type: "sample",
         assetId: asset.id,
@@ -117,14 +131,14 @@ export function replaceContent(
   candidate: ContentCandidate,
 ): Project {
   const parent = nodeParent(root, address.path);
-  const old = parent.layers.find((l) => l.id === address.id);
-  if (!old || !["sample", "composition"].includes(candidate.content.type))
+  const old = parent.inputs.find((l) => l.id === address.id);
+  if (!old || !Number.isFinite(candidate.duration) || candidate.duration <= 0 || !["synth", "sample", "composition", "instrument"].includes(candidate.player.type))
     throw Error("error.replaceSource");
   if (
     Object.keys(candidate.assets).some((id) => Object.hasOwn(parent.assets, id))
   )
     throw Error("error.replaceSource");
-  const content = structuredClone(candidate.content);
+  const player = structuredClone(candidate.player);
   const automation =
     old.automation &&
     Object.fromEntries(
@@ -134,14 +148,14 @@ export function replaceContent(
     );
   const replacement = {
     ...old,
-    content,
-    duration: candidate.duration,
+    player,
+
     automation,
   };
   const changed = updateProjectAtPath(root, address.path, (p) => ({
     ...p,
     assets: { ...p.assets, ...candidate.assets },
-    layers: p.layers.map((l) => (l.id === old.id ? replacement : l)),
+    inputs: p.inputs.map((l) => (l.id === old.id ? replacement : l)),
     controls: p.controls?.map((c) => ({
       ...c,
       mappings: c.mappings.filter(
@@ -150,6 +164,6 @@ export function replaceContent(
     })),
   }));
   const next = reconcileAdvanced(normalizeGroups(changed));
-  // Long replacements remain visible as overflow; changing content does not extend the work window.
+  // Long replacements remain visible as overflow; changing player does not extend the work window.
   return parseProject(projectForSave({ ...next, duration: root.duration }));
 }

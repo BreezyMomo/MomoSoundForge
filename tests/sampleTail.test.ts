@@ -68,7 +68,7 @@ it("renders a smooth ending while keeping the original embedded recording availa
   const audio = signal(6, (t) => 0.3 * Math.exp(-t * 3) + 0.0006);
   const range = instrumentPlaybackRange([audio], rate, "upright-piano");
   const project: Project = {
-    schema: "momo.soundforge/v3",
+    schema: "momo.soundforge/v4",
     name: "Tail",
     seed: 1,
     duration: range.duration,
@@ -82,7 +82,7 @@ it("renders a smooth ending while keeping the original embedded recording availa
         channels: [encodeSamples(audio)],
       },
     },
-    layers: [
+    inputs: [
       makeLayer({
         type: "sample",
         assetId: "note",

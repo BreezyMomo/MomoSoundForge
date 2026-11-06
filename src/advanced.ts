@@ -1,5 +1,7 @@
+import { DEFAULT_EFFECTS, type Effects, type EffectParameter } from "./effectTypes";
+export { DEFAULT_EFFECTS, type Effects, type EffectGroup, type EffectParameter } from "./effectTypes";
 import { withLayerValue } from "./model";
-import type { Layer, Project } from "./model";
+import type { PlayerInput, Project } from "./model";
 export type CurvePoint = { time: number; value: number };
 export type AutomationKey = "gain" | "pan" | "cutoff";
 export type Automation = Partial<Record<AutomationKey, CurvePoint[]>>;
@@ -33,36 +35,6 @@ export type Macro = {
   hidden?: boolean;
   mappings: Mapping[];
 };
-export type EffectGroup = "toneEnabled" | "delayEnabled" | "spaceEnabled";
-export type EffectParameter =
-  | "low"
-  | "mid"
-  | "high"
-  | "delayTime"
-  | "delayFeedback"
-  | "delayWet"
-  | "reverb"
-  | "ceiling";
-export type Effects = Partial<Record<EffectGroup, boolean>> & {
-  low: number;
-  mid: number;
-  high: number;
-  delayTime: number;
-  delayFeedback: number;
-  delayWet: number;
-  reverb: number;
-  ceiling: number;
-};
-export const DEFAULT_EFFECTS: Effects = {
-  low: 0,
-  mid: 0,
-  high: 0,
-  delayTime: 0.18,
-  delayFeedback: 0.25,
-  delayWet: 0,
-  reverb: 0,
-  ceiling: -0.18,
-};
 export type LoopRegion = { start: number; end: number; crossfade: number };
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 export function curveValue(
@@ -90,12 +62,12 @@ export function resolveControls(
 ): Project {
   if (!project.controls?.length) return project;
   values = { ...project.controlValues, ...values };
-  const layers = project.layers.map((l) => ({
+  const inputs = project.inputs.map((l) => ({
     ...l,
-    content: {
-      ...l.content,
-      controlValues: l.content.controlValues
-        ? { ...l.content.controlValues }
+    player: {
+      ...l.player,
+      controlValues: l.player.controlValues
+        ? { ...l.player.controlValues }
         : undefined,
     },
   }));
@@ -107,22 +79,22 @@ export function resolveControls(
       ),
       u = (value - control.min) / (control.max - control.min);
     for (const m of control.mappings) {
-      const layer = layers.find((l) => l.id === m.layerId);
+      const layer = inputs.find((l) => l.id === m.layerId);
       if (!layer) continue;
       const mapped =
         m.logarithmic && m.low > 0 && m.high > 0
           ? m.low * Math.pow(m.high / m.low, u)
           : m.low + (m.high - m.low) * u;
       if (m.parameter === "control" && m.controlId)
-        layer.content.controlValues = {
-          ...layer.content.controlValues,
+        layer.player.controlValues = {
+          ...layer.player.controlValues,
           [m.controlId]: mapped,
         };
       else if (m.parameter !== "control")
         Object.assign(layer, withLayerValue(layer, m.parameter, mapped));
     }
   }
-  return { ...project, layers, controlValues: values };
+  return { ...project, inputs, controlValues: values };
 }
 export function boundControl(
   project: Project,
@@ -141,7 +113,7 @@ export function validateAdvanced(project: Project) {
     typeof v === "number" && Number.isFinite(v) && v >= a && v <= b;
   for (const effects of [
     project.effects,
-    ...project.layers.map((l) => l.effects),
+    ...project.inputs.map((l) => l.player.effects),
   ]) {
     if (effects === undefined) continue;
     if (!effects || typeof effects !== "object" || Array.isArray(effects))
@@ -207,8 +179,8 @@ export function validateAdvanced(project: Project) {
         (m.logarithmic !== undefined && typeof m.logarithmic !== "boolean")
       )
         fail();
-      const l = project.layers.find((l) => l.id === m.layerId),
-        child = l?.content.project?.controls?.find((c) => c.id === m.controlId);
+      const l = project.inputs.find((l) => l.id === m.layerId),
+        child = l?.player.mix?.controls?.find((c) => c.id === m.controlId);
       const range =
         m.parameter === "control" && child
           ? [child.min, child.max]
@@ -247,8 +219,8 @@ export function validateAdvanced(project: Project) {
     }
   };
   validateValues(project.controlValues, project.controls);
-  for (const l of project.layers) {
-    validateValues(l.content.controlValues, l.content.project?.controls);
+  for (const l of project.inputs) {
+    validateValues(l.player.controlValues, l.player.mix?.controls);
     if (l.automation !== undefined) {
       if (
         !l.automation ||
@@ -279,8 +251,8 @@ export function validateAdvanced(project: Project) {
     }
   }
 }
-// Authored edits may remove layers/child controls. Repair their references, never imported data.
-// Authored edits may remove layers/child controls. Repair their references, never imported data.
+// Authored edits may remove inputs/child controls. Repair their references, never imported data.
+// Authored edits may remove inputs/child controls. Repair their references, never imported data.
 export function reconcileAdvanced(project: Project): Project {
   const values = (
     v: Record<string, number> | undefined,
@@ -294,26 +266,26 @@ export function reconcileAdvanced(project: Project): Project {
           }),
         )
       : undefined;
-  const layers = project.layers.map((l) => {
-    const child = l.content.project
-      ? reconcileAdvanced(l.content.project)
+  const inputs = project.inputs.map((l) => {
+    const child = l.player.mix
+      ? reconcileAdvanced(l.player.mix)
       : undefined;
     return {
       ...l,
-      content: {
-        ...l.content,
-        ...(child ? { project: child } : {}),
-        controlValues: values(l.content.controlValues, child?.controls),
+      player: {
+        ...l.player,
+        ...(child ? { mix: child } : {}),
+        controlValues: values(l.player.controlValues, child?.controls),
       },
     };
   });
   const controls = project.controls?.map((c) => ({
     ...c,
     mappings: c.mappings.flatMap((m) => {
-      const layer = layers.find((l) => l.id === m.layerId);
+      const layer = inputs.find((l) => l.id === m.layerId);
       if (!layer) return [];
       if (m.parameter !== "control") return [m];
-      const child = layer.content.project?.controls?.find(
+      const child = layer.player.mix?.controls?.find(
         (c) => c.id === m.controlId,
       );
       if (!child) return [];
@@ -336,7 +308,7 @@ export function reconcileAdvanced(project: Project): Project {
   }
   const result = {
     ...project,
-    layers,
+    inputs,
     controls,
     controlValues: values(project.controlValues, controls),
     loopRegion,

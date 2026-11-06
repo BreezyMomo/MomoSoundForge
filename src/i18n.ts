@@ -1,3 +1,4 @@
+import { PLAYER_MESSAGES } from "./playerMessages";
 import { useSyncExternalStore } from "react";
 import {
   createLanguageController,
@@ -9,6 +10,7 @@ import { AI_MESSAGES } from "./aiMessages";
 import { REPLACEMENT_MESSAGES } from "./replacementMessages";
 const words: Record<string, [string, string]> = {
   ...REPLACEMENT_MESSAGES,
+  ...PLAYER_MESSAGES,
   "roll.playhead": ["音符播放位置（拍）", "Note playback position (beats)"],
   "roll.seekHelp": [
     "点击或拖动节拍尺定位；方向键微调，Home/End 跳转声部首尾。",
@@ -706,8 +708,8 @@ const words: Record<string, [string, string]> = {
   "editor.cropStart": ["裁切起点：{0}", "Crop start: {0}"],
   "editor.cropEnd": ["裁切终点：{0}", "Crop end: {0}"],
   "editor.cropHelp": [
-    "拖动选中片段底部手柄；灰色区域静音，外框不变",
-    "Drag the selected clip’s lower handles; gray regions are silent, the frame stays fixed",
+    "拖动底部手柄调整读取范围；原声音保留，其他声层位置不变",
+    "Drag lower handles to change the read range; keep the source and other layers in place",
   ],
   "editor.stretchHelp": [
     "拖动外框边缘缩放时长与音高；拖动主体移动",

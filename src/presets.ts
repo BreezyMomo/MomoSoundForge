@@ -1,11 +1,11 @@
 import type { LayerInit } from "./model";
-import { makeLayer, type Layer, type Project } from "./model";
+import { makeLayer, type PlayerInput, type Project } from "./model";
 type Preset = {
   id: string;
   category: "interface" | "magic" | "motion";
   duration: number;
   echo: number;
-  layers: LayerInit[];
+  inputs: LayerInit[];
 };
 export const PRESETS: Preset[] = [
   {
@@ -13,12 +13,12 @@ export const PRESETS: Preset[] = [
     category: "magic",
     duration: 1.6,
     echo: 0.14,
-    layers: [
+    inputs: [
       {
         name: "body",
         duration: 0.28,
         gain: 0.95,
-        content: {
+        player: {
           wave: "sine",
           frequency: 190,
           endFrequency: 42,
@@ -30,7 +30,7 @@ export const PRESETS: Preset[] = [
         start: 0.025,
         duration: 0.45,
         gain: 0.65,
-        content: {
+        player: {
           wave: "noise",
           cutoff: 8000,
           decay: 4,
@@ -43,7 +43,7 @@ export const PRESETS: Preset[] = [
         duration: 0.8,
         gain: 0.27,
         pan: -0.25,
-        content: {
+        player: {
           wave: "triangle",
           frequency: 3200,
           endFrequency: 1800,
@@ -56,7 +56,7 @@ export const PRESETS: Preset[] = [
         duration: 1.2,
         gain: 0.14,
         pan: 0.2,
-        content: {
+        player: {
           wave: "noise",
           cutoff: 3400,
           attack: 0.08,
@@ -71,12 +71,12 @@ export const PRESETS: Preset[] = [
     category: "interface",
     duration: 0.55,
     echo: 0,
-    layers: [
+    inputs: [
       {
         name: "tone",
         duration: 0.14,
         gain: 0.65,
-        content: {
+        player: {
           wave: "sine",
           frequency: 660,
           endFrequency: 660,
@@ -88,7 +88,7 @@ export const PRESETS: Preset[] = [
         start: 0.09,
         duration: 0.26,
         gain: 0.6,
-        content: {
+        player: {
           wave: "sine",
           frequency: 990,
           endFrequency: 990,
@@ -102,12 +102,12 @@ export const PRESETS: Preset[] = [
     category: "interface",
     duration: 0.5,
     echo: 0,
-    layers: [
+    inputs: [
       {
         name: "tone",
         duration: 0.24,
         gain: 0.55,
-        content: {
+        player: {
           wave: "triangle",
           frequency: 180,
           endFrequency: 95,
@@ -120,7 +120,7 @@ export const PRESETS: Preset[] = [
         start: 0.12,
         duration: 0.2,
         gain: 0.7,
-        content: {
+        player: {
           wave: "sine",
           frequency: 90,
           endFrequency: 65,
@@ -134,12 +134,12 @@ export const PRESETS: Preset[] = [
     category: "interface",
     duration: 0.9,
     echo: 0.18,
-    layers: [
+    inputs: [
       {
         name: "tone",
         duration: 0.16,
         gain: 0.6,
-        content: {
+        player: {
           wave: "sine",
           frequency: 980,
           endFrequency: 1960,
@@ -151,7 +151,7 @@ export const PRESETS: Preset[] = [
         start: 0.1,
         duration: 0.42,
         gain: 0.24,
-        content: {
+        player: {
           wave: "triangle",
           frequency: 1960,
           endFrequency: 2400,
@@ -165,12 +165,12 @@ export const PRESETS: Preset[] = [
     category: "magic",
     duration: 0.85,
     echo: 0.12,
-    layers: [
+    inputs: [
       {
         name: "body",
         duration: 0.42,
         gain: 0.5,
-        content: {
+        player: {
           wave: "saw",
           frequency: 1800,
           endFrequency: 70,
@@ -183,7 +183,7 @@ export const PRESETS: Preset[] = [
         name: "attack",
         duration: 0.06,
         gain: 0.42,
-        content: {
+        player: {
           wave: "noise",
           cutoff: 8500,
           decay: 5,
@@ -196,12 +196,12 @@ export const PRESETS: Preset[] = [
     category: "magic",
     duration: 2.5,
     echo: 0.12,
-    layers: [
+    inputs: [
       {
         name: "body",
         duration: 2,
         gain: 0.55,
-        content: {
+        player: {
           wave: "triangle",
           frequency: 90,
           endFrequency: 800,
@@ -214,7 +214,7 @@ export const PRESETS: Preset[] = [
         name: "air",
         duration: 2,
         gain: 0.16,
-        content: {
+        player: {
           wave: "noise",
           frequency: 300,
           endFrequency: 300,
@@ -229,7 +229,7 @@ export const PRESETS: Preset[] = [
         start: 1.9,
         duration: 0.35,
         gain: 0.6,
-        content: {
+        player: {
           wave: "sine",
           frequency: 1400,
           endFrequency: 600,
@@ -243,12 +243,12 @@ export const PRESETS: Preset[] = [
     category: "motion",
     duration: 0.85,
     echo: 0,
-    layers: [
+    inputs: [
       {
         name: "air",
         duration: 0.58,
         gain: 0.6,
-        content: {
+        player: {
           wave: "noise",
           attack: 0.19,
           release: 0.3,
@@ -261,7 +261,7 @@ export const PRESETS: Preset[] = [
         start: 0.06,
         duration: 0.46,
         gain: 0.38,
-        content: {
+        player: {
           wave: "sine",
           frequency: 220,
           endFrequency: 55,
@@ -277,12 +277,12 @@ export const PRESETS: Preset[] = [
     category: "motion",
     duration: 2.3,
     echo: 0.16,
-    layers: [
+    inputs: [
       {
         name: "attack",
         duration: 0.16,
         gain: 0.7,
-        content: {
+        player: {
           wave: "noise",
           cutoff: 9000,
           decay: 5,
@@ -293,7 +293,7 @@ export const PRESETS: Preset[] = [
         name: "body",
         duration: 1,
         gain: 0.9,
-        content: {
+        player: {
           wave: "sine",
           frequency: 130,
           endFrequency: 28,
@@ -306,7 +306,7 @@ export const PRESETS: Preset[] = [
         start: 0.03,
         duration: 1.9,
         gain: 0.6,
-        content: {
+        player: {
           wave: "noise",
           cutoff: 1300,
           release: 0.7,
@@ -323,14 +323,14 @@ export function fromPreset(
 ): Project {
   const p = PRESETS.find((p) => p.id === id) ?? PRESETS[0];
   return {
-    schema: "momo.soundforge/v3",
+    schema: "momo.soundforge/v4",
     name,
     seed: 2048,
     duration: p.duration,
     master: 0.8,
     echo: p.echo,
     assets: {},
-    layers: p.layers.map((l, i) =>
+    inputs: p.inputs.map((l, i) =>
       makeLayer({ ...l, id: `${p.id}-${i}`, name: layerName(l.name!) }),
     ),
   };

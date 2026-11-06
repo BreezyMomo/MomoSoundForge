@@ -7,11 +7,11 @@ export function beforeSoundPolish(
   address?: NodeAddress,
 ): Project {
   if (address) {
-    const node = nodeParent(project, address.path).layers.find(
+    const node = nodeParent(project, address.path).inputs.find(
       (l) => l.id === address.id,
     );
     return node
-      ? editNode(project, address, { effects: bypassEffects(node.effects) })
+      ? editNode(project, address, { player: { effects: bypassEffects(node.player.effects) } })
       : project;
   }
   return project.effects

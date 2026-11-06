@@ -17,22 +17,22 @@ describe('AI bridge', () => {
       expect((await client.listTools()).tools.some(t => t.name === 'sound_render')).toBe(true);
       const invalid = await client.callTool({ name: 'sound_edit', arguments: { pageId: page.pageId, mode: 'typo', operations: [] } });
       expect(invalid.isError).toBe(true);
-      expect(invalid.content[0].text).toContain('Invalid arguments');
+      expect(invalid.player[0].text).toContain('Invalid arguments');
       const emptySet = await client.callTool({ name: 'sound_export', arguments: { pageId: page.pageId, snapshotId: 's', variantSetId: '' } });
       expect(emptySet.isError).toBe(true);
-      expect(emptySet.content[0].text).toContain('Invalid arguments');
+      expect(emptySet.player[0].text).toContain('Invalid arguments');
       const list = await client.callTool({ name: 'sound_pages' });
-      expect(JSON.parse(list.content[0].text).pages[0].pageId).toBe(page.pageId);
+      expect(JSON.parse(list.player[0].text).pages[0].pageId).toBe(page.pageId);
       const call = client.callTool({ name: 'sound_capture', arguments: { pageId: page.pageId } });
       const headers = { Origin: origin, Authorization: `Bearer ${page.token}`, 'Content-Type': 'application/json' };
       const poll = await fetch(`${service.base}/pages/${page.pageId}/requests`, { headers });
       const task = (await poll.json()).requests[0];
       expect(task.operation).toBe('capture');
       await fetch(`${service.base}/pages/${page.pageId}/response`, { method: 'POST', headers, body: JSON.stringify({ id: task.id, result: { snapshotId: 'one' } }) });
-      expect(JSON.parse((await call).content[0].text).snapshotId).toBe('one');
+      expect(JSON.parse((await call).player[0].text).snapshotId).toBe('one');
       expect((await fetch(`${service.base}/pages/${page.pageId}/requests`, { headers: { ...headers, Authorization: 'Bearer wrong' } })).status).toBe(401);
       await fetch(`${service.base}/pages/${page.pageId}/disconnect`, { method: 'POST', headers, body: '{}' });
-      expect(JSON.parse((await client.callTool({ name: 'sound_pages' })).content[0].text).pages).toEqual([]);
+      expect(JSON.parse((await client.callTool({ name: 'sound_pages' })).player[0].text).pages).toEqual([]);
     } finally { await client.close(); await service.close(); }
   });
   it('expires unacknowledged writes and tells clients to inspect before retry', async () => {
@@ -42,7 +42,7 @@ describe('AI bridge', () => {
       const page = await (await fetch(s.base + '/pages/connect', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: '{}' })).json();
       await client.connect(new StreamableHTTPClientTransport(new URL(s.base + '/mcp'), { requestInit: { headers: { Authorization: `Bearer ${s.token}` } } }));
       const result = await client.callTool({ name: 'sound_edit', arguments: { pageId: page.pageId, snapshotId: 's', operations: [] } });
-      expect(result.isError).toBe(true); expect(result.content[0].text).toContain('Capture actual state');
+      expect(result.isError).toBe(true); expect(result.player[0].text).toContain('Capture actual state');
     } finally { await client.close(); await s.close(); }
   });
 });

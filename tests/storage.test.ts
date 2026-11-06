@@ -78,20 +78,20 @@ describe("persistent editable sound library", () => {
         ),
       ],
     };
-    child.layers.push(
+    child.inputs.push(
       makeLayer({ type: "sample", assetId: "sample", duration: 0.25 }),
     );
     const project = wrapProject(wrapProject(child)),
       expected = renderProject(project),
       entry = await saveSoundToLibrary(project, expected);
-    child.layers[0].content.frequency = 999;
-    project.layers[0].content.project!.master = 0;
+    child.inputs[0].player.frequency = 999;
+    project.inputs[0].player.mix!.master = 0;
     const restored = await readSavedSound(entry.id),
       actual = renderProject(restored);
     expect(actual.left).toEqual(expected.left);
     expect(actual.right).toEqual(expected.right);
     expect(
-      restored.layers[0].content.project!.layers[0].content.project!.assets
+      restored.inputs[0].player.mix!.inputs[0].player.mix!.assets
         .sample,
     ).toBeDefined();
     const index = await listSavedSounds();
@@ -100,8 +100,8 @@ describe("persistent editable sound library", () => {
     expect(index[0].layerCount).toBe(5);
     expect(index[0].thumbnail).toHaveLength(160);
     expect(index[0].thumbnail.every(Number.isFinite)).toBe(true);
-    restored.layers[0].gain = 0;
-    expect((await readSavedSound(entry.id)).layers[0].gain).toBe(1);
+    restored.inputs[0].gain = 0;
+    expect((await readSavedSound(entry.id)).inputs[0].gain).toBe(1);
   });
   it("updates, renames, removes and restores a saved sound without changing its instances", async () => {
     const project = sound(),
@@ -120,7 +120,7 @@ describe("persistent editable sound library", () => {
     expect((await listSavedSounds())[0].deleted).toBe(true);
     await setSavedSoundDeleted(entry.id, false);
     expect((await listSavedSounds())[0].deleted).toBe(false);
-    expect((await readSavedSound(entry.id)).layers).toEqual(updated.layers);
+    expect((await readSavedSound(entry.id)).inputs).toEqual(updated.inputs);
     await expect(readSavedSound("missing")).rejects.toThrow();
   });
   it("rolls back both payload and index when a write transaction fails", async () => {

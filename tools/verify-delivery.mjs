@@ -41,15 +41,15 @@ try {
   let totalLayers = 0,
     embeddedSamples = 0;
   const count = (p) => {
-    totalLayers += p.layers.length;
+    totalLayers += p.inputs.length;
     embeddedSamples += Object.keys(p.assets).length;
-    for (const layer of p.layers)
-      if (layer.content.type === "composition" && layer.content.project) count(layer.content.project);
+    for (const layer of p.inputs)
+      if (layer.player.type === "composition" && layer.player.mix) count(layer.player.mix);
   };
   count(project);
   console.log(
     JSON.stringify({
-      layers: project.layers.length,
+      inputs: project.inputs.length,
       totalLayers,
       embeddedSamples,
       mixBytes: actual.length,

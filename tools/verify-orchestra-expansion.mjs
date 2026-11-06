@@ -41,11 +41,11 @@ try {
   const bundles=[];
   for(const id of ['piano','flute','violin','cello','horn','trumpet']) {
     const project=parseProject(JSON.parse(await readFile(`${base}/demos/expanded-${id}.soundforge`,'utf8')));
-    const instruments=project.layers.flatMap(l=>l.content.score.instruments);
+    const instruments=project.inputs.flatMap(l=>l.player.score.instruments);
     assert(instruments.every(i=>i.id===instruments[0].id));
     const regions=[...new Map(instruments.flatMap(i=>i.regions).map(r=>[r.id,r])).values()];
     const instrument={...instruments[0],regions};
-    parseProject({...project,layers:[makeLayer({type:'instrument',score:{schema:'momo.score/v1',bpm:120,instruments:[instrument],notes:[]}})]});
+    parseProject({...project,inputs:[makeLayer({type:'instrument',score:{schema:'momo.score/v1',bpm:120,instruments:[instrument],notes:[]}})]});
     const json=JSON.stringify({schema:'momo.instrument/v1',instrument,assets:project.assets});
     assert(Buffer.byteLength(json)<34*1024*1024);
     const file=`instruments/${id}-demo-region.sfinstrument`;

@@ -75,7 +75,7 @@ it('opens portable editable combinations with audible controls and reproducible 
   for (const sound of scenes) {
     const project = read(sound);
     expect(project.recipe).toBeUndefined();
-    expect(project.layers.length).toBeGreaterThan(1);
+    expect(project.inputs.length).toBeGreaterThan(1);
     const saved = parseProject(JSON.parse(JSON.stringify(projectForSave(project))));
     expect(renderProject(saved).left).toEqual(renderProject(project).left);
     for (const control of project.controls ?? []) {
@@ -93,8 +93,8 @@ it('loads distinct recordings independently through the normal lazy project load
   const load = createBuiltinLoader(choices, fetcher, '/');
   const a = await load(choices[0].id, 'My footstep');
   const b = await load(choices[1].id, 'Another footstep');
-  a.layers[0].gain = 0;
-  expect(b.layers[0].gain).not.toBe(0);
+  a.inputs[0].gain = 0;
+  expect(b.inputs[0].gain).not.toBe(0);
   expect(b.assets).not.toEqual(a.assets);
   expect((await load(choices[0].id)).name).not.toBe(a.name);
 });

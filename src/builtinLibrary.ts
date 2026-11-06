@@ -245,7 +245,7 @@ export function createBuiltinLoader(
       );
       if (name) {
         project.name = name.slice(0, 120);
-        for (const layer of project.layers)
+        for (const layer of project.inputs)
           if (
             layer.name.startsWith("builtin.game") ||
             layer.name.startsWith("builtin.nature.")
@@ -258,9 +258,9 @@ export function createBuiltinLoader(
           )
             control.name = t(control.name);
         if (sound.kind === "instrument")
-          for (const layer of project.layers) {
+          for (const layer of project.inputs) {
             layer.name = project.name;
-            for (const instrument of layer.content.score?.instruments ?? [])
+            for (const instrument of layer.player.score?.instruments ?? [])
               instrument.name = t(sound.nameKey);
           }
       }

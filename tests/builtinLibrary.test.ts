@@ -26,13 +26,13 @@ import { appendInstrumentNode } from "../src/instrumentNode";
 import { renderProject } from "../src/engine";
 
 const fixture = (): Project => ({
-  schema: "momo.soundforge/v3",
+  schema: "momo.soundforge/v4",
   name: "Factory piano",
   seed: 2048,
   duration: 0.1,
   master: 1,
   echo: 0,
-  layers: [
+  inputs: [
     makeLayer({
       id: "note",
       type: "sample",
@@ -182,7 +182,7 @@ it("ships audible defaults for timpani, harp and low flute", () => {
     expect(rendered.peak, id).toBeGreaterThan(0.03);
     expect(rendered.sourcePeak, id).toBeLessThan(1);
     const template = fixture();
-    template.layers = [];
+    template.inputs = [];
     template.assets = {};
     const inserted = parseProject(
       appendInstrumentNode(template, project, "checked-instrument"),
@@ -194,11 +194,11 @@ it("ships audible defaults for timpani, harp and low flute", () => {
 it("can add and reopen every single-instrument example, including boosted piano", () => {
   const checked: string[] = [];
   for (const sound of BUILTIN_SOUNDS.filter((s) => s.kind === "example")) {
-    const raw = JSON.parse(gunzipSync(
-      readFileSync(`public/sound-library/${sound.file}`)).toString());
-    if (raw.layers.length !== 1 || raw.layers[0].content.type !== "instrument") continue;
+    const raw = parseProject(JSON.parse(gunzipSync(
+      readFileSync(`public/sound-library/${sound.file}`)).toString()));
+    if (raw.inputs.length !== 1 || raw.inputs[0].player.type !== "instrument") continue;
     const project = parseProject(raw);
-    const parent = { ...fixture(), layers: [], assets: {} };
+    const parent = { ...fixture(), inputs: [], assets: {} };
     const added = appendInstrumentNode(parent, project, "example");
     expect(() => parseProject(projectForSave(added)), sound.id).not.toThrow();
     checked.push(sound.id);
@@ -220,8 +220,8 @@ it("inserts two playable ranges as independent editable instruments and reopens 
   };
   const piano = read("builtin.instrument.upright-piano"),
     flute = read("builtin.instrument.flute");
-  const instrument = piano.layers[0].content.score!.instruments[0];
-  const note = piano.layers[0].content.score!.notes[0];
+  const instrument = piano.inputs[0].player.score!.instruments[0];
+  const note = piano.inputs[0].player.score!.notes[0];
   const soft = selectRegion(
     instrument,
     { ...note, velocity: 35 },
@@ -240,7 +240,7 @@ it("inserts two playable ranges as independent editable instruments and reopens 
   const appended = parseProject(
     appendInstrumentNode(piano, flute, "added-flute"),
   );
-  expect(appended.layers).toHaveLength(2);
+  expect(appended.inputs).toHaveLength(2);
   const reopened = parseProject(
     JSON.parse(JSON.stringify(projectForSave(appended))),
   );
@@ -263,9 +263,9 @@ it("ships the original mapped regions in every range without including quarantin
   >(manifest.samples.map((s: { id: string }) => [s.id, s]));
   const shipped = new Set<string>();
   for (const tone of BUILTIN_SOUNDS.filter((s) => s.tone)) {
-    const project: Project = JSON.parse(
+    const project: Project = parseProject(JSON.parse(
       gunzipSync(readFileSync(`public/sound-library/${tone.file}`)).toString(),
-    );
+    ));
     const bytes = Object.values(project.assets).reduce(
       (n, a) =>
         n +
@@ -273,7 +273,7 @@ it("ships the original mapped regions in every range without including quarantin
       0,
     );
     expect(bytes).toBeLessThanOrEqual(10 * 1024 * 1024);
-    const score = project.layers[0].content.score!;
+    const score = project.inputs[0].player.score!;
     expect(
       scoreIssues(score, project.assets, project.duration, project.seed),
       tone.id,
@@ -300,14 +300,14 @@ it("uses translated built-in labels while names of opened independent projects r
   const load = createBuiltinLoader([sound], fetcher, "/nested/");
   expect(fetcher).not.toHaveBeenCalled();
   const opened = await load(sound.id, "我的钢琴");
-  opened.layers[0].gain = 0;
+  opened.inputs[0].gain = 0;
   opened.assets.sample.name = "changed.wav";
   const pristine = await load(sound.id);
   expect(fetcher).toHaveBeenCalledTimes(1);
   expect(fetcher).toHaveBeenCalledWith(`/nested/sound-library/${sound.file}`);
   expect(pristine.name).toBe("Factory piano");
   expect(pristine.assets.sample.name).toBe("piano.wav");
-  expect(pristine.layers[0].gain).not.toBe(0);
+  expect(pristine.inputs[0].gain).not.toBe(0);
   expect(renderProject(pristine).left).toEqual(renderProject(fixture()).left);
   expect(opened.name).toBe("我的钢琴");
   const instrument = BUILTIN_SOUNDS.find((x) => x.kind === "instrument")!;
@@ -342,7 +342,7 @@ it("does not cache failures and supports retry after a missing deployment resour
     .mockImplementation(async () => response());
   const load = createBuiltinLoader([sound], fetcher);
   await expect(load(sound.id)).rejects.toThrow("library.builtinLoadError");
-  expect((await load(sound.id)).layers[0].content.assetId).toBe("sample");
+  expect((await load(sound.id)).inputs[0].player.assetId).toBe("sample");
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
 it("bounds compressed and expanded data and validates the decoded project schema", async () => {

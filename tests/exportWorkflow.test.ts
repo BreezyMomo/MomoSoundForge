@@ -1,3 +1,4 @@
+import { withLayerValue } from "../src/model";
 import { renderExport } from "../src/exportPipeline";
 import { describe, expect, it } from "vitest";
 import { makeProject, makeLayer, type Project } from "../src/model";
@@ -14,7 +15,7 @@ import {
 const project = (): Project => ({
   ...makeProject("Export test"),
   duration: 0.2,
-  layers: [
+  inputs: [
     makeLayer({
       id: "tone",
       duration: 0.2,
@@ -36,7 +37,7 @@ const render = async (p: Project) => renderProject(p, 4000);
 describe("export content, tails and pure silence", () => {
   it("appends exact zeros without rendering extra source or changing normalized sound", async () => {
     const p = project();
-    p.layers.push(
+    p.inputs.push(
       makeLayer({ id: "outside", start: 0.3, duration: 0.2, gain: 0.3 }),
     );
     const base = await renderExport(
@@ -104,8 +105,8 @@ describe("export content, tails and pure silence", () => {
   });
   it("does not add arbitrary tail silence to dry audio or extend for muted content", async () => {
     const p = project();
-    p.layers[0].effects = undefined;
-    p.layers.push(makeLayer({ muted: true, start: 1, duration: 0.1 }));
+    p.inputs[0] = withLayerValue(p.inputs[0], "effects", undefined);
+    p.inputs.push(makeLayer({ muted: true, start: 1, duration: 0.1 }));
     const a = await renderExport(
       p,
       { ...DEFAULT_EXPORT, preserveTail: true },
@@ -116,9 +117,9 @@ describe("export content, tails and pure silence", () => {
   });
   it("honors solos when determining full content range", async () => {
     const p = project();
-    p.layers[0].effects = undefined;
-    p.layers[0].solo = true;
-    p.layers.push(makeLayer({ id: "not-solo", start: 1, duration: 0.1 }));
+    p.inputs[0] = withLayerValue(p.inputs[0], "effects", undefined);
+    p.inputs[0].solo = true;
+    p.inputs.push(makeLayer({ id: "not-solo", start: 1, duration: 0.1 }));
     const output = await renderExport(
       p,
       { ...DEFAULT_EXPORT, preserveTail: true },
@@ -132,12 +133,12 @@ describe("export content, tails and pure silence", () => {
       ...makeProject("nested"),
       duration: 0.2,
       echo: 0.4,
-      layers: [
+      inputs: [
         makeLayer({
           type: "composition",
           id: "group",
           duration: 0.2,
-          project: p,
+          mix: p,
         }),
       ],
     };

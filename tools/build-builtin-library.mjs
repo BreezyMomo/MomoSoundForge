@@ -86,7 +86,7 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts",
+  "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts", "src/playerPlayback.ts", "src/effectTypes.ts",
   `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   `${expandedRoot}/manifest.json`,
@@ -112,9 +112,16 @@ await mkdir(output, { recursive: true });
 await mkdir(path.dirname(catalogFile), { recursive: true });
 const server = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom" });
 try {
-  const { makeLayer, encodeSamples, decodeSamples, parseProject, projectForSave } = await server.ssrLoadModule("/src/model.ts");
+  const { makeLayer: makeInput, stableHash, encodeSamples, decodeSamples, parseProject, projectForSave, projectDocument } = await server.ssrLoadModule("/src/model.ts");
   const { renderProject } = await server.ssrLoadModule("/src/engine.ts");
   const { instrumentPlaybackRange } = await server.ssrLoadModule("/src/sampleTail.ts");
+  // Preserve the curated seeds while playback instances become independent of placement IDs.
+  const makeLayer = patch => {
+    const input = makeInput(patch);
+    if (input.player.type === 'synth') input.player.noiseSeed = (input.player.noiseSeed ^ stableHash(input.id)) >>> 0;
+    if (input.player.type === 'instrument') input.player.noiseSeed = (input.player.noiseSeed ^ 2048) >>> 0;
+    return input;
+  };
   const sounds = [];
   for (const job of jobs) {
     let source;
@@ -128,7 +135,7 @@ try {
       // A naturally weak low-register note need not be the first sound a novice
       // hears. Pick a nearby audible root without changing sample/velocity gains.
       if (levels([raw.left, raw.right], raw.sampleRate).status !== "ok") {
-        const originalMidi = source.layers[0].content.score.notes[0].midi;
+        const originalMidi = source.inputs[0].player.score.notes[0].midi;
         const roots = [...new Set(job.samples.map(s => s.rootMidi))]
           .filter(midi => midi !== originalMidi).sort((a, b) => Math.abs(a - originalMidi) - Math.abs(b - originalMidi));
         for (const midi of roots) {
@@ -155,9 +162,9 @@ try {
       for (let i = 0; i < length; i++) for (let c = 0; c < 2; c++) channels[c][i] = wav.readInt16LE(44 + i * 4 + c * 2) / 32768 * assetGain;
       const { duration, release } = instrumentPlaybackRange(channels, 48000, job.sample.instrumentId);
       source = {
-        schema: "momo.soundforge/v3", name: job.id, seed: 2048, duration, master: 1, echo: 0,
+        schema: "momo.soundforge/v4", name: job.id, seed: 2048, duration, master: 1, echo: 0,
         assets: { [job.sample.id]: { id: job.sample.id, name: path.basename(job.source), sampleRate: 48000, channels: channels.map(encodeSamples) } },
-        layers: [makeLayer({ id: `layer-${job.sample.id}`, name: job.sample.id, type: "instrument",
+        inputs: [makeLayer({ id: `layer-${job.sample.id}`, name: job.sample.id, type: "instrument",
           score: { schema: "momo.score/v1", bpm: 120,
             instruments: [{ id: job.sample.instrumentId, name: job.sample.instrumentId, license: "CC0-1.0",
               regions: [{ id: job.sample.id, assetId: job.sample.id, rootMidi: job.sample.rootMidi ?? 60,
@@ -168,7 +175,7 @@ try {
               velocity: 100, articulation: job.sample.articulation }] },
           duration, frequency: 440, endFrequency: 440, gain: 1.3, attack: .002, release, decay: 0, cutoff: 22000, noiseSeed: 2048 })],
       };
-    } else source = JSON.parse(await readFile(path.join(root, job.source), "utf8"));
+    } else source = parseProject(JSON.parse(await readFile(path.join(root, job.source), "utf8")));
     let project = parseProject(projectForSave(source));
     let audio = renderProject(project);
     if (job.gameSfx || job.natureSfx) {
@@ -182,7 +189,7 @@ try {
     if (job.kind === "instrument" && !job.tone) {
       const boostDb = standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate));
       if (boostDb > 0) {
-        const region = project.layers[0].content.score.instruments[0].regions[0];
+        const region = project.inputs[0].player.score.instruments[0].regions[0];
         const extraDb = Math.max(0, region.gainDb + boostDb - 24);
         region.gainDb = Math.min(24, region.gainDb + boostDb);
         if (extraDb > 0) {
@@ -203,7 +210,7 @@ try {
       for (let i = start; i < end; i++) for (const channel of [audio.left, audio.right]) if (Math.abs(channel[i]) > Math.abs(peak)) peak = channel[i];
       return Number(peak.toFixed(6));
     });
-    const json = Buffer.from(JSON.stringify(project));
+    const json = Buffer.from(JSON.stringify(projectDocument(project)));
     const compressed = gzipSync(json, { level: 6 });
     if (json.length > 36 * 1024 * 1024 || compressed.length > 12 * 1024 * 1024)
       throw Error(`Built-in sound exceeds the loader budget: ${job.id}`);

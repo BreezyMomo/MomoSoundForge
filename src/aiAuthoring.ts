@@ -1,13 +1,15 @@
 import { CONTENT_KEYS, patchLayer, type LayerPatch } from "./model";
 import {
   makeLayer,
+  withLayerValue,
   makeProject,
   makeComposition,
+  reusableInput,
   parseProject,
   projectForSave,
   assertProjectLimits,
   type Project,
-  type Layer,
+  type PlayerInput,
 } from "./model";
 import {
   groupNodes,
@@ -59,7 +61,7 @@ const projectKeys = [
   "controls",
   "controlValues",
 ];
-const layerKeys = [...Object.keys(makeLayer()), "effects", "automation"];
+const layerKeys = [...Object.keys(makeLayer()), "automation"];
 function keys(value: object, allowed: string[]) {
   if (
     !value ||
@@ -121,50 +123,50 @@ export function applyEdits(
           "enabled",
           "values",
         ]);
-        const layer = parent.layers.find((l) => l.id === action.id);
+        const layer = parent.inputs.find((l) => l.id === action.id);
         if (!layer) throw Error("ai.missingNode");
-        layer.effects = editPolish(layer.effects, action);
+        Object.assign(layer, withLayerValue(layer, "effects", editPolish(layer.player.effects, action)));
         break;
       }
       case "add":
         keys(action.layer, layerKeys);
-        if (action.layer.content)
+        if (action.layer.player)
           keys(
-            action.layer.content,
-            [...CONTENT_KEYS].filter(
-              (k) => !["assetId", "project", "score"].includes(k),
+            action.layer.player,
+            [...CONTENT_KEYS, "duration"].filter(
+              (k) => !["assetId", "mix", "score"].includes(k),
             ),
           );
         if (
-          action.layer.content?.type &&
-          action.layer.content?.type !== "synth"
+          action.layer.player?.type &&
+          action.layer.player?.type !== "synth"
         )
           throw Error("ai.useInsert");
-        parent.layers.push(makeLayer(action.layer));
+        parent.inputs.push(makeLayer(action.layer));
         break;
       case "patch": {
         keys(
           action.patch,
           layerKeys.filter((k) => k !== "id"),
         );
-        if (action.patch.content)
+        if (action.patch.player)
           keys(
-            action.patch.content,
-            [...CONTENT_KEYS].filter(
-              (k) => !["type", "assetId", "project"].includes(k),
+            action.patch.player,
+            [...CONTENT_KEYS, "duration"].filter(
+              (k) => !["type", "assetId", "mix"].includes(k),
             ),
           );
-        const layer = parent.layers.find((l) => l.id === action.id);
+        const layer = parent.inputs.find((l) => l.id === action.id);
         if (!layer) throw Error("ai.missingNode");
         Object.assign(layer, patchLayer(layer, action.patch));
-        if (action.patch.content?.controlValues !== undefined)
+        if (action.patch.player?.controlValues !== undefined)
           validateValues.push({ path, id: action.id });
         break;
       }
       case "remove": {
-        if (!parent.layers.some((l) => l.id === action.id))
+        if (!parent.inputs.some((l) => l.id === action.id))
           throw Error("ai.missingNode");
-        parent.layers = parent.layers.filter((l) => l.id !== action.id);
+        parent.inputs = parent.inputs.filter((l) => l.id !== action.id);
         break;
       }
       case "group":
@@ -182,12 +184,9 @@ export function applyEdits(
       case "insert": {
         if (!action.project) throw Error("ai.useInsert");
         const child = nodeDocument(parseProject(action.project));
-        parent.layers.push(
-          makeComposition(child, {
-            start: action.start ?? 0,
-            name: action.name ?? child.name,
-          }),
-        );
+        const { input, assets } = reusableInput(child);
+        parent.inputs.push({ ...input, start: action.start ?? 0, name: action.name ?? child.name });
+        Object.assign(parent.assets, assets);
         break;
       }
       default:
@@ -201,10 +200,10 @@ export function applyEdits(
     validateAdvanced({
       ...p,
       controlValues: undefined,
-      layers: p.layers.map((l) => ({
+      inputs: p.inputs.map((l) => ({
         ...l,
-        content: {
-          ...l.content,
+        player: {
+          ...l.player,
           controlValues: undefined,
         },
       })),
@@ -212,10 +211,10 @@ export function applyEdits(
   }
   for (const { path, id } of validateValues) {
     const p = nodeParent(next, path),
-      layer = id ? p.layers.find((l) => l.id === id) : undefined;
+      layer = id ? p.inputs.find((l) => l.id === id) : undefined;
     if (id && !layer) throw Error("ai.missingNode");
-    const controls = id ? layer!.content.project?.controls : p.controls,
-      controlValues = id ? layer!.content.controlValues : p.controlValues;
+    const controls = id ? layer!.player.mix?.controls : p.controls,
+      controlValues = id ? layer!.player.controlValues : p.controlValues;
     validateAdvanced({
       ...makeProject("Validation"),
       controls: controls?.map((c) => ({ ...c, mappings: [] })),
@@ -250,12 +249,12 @@ export function describeProject(project: Project): unknown {
         },
       ]),
     ),
-    layers: project.layers.map((l) => ({
+    inputs: project.inputs.map((l) => ({
       ...l,
-      content: {
-        ...l.content,
-        project: l.content.project
-          ? describeProject(l.content.project)
+      player: {
+        ...l.player,
+        mix: l.player.mix
+          ? describeProject(l.player.mix)
           : undefined,
       },
     })),
@@ -265,17 +264,17 @@ export function projectScoreIssues(
   project: Project,
   path: string[] = [],
 ): object[] {
-  return project.layers.flatMap((layer) => [
-    ...(layer.content.score
+  return project.inputs.flatMap((layer) => [
+    ...(layer.player.score
       ? scoreIssues(
-          layer.content.score,
+          layer.player.score,
           project.assets,
-          layer.duration,
-          project.seed ^ layer.content.noiseSeed,
+          layer.player.duration,
+          layer.player.noiseSeed,
         ).map((issue) => ({ path, layerId: layer.id, ...issue }))
       : []),
-    ...(layer.content.project
-      ? projectScoreIssues(layer.content.project, [...path, layer.id])
+    ...(layer.player.mix
+      ? projectScoreIssues(layer.player.mix, [...path, layer.id])
       : []),
   ]);
 }
@@ -283,8 +282,8 @@ export const AUTHORING_SCHEMA = {
   schema: "momo.soundforge.ai/v1",
   projectDefaults: makeProject("Untitled"),
   layerDefaults: { ...makeLayer(), id: "<unique id>" },
-  contentPatchKeys: [...CONTENT_KEYS].filter(
-    (k) => !["type", "assetId", "project"].includes(k),
+  playerPatchKeys: [...CONTENT_KEYS, "duration"].filter(
+    (k) => !["type", "assetId", "mix"].includes(k),
   ),
   effectsDefaults: DEFAULT_EFFECTS,
   parameterRanges: PARAMS,
@@ -306,7 +305,7 @@ export const AUTHORING_SCHEMA = {
     add: {
       path: [],
       layer:
-        "Partial synth layer with source parameters inside content; missing fields use layerDefaults",
+        "Partial parent input with source parameters inside player; missing fields use layerDefaults",
     },
     patch: {
       path: [],
@@ -327,7 +326,7 @@ export const AUTHORING_SCHEMA = {
       start: 0,
     },
   },
-  time: "Layer start/duration use seconds relative to parent. content.cropStart/cropEnd are normalized fractions. Automation time is normalized [0,1] across the source duration, NOT seconds. Score notes use beats, with score.bpm. Patch content.score by preserving instruments and replacing notes. Groups have content-derived duration. Root duration remains explicit.",
+  time: "Inputs own start/duration in parent seconds, sourceStart/sourceEnd in child-output seconds, speed, loop and reverse. player.duration is the intrinsic source body; effects extend its output. Over-read is silence, loops retain the requested read interval. Gain/pan automation time is normalized [0,1] over this use; cutoff automation is over source body. player.score notes use beats and score.bpm. Preserve instruments when replacing notes. Native files use momo.soundforge/v4 with root player; capture exposes root mix inputs. Work duration is explicit.",
   waves: ["sine", "triangle", "saw", "square", "noise"],
   polish: POLISH_SCHEMA,
   export: EXPORT_SCHEMA,
@@ -362,7 +361,7 @@ export const AUTHORING_SCHEMA = {
       high: "within child range",
     },
     values:
-      "project.controlValues or group layer content.controlValues; values must be in declared ranges",
+      "project.controlValues or group input player.controlValues; values must be in declared ranges",
   },
   notes: {
     schema: "momo.score/v1",
@@ -379,5 +378,5 @@ export const AUTHORING_SCHEMA = {
     },
   },
   constraints:
-    "Query catalog and capture; use actual instrument regions. A patch shallow-merges content; nested fields such as content.score and effects are replaced in full. Every edit is atomic, version-checked, validated and undoable. Imported sounds become editable groups. All layers have effects. No arbitrary scripts.",
+    "Query catalog and capture; use actual instrument regions. A patch shallow-merges player; player.score and player.effects are replaced in full. Every edit is atomic, version-checked, validated and undoable. Insert retains meaningful mix boundaries and reuses neutral single-input roots. Effects belong to players. No arbitrary scripts.",
 };

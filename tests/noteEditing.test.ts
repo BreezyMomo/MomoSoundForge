@@ -61,10 +61,7 @@ describe("visual note editing", () => {
         {
           ...layer,
           duration: 2,
-          content: {
-            ...layer.content,
-            sourceDuration: 4,
-          },
+          speed: 2,
         },
         note,
       ),
@@ -73,11 +70,7 @@ describe("visual note editing", () => {
       noteSpan(
         {
           ...layer,
-          content: {
-            ...layer.content,
-            trim: 0.5,
-            frequency: 880,
-          },
+          sourceStart: 0.5, speed: 2,
         },
         note,
       ),
@@ -86,10 +79,7 @@ describe("visual note editing", () => {
       noteSpan(
         {
           ...layer,
-          content: {
-            ...layer.content,
-            reverse: true,
-          },
+          reverse: true,
         },
         note,
       ),
@@ -100,9 +90,9 @@ describe("visual note editing", () => {
       type: "instrument",
       start: 2,
       duration: 2,
-      sourceDuration: 4,
-      frequency: 880,
-      trim: 0.5,
+      player: { duration: 4 }, sourceEnd: 3.5,
+      speed: 4,
+      sourceStart: 0.5,
       score: emptyScore(),
     });
     expect(scoreBeatAtTime(layer, 5.25, 3)).toBe(3);
@@ -111,10 +101,7 @@ describe("visual note editing", () => {
       scoreBeatAtTime(
         {
           ...layer,
-          content: {
-            ...layer.content,
-            reverse: true,
-          },
+          reverse: true,
         },
         5.25,
         3,
@@ -124,10 +111,7 @@ describe("visual note editing", () => {
       scoreTimeAtBeat(
         {
           ...layer,
-          content: {
-            ...layer.content,
-            reverse: true,
-          },
+          reverse: true,
         },
         5,
         3,
@@ -137,10 +121,7 @@ describe("visual note editing", () => {
       for (const time of [0, 4.9, 5, 5.2, 6, 7, 10]) {
         const transformed = {
           ...layer,
-          content: {
-            ...layer.content,
-            reverse,
-          },
+          reverse,
         };
         expect(
           scoreTimeAtBeat(

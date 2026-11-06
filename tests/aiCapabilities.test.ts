@@ -60,7 +60,7 @@ function roundRobinProject(): Project {
     gainDb: 0,
     releaseSeconds: 0.01,
   });
-  p.layers = [
+  p.inputs = [
     makeLayer({
       id: "instrument",
       name: "Instrument",
@@ -109,13 +109,13 @@ describe("AI-accessible native variation invariants", () => {
   });
   it("keeps locked round-robin instrument audio unchanged for a different variation seed", () => {
     const p = roundRobinProject();
-    p.layers[0].locked = true;
+    p.inputs[0].locked = true;
     expect(audioHash(varyProject(p, 2, 0.8))).toBe(audioHash(p));
   });
   it("creates reproducible candidates without modifying the source or unlocking a subtree", () => {
     const p = makeProject("Grouped instrument");
     p.duration = 0.2;
-    p.layers = [
+    p.inputs = [
       makeComposition(roundRobinProject(), {
         id: "locked-group",
         locked: true,
@@ -128,7 +128,7 @@ describe("AI-accessible native variation invariants", () => {
       generateVariants(p, { count: 3, amount: 0.8, seed: 99 }),
     );
     for (const next of first) {
-      expect(next.layers[0]).toEqual(p.layers[0]);
+      expect(next.inputs[0]).toEqual(p.inputs[0]);
       expect(audioHash(next)).toBe(audioHash(p));
       expect(() => parseProject(projectForSave(next))).not.toThrow();
     }
@@ -152,7 +152,7 @@ describe("AI-accessible native variation invariants", () => {
 function nestedProject() {
   const child = makeProject("Child");
   child.duration = 0.2;
-  child.layers = [
+  child.inputs = [
     makeLayer({
       id: "tone",
       duration: 0.2,
@@ -163,7 +163,7 @@ function nestedProject() {
   ];
   const p = makeProject("Parent");
   p.duration = 0.2;
-  p.layers = [makeComposition(child, { id: "group" })];
+  p.inputs = [makeComposition(child, { id: "group" })];
   return p;
 }
 const childMacro = (): Macro => ({
@@ -206,16 +206,16 @@ describe("nested authoring through MCP operations", () => {
     ]);
     const saved = parseProject(projectForSave(next)),
       resolved = resolveControls(saved),
-      group = resolved.layers[0];
-    expect(group.content.controlValues?.body).toBe(75);
+      group = resolved.inputs[0];
+    expect(group.player.controlValues?.body).toBe(75);
     expect(
-      resolveControls(group.content.project!, group.content.controlValues)
-        .layers[0].gain,
+      resolveControls(group.player.mix!, group.player.controlValues)
+        .inputs[0].gain,
     ).toBe(0.75);
-    expect(group.content.project!.layers[0].gain).toBe(0.2);
-    expect(p.layers[0].content.project!.controls).toBeUndefined();
+    expect(group.player.mix!.inputs[0].gain).toBe(0.2);
+    expect(p.inputs[0].player.mix!.controls).toBeUndefined();
     const equivalent = nestedProject();
-    equivalent.layers[0].content.project!.layers[0].gain = 0.75;
+    equivalent.inputs[0].player.mix!.inputs[0].gain = 0.75;
     expect(audioHash(saved)).toBe(audioHash(equivalent));
   });
   it("rejects newly authored out-of-range macro mappings and values instead of silently clamping", () => {
@@ -268,7 +268,7 @@ describe("nested authoring through MCP operations", () => {
           op: "patch",
           id: "group",
           patch: {
-            content: {
+            player: {
               controlValues: { body: 101 },
             },
           },
@@ -287,7 +287,7 @@ describe("nested authoring through MCP operations", () => {
         op: "patch",
         id: "group",
         patch: {
-          content: {
+          player: {
             controlValues: { body: 90 },
           },
         },
@@ -323,10 +323,10 @@ describe("nested authoring through MCP operations", () => {
         patch: { controls: [{ ...childMacro(), max: 50 }] },
       },
     ]);
-    expect(next.layers[0].content.project!.controlValues?.body).toBe(50);
-    expect(next.layers[0].content.controlValues?.body).toBe(50);
+    expect(next.inputs[0].player.mix!.controlValues?.body).toBe(50);
+    expect(next.inputs[0].player.controlValues?.body).toBe(50);
     expect(next.controls![0].mappings[0].high).toBe(50);
-    expect(p.layers[0].content.project!.controlValues?.body).toBe(80);
+    expect(p.inputs[0].player.mix!.controlValues?.body).toBe(80);
   });
   it("rejects missing nested paths and manual group duration changes atomically", () => {
     const p = nestedProject(),
@@ -349,7 +349,7 @@ describe("nested authoring through MCP operations", () => {
 describe("sound polish controls", () => {
   it("maps familiar UI percentages to native parameters and retains unrelated settings", () => {
     const p = nestedProject();
-    p.layers[0].content.project!.layers[0].effects = {
+    p.inputs[0].player.mix!.inputs[0].player.effects = {
       ...DEFAULT_EFFECTS,
       toneEnabled: false,
       delayTime: 0.37,
@@ -369,7 +369,7 @@ describe("sound polish controls", () => {
         },
       },
     ]);
-    const effects = next.layers[0].content.project!.layers[0].effects!;
+    const effects = next.inputs[0].player.mix!.inputs[0].player.effects!;
     expect(effects).toMatchObject({
       low: 12,
       high: -6,
@@ -378,11 +378,11 @@ describe("sound polish controls", () => {
       reverb: 0.75,
       delayTime: 0.37,
     });
-    expect(p.layers[0].content.project!.layers[0].effects!.low).toBe(0);
+    expect(p.inputs[0].player.mix!.inputs[0].player.effects!.low).toBe(0);
   });
   it("toggles a group without discarding its values and resets only the requested group", () => {
     const p = nestedProject();
-    p.layers[0].effects = {
+    p.inputs[0].player.effects = {
       ...DEFAULT_EFFECTS,
       low: 12,
       delayWet: 0.3,
@@ -397,7 +397,7 @@ describe("sound polish controls", () => {
         enabled: false,
       },
     ]);
-    expect(off.layers[0].effects).toMatchObject({
+    expect(off.inputs[0].player.effects).toMatchObject({
       toneEnabled: false,
       low: 12,
       delayWet: 0.3,
@@ -406,7 +406,7 @@ describe("sound polish controls", () => {
     const reset = applyEdits(off, [
       { op: "polish", id: "group", action: "reset", group: "tone" },
     ]);
-    expect(reset.layers[0].effects).toMatchObject({
+    expect(reset.inputs[0].player.effects).toMatchObject({
       toneEnabled: true,
       low: 0,
       mid: 0,

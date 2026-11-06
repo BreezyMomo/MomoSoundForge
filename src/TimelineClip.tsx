@@ -7,7 +7,7 @@ import {
   type PointerEvent,
   type KeyboardEvent,
 } from "react";
-import type { Layer } from "./model";
+import type { PlayerInput } from "./model";
 import {
   adjustClipTiming,
   adjustCrop,
@@ -27,10 +27,10 @@ type Gesture = {
   originX: number;
   width: number;
   mode: ClipEdit | CropEdit | "attack" | "release";
-  layer: Layer;
+  layer: PlayerInput;
   projectDuration: number;
   node: HTMLButtonElement;
-  timing: Layer;
+  timing: PlayerInput;
   moved: boolean;
   plainClick: boolean;
 };
@@ -58,7 +58,7 @@ export function TimelineClip({
   onNoteAudition,
   onExpandNotes,
 }: {
-  layer: Layer;
+  layer: PlayerInput;
   offset?: number;
   tail?: number;
   sampleRate?: number;
@@ -67,10 +67,10 @@ export function TimelineClip({
   position: number;
   cropMode: boolean;
   snapTargets?: number[];
-  displayLayer?: Layer;
-  constrain?: (next: Layer) => Layer;
+  displayLayer?: PlayerInput;
+  constrain?: (next: PlayerInput) => PlayerInput;
   disabledParameters?: string[];
-  onPreview?: (next: Layer | null) => void;
+  onPreview?: (next: PlayerInput | null) => void;
   data?: Float32Array;
   tailData?: Float32Array;
   onSelect: (event?: {
@@ -96,32 +96,32 @@ export function TimelineClip({
   const selectOnClick = useRef(false);
   const waveform = useRef(data);
   if (data) waveform.current = data;
-  const [draft, setDraft] = useState<Layer | null>(null);
+  const [draft, setDraft] = useState<PlayerInput | null>(null);
   const timing = displayLayer ?? draft ?? layer;
-  const changed = (a: Layer, b: Layer) =>
+  const changed = (a: PlayerInput, b: PlayerInput) =>
     timingChanged(a, b) ||
-    a.content.cropStart !== b.content.cropStart ||
-    a.content.cropEnd !== b.content.cropEnd ||
-    a.content.attack !== b.content.attack ||
-    a.content.release !== b.content.release;
+    a.sourceStart !== b.sourceStart ||
+    a.sourceEnd !== b.sourceEnd ||
+    a.player.attack !== b.player.attack ||
+    a.player.release !== b.player.release;
   const adjust = (
-    original: Layer,
+    original: PlayerInput,
     mode: ClipEdit | CropEdit | "attack" | "release",
     delta: number,
     duration: number,
     step: number,
-  ): Layer => {
+  ): PlayerInput => {
     if (mode === "attack" || mode === "release")
       return patchLayer(original, {
-        content: {
+        player: {
           [mode]: Math.max(
             0,
             Math.min(
-              original.content.sourceDuration ?? original.duration,
+              original.player.duration ?? original.duration,
               mode === "attack" ? 3 : 5,
-              original.content[mode] +
+              original.player[mode] +
                 ((mode === "release" ? -delta : delta) *
-                  (original.content.sourceDuration ?? original.duration)) /
+                  (original.player.duration ?? original.duration)) /
                   original.duration,
             ),
           ),
@@ -129,7 +129,7 @@ export function TimelineClip({
       });
     if (mode === "cropStart" || mode === "cropEnd")
       return patchLayer(original, {
-        content: adjustCrop(original, mode, Math.round(delta / step) * step),
+        ...adjustCrop(original, mode, Math.round(delta / step) * step),
       });
     return patchLayer(
       original,
@@ -327,7 +327,7 @@ export function TimelineClip({
   const seconds = (value: number) => value.toFixed(draft ? 3 : 2);
   return (
     <div
-      className={`layer-lane ${layer.content.type === "instrument" ? "instrument-lane" : ""}`}
+      className={`layer-lane ${layer.player.type === "instrument" ? "instrument-lane" : ""}`}
       ref={lane}
       onClick={(event) => {
         if (event.ctrlKey || event.metaKey || event.shiftKey) onSelect(event);
@@ -364,7 +364,7 @@ export function TimelineClip({
           className="clip-move"
           aria-label={t("editor.moveLayer", layer.name)}
           title={t(
-            layer.content.type === "instrument"
+            layer.player.type === "instrument"
               ? "roll.clipHelp"
               : "editor.clipDragHint",
           )}
@@ -373,11 +373,11 @@ export function TimelineClip({
         >
           <span className="clip-label">
             {seconds(timing.start)} s · {seconds(timing.duration)} s
-            {layer.content.type === "instrument" &&
-              layer.content.score &&
-              ` · ${t("roll.count", layer.content.score.notes.length)}`}
-            {timing.content.sourceDuration !== undefined &&
-              ` · ${(timing.content.sourceDuration / timing.duration).toFixed(2)}×`}
+            {layer.player.type === "instrument" &&
+              layer.player.score &&
+              ` · ${t("roll.count", layer.player.score.notes.length)}`}
+            {timing.player.duration !== undefined &&
+              ` · ${timing.speed.toFixed(2)}×`}
           </span>
           <Waveform
             data={waveform.current}
@@ -387,8 +387,9 @@ export function TimelineClip({
             )}
           />
         </button>
-        {sourceLayer.content.type === "instrument" &&
-          sourceLayer.content.score &&
+        {sourceLayer.player.type === "instrument" &&
+          !sourceLayer.loop &&
+          sourceLayer.player.score &&
           onNoteChange &&
           onNoteAudition && (
             <NoteRoll
@@ -415,10 +416,10 @@ export function TimelineClip({
               title={t("editor.resizeEnd", layer.name)}
               {...events("end")}
             />
-            <button
+            {layer.player.type !== "composition" && <><button
               className="clip-fade-handle"
               style={{
-                left: `${Math.min(1, timing.content.attack / (timing.content.sourceDuration ?? timing.duration)) * 100}%`,
+                left: `${Math.min(1, timing.player.attack / (timing.player.duration ?? timing.duration)) * 100}%`,
               }}
               aria-label={t("pro.fadeIn", layer.name)}
               title={t("pro.fadeIn", layer.name)}
@@ -427,34 +428,34 @@ export function TimelineClip({
             <button
               className="clip-fade-handle clip-fade-end"
               style={{
-                left: `${(1 - Math.min(1, timing.content.release / (timing.content.sourceDuration ?? timing.duration))) * 100}%`,
+                left: `${(1 - Math.min(1, timing.player.release / (timing.player.duration ?? timing.duration))) * 100}%`,
               }}
               aria-label={t("pro.fadeOut", layer.name)}
               title={t("pro.fadeOut", layer.name)}
               {...events("release")}
-            />
+            /></>}
           </>
         )}
         <div
           className="clip-crop-mask clip-crop-before"
-          style={{ width: `${(timing.content.cropStart ?? 0) * 100}%` }}
+          style={{ width: `${0}%` }}
         />
         <div
           className="clip-crop-mask clip-crop-after"
-          style={{ width: `${(1 - (timing.content.cropEnd ?? 1)) * 100}%` }}
+          style={{ width: `${0}%` }}
         />
         {cropMode && !moveOnly && (
           <>
             <button
               className="clip-crop-handle"
-              style={{ left: `${(timing.content.cropStart ?? 0) * 100}%` }}
+              style={{ left: "0%" }}
               aria-label={t("editor.cropStart", layer.name)}
               title={t("editor.cropStart", layer.name)}
               {...events("cropStart")}
             />
             <button
               className="clip-crop-handle clip-crop-end"
-              style={{ left: `${(timing.content.cropEnd ?? 1) * 100}%` }}
+              style={{ left: `${100}%` }}
               aria-label={t("editor.cropEnd", layer.name)}
               title={t("editor.cropEnd", layer.name)}
               {...events("cropEnd")}

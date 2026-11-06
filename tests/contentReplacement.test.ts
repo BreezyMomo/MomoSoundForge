@@ -46,10 +46,7 @@ function fixture() {
     start: 0.1,
     duration: 0.2,
     frequency: 880,
-    trim: 0.01,
-    cropStart: 0.1,
-    cropEnd: 0.9,
-    sourceDuration: 0.4,
+    sourceStart: 0.05, sourceEnd: 0.37, speed: 1.6, player: { duration: 0.4 },
     gain: 0.25,
     cutoff: 3000,
     effects: { ...DEFAULT_EFFECTS, low: 3 },
@@ -64,7 +61,7 @@ function fixture() {
     ...makeProject("Test"),
     duration: 1,
     assets: { shared: asset },
-    layers: [
+    inputs: [
       first,
       makeLayer({ ...first, id: "second", name: "Sibling", start: 0.5 }),
     ],
@@ -111,25 +108,24 @@ function fixture() {
 }
 
 describe("independent sound content", () => {
-  it("replaces audio without changing outer settings, shared assets, sibling layers or the input", () => {
+  it("replaces audio without changing outer settings, shared assets, sibling inputs or the input", () => {
     const { root, candidate, address } = fixture(),
       before = JSON.stringify(root);
     const next = replaceContent(root, address, candidate),
-      layer = next.layers[0];
+      layer = next.inputs[0];
     expect(JSON.stringify(root)).toBe(before);
     expect(layer).toMatchObject({
       id: "first",
       name: "My layer",
       start: 0.1,
       gain: 0.25,
-      duration: 0.5,
-      effects: root.layers[0].effects,
-      automation: root.layers[0].automation,
-      content: candidate.content,
+      duration: 0.2, sourceStart: 0.05, sourceEnd: 0.37, speed: 1.6,
+      automation: root.inputs[0].automation,
+      player: candidate.player,
     });
-    expect(layer.content.sourceDuration).toBeUndefined();
-    expect(layer.content.cropStart).toBeUndefined();
-    expect(next.layers[1]).toEqual(root.layers[1]);
+    expect(layer.player.duration).toBe(candidate.player.duration);
+    expect(layer.sourceStart).toBe(root.inputs[0].sourceStart);
+    expect(next.inputs[1]).toEqual(root.inputs[1]);
     expect(next.assets.shared).toEqual(root.assets.shared);
     expect(next.controls).toEqual(root.controls);
     expect(next.duration).toBe(1);
@@ -146,19 +142,18 @@ describe("independent sound content", () => {
       gain: 0.4,
       effects: { ...DEFAULT_EFFECTS, reverb: 0.2 },
     });
-    const root = { ...makeProject("Outer"), duration: 0.4, layers: [group] };
+    const root = { ...makeProject("Outer"), duration: 0.4, inputs: [group] };
     const next = replaceContent(root, { path: [], id: "group" }, candidate);
-    expect(next.layers[0]).toMatchObject({
+    expect(next.inputs[0]).toMatchObject({
       id: "group",
       start: 0.2,
       gain: 0.4,
-      effects: group.effects,
-      content: { type: "sample" },
+      player: { type: "sample" },
     });
-    expect(next.layers[0].content.project).toBeUndefined();
+    expect(next.inputs[0].player.mix).toBeUndefined();
     expect(Object.keys(next.assets)).toEqual(Object.keys(candidate.assets));
     expect(next.duration).toBe(0.4);
-    expect(root.layers[0].content.project).toEqual(child);
+    expect(root.inputs[0].player.mix).toEqual(child);
   });
 
   it("replaces a sample with an editable combination, including its internal mix and effects once", () => {
@@ -168,21 +163,21 @@ describe("independent sound content", () => {
       duration: 0.2,
       master: 0.7,
       effects: { ...DEFAULT_EFFECTS, low: 4 },
-      layers: [makeLayer({ id: "tone", duration: 0.2, wave: "noise" })],
+      inputs: [makeLayer({ id: "tone", duration: 0.2, wave: "noise" })],
     };
     const candidate = contentCandidate(inner, true);
     const next = replaceContent(root, address, candidate);
-    expect(next.layers[0].content.project).toEqual(inner);
-    expect(next.layers[0].effects).toEqual(root.layers[0].effects);
+    expect(next.inputs[0].player.mix).toEqual(inner);
+    expect(next.inputs[0].player.effects).toEqual(candidate.player.effects);
     const expected = {
       ...root,
-      layers: [
+      inputs: [
         makeComposition(inner, {
-          ...root.layers[0],
-          content: candidate.content,
+          ...root.inputs[0],
+          player: candidate.player,
           duration: 0.2,
         }),
-        root.layers[1],
+        root.inputs[1],
       ],
     };
     expect(renderProject(next, 12000).left).toEqual(
@@ -205,7 +200,7 @@ describe("independent sound content", () => {
     const group = makeComposition(child, { id: "group" });
     const root = {
       ...makeProject("Outer"),
-      layers: [group],
+      inputs: [group],
       controls: [
         {
           id: "macro",
@@ -237,24 +232,24 @@ describe("independent sound content", () => {
       contentCandidate(child, true),
     );
     expect(next.controls![0].mappings).toEqual([root.controls[0].mappings[1]]);
-    expect(resolveControls(next).layers[0].start).toBe(0.3);
+    expect(resolveControls(next).inputs[0].start).toBe(0.3);
     const nested = replaceContent(
       root,
       { path: ["group"], id: "first" },
       candidate,
     );
     expect(
-      nested.layers[0].content.project!.controls!.find((c) => c.id === "rate")!
+      nested.inputs[0].player.mix!.controls!.find((c) => c.id === "rate")!
         .mappings,
     ).toEqual([]);
-    expect(nested.layers[0].content.project!.layers[0].content.frequency).toBe(
+    expect(nested.inputs[0].player.mix!.inputs[0].player.frequency).toBe(
       440,
     );
   });
 
   it("retains volume/pan automation but removes the old filter curve and source bindings", () => {
     const { root, candidate, address } = fixture();
-    root.layers[0].automation!.cutoff = [{ time: 0, value: 1000 }];
+    root.inputs[0].automation!.cutoff = [{ time: 0, value: 1000 }];
     root.controls![0].mappings.push({
       layerId: "first",
       parameter: "frequency",
@@ -262,24 +257,24 @@ describe("independent sound content", () => {
       high: 880,
     });
     const next = replaceContent(root, address, candidate);
-    expect(next.layers[0].automation?.cutoff).toBeUndefined();
-    expect(next.layers[0].automation?.pan).toEqual(
-      root.layers[0].automation?.pan,
+    expect(next.inputs[0].automation?.cutoff).toBeUndefined();
+    expect(next.inputs[0].automation?.pan).toEqual(
+      root.inputs[0].automation?.pan,
     );
     expect(
       next.controls![0].mappings.some((m) => m.parameter === "frequency"),
     ).toBe(false);
-    expect(resolveControls(next).layers[0].gain).toBe(
-      resolveControls(root).layers[0].gain,
+    expect(resolveControls(next).inputs[0].gain).toBe(
+      resolveControls(root).inputs[0].gain,
     );
   });
 
   it("supports replacing synth and instrument content while retaining variation locks", () => {
     const { root, candidate, address } = fixture();
-    root.layers[0] = makeLayer({ id: "first", locked: true });
-    expect(replaceContent(root, address, candidate).layers[0]).toMatchObject({
+    root.inputs[0] = makeLayer({ id: "first", locked: true });
+    expect(replaceContent(root, address, candidate).inputs[0]).toMatchObject({
       locked: true,
-      content: { type: "sample" },
+      player: { type: "sample" },
     });
   });
 
@@ -287,7 +282,7 @@ describe("independent sound content", () => {
     const { root, address } = fixture();
     const p = {
       ...root,
-      layers: [
+      inputs: [
         makeLayer({
           type: "sample",
           assetId: "shared",
@@ -299,8 +294,8 @@ describe("independent sound content", () => {
       master: 0.5,
     };
     const candidate = contentCandidate(p);
-    expect(candidate.content.level).toBe(0.2);
-    expect(replaceContent(root, address, candidate).layers[0].gain).toBe(0.25);
+    expect(candidate.player.level).toBe(0.2);
+    expect(replaceContent(root, address, candidate).inputs[0].gain).toBe(0.25);
   });
 
   it("rejects invalid content, collisions and resource budget overflow without touching the original", () => {
@@ -319,7 +314,7 @@ describe("independent sound content", () => {
     let p = deep;
     for (let i = 0; i < 7; i++) {
       const child = makeProject("Child");
-      p.layers = [makeLayer({ type: "composition", project: child })];
+      p.inputs = [makeLayer({ type: "composition", mix: child })];
       p = child;
     }
     expect(() => contentCandidate(deep, true)).toThrow();
@@ -332,8 +327,8 @@ describe("independent sound content", () => {
     const reopened = parseProject(
       JSON.parse(JSON.stringify(projectForSave(next))),
     );
-    expect(reopened.assets[candidate.content.assetId!].source).toEqual(
-      candidate.assets[candidate.content.assetId!].source,
+    expect(reopened.assets[candidate.player.assetId!].source).toEqual(
+      candidate.assets[candidate.player.assetId!].source,
     );
     expect(renderProject(next, 12000).left).toEqual(
       renderProject(reopened, 12000).left,
@@ -350,14 +345,14 @@ describe("independent sound content", () => {
     expect(() =>
       parseProject({
         ...root,
-        layers: [{ ...root.layers[0], content: undefined }],
+        inputs: [{ ...root.inputs[0], player: undefined }],
       }),
     ).toThrow();
-    expect(root.schema).toBe("momo.soundforge/v3");
+    expect(root.schema).toBe("momo.soundforge/v4");
     expect(() =>
       parseProject({
         ...root,
-        layers: [{ ...root.layers[0], cutoff: 16000 }],
+        inputs: [{ ...root.inputs[0], cutoff: 16000 }],
       }),
     ).toThrow();
   });

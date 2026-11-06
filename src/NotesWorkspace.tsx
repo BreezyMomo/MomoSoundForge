@@ -4,7 +4,7 @@ import {
   FieldLabel,
   WorkbenchChoice,
 } from "@momo/workbench/react";
-import type { Layer } from "./model";
+import type { PlayerInput } from "./model";
 import type { NoteEvent } from "./instruments";
 import { scoreBeatAtTime, scoreTimeAtBeat } from "./noteEditing";
 import { NoteRoll } from "./NoteRoll";
@@ -12,7 +12,7 @@ import { t } from "./i18n";
 import "./notes-workspace.css";
 
 export function NotesWorkspace({
-  layers,
+  inputs,
   selected,
   onSelect,
   onChange,
@@ -29,7 +29,7 @@ export function NotesWorkspace({
   onSeekEnd,
   onArrange,
 }: {
-  layers: Layer[];
+  inputs: PlayerInput[];
   selected: string;
   onSelect: (id: string) => void;
   onChange: (note: NoteEvent) => void;
@@ -46,8 +46,8 @@ export function NotesWorkspace({
   onSeekEnd: (time: number) => void;
   onArrange: () => void;
 }) {
-  const instruments = layers.filter(
-    (layer) => layer.content.type === "instrument" && layer.content.score,
+  const instruments = inputs.filter(
+    (layer) => layer.player.type === "instrument" && layer.player.score,
   );
   const layer = instruments.find((layer) => layer.id === selected);
   const timeAtBeat = (beat: number) =>

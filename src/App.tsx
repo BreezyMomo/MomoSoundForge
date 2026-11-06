@@ -1,3 +1,5 @@
+import { projectDocument } from './model';
+import { timeAtPath, timeFromPath, fitPlayerRange, resetPlayerRange, playerDuration } from "./playerPlayback";
 import {
   layerValue,
   withLayerValue,
@@ -92,9 +94,10 @@ import {
   uid,
   assertProjectLimits,
   makeComposition,
+  reusableInput,
   resolveProjectPath,
   updateProjectAtPath,
-  type Layer,
+  type PlayerInput,
   type Project,
   type RenderResult,
 } from "./model";
@@ -145,6 +148,8 @@ export default function App() {
     future: Project[];
   }>(() => ({ past: [], project: nodeDocument(defaultProject()), future: [] }));
   const [editPath, setEditPath] = useState<string[]>([]);
+  const [timelinePath, setTimelinePath] = useState<string[]>([]);
+  const timelineScope = useMemo(() => resolveProjectPath(history.project, timelinePath), [history.project, timelinePath]);
   const context = useMemo(
     () => resolveProjectPath(history.project, editPath),
     [history.project, editPath],
@@ -195,8 +200,8 @@ export default function App() {
     [groupScale, setGroupScale] = useState(1);
   const selectionAnchor = useRef<string | null>(null);
   const selectedIds = selection.includes(selected)
-    ? selection.filter((id) => project.layers.some((l) => l.id === id))
-    : project.layers.some((layer) => layer.id === selected)
+    ? selection.filter((id) => project.inputs.some((l) => l.id === id))
+    : project.inputs.some((layer) => layer.id === selected)
       ? [selected]
       : [];
   const [exportSettings, setExportSettings] =
@@ -239,12 +244,12 @@ export default function App() {
   ) => {
     if (event?.shiftKey) {
       const anchor = selectionAnchor.current ?? selected;
-      const anchorIndex = project.layers.findIndex((l) => l.id === anchor),
-        b = project.layers.findIndex((l) => l.id === id);
+      const anchorIndex = project.inputs.findIndex((l) => l.id === anchor),
+        b = project.inputs.findIndex((l) => l.id === id);
       const a = anchorIndex < 0 ? b : anchorIndex;
-      selectionAnchor.current = project.layers[a]?.id ?? id;
+      selectionAnchor.current = project.inputs[a]?.id ?? id;
       setSelection(
-        project.layers
+        project.inputs
           .slice(Math.min(a, b), Math.max(a, b) + 1)
           .map((l) => l.id),
       );
@@ -262,15 +267,15 @@ export default function App() {
     }
     setSelected(id);
   };
-  const transformLayers = (p: Project, l: Layer, next: LayerPatch) => {
+  const transformLayers = (p: Project, l: PlayerInput, next: LayerPatch) => {
     const ids = selectedIds.includes(l.id) ? selectedIds : [l.id];
     if (
       (Math.abs((next.start ?? l.start) - l.start) > 1e-6 ||
         Math.abs((next.duration ?? l.duration) - l.duration) > 1e-6) &&
       ids.some((id) => boundControl(p, id, "start"))
     )
-      return p.layers;
-    return boundedSelection(p.layers, ids, l, next, p.duration);
+      return p.inputs;
+    return boundedSelection(p.inputs, ids, l, next, p.duration);
   };
   const [variations, setVariations] = useState<Variation[]>([]),
     [variationBase, setVariationBase] = useState<Project | null>(null),
@@ -426,7 +431,7 @@ export default function App() {
   });
   const save = useCallback(() => {
     download(
-      JSON.stringify(projectForSave(rootCurrent.current)),
+      JSON.stringify(projectDocument(rootCurrent.current)),
       `${safeFilename(rootCurrent.current.name)}.soundforge`,
       "application/json",
     );
@@ -442,7 +447,7 @@ export default function App() {
         if (cancelled) return;
         if (p) {
           setHistory({ past: [], project: nodeDocument(p), future: [] });
-          setSelected(p.layers[0]?.id ?? "");
+          setSelected(p.inputs[0]?.id ?? "");
           flash("status.restored");
         }
         setSaveState("status.local");
@@ -541,8 +546,8 @@ export default function App() {
     };
   }, [history.project, selected, JSON.stringify(context.path), ready, flash]);
   useEffect(() => {
-    if (selected && !project.layers.some((l) => l.id === selected))
-      setSelected(project.layers[0]?.id ?? "");
+    if (selected && !project.inputs.some((l) => l.id === selected))
+      setSelected(project.inputs[0]?.id ?? "");
   }, [project, selected]);
   const play = useCallback(
     async (
@@ -639,24 +644,27 @@ export default function App() {
     originalAudition && comparisonReady ? rendered.original : result;
   // Keep the last waveform during edits, but never use it for playback/export.
   // Unrelated documents have new node IDs and must not inherit this preview.
-  const sharesNode = (nodes: Layer[], previous: Set<string>): boolean =>
+  const sharesNode = (nodes: PlayerInput[], previous: Set<string>): boolean =>
     nodes.some(
       (node) =>
         previous.has(node.id) ||
-        (node.content.project &&
-          sharesNode(node.content.project.layers, previous)),
+        (node.player.mix &&
+          sharesNode(node.player.mix.inputs, previous)),
     );
   const previousIds = new Set<string>();
-  const collectIds = (nodes: Layer[]) =>
+  const collectIds = (nodes: PlayerInput[]) =>
     nodes.forEach((node) => {
       previousIds.add(node.id);
-      if (node.content.project) collectIds(node.content.project.layers);
+      if (node.player.mix) collectIds(node.player.mix.inputs);
     });
-  if (rendered) collectIds(rendered.project.layers);
+  if (rendered) collectIds(rendered.project.inputs);
   const displayResult =
     auditionResult ??
-    (sharesNode(history.project.layers, previousIds) ? rendered?.result : null);
+    (sharesNode(history.project.inputs, previousIds) ? rendered?.result : null);
   const timelineDuration = history.project.duration;
+  const layerTimelineDuration = timelineScope.project.duration;
+  const layerTimelineCue = timeAtPath(history.project, timelineScope.path, cue) ?? -1;
+  const selectedScopeCue = timeAtPath(history.project, context.path, cue) ?? 0;
   const comparePolish = (original: boolean) => {
     if (
       !result ||
@@ -677,8 +685,8 @@ export default function App() {
       if (activePlaybackRef.current === `node-${nodeKey(address)}`) {
         const isolated = isolatedNode(history.project, address);
         if (original)
-          isolated.layers[0].effects = bypassEffects(
-            isolated.layers[0].effects,
+          isolated.inputs[0].player.effects = bypassEffects(
+            isolated.inputs[0].player.effects,
           );
         void play(
           () => renderer.current!.render(isolated),
@@ -707,7 +715,7 @@ export default function App() {
     updateCue(0);
     endSeek(0);
   };
-  const previewLayer = project.layers.find(
+  const previewLayer = project.inputs.find(
     (layer) =>
       `node-${nodeKey({ path: context.path, id: layer.id })}` ===
       (playing ?? pendingPlayback),
@@ -784,25 +792,27 @@ export default function App() {
     undo,
     redo,
   ]);
-  const selectedLayer = project.layers.find((l) => l.id === selected);
+  const selectedLayer = project.inputs.find((l) => l.id === selected);
   const navigate = (path: string[]) => {
     stop();
     scopeEpoch.current++;
     const target = resolveProjectPath(rootCurrent.current, path);
     const returnSelection = pathRef.current[path.length];
     setEditPath(target.path);
-    setSelected(returnSelection ?? target.project.layers[0]?.id ?? "");
+    setTimelinePath(target.path);
+    setSelected(returnSelection ?? target.project.inputs[0]?.id ?? "");
     updateCue(0);
     setVariations([]);
     manager.current?.show("editor");
   };
   const enterComposition = (id: string) => {
-    const layer = current.current.layers.find((l) => l.id === id);
-    if (layer?.content.type !== "composition" || !layer.content.project) return;
+    const layer = current.current.inputs.find((l) => l.id === id);
+    if (layer?.player.type !== "composition" || !layer.player.mix) return;
     stop();
     scopeEpoch.current++;
     setEditPath([...pathRef.current, id]);
-    setSelected(layer.content.project.layers[0]?.id ?? "");
+    setTimelinePath([...pathRef.current, id]);
+    setSelected(layer.player.mix.inputs[0]?.id ?? "");
     updateCue(0);
     setVariations([]);
     manager.current?.show("editor");
@@ -862,7 +872,7 @@ export default function App() {
       originalAudition &&
       nodeKey(address) === nodeKey({ path: context.path, id: selected })
     )
-      isolated.layers[0].effects = bypassEffects(isolated.layers[0].effects);
+      isolated.inputs[0].player.effects = bypassEffects(isolated.inputs[0].player.effects);
     void play(
       () => renderer.current!.render(isolated),
       `node-${nodeKey(address)}`,
@@ -870,8 +880,8 @@ export default function App() {
   };
   const previewNote = (address: NodeAddress, note: NoteEvent) => {
     const isolated = isolatedNode(rootCurrent.current, address);
-    const layer = isolated.layers[0],
-      score = layer.content.score;
+    const layer = isolated.inputs[0],
+      score = layer.player.score;
     if (!score) return;
     // Resolve with the original ordering so round-robin audition matches the score.
     const counters = new Map<string, number>();
@@ -880,7 +890,7 @@ export default function App() {
       const chosen = selectRegion(
         score.instruments.find((i) => i.id === n.instrumentId),
         n,
-        isolated.seed ^ layer.content.noiseSeed,
+        layer.player.noiseSeed,
         counters,
       );
       if (n.id === note.id) {
@@ -901,17 +911,13 @@ export default function App() {
       noteEndSeconds(single, region, isolated.assets, score.bpm),
     );
     isolated.duration = duration;
-    isolated.layers = [
+    isolated.inputs = [
       {
         ...layer,
-        duration,
-        content: {
-          ...layer.content,
-          sourceDuration: undefined,
-          trim: 0,
-          reverse: false,
-          cropStart: 0,
-          cropEnd: 1,
+        duration, sourceStart: 0, sourceEnd: duration, speed: 1, reverse: false, loop: false,
+        player: {
+          ...layer.player,
+          duration,
           attack: 0,
           release: 0,
           score: {
@@ -930,7 +936,7 @@ export default function App() {
   const saveCurrentSound = () => {
     download(
       JSON.stringify(
-        projectForSave(
+        projectDocument(
           context.path.length
             ? isolatedNode(history.project, {
                 path: context.path.slice(0, -1),
@@ -949,7 +955,8 @@ export default function App() {
     editRoot(() => nodeDocument(next));
     scopeEpoch.current++;
     setEditPath([]);
-    setSelected(next.layers[0]?.id ?? "");
+    setTimelinePath([]);
+    setSelected(next.inputs[0]?.id ?? "");
     updateCue(0);
     setVariations([]);
     manager.current?.show("editor");
@@ -971,7 +978,8 @@ export default function App() {
     editRoot(() => nodeDocument(next));
     scopeEpoch.current++;
     setEditPath([]);
-    setSelected(next.layers[0]?.id ?? "");
+    setTimelinePath([]);
+    setSelected(next.inputs[0]?.id ?? "");
     updateCue(0);
     setVariations([]);
     manager.current?.show("editor");
@@ -985,10 +993,10 @@ export default function App() {
     insertSound(child);
   }
   function insertSound(child: Project) {
-    if (current.current.layers.length >= 16) throw Error("error.layers");
+    if (current.current.inputs.length >= 16) throw Error("error.layers");
     if (
-      child.layers.length === 1 &&
-      child.layers[0].content.type === "instrument" &&
+      child.inputs.length === 1 &&
+      child.inputs[0].player.type === "instrument" &&
       !child.effects &&
       !child.echo &&
       !child.controls?.length
@@ -1003,11 +1011,12 @@ export default function App() {
       manager.current?.show("inspector");
       return;
     }
-    const layer = makeComposition(nodeDocument(child)),
+    const { input: layer, assets } = reusableInput(nodeDocument(child)),
       append = (p: Project) => ({
         ...p,
+        assets: { ...p.assets, ...assets },
         duration: Math.max(p.duration, layer.duration),
-        layers: [...p.layers, layer],
+        inputs: [...p.inputs, layer],
       });
     assertProjectLimits(
       updateProjectAtPath(rootCurrent.current, pathRef.current, append),
@@ -1021,16 +1030,10 @@ export default function App() {
     edit(
       (p) => ({
         ...p,
-        layers: p.layers.map((l) =>
+        inputs: p.inputs.map((l) =>
           l.id === selected && !boundControl(p, l.id, key)
             ? withLayerValue(
-                key === "duration"
-                  ? patchLayer(l, {
-                      content: {
-                        sourceDuration: l.content.sourceDuration ?? l.duration,
-                      },
-                    })
-                  : l,
+                l,
                 key,
                 value,
               )
@@ -1050,44 +1053,45 @@ export default function App() {
     editRoot(() => nodeDocument(next));
     scopeEpoch.current++;
     setEditPath([]);
+    setTimelinePath([]);
     setVariations([]);
     setSelection([]);
     updateCue(0);
-    setSelected(next.layers[0].id);
+    setSelected(next.inputs[0].id);
     manager.current?.show("editor");
   };
   const addSynth = () => {
-    if (project.layers.length >= 16) {
+    if (project.inputs.length >= 16) {
       flash("error.layers");
       return;
     }
     const l = makeLayer({ name: t("layer.new") });
-    edit((p) => ({ ...p, layers: [...p.layers, l] }));
+    edit((p) => ({ ...p, inputs: [...p.inputs, l] }));
     setSelected(l.id);
     manager.current?.show("inspector");
   };
   const duplicate = () => {
-    const layers = resolveControls(project).layers.filter((l) =>
+    const inputs = resolveControls(project).inputs.filter((l) =>
       selectedIds.includes(l.id),
     );
-    if (!layers.length || project.layers.length + layers.length > 16) {
+    if (!inputs.length || project.inputs.length + inputs.length > 16) {
       flash("error.layers");
       return;
     }
-    const copies = layers.map((l) => ({
+    const copies = inputs.map((l) => ({
       ...structuredClone(l),
       id: uid(),
       name: `${l.name} ${t("layer.copy")}`.slice(0, 120),
     }));
-    edit((p) => ({ ...p, layers: [...p.layers, ...copies] }));
+    edit((p) => ({ ...p, inputs: [...p.inputs, ...copies] }));
     setSelection(copies.map((l) => l.id));
     setSelected(copies[0].id);
   };
   const removeLayers = (ids: string[]) => {
-    if (!project.layers.some((layer) => ids.includes(layer.id))) return;
+    if (!project.inputs.some((layer) => ids.includes(layer.id))) return;
     edit((p) => ({
       ...p,
-      layers: p.layers.filter((layer) => !ids.includes(layer.id)),
+      inputs: p.inputs.filter((layer) => !ids.includes(layer.id)),
     }));
     setSelection([]);
     setSelected("");
@@ -1097,7 +1101,7 @@ export default function App() {
     editRoot((root) => {
       const next = structuredClone(root),
         parent = nodeParent(next, address.path);
-      parent.layers = parent.layers.filter((layer) => layer.id !== address.id);
+      parent.inputs = parent.inputs.filter((layer) => layer.id !== address.id);
       return next;
     });
     const removesContext = [...address.path, address.id].every(
@@ -1243,8 +1247,9 @@ export default function App() {
       editRoot(() => next);
       scopeEpoch.current++;
       setEditPath([]);
+    setTimelinePath([]);
       updateCue(0);
-      setSelected(next.layers[0]?.id ?? "");
+      setSelected(next.inputs[0]?.id ?? "");
       setVariations([]);
       manager.current?.show("editor");
       flash("status.opened");
@@ -1267,12 +1272,13 @@ export default function App() {
       const child = parseProject(JSON.parse(await file.text()));
       if (JSON.stringify(path) !== JSON.stringify(pathRef.current))
         throw Error("error.scopeChanged");
-      if (current.current.layers.length >= 16) throw Error("error.layers");
-      const layer = makeComposition(child);
+      if (current.current.inputs.length >= 16) throw Error("error.layers");
+      const { input: layer, assets } = reusableInput(child);
       const append = (p: Project) => ({
         ...p,
+        assets: { ...p.assets, ...assets },
         duration: Math.max(p.duration, layer.duration),
-        layers: [...p.layers, layer],
+        inputs: [...p.inputs, layer],
       });
       assertProjectLimits(
         updateProjectAtPath(rootCurrent.current, path, append),
@@ -1293,7 +1299,7 @@ export default function App() {
   }
   async function importSample(file?: File) {
     if (!file) return;
-    if (current.current.layers.length >= 16) {
+    if (current.current.inputs.length >= 16) {
       flash("error.layers");
       return;
     }
@@ -1322,7 +1328,7 @@ export default function App() {
           sampleRate: buffer.sampleRate,
           channels,
         };
-      if (current.current.layers.length >= 16) throw Error("error.layers");
+      if (current.current.inputs.length >= 16) throw Error("error.layers");
       const p = current.current,
         total =
           Object.values(projectForSave(p).assets).reduce(
@@ -1348,7 +1354,7 @@ export default function App() {
         ...p,
         duration: Math.max(p.duration, buffer.duration + 0.05),
         assets: { ...projectForSave(p).assets, [id]: asset },
-        layers: [...p.layers, layer],
+        inputs: [...p.inputs, layer],
       });
       assertProjectLimits(
         updateProjectAtPath(rootCurrent.current, importPath, append),
@@ -1434,7 +1440,7 @@ export default function App() {
         zip.file(`${name}.${exportSettings.format}`, bytes);
         zip.file(
           `${name}.soundforge`,
-          JSON.stringify(projectForSave(v.project)),
+          JSON.stringify(projectDocument(v.project)),
         );
         manifest.push({
           file: `${name}.${exportSettings.format}`,
@@ -1484,7 +1490,7 @@ export default function App() {
   const truncated =
     !!result &&
     fullContentEnd > history.project.duration + 1 / result.sampleRate;
-  const compareName = project.layers.find((l) => l.id === selected)?.name ?? "";
+  const compareName = project.inputs.find((l) => l.id === selected)?.name ?? "";
   const library = (
     <SoundLibrary
       project={history.project}
@@ -1529,13 +1535,13 @@ export default function App() {
   );
   const editor = (
     <div className="editor-content">
-      {context.path.length > 0 && (
+      {timelineScope.path.length > 0 && (
         <div className="composition-navigation">
           <nav aria-label={t("composition.breadcrumbs")}>
-            {context.breadcrumbs.map((item, index) => (
+            {timelineScope.breadcrumbs.map((item, index) => (
               <span key={index}>
                 {index > 0 && <ChevronRight size={13} />}{" "}
-                {index === context.breadcrumbs.length - 1 ? (
+                {index === timelineScope.breadcrumbs.length - 1 ? (
                   <span aria-current="page">{item.name}</span>
                 ) : (
                   <button
@@ -1727,7 +1733,7 @@ export default function App() {
       </div>
       <div className="layers-heading">
         <div className="layer-title-status">
-          <h2>{t("tree.title")}</h2>
+          <h2>{timelineScope.path.length ? t("player.localTimeline", timelineScope.project.name) : t("tree.title")}</h2>
           <span
             className="field-help"
             role="status"
@@ -1752,14 +1758,14 @@ export default function App() {
           <button
             className="text-button"
             onClick={() => compositionInput.current?.click()}
-            disabled={ioBusy || project.layers.length >= 16}
+            disabled={ioBusy || project.inputs.length >= 16}
           >
             <FilePlus2 size={15} />
             {t("composition.import")}
           </button>
           <button
             className="text-button"
-            disabled={project.layers.length >= 16}
+            disabled={project.inputs.length >= 16}
             onClick={addSynth}
           >
             <Plus size={15} />
@@ -1767,7 +1773,7 @@ export default function App() {
           </button>
           <button
             className="text-button"
-            disabled={ioBusy || project.layers.length >= 16}
+            disabled={ioBusy || project.inputs.length >= 16}
             onClick={() => sampleInput.current?.click()}
           >
             <Upload size={15} />
@@ -1785,22 +1791,15 @@ export default function App() {
             onCrop={() => setCropMode((value) => !value)}
             canResetCrop={
               !!selectedLayer &&
-              ((selectedLayer.content.cropStart ?? 0) > 0 ||
-                (selectedLayer.content.cropEnd ?? 1) < 1)
+              ((selectedLayer.sourceStart ?? 0) > 0 ||
+                selectedLayer.sourceEnd < playerDuration(selectedLayer.player))
             }
             onResetCrop={() =>
               edit((p) => ({
                 ...p,
-                layers: p.layers.map((l) =>
+                inputs: p.inputs.map((l) =>
                   l.id === selected
-                    ? {
-                        ...l,
-                        content: {
-                          ...l.content,
-                          cropStart: 0,
-                          cropEnd: 1,
-                        },
-                      }
+                    ? resetPlayerRange(l)
                     : l,
                 ),
               }))
@@ -1809,7 +1808,7 @@ export default function App() {
             onSnap={setSnap}
             zoom={zoom}
             onZoom={setZoom}
-            duration={timelineDuration}
+            duration={layerTimelineDuration}
             canDuplicate={!!selectedLayer}
             onDuplicate={duplicate}
             canGroup={!!selectedIds.length && ready}
@@ -1831,7 +1830,7 @@ export default function App() {
               onClick={() =>
                 edit((p) => ({
                   ...p,
-                  layers: transformLayers(p, selectedLayer!, { start: cue }),
+                  inputs: transformLayers(p, selectedLayer!, { start: selectedScopeCue }),
                 }))
               }
             >
@@ -1843,14 +1842,14 @@ export default function App() {
               onClick={() =>
                 edit((p) => ({
                   ...p,
-                  layers: p.layers.map((l) =>
+                  inputs: p.inputs.map((l) =>
                     selectedIds.includes(l.id) &&
                     !boundControl(p, l.id, "start")
                       ? {
                           ...l,
                           start: Math.max(
                             0,
-                            Math.min(cue, p.duration - l.duration),
+                            Math.min(selectedScopeCue, p.duration - l.duration),
                           ),
                         }
                       : l,
@@ -1866,10 +1865,10 @@ export default function App() {
               onClick={() =>
                 edit((p) => ({
                   ...p,
-                  layers: p.layers.map((l) =>
+                  inputs: p.inputs.map((l) =>
                     selectedIds.includes(l.id) &&
                     !boundControl(p, l.id, "start")
-                      ? { ...l, start: Math.max(0, cue - l.duration) }
+                      ? { ...l, start: Math.max(0, selectedScopeCue - l.duration) }
                       : l,
                   ),
                 }))
@@ -1893,19 +1892,12 @@ export default function App() {
             </label>
             <button
               className="secondary"
-              disabled={
-                !selectedLayer ||
-                selectedIds.some(
-                  (id) =>
-                    project.layers.find((l) => l.id === id)?.content.type ===
-                    "composition",
-                )
-              }
+              disabled={!selectedLayer}
               onClick={() => {
                 if (selectedLayer)
                   edit((p) => ({
                     ...p,
-                    layers: transformLayers(p, selectedLayer, {
+                    inputs: transformLayers(p, selectedLayer, {
                       duration: selectedLayer.duration * groupScale,
                     }),
                   }));
@@ -1916,6 +1908,7 @@ export default function App() {
           </LayerToolbar>
         )}
         root={history.project}
+        viewPath={timelineScope.path}
         selected={{ path: context.path, id: selected }}
         ids={selectedIds}
         result={displayResult ?? null}
@@ -1925,8 +1918,8 @@ export default function App() {
             : undefined
         }
         ready={!!auditionResult}
-        cue={cue}
-        duration={timelineDuration}
+        cue={layerTimelineCue}
+        duration={layerTimelineDuration}
         zoom={zoom}
         cropMode={cropMode}
         playing={playing}
@@ -1945,28 +1938,26 @@ export default function App() {
         onTiming={(address, patch) =>
           editRoot((root) => {
             const parent = nodeParent(root, address.path),
-              active = parent.layers.find((l) => l.id === address.id)!;
-            const layers = transformLayers(
+              active = parent.inputs.find((l) => l.id === address.id)!;
+            const inputs = transformLayers(
               {
                 ...parent,
                 duration: Math.max(
                   parent.duration,
-                  timelineDuration - pathOffset(root, address.path),
+                  layerTimelineDuration - (pathOffset(root, address.path) - pathOffset(root, timelineScope.path)),
                 ),
               },
               active,
               patch,
             );
-            if (layers === parent.layers) return root;
-            const next = structuredClone(root);
-            nodeParent(next, address.path).layers = layers;
-            return next;
+            if (inputs === parent.inputs) return root;
+            return updateProjectAtPath(root, address.path, p => ({ ...p, inputs }));
           })
         }
         snap={snap}
         onSeekStart={beginSeek}
-        onSeek={updateCue}
-        onSeekEnd={endSeek}
+        onSeek={time => updateCue(timeFromPath(history.project, timelineScope.path, time, cue))}
+        onSeekEnd={time => endSeek(timeFromPath(history.project, timelineScope.path, time, cue))}
         onMove={treeMove}
         onPreview={previewNode}
         onNoteAudition={previewNote}
@@ -2021,7 +2012,7 @@ export default function App() {
           <button
             className="secondary"
             onClick={() => void generate()}
-            disabled={busy || !ready || !project.layers.length}
+            disabled={busy || !ready || !project.inputs.length}
           >
             <Shuffle size={15} />
             {t(busy ? "variants.busy" : "variants.generate")}
@@ -2076,7 +2067,7 @@ export default function App() {
                     className="text-button"
                     onClick={() => {
                       edit(() => v.project);
-                      setSelected(v.project.layers[0]?.id ?? "");
+                      setSelected(v.project.inputs[0]?.id ?? "");
                     }}
                   >
                     {t("action.apply")}
@@ -2130,6 +2121,7 @@ export default function App() {
               editRoot(() => defaultProject());
               scopeEpoch.current++;
               setEditPath([]);
+    setTimelinePath([]);
               setSelected("");
               setSelection([]);
               setVariations([]);
@@ -2186,27 +2178,27 @@ export default function App() {
             library,
             notes: (
               <NotesWorkspace
-                layers={project.layers}
+                inputs={project.inputs}
                 selected={selected}
-                cue={cue}
-                duration={timelineDuration}
-                offset={pathOffset(history.project, context.path)}
+                cue={timeAtPath(history.project, context.path, cue) ?? -1}
+                duration={project.duration}
+                offset={0}
                 onSeekStart={beginSeek}
-                onSeek={updateCue}
-                onSeekEnd={endSeek}
+                onSeek={time => updateCue(timeFromPath(history.project, context.path, time, cue))}
+                onSeekEnd={time => endSeek(timeFromPath(history.project, context.path, time, cue))}
                 onSelect={(id) => treeSelect({ path: context.path, id })}
                 onBegin={stop}
                 onChange={(note) => {
-                  if (selectedLayer?.content.score)
+                  if (selectedLayer?.player.score)
                     editRoot((root) =>
                       editNode(
                         root,
                         { path: context.path, id: selectedLayer.id },
                         {
-                          content: {
+                          player: {
                             score: {
-                              ...selectedLayer.content.score!,
-                              notes: selectedLayer.content.score!.notes.map(
+                              ...selectedLayer.player.score!,
+                              notes: selectedLayer.player.score!.notes.map(
                                 (n) => (n.id === note.id ? note : n),
                               ),
                             },
@@ -2291,7 +2283,7 @@ export default function App() {
                     : undefined
                 }
                 sourceEditor={
-                  selectedLayer?.content.type === "instrument" ? (
+                  selectedLayer?.player.type === "instrument" ? (
                     <ScoreEditor
                       key={selectedLayer.id}
                       project={project}
@@ -2320,6 +2312,7 @@ export default function App() {
                 layer={selectedLayer}
                 project={project}
                 onChange={changeLayer}
+                onFitRange={() => edit(p => ({ ...p, inputs: p.inputs.map(l => l.id === selected ? fitPlayerRange(l) : l) }))}
                 onExpose={(key) =>
                   selectedLayer &&
                   edit((p) => exposeParameter(p, selectedLayer, key))

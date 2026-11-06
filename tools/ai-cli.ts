@@ -1,3 +1,4 @@
+import { projectDocument } from '../src/model';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +21,7 @@ const need = (key: string) => { if (!options[key]) throw Error(`Missing ${key}`)
 const json = async (path: string) => { const bytes = await readFile(path); if (bytes.length > 36 * 1024 * 1024) throw Error('Input exceeds budget'); return JSON.parse(bytes.toString('utf8')); };
 const input = async () => parseProject(await json(need('--input')));
 const write = async (path: string, value: string | Uint8Array) => { await mkdir(dirname(resolve(path)), { recursive: true }); await writeFile(path, value, { flag: 'wx' }); };
-const save = (p: Project) => write(need('--out'), JSON.stringify(parseProject(projectForSave(p)), null, 2));
+const save = (p: Project) => write(need('--out'), JSON.stringify(projectDocument(parseProject(projectForSave(p))), null, 2));
 
 export function decodePCM(bytes: Buffer, name: string, id: string) {
   if (bytes.length > 24 * 1024 * 1024 || bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WAVE') throw Error('Use a PCM WAV file <=24 MiB');
@@ -82,7 +83,7 @@ async function run() {
     const project = makeProject(asset.name); project.assets[asset.id] = asset;
     const seconds = Buffer.from(asset.channels[0], 'base64').length / 4 / asset.sampleRate;
     project.duration = Math.max(0.1, seconds);
-    project.layers = [makeLayer({ id: 'sample-layer', name: asset.name, type: 'sample', assetId: asset.id, duration: seconds, frequency: 440, endFrequency: 440, decay: 0, attack: 0.002, release: 0.02 })];
+    project.inputs = [makeLayer({ id: 'sample-layer', name: asset.name, type: 'sample', assetId: asset.id, duration: seconds, frequency: 440, endFrequency: 440, decay: 0, attack: 0.002, release: 0.02 })];
     return save(project);
   }
   if (command === 'instrument') {
@@ -97,7 +98,7 @@ async function run() {
       regions.push({ velocityLow: 1, velocityHigh: 127, roundRobin: 0, tuneCents: 0, gainDb: 0, releaseSeconds: 0.1, ...region, id: `region-${i}`, assetId: id });
     }
     p.duration = manifest.duration ?? 10;
-    p.layers = [makeLayer({ id: 'instrument-layer', name: manifest.name, type: 'instrument', duration: p.duration, gain: 0.8, decay: 0, attack: 0, release: 0,
+    p.inputs = [makeLayer({ id: 'instrument-layer', name: manifest.name, type: 'instrument', duration: p.duration, gain: 0.8, decay: 0, attack: 0, release: 0,
       score: { schema: 'momo.score/v1', bpm: manifest.bpm ?? 120, instruments: [{ id: manifest.instrumentId, name: manifest.name, regions }], notes: manifest.notes ?? [] } })];
     return save(p);
   }
@@ -106,7 +107,7 @@ async function run() {
     const recipe = bank.recipes.find((r: { id: string }) => r.id === need('--id')); if (!recipe) throw Error('Unknown lesson');
     const p = makeProject(recipe.name); p.duration = recipe.durationSeconds; p.seed = bank.renderSettings.seed;
     const hz = (m: number) => 440 * 2 ** ((m - 69) / 12);
-    p.layers = recipe.notes.map((n: any, i: number) => makeLayer({ id: `${recipe.id}-${i}`, name: `MIDI ${n.midi}`, start: n.startSeconds, duration: n.durationSeconds, wave: n.wave ?? bank.renderSettings.defaultWave,
+    p.inputs = recipe.notes.map((n: any, i: number) => makeLayer({ id: `${recipe.id}-${i}`, name: `MIDI ${n.midi}`, start: n.startSeconds, duration: n.durationSeconds, wave: n.wave ?? bank.renderSettings.defaultWave,
       frequency: hz(n.midi), endFrequency: hz(n.endMidi ?? n.midi), gain: 0.35 * n.velocity / 127, attack: n.attackSeconds ?? Math.min(bank.renderSettings.defaultAttackSeconds, n.durationSeconds * 0.2),
       release: Math.min(bank.renderSettings.defaultReleaseSeconds, n.durationSeconds * 0.3), decay: n.decay ?? bank.renderSettings.defaultDecay, cutoff: bank.renderSettings.cutoffHz }));
     const initial = renderProject(parseProject(p)); p.master = Math.min(1.5, bank.renderSettings.targetPeak / Math.max(1e-9, initial.peak));

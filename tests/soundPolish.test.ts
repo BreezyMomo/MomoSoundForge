@@ -9,14 +9,14 @@ import {
 } from "../src/model";
 import { beforeSoundPolish } from "../src/polishAudition";
 const fixture = (): Project => ({
-  schema: "momo.soundforge/v3",
+  schema: "momo.soundforge/v4",
   name: "polish",
   seed: 42,
   duration: 0.5,
   master: 0.5,
   echo: 0.12,
   assets: {},
-  layers: [makeLayer({ duration: 0.1, frequency: 440 })],
+  inputs: [makeLayer({ duration: 0.1, frequency: 440 })],
   effects: {
     ...DEFAULT_EFFECTS,
     low: 8,
@@ -60,7 +60,7 @@ describe("sound polish", () => {
       snapshot = structuredClone(p);
     const original = beforeSoundPolish(p);
     expect(p).toEqual(snapshot);
-    expect(original.layers).toBe(p.layers);
+    expect(original.inputs).toBe(p.inputs);
     expect(original.echo).toBe(p.echo);
     expect(original.effects!.ceiling).toBe(-3);
     const neutral = {

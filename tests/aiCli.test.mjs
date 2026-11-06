@@ -34,7 +34,7 @@ it('imports PCM with provenance and diagnoses uncovered instrument notes', async
   await writeFile(join(root, 'metadata.json'), JSON.stringify({ name: 'Fixture', source }));
   await run('import-wav', '--audio', 'source.wav', '--metadata', 'metadata.json', '--out', 'sample.soundforge');
   const sample = JSON.parse(await readFile(join(root, 'sample.soundforge'), 'utf8'));
-  expect(Object.values(sample.assets)[0].source).toEqual(source);
+  expect(Object.values(sample.root.mix.assets)[0].source).toEqual(source);
   await writeFile(join(root, 'instrument.json'), JSON.stringify({ schema: 'momo.soundforge.instrument-input/v1', name: 'Test instrument', instrumentId: 'test', duration: 2, bpm: 120,
     regions: [{ file: 'source.wav', rootMidi: 60, keyLow: 60, keyHigh: 60, articulation: 'sustain', source }],
     notes: [{ id: 'n1', instrumentId: 'test', midi: 61, start: 0, duration: 1, velocity: 80, articulation: 'sustain' }] }));
@@ -48,6 +48,6 @@ it('builds every included original lesson recipe as a valid native project', asy
   for (const recipe of bank.recipes) {
     await run('lesson', '--id', recipe.id, '--out', `${recipe.id}.soundforge`);
     const p = JSON.parse(await readFile(join(root, `${recipe.id}.soundforge`), 'utf8'));
-    expect(p.layers.length).toBe(recipe.notes.length);
+    expect(p.root.mix.inputs.length).toBe(recipe.notes.length);
   }
 }, 30000);

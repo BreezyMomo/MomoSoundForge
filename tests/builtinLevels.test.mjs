@@ -48,9 +48,9 @@ it('renders the shipped timpani at usable default loudness and retains velocity 
     const measured = levels([normal.left, normal.right], normal.sampleRate);
     expect(measured.activeRmsDb).toBeGreaterThanOrEqual(-20.1);
     expect(normal.peak).toBeGreaterThan(.2);
-    (project.layers[0].content.score).notes[0].velocity = 50;
+    (project.inputs[0].player.score).notes[0].velocity = 50;
     expect(renderProject(project).peak / normal.peak).toBeCloseTo(.5, 4);
-    (project.layers[0].content.score).notes[0].velocity = 127;
+    (project.inputs[0].player.score).notes[0].velocity = 127;
     expect(renderProject(project).sourcePeak).toBeLessThan(.8);
 });
 

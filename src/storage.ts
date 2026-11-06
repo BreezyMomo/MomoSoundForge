@@ -1,3 +1,4 @@
+import { projectDocument } from './model';
 import { SOUND_CATEGORIES, type SoundCategory } from "./libraryPreferences";
 import {
   parseProject,
@@ -61,7 +62,7 @@ export async function writeDraft(project: Project) {
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction("drafts", "readwrite");
-      tx.objectStore("drafts").put(projectForSave(project), "current");
+      tx.objectStore("drafts").put(projectDocument(project), "current");
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
@@ -116,9 +117,9 @@ export async function saveSoundToLibrary(
   const project = parseProject(projectForSave(source));
   let layerCount = 0;
   const count = (p: Project) => {
-    layerCount += p.layers.length;
-    for (const layer of p.layers)
-      if (layer.content.project) count(layer.content.project);
+    layerCount += p.inputs.length;
+    for (const layer of p.inputs)
+      if (layer.player.mix) count(layer.player.mix);
   };
   count(project);
   const channels = [audio.left, audio.right];
@@ -149,7 +150,7 @@ export async function saveSoundToLibrary(
   try {
     const tx = db.transaction(["sounds", "sound-index"], "readwrite"),
       done = completed(tx);
-    tx.objectStore("sounds").put(project, id);
+    tx.objectStore("sounds").put(projectDocument(project), id);
     tx.objectStore("sound-index").put(entry, id);
     await done;
     return entry;
@@ -205,7 +206,7 @@ export async function renameSavedSound(
           ? { category }
           : {}),
       };
-      sounds.put({ ...project.result, name: nextName }, id);
+      sounds.put(projectDocument({ ...parseProject(project.result), name: nextName }), id);
       index.put(result, id);
     };
     await done;

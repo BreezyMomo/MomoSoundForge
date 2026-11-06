@@ -34,8 +34,8 @@ export const REPLACEMENT_MESSAGES: Record<string, [string, string]> = {
     "Choose a recording or import local audio",
   ],
   "replace.preserveHelp": [
-    "保留声层名称、位置、音量、声像、静音／独奏和外部效果；音量与声像曲线随新时长展开。",
-    "Keep layer name, position, volume, pan, mute/solo and outer effects. Volume and pan curves follow the new duration.",
+    "保留声层名称、位置、读取范围、速度、循环、播放时长、音量和声像设置；父组合效果保持不变。",
+    "Keep name, placement, read range, speed, loop, playback length, volume and pan. Parent mix effects stay unchanged.",
   ],
   "replace.detach": [
     "将解除 {0} 处指向旧内容的控件绑定；开始位置、音量和声像绑定保留。",
@@ -46,8 +46,8 @@ export const REPLACEMENT_MESSAGES: Record<string, [string, string]> = {
     "The old content’s filter curve will be removed.",
   ],
   "replace.contentHelp": [
-    "用候选内容的完整设置替换旧内容。旧组合的子声层、片段裁切和合成参数不会沿用。",
-    "Use the candidate content settings. Old child layers, clip trims and synthesis settings are not carried over.",
+    "替换整个声音及其自身效果。旧声音内部的组合、乐谱和合成参数不会沿用。",
+    "Replace the sound and its own effects. Old internal combinations, scores and synthesis settings are not carried over.",
   ],
   "replace.timing": [
     "声层时长：{0} s → {1} s",
