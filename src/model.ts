@@ -1,4 +1,5 @@
 import { effectTail } from "./nodeEffects";
+import { BASIC_SYNTH, parseSynth, type SynthDefinition } from "./synthesizers";
 import { playerDuration } from "./playerPlayback";
 import { validateVideoReference, type VideoReference } from "./videoReference";
 import { validateSampleSource, type SampleSource } from "./sampleSource";
@@ -54,6 +55,7 @@ export type PlayerInput = {
 };
 /** Source-specific playback and shaping; never copied from the old player across replacement. */
 export type Player = {
+  synth?: SynthDefinition;
   type: "synth" | "sample" | "composition" | "instrument";
   wave: Wave;
   noiseSeed: number;
@@ -73,6 +75,7 @@ export type Player = {
   drive: number;
 };
 export const CONTENT_KEYS = [
+  "synth",
   "effects",
   "level",
   "type",
@@ -202,6 +205,8 @@ export function makeLayer(patch: LayerInit = {}): PlayerInput {
     ),
     ...patch.player,
   };
+  if (player.type === "synth") player.synth = parseSynth(player.synth ?? BASIC_SYNTH);
+  else delete player.synth;
   const outer = Object.fromEntries(
     Object.entries(patch).filter(
       ([key]) =>
@@ -466,6 +471,8 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       ]),
     ) as unknown as Player;
     player.duration = l.player.duration;
+    if (player.type === "synth") player.synth = parseSynth(l.player.synth ?? BASIC_SYNTH);
+    else delete player.synth;
     if (l.player.effects) player.effects = structuredClone(l.player.effects);
     if (player.type !== "sample") delete player.assetId;
     if (player.type !== "instrument") delete player.score;

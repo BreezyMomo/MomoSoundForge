@@ -1,6 +1,7 @@
 import { playerDuration, sourceTime, mixTail } from "./playerPlayback";
 import { effectTail, MAX_RENDER_SAMPLES } from "./nodeEffects";
 import { renderScore } from "./instruments";
+import { synthSample } from "./synthesizers";
 import { resolveControls, curveValue, processEffects } from "./advanced";
 import {
   SAMPLE_RATE,
@@ -240,22 +241,7 @@ function renderNested(
         value = read(channels[0]);
         stereo = read(channels[1] ?? channels[0]);
       } else {
-        switch (layer.player.wave) {
-          case "sine":
-            value = Math.sin(phase * 2 * Math.PI);
-            break;
-          case "triangle":
-            value = 1 - 4 * Math.abs(phase - 0.5);
-            break;
-          case "saw":
-            value = 2 * phase - 1;
-            break;
-          case "square":
-            value = phase < 0.5 ? 1 : -1;
-            break;
-          case "noise":
-            value = noise() * 2 - 1;
-        }
+        value = synthSample(layer.player.synth?.algorithm ?? "oscillator-v1", layer.player.wave, phase, noise);
         stereo = value;
       }
       const attack =

@@ -1,4 +1,5 @@
 import { PLAYER_MESSAGES } from "./playerMessages";
+import { DEFINITION_MESSAGES } from "./definitionMessages";
 import { useSyncExternalStore } from "react";
 import {
   createLanguageController,
@@ -9,6 +10,7 @@ import { BUILTIN_MESSAGES } from "./builtinMessages";
 import { AI_MESSAGES } from "./aiMessages";
 import { REPLACEMENT_MESSAGES } from "./replacementMessages";
 const words: Record<string, [string, string]> = {
+  ...DEFINITION_MESSAGES,
   ...REPLACEMENT_MESSAGES,
   ...PLAYER_MESSAGES,
   "roll.playhead": ["音符播放位置（拍）", "Note playback position (beats)"],

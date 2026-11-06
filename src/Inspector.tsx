@@ -154,9 +154,11 @@ export function Inspector({
   sourceEditor,
   onReplaceContent,
   onFitRange,
+  definitionControl,
 }: {
   postProcessing?: ReactNode;
   sourceEditor?: ReactNode;
+  definitionControl?: ReactNode;
   onReplaceContent?: () => void;
   onFitRange?: () => void;
   layer?: PlayerInput;
@@ -347,6 +349,7 @@ export function Inspector({
       <h3>{t("player.ownEffects")}</h3>
       {postProcessing}
       <div ref={contentEditor}>
+        {definitionControl}
         {sourceEditor}
         <section className="property-section">
           <h3>{t("prop.source")}</h3>

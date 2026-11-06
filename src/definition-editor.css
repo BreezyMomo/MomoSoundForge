@@ -1,0 +1,24 @@
+@layer utilities {
+.definition-editor[data-slot="dialog-content"] { display: block; max-width: none; width: min(1040px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; padding: 20px; color: var(--ui-text); background: var(--ui-panel); border: 1px solid var(--ui-line); border-radius: 8px; overflow: auto; }
+.definition-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.definition-header h2 { margin: 0; font-size: 17px; }
+.definition-layout { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 22px; }
+.definition-sidebar { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.definition-list { height: 390px; overflow: auto; }
+.definition-list h3, .definition-content h3 { font-size: 13px; margin: 14px 0 8px; }
+.definition-entry[data-slot="button"] { color: var(--ui-text); justify-content: flex-start; height: auto; min-height: 30px; padding: 6px 9px; display: block; width: 100%; text-align: left; border-color: transparent; background: transparent; margin-bottom: 3px; white-space: normal; overflow-wrap: anywhere; }
+.definition-editor button[aria-pressed="true"] { background: var(--ui-hover); border-color: var(--ui-line); }
+.definition-content { min-width: 0; max-height: 570px; overflow: auto; padding-right: 8px; }
+.definition-content > p:first-child { margin-top: 0; }
+.definition-content .text-field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.definition-content input:not([data-slot]), .definition-content select, .definition-sidebar > input { color: var(--ui-text); background: var(--ui-inset); border: 1px solid var(--ui-line); border-radius: 6px; padding: 7px 9px; min-width: 0; }
+.definition-parameters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.definition-parameters .text-field { margin: 0; }
+.definition-footer { border-top: 1px solid var(--ui-line); margin-top: 16px; padding-top: 8px; }
+.definition-editor .button-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.definition-unsaved { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--ui-line); margin-top: 10px; padding-top: 10px; }
+.definition-content .score-advanced > summary[hidden] { display: none; }
+@media(max-width: 720px) { .definition-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; } .definition-list { height: 140px; } .definition-content { max-height: none; } .definition-editor[data-slot="dialog-content"] { padding: 14px; } }
+@media(max-width: 440px) { .definition-parameters { grid-template-columns: minmax(0, 1fr); } }
+
+}

@@ -98,17 +98,19 @@ export function ScoreEditor({
   layer,
   onChange,
   onAudition,
+  definitionOnly = false,
 }: {
   project: Project;
   layer: PlayerInput;
   onChange: (p: Project) => void;
   onAudition: (note: NoteEvent) => void;
+  definitionOnly?: boolean;
 }) {
   const latestProject = useRef(project);
   latestProject.current = project;
   const score = layer.player.score ?? emptyScore(),
     [error, setError] = useState(""),
-    [tab, setTab] = useState("notes"),
+    [tab, setTab] = useState(definitionOnly ? "mapping" : "notes"),
     [instrumentId, setInstrumentId] = useState(score.instruments[0]?.id ?? ""),
     [assetId, setAssetId] = useState(Object.keys(project.assets)[0] ?? ""),
     [regionId, setRegionId] = useState(""),
@@ -311,7 +313,7 @@ export function ScoreEditor({
   };
   return (
     <section className="score-editor">
-      <BasicScoreEditor
+      {!definitionOnly && <BasicScoreEditor
         score={score}
         canAdd={!!inst && score.notes.length < 256}
         onAdd={addNote}
@@ -321,7 +323,7 @@ export function ScoreEditor({
           commit({ ...score, notes: score.notes.filter((n) => n.id !== id) })
         }
         onAudition={onAudition}
-      />
+      />}
       {error && (
         <p role="alert" className="warning-line">
           {error}
@@ -341,8 +343,8 @@ export function ScoreEditor({
             : {t(issue.key)}
           </p>
         ))}
-      <details className="score-advanced">
-        <summary>{t("note.basic.advanced")}</summary>
+      <details className="score-advanced" open={definitionOnly || undefined}>
+        <summary hidden={definitionOnly}>{t("note.basic.advanced")}</summary>
         <Tabs
           value={tab}
           onValueChange={(value) => setTab(String(value))}
@@ -353,10 +355,10 @@ export function ScoreEditor({
             <h2>
               {t("score.title")} · {layer.name}
             </h2>
-            <TabsList aria-label={t("score.title")}>
+            {!definitionOnly && <TabsList aria-label={t("score.title")}>
               <TabsTrigger value="notes">{t("score.notes")}</TabsTrigger>
               <TabsTrigger value="mapping">{t("score.mapping")}</TabsTrigger>
-            </TabsList>
+            </TabsList>}
           </header>
 
           <FieldGroup className="sound-score-toolbar">
@@ -376,14 +378,14 @@ export function ScoreEditor({
                 onValueChange={setInstrumentId}
               />
             </Field>
-            <Button
+            {!definitionOnly && <Button
               variant="outline"
               className="secondary"
               onClick={() => bundleInput.current?.click()}
               disabled={score.instruments.length >= 8}
             >
               {t("score.importInstrument")}
-            </Button>
+            </Button>}
             <input
               ref={bundleInput}
               type="file"
@@ -683,7 +685,7 @@ export function ScoreEditor({
                 <Button
                   variant="outline"
                   className="secondary"
-                  disabled={!assetId || score.instruments.length >= 8}
+                  disabled={!assetId || score.instruments.length >= (definitionOnly ? 1 : 8)}
                   onClick={addInstrument}
                 >
                   {t("score.fromSample")}

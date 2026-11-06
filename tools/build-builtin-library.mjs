@@ -86,7 +86,7 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 });
 
 const sourceFiles = [...new Set([
-  "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts", "src/playerPlayback.ts", "src/effectTypes.ts",
+  "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts", "src/playerPlayback.ts", "src/effectTypes.ts", "src/synthesizers.ts",
   `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   `${expandedRoot}/manifest.json`,

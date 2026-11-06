@@ -67,6 +67,7 @@ MCP 还支持候选变体生成、试听与应用，声音修饰与原声对比�
 - [乐器与音符](docs/instruments.md)：采样音域、力度层、演奏法、音符 JSON 和便携乐器包。
 - [长笛示例](examples/instruments/flute/)：可编辑工程、乐器包和音符数据。
 - [开发与部署](docs/development.md)：本地运行、资源构建、验证与 GitHub Pages。
+- [合成器与乐器定义交接](docs/handoff-sound-definitions.md)：独立定义编辑器、播放器绑定、数据约定及后续边界。
 - [产品目标](docs/product-vision.md)：面向非专业游戏开发者的设计方向。
 
 当前支持多声部音符编辑；尚未提供实时 MIDI 输入、VST 插件宿主、语音生成或在线 AI 生成服务。专业模式属于后续方向。乐器的真实音域、演奏法和可持续时长受现有采样限制，不会自动补出未录制的演奏法。

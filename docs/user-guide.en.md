@@ -177,3 +177,14 @@ Each layer row also has a trash icon that deletes only that row, independently o
 ## Nature ambience
 
 Wind, rain & thunder and Birds & nature provide 20 working clips in eight groups, selected from 11 publisher originals. Rain is separated into water and ground surfaces; the publisher describes the three isolated thunder recordings as being without rain. Ambient loops use 10–12 seconds with processed cycle boundaries; bird calls and thunder events retain their attacks and natural tails. Multiple selections can come from one long recording. Forest morning, Rainstorm and Crickets by the stream are editable combinations. See [collection notes](../samples/nature-ambience-20261105/使用说明.txt) for originals, licensing, processing and source formats.
+
+
+## Create synthesizers and instruments
+
+Open **Synthesizers & instruments** in the top bar to manage reusable definitions. A synthesizer definition stores an algorithm and its default parameters. The first implementation supports the basic oscillator algorithm with multiple saved parameter definitions. Create a sound layer to edit its duration and instance parameters, then save the finished sound to the sound library.
+
+An instrument definition maps recordings to pitches, velocities and articulations; it contains no melody. Start from a built-in definition, or create an instrument, import a recording, select the sample and create its first mapping. Apply mapping edits before saving the definition. Creating a sound layer produces an empty score; add notes in the note editor.
+
+Existing synth and instrument layers offer a definition selector in their properties. Switching instruments preserves notes and warns about unsupported pitches. Parent timing, read ranges, speed, looping and effects are preserved, and the operation can be undone. Editing a library definition does not change existing works.
+
+Definitions are stored in the current browser and can be exported/imported as `.sfsynth` or portable `.sfinstrument` files with recordings. They are separate from finished sounds in My sounds.
