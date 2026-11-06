@@ -44,7 +44,7 @@ try {
     totalLayers += p.layers.length;
     embeddedSamples += Object.keys(p.assets).length;
     for (const layer of p.layers)
-      if (layer.type === "composition" && layer.project) count(layer.project);
+      if (layer.content.type === "composition" && layer.content.project) count(layer.content.project);
   };
   count(project);
   console.log(

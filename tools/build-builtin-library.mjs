@@ -128,7 +128,7 @@ try {
       // A naturally weak low-register note need not be the first sound a novice
       // hears. Pick a nearby audible root without changing sample/velocity gains.
       if (levels([raw.left, raw.right], raw.sampleRate).status !== "ok") {
-        const originalMidi = source.layers[0].score.notes[0].midi;
+        const originalMidi = source.layers[0].content.score.notes[0].midi;
         const roots = [...new Set(job.samples.map(s => s.rootMidi))]
           .filter(midi => midi !== originalMidi).sort((a, b) => Math.abs(a - originalMidi) - Math.abs(b - originalMidi));
         for (const midi of roots) {
@@ -155,7 +155,7 @@ try {
       for (let i = 0; i < length; i++) for (let c = 0; c < 2; c++) channels[c][i] = wav.readInt16LE(44 + i * 4 + c * 2) / 32768 * assetGain;
       const { duration, release } = instrumentPlaybackRange(channels, 48000, job.sample.instrumentId);
       source = {
-        schema: "momo.soundforge/v2", name: job.id, seed: 2048, duration, master: 1, echo: 0,
+        schema: "momo.soundforge/v3", name: job.id, seed: 2048, duration, master: 1, echo: 0,
         assets: { [job.sample.id]: { id: job.sample.id, name: path.basename(job.source), sampleRate: 48000, channels: channels.map(encodeSamples) } },
         layers: [makeLayer({ id: `layer-${job.sample.id}`, name: job.sample.id, type: "instrument",
           score: { schema: "momo.score/v1", bpm: 120,
@@ -182,7 +182,7 @@ try {
     if (job.kind === "instrument" && !job.tone) {
       const boostDb = standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate));
       if (boostDb > 0) {
-        const region = project.layers[0].score.instruments[0].regions[0];
+        const region = project.layers[0].content.score.instruments[0].regions[0];
         const extraDb = Math.max(0, region.gainDb + boostDb - 24);
         region.gainDb = Math.min(24, region.gainDb + boostDb);
         if (extraDb > 0) {

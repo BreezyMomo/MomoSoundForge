@@ -1,3 +1,4 @@
+import { patchLayer, type LayerPatch } from "./model";
 import { DEFAULT_EFFECTS, resolveControls } from "./advanced";
 import {
   assertProjectLimits,
@@ -13,22 +14,29 @@ export function nodeParent(root: Project, path: string[]) {
   let p = root;
   for (const id of path) {
     const node = p.layers.find((l) => l.id === id);
-    if (!node?.project || node.type !== "composition")
+    if (!node?.content.project || node.content.type !== "composition")
       throw Error("error.project");
-    p = node.project;
+    p = node.content.project;
   }
   return p;
 }
 export function normalizeGroups(root: Project): Project {
   const layers = root.layers.map((l) => {
-    if (l.type !== "composition" || !l.project) return l;
-    const child = normalizeGroups(l.project);
+    if (l.content.type !== "composition" || !l.content.project) return l;
+    const child = normalizeGroups(l.content.project);
     const duration = Math.max(
       0.1,
       ...child.layers.map((n) => n.start + n.duration),
     );
     if (!Number.isFinite(duration)) throw Error("error.tree.timeBounds");
-    return { ...l, duration, project: { ...child, duration } };
+    return {
+      ...l,
+      duration,
+      content: {
+        ...l.content,
+        project: { ...child, duration },
+      },
+    };
   });
   return { ...root, layers };
 }
@@ -45,7 +53,10 @@ export function groupNodes(
   path: string[],
   ids: string[],
   name: string,
-): { root: Project; id: string } {
+): {
+  root: Project;
+  id: string;
+} {
   const next = structuredClone(root),
     parent = nodeParent(next, path);
   const chosen = parent.layers.filter((l) => ids.includes(l.id));
@@ -54,7 +65,7 @@ export function groupNodes(
   const start = Math.min(...chosen.map((l) => l.start));
   const duration = Math.max(...chosen.map((l) => l.start + l.duration)) - start;
   const child: Project = {
-    schema: "momo.soundforge/v2",
+    schema: "momo.soundforge/v3",
     name,
     duration,
     master: 1,
@@ -77,7 +88,7 @@ export function pathOffset(root: Project, path: string[]) {
   for (const id of path) {
     const n = p.layers.find((l) => l.id === id)!;
     time += n.start;
-    p = n.project!;
+    p = n.content.project!;
   }
   return time;
 }
@@ -109,14 +120,15 @@ export function moveNodes(
   if (
     chosen.some(
       (l) =>
-        l.start + delta < -1e-6 || !Number.isFinite(l.start + delta + l.duration),
+        l.start + delta < -1e-6 ||
+        !Number.isFinite(l.start + delta + l.duration),
     )
   )
     throw Error("error.tree.timeBounds");
   for (const layer of chosen) {
     if (source !== target && target.layers.some((l) => l.id === layer.id))
       throw Error("error.tree.duplicateId");
-    if (source !== target && layer.type !== "composition") {
+    if (source !== target && layer.content.type !== "composition") {
       const isolated = projectForSave({
         ...source,
         layers: [layer],
@@ -132,17 +144,19 @@ export function moveNodes(
         target.assets[key] = { ...asset, id: key };
         replacements[id] = key;
       }
-      if (layer.assetId)
-        layer.assetId = replacements[layer.assetId] ?? layer.assetId;
-      if (layer.score) {
-        for (const instrument of layer.score.instruments)
+      if (layer.content.assetId)
+        layer.content.assetId =
+          replacements[layer.content.assetId] ?? layer.content.assetId;
+      if (layer.content.score) {
+        for (const instrument of layer.content.score.instruments)
           for (const region of instrument.regions) {
             region.assetId = replacements[region.assetId] ?? region.assetId;
             if (region.releaseAssetId)
               region.releaseAssetId =
                 replacements[region.releaseAssetId] ?? region.releaseAssetId;
           }
-        layer.noiseSeed = (layer.noiseSeed ^ source.seed ^ target.seed) >>> 0;
+        layer.content.noiseSeed =
+          (layer.content.noiseSeed ^ source.seed ^ target.seed) >>> 0;
       }
     }
     layer.start = Math.max(0, layer.start + delta);
@@ -157,13 +171,13 @@ export function moveNodes(
 export function editNode(
   root: Project,
   address: NodeAddress,
-  patch: Partial<Layer>,
+  patch: LayerPatch,
 ): Project {
   const next = structuredClone(root),
     parent = nodeParent(next, address.path),
     index = parent.layers.findIndex((l) => l.id === address.id);
   if (index < 0) throw Error("error.project");
-  parent.layers[index] = { ...parent.layers[index], ...patch };
+  parent.layers[index] = patchLayer(parent.layers[index], patch);
   return normalizeGroups(next);
 }
 export function isolatedNode(root: Project, address: NodeAddress): Project {
@@ -184,6 +198,8 @@ export function isolatedNode(root: Project, address: NodeAddress): Project {
   };
 }
 
+// Resource recipes can still describe a finished sound. Insert their output settings on
+// an explicit node so the editable document root remains a neutral container.
 // Resource recipes can still describe a finished sound. Insert their output settings on
 // an explicit node so the editable document root remains a neutral container.
 export function nodeDocument(project: Project): Project {

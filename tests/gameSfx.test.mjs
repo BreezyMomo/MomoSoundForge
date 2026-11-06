@@ -68,9 +68,13 @@ it('renders short, audible, peak-safe defaults with exactly matching card wavefo
 }, 30000);
 
 it('opens portable editable combinations with audible controls and reproducible output', () => {
-  expect(scenes).toHaveLength(8);
+  expect(scenes.map(s => s.id)).toEqual(expect.arrayContaining([
+    'example-game-wood-impact', 'example-game-metal-impact', 'example-game-body-impact',
+    'example-game-wooden-landing', 'example-game-solid-punch',
+  ]));
   for (const sound of scenes) {
     const project = read(sound);
+    expect(project.recipe).toBeUndefined();
     expect(project.layers.length).toBeGreaterThan(1);
     const saved = parseProject(JSON.parse(JSON.stringify(projectForSave(project))));
     expect(renderProject(saved).left).toEqual(renderProject(project).left);

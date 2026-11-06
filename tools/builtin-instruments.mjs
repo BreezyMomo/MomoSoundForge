@@ -66,7 +66,7 @@ export async function instrumentProject(job, root, { makeLayer, encodeSamples },
   // Include every velocity and alternate take's tail, not just the first take.
   const duration = Math.max(.2, ...playable.map(r => Math.min(available(r), held + r.releaseSeconds) + .05));
   const instrument = { id: job.id, name: sample.instrumentName, source: sample.sourceUrl, license: sample.license, regions };
-  return { schema: 'momo.soundforge/v2', name: job.id, seed: 2048, duration, master: 1, echo: 0, assets,
+  return { schema: 'momo.soundforge/v3', name: job.id, seed: 2048, duration, master: 1, echo: 0, assets,
     layers: [makeLayer({ id: `layer-${job.id}`, name: job.id, type: 'instrument', duration,
       frequency: 440, endFrequency: 440, attack: 0, release: 0, decay: 0, gain: 1, cutoff: 22000,
       score: { schema: 'momo.score/v1', bpm: 120, instruments: [instrument], notes: [

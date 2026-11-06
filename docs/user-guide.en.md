@@ -53,6 +53,16 @@ Legacy standalone notes restore authored gain, then receive an audible default l
 - A local library of editable sounds with waveform previews, search, audition, opening, insertion as composition layers, updates and separate copies. Removed sounds can be restored.
 - Shared MomoWorkbench docking, saved layouts, themes and Chinese/English UI. Narrow screens use workspace tabs.
 
+## Layers and sound content
+
+A work contains layers. Each layer has outer settings and replaceable content: synthesized sound, an audio clip, an instrument performance, or an editable combination. Instruments currently use recordings; notes describe the performance.
+
+Choose **Edit content** or **Replace content** in layer properties. Replacement accepts built-in recordings, combination examples, current group assets and local audio. A whole combination can become an audio clip, and an audio clip can become an editable combination. Synth and instrument layers can also receive those contents.
+
+Replacement retains name, placement, volume, pan, mute/solo, variation lock, outer effects and volume/pan curves. It replaces old child layers, notes, synthesis, trim and stretch settings, removes old content-control bindings and filter automation, and displays the affected bindings and duration change. The work window stays fixed.
+
+Audition in the full work before confirming. Cancel makes no document change; confirmation is one undoable edit. Group multiple layers before replacing them as a whole. Native documents use v3; unpublished older formats are not supported. Built-in resources have been updated.
+
 ## Workflow
 
 1. Find a sound in the library. Use Open to edit for a standalone project, Add to current for a composition layer, or its play button to audition it.
@@ -79,7 +89,7 @@ Shortcuts: Space to play/pause; Ctrl/Cmd+Z to undo; Ctrl/Cmd+Shift+Z to redo; Ct
 
 Rejected takes are deleted from the library and source files. `tools/builtin-quality.json` retains only the rejection reason to prevent reintroduction. The amplified F♯2 timpani lacked a clear drum attack; its original and working copies have been deleted. The timpani card and bundled examples now use C♯3, and the audition reel and distribution archive are cleaned as well. Review records distinguish listening feedback from signal measurements: passing level checks is not a sound-quality certification.
 
-The library separates **Basic sounds**, **Combinations** and **My sounds**. Basic sounds contains 108 choices: 48 instrument/articulation combinations, 52 CC0 sound-effect groups and 8 synthesis presets. Instruments use 725 distinct recordings; sound effects provide 126 selectable clips. Alternate recordings of the same action share one card with a Recording selector. Different actions, materials and impact strengths keep separate cards. Instruments are grouped by instrument and articulation, with ranges selected within the card. Browse the 27 editable combinations separately. Categories, bilingual search, favorites and recent items work within each section.
+The library separates **Basic sounds**, **Combinations** and **My sounds**. Basic sounds contains 108 choices: 48 instrument/articulation combinations, 52 CC0 sound-effect groups and 8 synthesis presets. Instruments use 725 distinct recordings; sound effects provide 126 selectable clips. Alternate recordings of the same action share one card with a Recording selector. Different actions, materials and impact strengths keep separate cards. Instruments are grouped by instrument and articulation, with ranges selected within the card. Browse the 30 editable combinations separately. Categories, bilingual search, favorites and recent items work within each section.
 
 The new game SFX starter adds five footstep surfaces, punches and material impacts, doors and mechanisms, and blade actions, plus eight editable scene combinations. Defaults have trimmed playback ranges and matched levels; combinations retain their layers and controls such as Landing weight and Impact. Recordings come from two Kenney CC0 packs. Originals, licenses, archive paths and conversion details are retained in [the collection notes](../samples/game-sfx-starter-20261105/使用说明.txt).
 

@@ -1,3 +1,4 @@
+import { patchLayer, type LayerPatch } from "./model";
 import { createPortal } from "react-dom";
 import { useState, type ReactNode } from "react";
 import type { TimelineTools } from "./LayerToolbar";
@@ -66,9 +67,13 @@ export function TreeTimeline({
   previewTime: number;
   onSelect: (
     address: NodeAddress,
-    event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
+    event?: {
+      ctrlKey: boolean;
+      metaKey: boolean;
+      shiftKey: boolean;
+    },
   ) => void;
-  onPatch: (address: NodeAddress, patch: Partial<Layer>) => void;
+  onPatch: (address: NodeAddress, patch: LayerPatch) => void;
   onClearSelection: () => void;
   onDeleteSelection: () => void;
   onDeleteNode: (address: NodeAddress) => void;
@@ -79,7 +84,7 @@ export function TreeTimeline({
     before?: string,
   ) => void;
   snap: boolean;
-  onTiming: (address: NodeAddress, patch: Partial<Layer>) => void;
+  onTiming: (address: NodeAddress, patch: LayerPatch) => void;
   onSeekStart: () => void;
   onSeek: (time: number) => void;
   onSeekEnd: (time: number) => void;
@@ -104,7 +109,6 @@ export function TreeTimeline({
     },
     onBegin,
   );
-
   const [draft, setDraft] = useState<{
     path: string[];
     layers: Layer[];
@@ -115,9 +119,10 @@ export function TreeTimeline({
     offset: number;
     parent: Project;
   }[] = [];
-  const groups: { path: string[]; name: string }[] = [
-    { path: [], name: t("tree.root") },
-  ];
+  const groups: {
+    path: string[];
+    name: string;
+  }[] = [{ path: [], name: t("tree.root") }];
   const collect = (
     p: Project,
     path: string[] = [],
@@ -129,13 +134,13 @@ export function TreeTimeline({
       const address = { path, id: layer.id },
         key = nodeKey(address);
       if (shown) rows.push({ layer, address, offset, parent: p });
-      if (layer.project) {
+      if (layer.content.project) {
         groups.push({
           path: [...path, layer.id],
           name: `${prefix}${layer.name}`,
         });
         collect(
-          layer.project,
+          layer.content.project,
           [...path, layer.id],
           offset + layer.start,
           shown && !closed.has(key),
@@ -145,25 +150,48 @@ export function TreeTimeline({
     }
   };
   collect(root);
-  const previewRow = rows.find(({ address }) => playing === `node-${nodeKey(address)}`);
+  const previewRow = rows.find(
+    ({ address }) => playing === `node-${nodeKey(address)}`,
+  );
   const selectionAt = (path: string[]) =>
     JSON.stringify(path) === JSON.stringify(selected.path);
   return (
-    <div className="node-tree" onKeyDown={(event) => {
-      if (event.key === "Delete" && !event.defaultPrevented && !event.repeat && !event.nativeEvent.isComposing &&
-          !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && !reorder.active && ids.length &&
-          !(event.target as HTMLElement).closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="combobox"], [role="listbox"], [role="dialog"], .note-roll')) {
-        event.preventDefault();
-        event.stopPropagation();
-        onDeleteSelection();
-        return;
-      }
-      if (event.key === "Escape" && !event.defaultPrevented && !reorder.active &&
-          !(event.target as HTMLElement).closest('input, textarea, select, [role="combobox"], [role="dialog"], .tree-note-editor')) {
-        event.preventDefault();
-        onClearSelection();
-      }
-    }}>
+    <div
+      className="node-tree"
+      onKeyDown={(event) => {
+        if (
+          event.key === "Delete" &&
+          !event.defaultPrevented &&
+          !event.repeat &&
+          !event.nativeEvent.isComposing &&
+          !event.ctrlKey &&
+          !event.metaKey &&
+          !event.altKey &&
+          !event.shiftKey &&
+          !reorder.active &&
+          ids.length &&
+          !(event.target as HTMLElement).closest(
+            'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="combobox"], [role="listbox"], [role="dialog"], .note-roll',
+          )
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          onDeleteSelection();
+          return;
+        }
+        if (
+          event.key === "Escape" &&
+          !event.defaultPrevented &&
+          !reorder.active &&
+          !(event.target as HTMLElement).closest(
+            'input, textarea, select, [role="combobox"], [role="dialog"], .tree-note-editor',
+          )
+        ) {
+          event.preventDefault();
+          onClearSelection();
+        }
+      }}
+    >
       {reorder.active &&
         createPortal(
           <div
@@ -176,7 +204,11 @@ export function TreeTimeline({
           </div>,
           document.body,
         )}
-      {renderToolbar({ groups, canCollapseNotes: openScore !== null, onCollapseNotes: () => setOpenScore(null) })}
+      {renderToolbar({
+        groups,
+        canCollapseNotes: openScore !== null,
+        onCollapseNotes: () => setOpenScore(null),
+      })}
       <div className="timeline-scroll">
         <div
           className="layer-list"
@@ -199,24 +231,63 @@ export function TreeTimeline({
             />
             <span />
           </div>
-          {!!root.videoReference?.markers.length && <div className="tree-row"><span/><span/><div className="tree-marker-strip">
-            {root.videoReference.markers.filter(m => m.time <= duration).map(m => <button key={m.id}
-              style={{left:`${m.time / duration * 100}%`}} title={`${m.name} · ${m.time.toFixed(3)} s`}
-              onClick={() => { onSeekStart(); onSeek(m.time); onSeekEnd(m.time); }}>{m.name}</button>)}
-          </div><span/></div>}
+          {!!root.videoReference?.markers.length && (
+            <div className="tree-row">
+              <span />
+              <span />
+              <div className="tree-marker-strip">
+                {root.videoReference.markers
+                  .filter((m) => m.time <= duration)
+                  .map((m) => (
+                    <button
+                      key={m.id}
+                      style={{ left: `${(m.time / duration) * 100}%` }}
+                      title={`${m.name} · ${m.time.toFixed(3)} s`}
+                      onClick={() => {
+                        onSeekStart();
+                        onSeek(m.time);
+                        onSeekEnd(m.time);
+                      }}
+                    >
+                      {m.name}
+                    </button>
+                  ))}
+              </div>
+              <span />
+            </div>
+          )}
           {rows.map(({ layer, address, offset, parent }) => {
             const key = nodeKey(address),
-              group = layer.type === "composition";
+              group = layer.content.type === "composition";
             const chosen = selectionAt(address.path) && ids.includes(layer.id);
             const tail = result?.tails?.[key] ?? 0;
-            const previewPath = previewRow && [...previewRow.address.path, previewRow.address.id];
-            const inPreview = previewRow && (nodeKey(previewRow.address) === key ||
-              previewPath!.every((id, index) => address.path[index] === id));
-            const scoreTime = inPreview ? previewTime + previewRow.offset + previewRow.layer.start : cue;
-            const timeAtBeat = (beat: number) => Math.max(0, Math.min(duration, scoreTimeAtBeat(layer, beat, offset)));
-            const changeNote = (note: NoteEvent) => onPatch(address, {
-              score: { ...layer.score!, notes: layer.score!.notes.map(n => n.id === note.id ? note : n) },
-            });
+            const previewPath = previewRow && [
+              ...previewRow.address.path,
+              previewRow.address.id,
+            ];
+            const inPreview =
+              previewRow &&
+              (nodeKey(previewRow.address) === key ||
+                previewPath!.every((id, index) => address.path[index] === id));
+            const scoreTime = inPreview
+              ? previewTime + previewRow.offset + previewRow.layer.start
+              : cue;
+            const timeAtBeat = (beat: number) =>
+              Math.max(
+                0,
+                Math.min(duration, scoreTimeAtBeat(layer, beat, offset)),
+              );
+            const changeNote = (note: NoteEvent) =>
+              onPatch(address, {
+                content: {
+                  score: {
+                    ...layer.content.score!,
+                    notes: layer.content.score!.notes.map((n) =>
+                      n.id === note.id ? note : n,
+                    ),
+                  },
+                },
+              });
             return (
               <div
                 key={key}
@@ -309,21 +380,35 @@ export function TreeTimeline({
                     <small>
                       {t(
                         group
-                          ? (beforeKey === key ? "tree.groupBefore" : "tree.groupProcessed")
-                          : layer.type === "instrument"
+                          ? beforeKey === key
+                            ? "tree.groupBefore"
+                            : "tree.groupProcessed"
+                          : layer.content.type === "instrument"
                             ? "score.title"
-                            : layer.type === "sample"
+                            : layer.content.type === "sample"
                               ? "editor.sample"
                               : "editor.synth",
                       )}
                     </small>
                   </button>
-                  {layer.type === "instrument" && <button className="tree-note-toggle"
-                    aria-label={t("roll.toggle", layer.name)} aria-expanded={openScore === key}
-                    onClick={() => { onSelect(address); setOpenScore(openScore === key ? null : key); }}>
-                    {openScore === key ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                    {t("roll.notes")}
-                  </button>}
+                  {layer.content.type === "instrument" && (
+                    <button
+                      className="tree-note-toggle"
+                      aria-label={t("roll.toggle", layer.name)}
+                      aria-expanded={openScore === key}
+                      onClick={() => {
+                        onSelect(address);
+                        setOpenScore(openScore === key ? null : key);
+                      }}
+                    >
+                      {openScore === key ? (
+                        <ChevronDown size={12} />
+                      ) : (
+                        <ChevronRight size={12} />
+                      )}
+                      {t("roll.notes")}
+                    </button>
+                  )}
                 </div>
                 <button
                   className="icon-button"
@@ -356,8 +441,11 @@ export function TreeTimeline({
                   onClearSelection={onClearSelection}
                   onBegin={onBegin}
                   onNoteChange={changeNote}
-                  onNoteAudition={note => onNoteAudition(address, note)}
-                  onExpandNotes={() => { onSelect(address); setOpenScore(key); }}
+                  onNoteAudition={(note) => onNoteAudition(address, note)}
+                  onExpandNotes={() => {
+                    onSelect(address);
+                    setOpenScore(key);
+                  }}
                   disabledParameters={(parent.controls ?? []).flatMap((c) =>
                     c.mappings
                       .filter((m) => m.layerId === layer.id)
@@ -375,7 +463,8 @@ export function TreeTimeline({
                       ? [
                           cue,
                           0,
-                          ...(root.videoReference?.markers.map(m => m.time) ?? []),
+                          ...(root.videoReference?.markers.map((m) => m.time) ??
+                            []),
                           ...rows
                             .filter(
                               (r) =>
@@ -454,24 +543,40 @@ export function TreeTimeline({
                   >
                     {layer.locked ? <Lock size={12} /> : <Unlock size={12} />}
                   </button>
-                  <button className="icon-button layer-delete"
-                    aria-label={t("tree.deleteNode", layer.name)} title={t("tree.deleteNodeHelp")}
-                    onClick={() => onDeleteNode(address)}>
+                  <button
+                    className="icon-button layer-delete"
+                    aria-label={t("tree.deleteNode", layer.name)}
+                    title={t("tree.deleteNodeHelp")}
+                    onClick={() => onDeleteNode(address)}
+                  >
                     <Trash2 size={13} />
                   </button>
                 </div>
-                {layer.type === "instrument" && layer.score && openScore === key && <div className="tree-note-editor">
-                  <NoteRoll layer={layer} onChange={changeNote} onSelect={() => onSelect(address)}
-                    playheadBeat={scoreBeatAtTime(layer, scoreTime, offset)}
-                    playheadVisible={(!playing || playing === "main" || !!inPreview) &&
-                      scoreTime >= offset + layer.start && scoreTime <= offset + layer.start + layer.duration}
-                    followPlayhead={playing === "main" || !!inPreview}
-                    seekReady={ready}
-                    onSeekStart={onSeekStart}
-                    onSeekBeat={beat => onSeek(timeAtBeat(beat))}
-                    onSeekEnd={beat => onSeekEnd(timeAtBeat(beat))}
-                    onBegin={onBegin} onAudition={note => onNoteAudition(address, note)} onExpand={() => onOpenNotes(address)} />
-                </div>}
+                {layer.content.type === "instrument" &&
+                  layer.content.score &&
+                  openScore === key && (
+                    <div className="tree-note-editor">
+                      <NoteRoll
+                        layer={layer}
+                        onChange={changeNote}
+                        onSelect={() => onSelect(address)}
+                        playheadBeat={scoreBeatAtTime(layer, scoreTime, offset)}
+                        playheadVisible={
+                          (!playing || playing === "main" || !!inPreview) &&
+                          scoreTime >= offset + layer.start &&
+                          scoreTime <= offset + layer.start + layer.duration
+                        }
+                        followPlayhead={playing === "main" || !!inPreview}
+                        seekReady={ready}
+                        onSeekStart={onSeekStart}
+                        onSeekBeat={(beat) => onSeek(timeAtBeat(beat))}
+                        onSeekEnd={(beat) => onSeekEnd(timeAtBeat(beat))}
+                        onBegin={onBegin}
+                        onAudition={(note) => onNoteAudition(address, note)}
+                        onExpand={() => onOpenNotes(address)}
+                      />
+                    </div>
+                  )}
               </div>
             );
           })}

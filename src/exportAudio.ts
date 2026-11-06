@@ -115,16 +115,20 @@ export function makeLoop(
   );
 }
 // Shared by the work-range warning and export; muted branches do not extend the range.
+// Shared by the work-range warning and export; muted branches do not extend the range.
 export function contentRange(project: Project, result: RenderResult) {
   const resolved = resolveControls(project);
   const hasSolo = (p: Project): boolean =>
     p.layers.some(
-      (l) => !l.muted && (l.solo || (!!l.project && hasSolo(l.project))),
+      (l) =>
+        !l.muted &&
+        (l.solo || (!!l.content.project && hasSolo(l.content.project))),
     );
   const solo = hasSolo(resolved);
   const audible = resolved.layers.filter(
     (l) =>
-      !l.muted && (!solo || l.solo || (!!l.project && hasSolo(l.project))),
+      !l.muted &&
+      (!solo || l.solo || (!!l.content.project && hasSolo(l.content.project))),
   );
   const contentEnd = Math.max(0, ...audible.map((l) => l.start + l.duration));
   const layerEnd = Math.max(
@@ -143,7 +147,8 @@ export function contentRange(project: Project, result: RenderResult) {
       : 0;
   return {
     contentEnd,
-    tailEnd: layerEnd + (audible.length ? effectTail(resolved.effects) + echoTail : 0),
+    tailEnd:
+      layerEnd + (audible.length ? effectTail(resolved.effects) + echoTail : 0),
   };
 }
 export async function renderExport(

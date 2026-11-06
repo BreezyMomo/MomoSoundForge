@@ -28,7 +28,7 @@ import {
 } from "../src/exportAudio";
 import { boundedSelection, snapTime } from "../src/timeline";
 const fixture = (): Project => ({
-  schema: "momo.soundforge/v2",
+  schema: "momo.soundforge/v3",
   name: "test",
   seed: 1,
   duration: 1,
@@ -117,7 +117,7 @@ describe("composition controls", () => {
     ];
     const resolved = resolveControls(p);
     expect(resolved.layers[0].gain).toBe(0.5);
-    expect(resolved.layers[0].frequency).toBe(1000);
+    expect(resolved.layers[0].content.frequency).toBe(1000);
     expect(p.layers[0].gain).toBe(0.4);
   });
   it("preserves nested defaults and independent instance overrides across save/load", () => {
@@ -154,8 +154,8 @@ describe("composition controls", () => {
       },
     ];
     const saved = parseProject(projectForSave(p));
-    expect(resolveControls(saved).layers[0].controlValues?.m).toBe(50);
-    expect(saved.layers[1].controlValues?.m).toBe(90);
+    expect(resolveControls(saved).layers[0].content.controlValues?.m).toBe(50);
+    expect(saved.layers[1].content.controlValues?.m).toBe(90);
     expect(resolveControls(child, {}).layers[0].gain).toBe(0.8);
     expect(renderProject(saved, 4000).left).toEqual(
       renderProject(saved, 4000).left,
@@ -168,7 +168,7 @@ describe("composition controls", () => {
     const wrapped = wrapProject(p);
     expect(wrapped.effects).toBeUndefined();
     expect(wrapped.controls).toBeUndefined();
-    expect(wrapped.layers[0].project?.effects).toEqual(p.effects);
+    expect(wrapped.layers[0].content.project?.effects).toEqual(p.effects);
     expect(() => parseProject(projectForSave(wrapped))).not.toThrow();
     const a = renderProject(p, 4000),
       b = renderProject(wrapped, 4000);
@@ -233,7 +233,7 @@ describe("composition controls", () => {
     ];
     child.controls[0].max = 60;
     const repaired = reconcileAdvanced(p);
-    expect(repaired.layers[0].controlValues?.m).toBe(60);
+    expect(repaired.layers[0].content.controlValues?.m).toBe(60);
     expect(repaired.controls![0].mappings[0].high).toBe(60);
     child.controls = [];
     expect(reconcileAdvanced(p).controls![0].mappings).toEqual([]);
@@ -291,7 +291,7 @@ describe("automation and processing", () => {
     const before = renderProject(p, 4000);
     expect(before.left).toEqual(renderProject(p, 4000).left);
     expect(before.left).not.toEqual(before.right);
-    p.layers[0].cropStart = 0.5;
+    p.layers[0].content.cropStart = 0.5;
     const cropped = renderProject(p, 4000);
     expect(cropped.layers.a).toEqual(before.layers.a);
     expect(cropped.left.slice(0, 1400).every((x) => x === 0)).toBe(true);
@@ -480,47 +480,81 @@ describe("multi-layer timeline", () => {
     );
     expect(scaled[1].start).toBeCloseTo(0.7);
     expect(scaled[1].duration).toBe(0.2);
-    expect(scaled[0].sourceDuration).toBe(0.2);
-    expect(scaled[0].cropStart).toBe(0.1);
+    expect(scaled[0].content.sourceDuration).toBe(0.2);
+    expect(scaled[0].content.cropStart).toBe(0.1);
     expect(
-      boundedSelection(ls, ["a"], ls[0], { duration: 0.4 }, 1)[0]
+      boundedSelection(ls, ["a"], ls[0], { duration: 0.4 }, 1)[0].content
         .sourceDuration,
     ).toBe(0.2);
   });
   it("rejects out-of-bounds scaling and edits crop/fade only on the active clip", () => {
     const ls = layers();
-    expect(boundedSelection(ls, ["a", "b"], ls[0], { duration: 1 }, 1)).toBe(ls);
+    expect(boundedSelection(ls, ["a", "b"], ls[0], { duration: 1 }, 1)).toBe(
+      ls,
+    );
     const edited = boundedSelection(
       ls,
       ["a", "b"],
       ls[0],
-      { cropStart: 0.2, attack: 0.1 },
+      {
+        content: {
+          cropStart: 0.2,
+          attack: 0.1,
+        },
+      },
       1,
     );
-    expect(edited[0].cropStart).toBe(0.2);
+    expect(edited[0].content.cropStart).toBe(0.2);
     expect(edited[1]).toBe(ls[1]);
   });
   it("stops a dragged set at either boundary without changing gaps or durations", () => {
-    const ls = [...layers(), makeLayer({ id: "untouched", start: 0, duration: 0.1 })];
+    const ls = [
+      ...layers(),
+      makeLayer({ id: "untouched", start: 0, duration: 0.1 }),
+    ];
     for (const active of ls.slice(0, 2)) {
-      const right = boundedSelection(ls, ["a", "b"], active, { start: active.start + 10 }, 1);
+      const right = boundedSelection(
+        ls,
+        ["a", "b"],
+        active,
+        { start: active.start + 10 },
+        1,
+      );
       expect(right[0].start).toBeCloseTo(0.6);
       expect(right[1].start).toBeCloseTo(0.9);
-      const left = boundedSelection(ls, ["a", "b"], active, { start: active.start - 10 }, 1);
+      const left = boundedSelection(
+        ls,
+        ["a", "b"],
+        active,
+        { start: active.start - 10 },
+        1,
+      );
       expect(left[0].start).toBeCloseTo(0);
       expect(left[1].start).toBeCloseTo(0.3);
-      expect(right.map(l => l.duration)).toEqual(ls.map(l => l.duration));
-      expect(left.map(l => l.duration)).toEqual(ls.map(l => l.duration));
+      expect(right.map((l) => l.duration)).toEqual(ls.map((l) => l.duration));
+      expect(left.map((l) => l.duration)).toEqual(ls.map((l) => l.duration));
       expect(right[2]).toBe(ls[2]);
       expect(left[2]).toBe(ls[2]);
-      expect(boundedSelection(left, ["a", "b"], left[1], { start: 0 }, 1)).toBe(left);
+      expect(boundedSelection(left, ["a", "b"], left[1], { start: 0 }, 1)).toBe(
+        left,
+      );
     }
   });
   it("moves smoothly back from an overshoot using the original gesture snapshot", () => {
     const ls = layers();
-    const positions = [0.2, 0.7, 0.8, 0.3].map(delta =>
-      boundedSelection(ls, ["a", "b"], ls[1], { start: ls[1].start + delta }, 1)[0].start);
-    [0.3, 0.6, 0.6, 0.4].forEach((value, i) => expect(positions[i]).toBeCloseTo(value));
+    const positions = [0.2, 0.7, 0.8, 0.3].map(
+      (delta) =>
+        boundedSelection(
+          ls,
+          ["a", "b"],
+          ls[1],
+          { start: ls[1].start + delta },
+          1,
+        )[0].start,
+    );
+    [0.3, 0.6, 0.6, 0.4].forEach((value, i) =>
+      expect(positions[i]).toBeCloseTo(value),
+    );
     expect(ls[0].start).toBe(0.1);
   });
   it("snaps to the closest boundary within tolerance", () => {

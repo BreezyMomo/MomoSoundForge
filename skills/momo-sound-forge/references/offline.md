@@ -20,7 +20,7 @@ node scripts/cli.mjs render --input pickup-v2.soundforge --out pickup-v2.wav
 node scripts/cli.mjs fetch-sound --id <catalog中的ID> --site <编辑器URL> --out instrument.soundforge
 ```
 
-目录版本不匹配时更新 Skill。离线没有网络时使用用户提供的带采样工程。生成音符后修改原有乐器声部的 score，保留实际映射；不要伪造乐器覆盖。
+目录版本不匹配时更新 Skill。离线没有网络时使用用户提供的带采样工程。生成音符后修改原有乐器声部的 content.score，保留实际映射；不要伪造乐器覆盖。
 
 ## 导入原始 WAV
 

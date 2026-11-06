@@ -1,3 +1,4 @@
+import { patchLayer, type LayerPatch } from "./model";
 import {
   useEffect,
   useMemo,
@@ -72,10 +73,14 @@ export function TimelineClip({
   onPreview?: (next: Layer | null) => void;
   data?: Float32Array;
   tailData?: Float32Array;
-  onSelect: (event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean }) => void;
+  onSelect: (event?: {
+    ctrlKey: boolean;
+    metaKey: boolean;
+    shiftKey: boolean;
+  }) => void;
   onClearSelection?: () => void;
   onBegin: () => void;
-  onCommit: (timing: Partial<Layer>) => void;
+  onCommit: (timing: LayerPatch) => void;
   onNoteChange?: (note: NoteEvent) => void;
   onNoteAudition?: (note: NoteEvent) => void;
   onExpandNotes?: () => void;
@@ -95,39 +100,45 @@ export function TimelineClip({
   const timing = displayLayer ?? draft ?? layer;
   const changed = (a: Layer, b: Layer) =>
     timingChanged(a, b) ||
-    a.cropStart !== b.cropStart ||
-    a.cropEnd !== b.cropEnd ||
-    a.attack !== b.attack ||
-    a.release !== b.release;
+    a.content.cropStart !== b.content.cropStart ||
+    a.content.cropEnd !== b.content.cropEnd ||
+    a.content.attack !== b.content.attack ||
+    a.content.release !== b.content.release;
   const adjust = (
     original: Layer,
     mode: ClipEdit | CropEdit | "attack" | "release",
     delta: number,
     duration: number,
     step: number,
-  ): Layer => ({
-    ...original,
-    ...(mode === "attack" || mode === "release"
-      ? {
+  ): Layer => {
+    if (mode === "attack" || mode === "release")
+      return patchLayer(original, {
+        content: {
           [mode]: Math.max(
             0,
             Math.min(
-              original.sourceDuration ?? original.duration,
+              original.content.sourceDuration ?? original.duration,
               mode === "attack" ? 3 : 5,
-              (original[mode] ?? 0) +
+              original.content[mode] +
                 ((mode === "release" ? -delta : delta) *
-                  (original.sourceDuration ?? original.duration)) /
+                  (original.content.sourceDuration ?? original.duration)) /
                   original.duration,
             ),
           ),
-        }
-      : mode === "cropStart" || mode === "cropEnd"
-        ? adjustCrop(original, mode, Math.round(delta / step) * step)
-        : stretchClip(
-            original,
-            adjustClipTiming(original, mode, delta, duration, step),
-          )),
-  });
+        },
+      });
+    if (mode === "cropStart" || mode === "cropEnd")
+      return patchLayer(original, {
+        content: adjustCrop(original, mode, Math.round(delta / step) * step),
+      });
+    return patchLayer(
+      original,
+      stretchClip(
+        original,
+        adjustClipTiming(original, mode, delta, duration, step),
+      ),
+    );
+  };
   const finish = (commit: boolean) => {
     const active = gesture.current;
     if (!active) return;
@@ -188,7 +199,9 @@ export function TimelineClip({
       plainClick: !event.shiftKey,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
-    onSelect(event.ctrlKey || event.metaKey || event.shiftKey ? event : undefined);
+    onSelect(
+      event.ctrlKey || event.metaKey || event.shiftKey ? event : undefined,
+    );
     onBegin();
   };
   const move = (event: PointerEvent<HTMLButtonElement>) => {
@@ -302,15 +315,25 @@ export function TimelineClip({
     onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) =>
       keyboard(event, mode),
   });
-  const visibleBody = Math.max(0, Math.min(timing.duration, projectDuration - timing.start));
-  const visibleTail = Math.max(0, Math.min(tail, projectDuration - timing.start - timing.duration));
+  const visibleBody = Math.max(
+    0,
+    Math.min(timing.duration, projectDuration - timing.start),
+  );
+  const visibleTail = Math.max(
+    0,
+    Math.min(tail, projectDuration - timing.start - timing.duration),
+  );
   const bodyFrames = Math.round(layer.duration * sampleRate);
   const seconds = (value: number) => value.toFixed(draft ? 3 : 2);
   return (
-    <div className={`layer-lane ${layer.type === "instrument" ? "instrument-lane" : ""}`} ref={lane} onClick={(event) => {
-      if (event.ctrlKey || event.metaKey || event.shiftKey) onSelect(event);
-      else onClearSelection?.();
-    }}>
+    <div
+      className={`layer-lane ${layer.content.type === "instrument" ? "instrument-lane" : ""}`}
+      ref={lane}
+      onClick={(event) => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey) onSelect(event);
+        else onClearSelection?.();
+      }}
+    >
       {visibleTail > 0 && (
         <div
           className="clip-effect-tail"
@@ -322,8 +345,12 @@ export function TimelineClip({
           }}
         >
           <span className="clip-tail-label">{t("tree.tailLabel")}</span>
-          <Waveform data={tailData} label={t("tree.tailWave", layer.name)}
-            startFrame={bodyFrames} endFrame={bodyFrames + Math.round(visibleTail * sampleRate)} />
+          <Waveform
+            data={tailData}
+            label={t("tree.tailWave", layer.name)}
+            startFrame={bodyFrames}
+            endFrame={bodyFrames + Math.round(visibleTail * sampleRate)}
+          />
         </div>
       )}
       <div
@@ -336,23 +363,44 @@ export function TimelineClip({
         <button
           className="clip-move"
           aria-label={t("editor.moveLayer", layer.name)}
-          title={t(layer.type === "instrument" ? "roll.clipHelp" : "editor.clipDragHint")}
+          title={t(
+            layer.content.type === "instrument"
+              ? "roll.clipHelp"
+              : "editor.clipDragHint",
+          )}
           {...events("move")}
           onDoubleClick={onExpandNotes}
         >
           <span className="clip-label">
             {seconds(timing.start)} s · {seconds(timing.duration)} s
-            {layer.type === "instrument" && layer.score && ` · ${t("roll.count", layer.score.notes.length)}`}
-            {timing.sourceDuration !== undefined &&
-              ` · ${(timing.sourceDuration / timing.duration).toFixed(2)}×`}
+            {layer.content.type === "instrument" &&
+              layer.content.score &&
+              ` · ${t("roll.count", layer.content.score.notes.length)}`}
+            {timing.content.sourceDuration !== undefined &&
+              ` · ${(timing.content.sourceDuration / timing.duration).toFixed(2)}×`}
           </span>
-          <Waveform data={waveform.current} label={layer.name}
-            endFrame={Math.round(bodyFrames * visibleBody / Math.max(0.000001, timing.duration))} />
+          <Waveform
+            data={waveform.current}
+            label={layer.name}
+            endFrame={Math.round(
+              (bodyFrames * visibleBody) / Math.max(0.000001, timing.duration),
+            )}
+          />
         </button>
-        {sourceLayer.type === "instrument" && sourceLayer.score && onNoteChange && onNoteAudition && (
-          <NoteRoll layer={sourceLayer} compact onChange={onNoteChange} onAudition={onNoteAudition}
-            onSelect={onSelect} onBegin={onBegin} onExpand={onExpandNotes} />
-        )}
+        {sourceLayer.content.type === "instrument" &&
+          sourceLayer.content.score &&
+          onNoteChange &&
+          onNoteAudition && (
+            <NoteRoll
+              layer={sourceLayer}
+              compact
+              onChange={onNoteChange}
+              onAudition={onNoteAudition}
+              onSelect={onSelect}
+              onBegin={onBegin}
+              onExpand={onExpandNotes}
+            />
+          )}
         {!moveOnly && (
           <>
             <button
@@ -370,7 +418,7 @@ export function TimelineClip({
             <button
               className="clip-fade-handle"
               style={{
-                left: `${Math.min(1, timing.attack / (timing.sourceDuration ?? timing.duration)) * 100}%`,
+                left: `${Math.min(1, timing.content.attack / (timing.content.sourceDuration ?? timing.duration)) * 100}%`,
               }}
               aria-label={t("pro.fadeIn", layer.name)}
               title={t("pro.fadeIn", layer.name)}
@@ -379,7 +427,7 @@ export function TimelineClip({
             <button
               className="clip-fade-handle clip-fade-end"
               style={{
-                left: `${(1 - Math.min(1, timing.release / (timing.sourceDuration ?? timing.duration))) * 100}%`,
+                left: `${(1 - Math.min(1, timing.content.release / (timing.content.sourceDuration ?? timing.duration))) * 100}%`,
               }}
               aria-label={t("pro.fadeOut", layer.name)}
               title={t("pro.fadeOut", layer.name)}
@@ -389,24 +437,24 @@ export function TimelineClip({
         )}
         <div
           className="clip-crop-mask clip-crop-before"
-          style={{ width: `${(timing.cropStart ?? 0) * 100}%` }}
+          style={{ width: `${(timing.content.cropStart ?? 0) * 100}%` }}
         />
         <div
           className="clip-crop-mask clip-crop-after"
-          style={{ width: `${(1 - (timing.cropEnd ?? 1)) * 100}%` }}
+          style={{ width: `${(1 - (timing.content.cropEnd ?? 1)) * 100}%` }}
         />
         {cropMode && !moveOnly && (
           <>
             <button
               className="clip-crop-handle"
-              style={{ left: `${(timing.cropStart ?? 0) * 100}%` }}
+              style={{ left: `${(timing.content.cropStart ?? 0) * 100}%` }}
               aria-label={t("editor.cropStart", layer.name)}
               title={t("editor.cropStart", layer.name)}
               {...events("cropStart")}
             />
             <button
               className="clip-crop-handle clip-crop-end"
-              style={{ left: `${(timing.cropEnd ?? 1) * 100}%` }}
+              style={{ left: `${(timing.content.cropEnd ?? 1) * 100}%` }}
               aria-label={t("editor.cropEnd", layer.name)}
               title={t("editor.cropEnd", layer.name)}
               {...events("cropEnd")}

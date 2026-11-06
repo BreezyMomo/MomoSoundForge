@@ -41,7 +41,7 @@ try {
   const bundles=[];
   for(const id of ['piano','flute','violin','cello','horn','trumpet']) {
     const project=parseProject(JSON.parse(await readFile(`${base}/demos/expanded-${id}.soundforge`,'utf8')));
-    const instruments=project.layers.flatMap(l=>l.score.instruments);
+    const instruments=project.layers.flatMap(l=>l.content.score.instruments);
     assert(instruments.every(i=>i.id===instruments[0].id));
     const regions=[...new Map(instruments.flatMap(i=>i.regions).map(r=>[r.id,r])).values()];
     const instrument={...instruments[0],regions};

@@ -1,8 +1,9 @@
+import { patchLayer, type LayerPatch } from "./model";
 import { clamp, type Layer } from "./model";
 export type CropEdit = "cropStart" | "cropEnd";
 export function adjustCrop(layer: Layer, mode: CropEdit, delta: number) {
-  const start = layer.cropStart ?? 0,
-    end = layer.cropEnd ?? 1;
+  const start = layer.content.cropStart ?? 0,
+    end = layer.content.cropEnd ?? 1;
   const gap = Math.min(1, 0.001 / layer.duration);
   return mode === "cropStart"
     ? {
@@ -15,11 +16,16 @@ export function adjustCrop(layer: Layer, mode: CropEdit, delta: number) {
       };
 }
 export function stretchClip(layer: Layer, timing: ClipTiming): Partial<Layer> {
-  if (layer.type === "composition") return { start: timing.start };
+  if (layer.content.type === "composition") return { start: timing.start };
   return {
     ...timing,
     ...(Math.abs(layer.duration - timing.duration) > 1e-6
-      ? { sourceDuration: layer.sourceDuration ?? layer.duration }
+      ? {
+          content: {
+            ...layer.content,
+            sourceDuration: layer.content.sourceDuration ?? layer.duration,
+          },
+        }
       : {}),
   };
 }
@@ -30,11 +36,14 @@ export function rulerTicks(duration: number, width: number): number[] {
   const count = Math.max(2, Math.min(1000, Math.floor(width / 90)));
   const raw = duration / count;
   const power = 10 ** Math.floor(Math.log10(raw));
-  const step = ([1, 2, 5, 10].find(n => n * power >= raw) ?? 10) * power;
+  const step = ([1, 2, 5, 10].find((n) => n * power >= raw) ?? 10) * power;
   if (!Number.isFinite(step) || step <= 0) return [0, duration];
-  const ticks = Array.from({ length: Math.ceil(duration / step) }, (_, i) => i * step);
+  const ticks = Array.from(
+    { length: Math.ceil(duration / step) },
+    (_, i) => i * step,
+  );
   // Leave enough room for the end label when the duration isn't a round interval.
-  if (ticks.length > 1 && duration - ticks.at(-1)! < step * .6) ticks.pop();
+  if (ticks.length > 1 && duration - ticks.at(-1)! < step * 0.6) ticks.pop();
   return [...ticks, duration];
 }
 
@@ -72,20 +81,13 @@ export function adjustClipTiming(
         clamp(
           original.duration + snapped,
           MIN_CLIP_DURATION,
-          Math.max(
-            MIN_CLIP_DURATION,
-            projectDuration - original.start,
-          ),
+          Math.max(MIN_CLIP_DURATION, projectDuration - original.start),
         ),
       ),
     };
   const end = Math.min(projectDuration, original.start + original.duration);
   const start = clean(
-    clamp(
-      original.start + snapped,
-      0,
-      Math.max(0, end - MIN_CLIP_DURATION),
-    ),
+    clamp(original.start + snapped, 0, Math.max(0, end - MIN_CLIP_DURATION)),
   );
   return { start, duration: clean(Math.max(MIN_CLIP_DURATION, end - start)) };
 }
@@ -97,7 +99,7 @@ export function transformSelection(
   layers: Layer[],
   ids: string[],
   active: Layer,
-  next: Partial<Layer>,
+  next: LayerPatch,
 ): Layer[] {
   const chosen = layers.filter((l) => ids.includes(l.id));
   if (!chosen.length) return layers;
@@ -110,16 +112,21 @@ export function transformSelection(
       : active.start;
   const delta = (next.start ?? active.start) - active.start;
   if (Math.abs(scale - 1) < 1e-6 && Math.abs(delta) < 1e-6)
-    return layers.map((l) => (l.id === active.id ? { ...l, ...next } : l));
+    return layers.map((l) => (l.id === active.id ? patchLayer(l, next) : l));
   return layers.map((l) =>
     !ids.includes(l.id)
       ? l
       : l.id === active.id && ids.length === 1
         ? {
             ...l,
-            ...next,
+            ...patchLayer(l, next),
             ...(Math.abs(scale - 1) > 1e-6
-              ? { sourceDuration: l.sourceDuration ?? l.duration }
+              ? {
+                  content: {
+                    ...l.content,
+                    sourceDuration: l.content.sourceDuration ?? l.duration,
+                  },
+                }
               : {}),
           }
         : Math.abs(scale - 1) > 1e-6
@@ -127,7 +134,10 @@ export function transformSelection(
               ...l,
               start: anchor + (l.start - anchor) * scale,
               duration: l.duration * scale,
-              sourceDuration: l.sourceDuration ?? l.duration,
+              content: {
+                ...l.content,
+                sourceDuration: l.content.sourceDuration ?? l.duration,
+              },
             }
           : { ...l, start: l.start + delta },
   );
@@ -136,25 +146,32 @@ export function boundedSelection(
   layers: Layer[],
   ids: string[],
   active: Layer,
-  next: Partial<Layer>,
+  next: LayerPatch,
   duration: number,
 ) {
   // Clamp the entire moving set by its earliest start and latest end. Rejecting
   // an overshoot makes every clip jump back to its original position mid-drag.
-  if (Math.abs((next.duration ?? active.duration) - active.duration) < 1e-6 &&
-      Math.abs((next.start ?? active.start) - active.start) > 1e-6) {
+  if (
+    Math.abs((next.duration ?? active.duration) - active.duration) < 1e-6 &&
+    Math.abs((next.start ?? active.start) - active.start) > 1e-6
+  ) {
     const chosen = layers.filter((layer) => ids.includes(layer.id));
     if (!chosen.length) return layers;
     const minDelta = -Math.min(...chosen.map((layer) => layer.start));
-    const maxDelta = duration - Math.max(...chosen.map((layer) => layer.start + layer.duration));
+    const maxDelta =
+      duration -
+      Math.max(...chosen.map((layer) => layer.start + layer.duration));
     if (minDelta > maxDelta) return layers;
-    const delta = Math.max(minDelta, Math.min(maxDelta, next.start! - active.start));
+    const delta = Math.max(
+      minDelta,
+      Math.min(maxDelta, next.start! - active.start),
+    );
     if (Math.abs(delta) < 1e-6) return layers;
     next = { ...next, start: active.start + delta };
   }
   if (
     Math.abs((next.duration ?? active.duration) - active.duration) > 1e-6 &&
-    layers.some((l) => ids.includes(l.id) && l.type === "composition")
+    layers.some((l) => ids.includes(l.id) && l.content.type === "composition")
   )
     return layers;
   const transformed = transformSelection(layers, ids, active, next);

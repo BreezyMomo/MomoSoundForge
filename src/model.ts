@@ -1,5 +1,5 @@
 import { validateVideoReference, type VideoReference } from "./videoReference";
-import { validateSampleSource, type SampleSource } from './sampleSource';
+import { validateSampleSource, type SampleSource } from "./sampleSource";
 import {
   validateScore,
   scoreAssets,
@@ -21,29 +21,44 @@ export const MAX_COMPOSITION_DEPTH = 6;
 export const MAX_TOTAL_LAYERS = 128;
 export const DEFAULT_PROJECT_DURATION = 10;
 export const makeProject = (name: string): Project => ({
-  schema: "momo.soundforge/v2", name, seed: 2048,
-  duration: DEFAULT_PROJECT_DURATION, master: 1, echo: 0, layers: [], assets: {},
+  schema: "momo.soundforge/v3",
+  name,
+  seed: 2048,
+  duration: DEFAULT_PROJECT_DURATION,
+  master: 1,
+  echo: 0,
+  layers: [],
+  assets: {},
 });
 export type Wave = "sine" | "triangle" | "saw" | "square" | "noise";
+/** A sound layer owns placement and outer processing. Its content is independently replaceable. */
 export type Layer = {
   id: string;
   name: string;
-  type: "synth" | "sample" | "composition" | "instrument";
-  score?: Score;
-  effects?: Effects;
-  project?: Project;
-  wave: Wave;
-  noiseSeed: number;
-  assetId?: string;
   start: number;
   duration: number;
+  gain: number;
+  pan: number;
+  muted: boolean;
+  solo: boolean;
+  locked: boolean;
+  effects?: Effects;
   automation?: Automation;
+  content: SoundContent;
+};
+/** Source-specific playback and shaping; never copied from the old content across replacement. */
+export type SoundContent = {
+  type: "synth" | "sample" | "composition" | "instrument";
+  wave: Wave;
+  noiseSeed: number;
+  level: number;
+  assetId?: string;
+  score?: Score;
+  project?: Project;
   controlValues?: Record<string, number>;
   sourceDuration?: number;
   cropStart?: number;
   cropEnd?: number;
-  gain: number;
-  pan: number;
   frequency: number;
   endFrequency: number;
   attack: number;
@@ -53,10 +68,58 @@ export type Layer = {
   drive: number;
   trim: number;
   reverse: boolean;
-  muted: boolean;
-  solo: boolean;
-  locked: boolean;
 };
+export const CONTENT_KEYS = [
+  "level",
+  "type",
+  "wave",
+  "noiseSeed",
+  "assetId",
+  "score",
+  "project",
+  "controlValues",
+  "sourceDuration",
+  "cropStart",
+  "cropEnd",
+  "frequency",
+  "endFrequency",
+  "attack",
+  "release",
+  "decay",
+  "cutoff",
+  "drive",
+  "trim",
+  "reverse",
+] as const;
+export type LayerPatch = Partial<Omit<Layer, "content">> & {
+  content?: Partial<SoundContent>;
+};
+export function patchLayer(layer: Layer, patch: LayerPatch): Layer {
+  return {
+    ...layer,
+    ...patch,
+    content: { ...layer.content, ...patch.content },
+  };
+}
+export type LayerField = keyof Omit<Layer, "content"> | keyof SoundContent;
+export type LayerValue = Layer[keyof Layer] | SoundContent[keyof SoundContent];
+export function layerValue(layer: Layer, key: LayerField): LayerValue {
+  return (CONTENT_KEYS as readonly string[]).includes(key)
+    ? layer.content[key as keyof SoundContent]
+    : layer[key as keyof Layer];
+}
+export function withLayerValue(
+  layer: Layer,
+  key: LayerField,
+  value: LayerValue,
+): Layer {
+  return (CONTENT_KEYS as readonly string[]).includes(key)
+    ? { ...layer, content: { ...layer.content, [key]: value } }
+    : { ...layer, [key]: value };
+}
+// Construction shorthand only; native documents always store the nested content object.
+export type LayerInit = Partial<Omit<Layer, "content">> &
+  Partial<SoundContent> & { content?: Partial<SoundContent> };
 export type SampleAsset = {
   source?: SampleSource;
   id: string;
@@ -66,7 +129,7 @@ export type SampleAsset = {
 };
 export type Project = {
   videoReference?: VideoReference;
-  schema: "momo.soundforge/v2";
+  schema: "momo.soundforge/v3";
   name: string;
   controls?: Macro[];
   controlValues?: Record<string, number>;
@@ -96,30 +159,49 @@ export const uid = () =>
   globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random()}`;
 export const clamp = (x: number, a: number, b: number) =>
   Math.min(b, Math.max(a, x));
-export const makeLayer = (patch: Partial<Layer> = {}): Layer => ({
-  id: uid(),
-  name: "Layer",
-  type: "synth",
-  wave: "sine",
-  noiseSeed: 2048,
-  start: 0,
-  duration: 0.5,
-  gain: 0.6,
-  pan: 0,
-  frequency: 220,
-  endFrequency: 110,
-  attack: 0.005,
-  release: 0.12,
-  decay: 2,
-  cutoff: 18000,
-  drive: 0,
-  trim: 0,
-  reverse: false,
-  muted: false,
-  solo: false,
-  locked: false,
-  ...patch,
-});
+export function makeLayer(patch: LayerInit = {}): Layer {
+  const content: SoundContent = {
+    level: 1,
+    type: "synth",
+    wave: "sine",
+    noiseSeed: 2048,
+    frequency: 220,
+    endFrequency: 110,
+    attack: 0.005,
+    release: 0.12,
+    decay: 2,
+    cutoff: 18000,
+    drive: 0,
+    trim: 0,
+    reverse: false,
+    ...Object.fromEntries(
+      CONTENT_KEYS.filter((k) => Object.hasOwn(patch, k)).map((k) => [
+        k,
+        patch[k],
+      ]),
+    ),
+    ...patch.content,
+  };
+  const outer = Object.fromEntries(
+    Object.entries(patch).filter(
+      ([key]) =>
+        key !== "content" && !(CONTENT_KEYS as readonly string[]).includes(key),
+    ),
+  );
+  return {
+    id: uid(),
+    name: "Layer",
+    start: 0,
+    duration: 0.5,
+    gain: 0.6,
+    pan: 0,
+    muted: false,
+    solo: false,
+    locked: false,
+    ...outer,
+    content,
+  };
+}
 export function rng(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -179,13 +261,15 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
   if (!raw || typeof raw !== "object") return fail();
   if (depth > MAX_COMPOSITION_DEPTH || budget.stack.has(raw)) return fail();
   budget.stack.add(raw);
-  const r = raw as Omit<Project, "schema"> & { schema: string };
+  const r = raw as Omit<Project, "schema"> & {
+    schema: string;
+  };
   const num = (v: unknown, min: number, max: number) =>
     typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
   const str = (v: unknown, max = 120): v is string =>
     typeof v === "string" && v.length > 0 && v.length <= max;
   if (
-    !["momo.soundforge/v1", "momo.soundforge/v2"].includes(r.schema) ||
+    r.schema !== "momo.soundforge/v3" ||
     !str(r.name) ||
     !num(r.seed, 0, 4294967295) ||
     !Number.isInteger(r.seed) ||
@@ -223,16 +307,14 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       budget.bytes += channel.length * 0.75;
       if (budget.bytes > MAX_ASSET_BYTES) return fail();
       const decoded = decodeSamples(channel);
-      if (
-        !decoded.length ||
-        decoded.length > MAX_SAMPLE_FRAMES
-      )
-        return fail();
+      if (!decoded.length || decoded.length > MAX_SAMPLE_FRAMES) return fail();
       lengths.push(decoded.length);
     }
     if (lengths.some((l) => l !== lengths[0])) return fail();
     assets[id] = {
-      ...(a.source !== undefined ? { source: validateSampleSource(a.source) } : {}),
+      ...(a.source !== undefined
+        ? { source: validateSampleSource(a.source) }
+        : {}),
       id,
       name: a.name,
       sampleRate: a.sampleRate,
@@ -245,19 +327,28 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     if (++budget.layers > MAX_TOTAL_LAYERS) return fail();
     if (
       !l ||
+      Object.keys(l).some((k) =>
+        (CONTENT_KEYS as readonly string[]).includes(k),
+      ) ||
+      !l.content ||
+      typeof l.content !== "object" ||
+      Array.isArray(l.content) ||
       !str(l.id) ||
       ids.has(l.id) ||
       !str(l.name) ||
-      !["synth", "sample", "composition", "instrument"].includes(l.type) ||
-      !["sine", "triangle", "saw", "square", "noise"].includes(l.wave)
+      !["synth", "sample", "composition", "instrument"].includes(
+        l.content.type,
+      ) ||
+      !["sine", "triangle", "saw", "square", "noise"].includes(l.content.wave)
     )
       return fail();
     ids.add(l.id);
     if (
-      (l.sourceDuration !== undefined && !num(l.sourceDuration, 0.01, Number.MAX_VALUE)) ||
-      (l.cropStart !== undefined && !num(l.cropStart, 0, 1)) ||
-      (l.cropEnd !== undefined && !num(l.cropEnd, 0, 1)) ||
-      (l.cropStart ?? 0) >= (l.cropEnd ?? 1)
+      (l.content.sourceDuration !== undefined &&
+        !num(l.content.sourceDuration, 0.01, Number.MAX_VALUE)) ||
+      (l.content.cropStart !== undefined && !num(l.content.cropStart, 0, 1)) ||
+      (l.content.cropEnd !== undefined && !num(l.content.cropEnd, 0, 1)) ||
+      (l.content.cropStart ?? 0) >= (l.content.cropEnd ?? 1)
     )
       return fail();
     const ranges = {
@@ -265,6 +356,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       duration: [0.01, Number.MAX_VALUE],
       gain: [0, 1.5],
       pan: [-1, 1],
+      level: [0, 8],
       frequency: [20, 20000],
       endFrequency: [20, 20000],
       attack: [0, 3],
@@ -275,65 +367,64 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       trim: [0, Number.MAX_VALUE],
     } as const;
     for (const [key, [min, max]] of Object.entries(ranges))
-      if (!num(l[key as keyof Layer], min, max)) return fail();
+      if (!num(layerValue(l, key as LayerField), min, max)) return fail();
     for (const key of ["reverse", "muted", "solo", "locked"] as const)
-      if (typeof l[key] !== "boolean") return fail();
+      if (typeof layerValue(l, key) !== "boolean") return fail();
     if (
-      l.type === "sample" &&
-      (!l.assetId || !Object.hasOwn(assets, l.assetId))
+      l.content.type === "sample" &&
+      (!l.content.assetId || !Object.hasOwn(assets, l.content.assetId))
     )
       return fail();
     if (
-      l.noiseSeed !== undefined &&
-      (!num(l.noiseSeed, 0, 4294967295) || !Number.isInteger(l.noiseSeed))
+      l.content.noiseSeed !== undefined &&
+      (!num(l.content.noiseSeed, 0, 4294967295) ||
+        !Number.isInteger(l.content.noiseSeed))
     )
       return fail();
-    if (l.type === "instrument") {
-      validateScore(l.score!, assets);
-      budget.notes += l.score!.notes.length;
+    if (l.content.type === "instrument") {
+      validateScore(l.content.score!, assets);
+      budget.notes += l.content.score!.notes.length;
       if (budget.notes > MAX_TOTAL_NOTES) return fail();
     }
+    const content = Object.fromEntries(
+      CONTENT_KEYS.filter((k) => Object.hasOwn(l.content, k)).map((k) => [
+        k,
+        structuredClone(l.content[k]),
+      ]),
+    ) as SoundContent;
+    if (content.type !== "sample") delete content.assetId;
+    if (content.type !== "instrument") delete content.score;
+    if (content.type === "composition")
+      content.project = readProject(l.content.project, budget, depth + 1);
+    else {
+      delete content.project;
+      delete content.controlValues;
+    }
     layers.push({
-      ...makeLayer(),
-      ...Object.fromEntries(
-        [
-          "id",
-          "name",
-          "type",
-          "wave",
-          "assetId",
-          ...Object.keys(ranges),
-          "reverse",
-          "muted",
-          "solo",
-          "locked",
-        ].map((k) => [k, l[k as keyof Layer]]),
-      ),
-      noiseSeed: l.noiseSeed ?? r.seed,
-      ...(l.type === "instrument" ? { score: structuredClone(l.score!) } : {}),
+      id: l.id,
+      name: l.name,
+      start: l.start,
+      duration: l.duration,
+      gain: l.gain,
+      pan: l.pan,
+      muted: l.muted,
+      solo: l.solo,
+      locked: l.locked,
+      content,
       ...(l.effects !== undefined
         ? { effects: structuredClone(l.effects) }
         : {}),
       ...(l.automation !== undefined
         ? { automation: structuredClone(l.automation) }
         : {}),
-      ...(l.controlValues !== undefined
-        ? { controlValues: structuredClone(l.controlValues) }
-        : {}),
-      ...(l.sourceDuration !== undefined
-        ? { sourceDuration: l.sourceDuration }
-        : {}),
-      ...(l.cropStart !== undefined ? { cropStart: l.cropStart } : {}),
-      ...(l.cropEnd !== undefined ? { cropEnd: l.cropEnd } : {}),
-      ...(l.type === "composition"
-        ? { project: readProject(l.project, budget, depth + 1) }
-        : {}),
-    } as Layer);
+    });
   }
   budget.stack.delete(raw);
   const parsed: Project = {
-    ...(r.videoReference !== undefined ? { videoReference: validateVideoReference(r.videoReference) } : {}),
-    schema: "momo.soundforge/v2",
+    ...(r.videoReference !== undefined
+      ? { videoReference: validateVideoReference(r.videoReference) }
+      : {}),
+    schema: "momo.soundforge/v3",
     name: r.name,
     seed: r.seed,
     duration: r.duration,
@@ -365,19 +456,26 @@ export function varyProject(
       value * Math.pow(2, (random() - 0.5) * amount * scale),
     // Instrument round-robin selection uses project.seed ^ layer.noiseSeed.
     // Compensate for the new project seed when this voice must stay identical.
-    preservedSeed = (l: Layer) => l.type === "instrument"
-      ? (l.noiseSeed ^ project.seed ^ seed) >>> 0
-      : l.noiseSeed;
+    preservedSeed = (l: Layer) =>
+      l.content.type === "instrument"
+        ? (l.content.noiseSeed ^ project.seed ^ seed) >>> 0
+        : l.content.noiseSeed;
   return {
     ...project,
     seed: seed >>> 0,
     layers: project.layers.map((l) =>
       l.locked || amount === 0
-        ? { ...l, noiseSeed: preservedSeed(l) }
-        : l.type === "composition" && l.project
+        ? {
+            ...l,
+            content: {
+              ...l.content,
+              noiseSeed: preservedSeed(l),
+            },
+          }
+        : l.content.type === "composition" && l.content.project
           ? (() => {
               const child = varyProject(
-                l.project,
+                l.content.project,
                 Math.floor(random() * 4294967296),
                 amount,
               );
@@ -387,24 +485,35 @@ export function varyProject(
               );
               return {
                 ...l,
-                project: { ...child, duration },
                 duration,
                 gain: clamp(jitter(l.gain, 0.3), 0, 1.5),
                 pan: clamp(l.pan + (random() - 0.5) * amount * 0.4, -1, 1),
+                content: {
+                  ...l.content,
+                  project: { ...child, duration },
+                },
               };
             })()
           : {
               ...l,
-              noiseSeed: Math.floor(random() * 4294967296),
-              frequency: clamp(jitter(l.frequency, 0.8), 20, 20000),
-              endFrequency: clamp(jitter(l.endFrequency, 0.8), 20, 20000),
               duration: Math.max(0.01, jitter(l.duration, 0.35)),
               gain: clamp(jitter(l.gain, 0.3), 0, 1.5),
               pan: clamp(l.pan + (random() - 0.5) * amount * 0.4, -1, 1),
+              content: {
+                ...l.content,
+                noiseSeed: Math.floor(random() * 4294967296),
+                frequency: clamp(jitter(l.content.frequency, 0.8), 20, 20000),
+                endFrequency: clamp(
+                  jitter(l.content.endFrequency, 0.8),
+                  20,
+                  20000,
+                ),
+              },
             },
     ),
   };
 }
+// Temporary audition state: keep the source document and its timing untouched.
 // Temporary audition state: keep the source document and its timing untouched.
 export function createLayerPreviewProject(
   project: Project,
@@ -429,17 +538,25 @@ export function createLayerPreviewProject(
 
 export function projectForSave(p: Project): Project {
   const used = new Set(
-    p.layers.filter((l) => l.type === "sample").map((l) => l.assetId),
+    p.layers
+      .filter((l) => l.content.type === "sample")
+      .map((l) => l.content.assetId),
   );
   for (const layer of p.layers)
-    if (layer.type === "instrument" && layer.score)
-      for (const id of scoreAssets(layer.score)) used.add(id);
+    if (layer.content.type === "instrument" && layer.content.score)
+      for (const id of scoreAssets(layer.content.score)) used.add(id);
   return {
     ...p,
-    schema: "momo.soundforge/v2",
+    schema: "momo.soundforge/v3",
     layers: p.layers.map((layer) =>
-      layer.type === "composition" && layer.project
-        ? { ...layer, project: projectForSave(layer.project) }
+      layer.content.type === "composition" && layer.content.project
+        ? {
+            ...layer,
+            content: {
+              ...layer.content,
+              project: projectForSave(layer.content.project),
+            },
+          }
         : layer,
     ),
     assets: Object.fromEntries(
@@ -465,14 +582,14 @@ export function assertProjectLimits(project: Project) {
       }
     for (const layer of p.layers) {
       if (++layers > MAX_TOTAL_LAYERS) throw Error("error.compositionLimit");
-      if (layer.type === "instrument") {
-        validateScore(layer.score!, p.assets);
-        notes += layer.score!.notes.length;
+      if (layer.content.type === "instrument") {
+        validateScore(layer.content.score!, p.assets);
+        notes += layer.content.score!.notes.length;
         if (notes > MAX_TOTAL_NOTES) throw Error("score.invalid");
       }
-      if (layer.type === "composition") {
-        if (!layer.project) throw Error("error.project");
-        visit(layer.project, depth + 1);
+      if (layer.content.type === "composition") {
+        if (!layer.content.project) throw Error("error.project");
+        visit(layer.content.project, depth + 1);
       }
     }
     stack.delete(p);
@@ -481,7 +598,7 @@ export function assertProjectLimits(project: Project) {
 }
 export function makeComposition(
   project: Project,
-  patch: Partial<Layer> = {},
+  patch: LayerInit = {},
 ): Layer {
   assertProjectLimits(project);
   return makeLayer({
@@ -519,9 +636,9 @@ export function resolveProjectPath(root: Project, path: readonly string[]) {
     breadcrumbs = [{ name: root.name, path: [] as string[] }];
   for (const id of path) {
     const layer = project.layers.find((l) => l.id === id);
-    if (layer?.type !== "composition" || !layer.project) break;
+    if (layer?.content.type !== "composition" || !layer.content.project) break;
     valid.push(id);
-    project = layer.project;
+    project = layer.content.project;
     breadcrumbs.push({ name: layer.name, path: [...valid] });
   }
   return { project, path: valid, breadcrumbs };
@@ -534,22 +651,28 @@ export function updateProjectAtPath(
   if (!path.length) return change(root);
   const [id, ...rest] = path,
     layer = root.layers.find((l) => l.id === id);
-  if (layer?.type !== "composition" || !layer.project) return root;
-  const before = layer.project,
+  if (layer?.content.type !== "composition" || !layer.content.project)
+    return root;
+  const before = layer.content.project,
     after = updateProjectAtPath(before, rest, change);
   if (before === after) return root;
   const followsDuration =
-    layer.sourceDuration === undefined &&
-    layer.trim === 0 &&
-    Math.abs(layer.duration - before.duration / (layer.frequency / 440)) < 1e-6;
+    layer.content.sourceDuration === undefined &&
+    layer.content.trim === 0 &&
+    Math.abs(
+      layer.duration - before.duration / (layer.content.frequency / 440),
+    ) < 1e-6;
   const duration = followsDuration
-    ? Math.max(0.01, after.duration / (layer.frequency / 440))
+    ? Math.max(0.01, after.duration / (layer.content.frequency / 440))
     : layer.duration;
   const updated = {
     ...layer,
-    project: after,
     duration,
     name: layer.name === before.name ? after.name : layer.name,
+    content: {
+      ...layer.content,
+      project: after,
+    },
   };
   const projectDuration =
     followsDuration && layer.start + layer.duration <= root.duration + 1e-6

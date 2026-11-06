@@ -47,10 +47,11 @@ export function NotesWorkspace({
   onArrange: () => void;
 }) {
   const instruments = layers.filter(
-    (layer) => layer.type === "instrument" && layer.score,
+    (layer) => layer.content.type === "instrument" && layer.content.score,
   );
   const layer = instruments.find((layer) => layer.id === selected);
-  const timeAtBeat = (beat: number) => Math.max(0, Math.min(duration, scoreTimeAtBeat(layer!, beat, offset)));
+  const timeAtBeat = (beat: number) =>
+    Math.max(0, Math.min(duration, scoreTimeAtBeat(layer!, beat, offset)));
   return (
     <section className="notes-workspace" aria-label={t("notes.panel")}>
       <header className="notes-workspace-toolbar">
@@ -91,12 +92,15 @@ export function NotesWorkspace({
           minimumRows={36}
           layer={layer}
           playheadBeat={scoreBeatAtTime(layer, cue, offset)}
-          playheadVisible={cue >= offset + layer.start && cue <= offset + layer.start + layer.duration}
+          playheadVisible={
+            cue >= offset + layer.start &&
+            cue <= offset + layer.start + layer.duration
+          }
           followPlayhead={playing}
           seekReady={ready}
           onSeekStart={onSeekStart}
-          onSeekBeat={beat => onSeek(timeAtBeat(beat))}
-          onSeekEnd={beat => onSeekEnd(timeAtBeat(beat))}
+          onSeekBeat={(beat) => onSeek(timeAtBeat(beat))}
+          onSeekEnd={(beat) => onSeekEnd(timeAtBeat(beat))}
           onSelect={() => {}}
           onBegin={onBegin}
           onChange={onChange}

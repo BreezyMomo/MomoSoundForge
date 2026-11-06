@@ -78,8 +78,11 @@ export function NoteRoll({
   onSeekBeat?: (beat: number) => void;
   onSeekEnd?: (beat: number) => void;
 }) {
-  const score = layer.score!;
-  const seeking = useRef<{ id: number; beat: number } | null>(null);
+  const score = layer.content.score!;
+  const seeking = useRef<{
+    id: number;
+    beat: number;
+  } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [snap, setSnap] = useState(0.25);
   const [draft, setDraft] = useState<NoteEvent | null>(null);
@@ -118,7 +121,7 @@ export function NoteRoll({
   const { low, high } = range;
   const count = high - low + 1;
   const sourceBeats = secondsToBeats(
-    layer.sourceDuration ?? layer.duration,
+    layer.content.sourceDuration ?? layer.duration,
     score.bpm,
   );
   const totalBeats = Math.min(
@@ -130,18 +133,29 @@ export function NoteRoll({
     ),
   );
   const ticks = noteGridTicks(totalBeats);
-  const cursor = playheadVisible && playheadBeat !== undefined && playheadBeat >= 0 && playheadBeat <= totalBeats
-    ? playheadBeat / totalBeats * 100 : null;
+  const cursor =
+    playheadVisible &&
+    playheadBeat !== undefined &&
+    playheadBeat >= 0 &&
+    playheadBeat <= totalBeats
+      ? (playheadBeat / totalBeats) * 100
+      : null;
   useEffect(() => {
     const host = scroll.current;
     if (!followPlayhead || cursor === null || !host || !grid.current) return;
-    const x = 44 + grid.current.clientWidth * cursor / 100;
+    const x = 44 + (grid.current.clientWidth * cursor) / 100;
     if (x < host.scrollLeft + 44 || x > host.scrollLeft + host.clientWidth - 20)
       host.scrollLeft = Math.max(0, x - host.clientWidth / 3);
   }, [cursor, followPlayhead]);
   const pointerBeat = (event: PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    return Math.max(0, Math.min(totalBeats, (event.clientX - rect.left) / rect.width * totalBeats));
+    return Math.max(
+      0,
+      Math.min(
+        totalBeats,
+        ((event.clientX - rect.left) / rect.width) * totalBeats,
+      ),
+    );
   };
   const rows = Array.from({ length: count }, (_, i) => high - i);
   const cancel = () => {
@@ -181,7 +195,9 @@ export function NoteRoll({
       width: rect.width,
       rowHeight: rect.height / count,
       beatSpan: compact
-        ? sourceBeats * (layer.frequency / 440) * (layer.reverse ? -1 : 1)
+        ? sourceBeats *
+          (layer.content.frequency / 440) *
+          (layer.content.reverse ? -1 : 1)
         : totalBeats,
       mode,
       note,
@@ -406,22 +422,44 @@ export function NoteRoll({
           }
         >
           {!compact && (
-            <div className={`roll-ruler ${onSeekBeat ? "can-seek" : ""}`}
-              role={onSeekBeat ? "slider" : undefined} tabIndex={onSeekBeat ? 0 : undefined}
+            <div
+              className={`roll-ruler ${onSeekBeat ? "can-seek" : ""}`}
+              role={onSeekBeat ? "slider" : undefined}
+              tabIndex={onSeekBeat ? 0 : undefined}
               aria-label={onSeekBeat ? t("roll.playhead") : undefined}
-              aria-valuemin={onSeekBeat ? 0 : undefined} aria-valuemax={onSeekBeat ? totalBeats : undefined}
-              aria-valuenow={onSeekBeat ? Math.max(0, Math.min(totalBeats, playheadBeat ?? 0)) : undefined}
+              aria-valuemin={onSeekBeat ? 0 : undefined}
+              aria-valuemax={onSeekBeat ? totalBeats : undefined}
+              aria-valuenow={
+                onSeekBeat
+                  ? Math.max(0, Math.min(totalBeats, playheadBeat ?? 0))
+                  : undefined
+              }
               aria-disabled={onSeekBeat ? !seekReady : undefined}
               title={onSeekBeat ? t("roll.seekHelp") : undefined}
-              onPointerDown={event => {
-                if (!onSeekBeat || !seekReady || event.button !== 0 || !event.isPrimary) return;
-                event.preventDefault(); event.stopPropagation();
-                seeking.current = { id: event.pointerId, beat: playheadBeat ?? 0 };
+              onPointerDown={(event) => {
+                if (
+                  !onSeekBeat ||
+                  !seekReady ||
+                  event.button !== 0 ||
+                  !event.isPrimary
+                )
+                  return;
+                event.preventDefault();
+                event.stopPropagation();
+                seeking.current = {
+                  id: event.pointerId,
+                  beat: playheadBeat ?? 0,
+                };
                 event.currentTarget.setPointerCapture(event.pointerId);
-                event.currentTarget.focus(); onSeekStart?.(); onSeekBeat(pointerBeat(event));
+                event.currentTarget.focus();
+                onSeekStart?.();
+                onSeekBeat(pointerBeat(event));
               }}
-              onPointerMove={event => { if (seeking.current?.id === event.pointerId) onSeekBeat?.(pointerBeat(event)); }}
-              onPointerUp={event => {
+              onPointerMove={(event) => {
+                if (seeking.current?.id === event.pointerId)
+                  onSeekBeat?.(pointerBeat(event));
+              }}
+              onPointerUp={(event) => {
                 if (seeking.current?.id !== event.pointerId) return;
                 seeking.current = null;
                 event.currentTarget.releasePointerCapture(event.pointerId);
@@ -429,30 +467,53 @@ export function NoteRoll({
               }}
               onPointerCancel={() => {
                 if (!seeking.current) return;
-                const beat = seeking.current.beat; seeking.current = null;
-                onSeekBeat?.(beat); onSeekEnd?.(beat);
+                const beat = seeking.current.beat;
+                seeking.current = null;
+                onSeekBeat?.(beat);
+                onSeekEnd?.(beat);
               }}
-              onKeyDown={event => {
+              onKeyDown={(event) => {
                 if (seeking.current) {
                   if (event.key === "Escape") {
-                    event.preventDefault(); event.stopPropagation();
-                    const active = seeking.current; seeking.current = null;
-                    if (event.currentTarget.hasPointerCapture(active.id)) event.currentTarget.releasePointerCapture(active.id);
-                    onSeekBeat?.(active.beat); onSeekEnd?.(active.beat);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const active = seeking.current;
+                    seeking.current = null;
+                    if (event.currentTarget.hasPointerCapture(active.id))
+                      event.currentTarget.releasePointerCapture(active.id);
+                    onSeekBeat?.(active.beat);
+                    onSeekEnd?.(active.beat);
                   }
                   return;
                 }
                 if (!onSeekBeat || !seekReady) return;
                 const step = event.shiftKey ? 0.01 : snap || 0.25;
-                const beat = event.key === "Home" ? 0 : event.key === "End" ? sourceBeats
-                  : event.key === "ArrowLeft" ? (playheadBeat ?? 0) - step
-                  : event.key === "ArrowRight" ? (playheadBeat ?? 0) + step : null;
+                const beat =
+                  event.key === "Home"
+                    ? 0
+                    : event.key === "End"
+                      ? sourceBeats
+                      : event.key === "ArrowLeft"
+                        ? (playheadBeat ?? 0) - step
+                        : event.key === "ArrowRight"
+                          ? (playheadBeat ?? 0) + step
+                          : null;
                 if (beat === null) return;
-                event.preventDefault(); event.stopPropagation();
+                event.preventDefault();
+                event.stopPropagation();
                 const value = Math.max(0, Math.min(totalBeats, beat));
-                onSeekStart?.(); onSeekBeat(value); onSeekEnd?.(value);
-              }}>
-              {cursor !== null && <i className="roll-playhead-head" aria-hidden="true" style={{ left: `${cursor}%` }} />}
+                onSeekStart?.();
+                onSeekBeat(value);
+                onSeekEnd?.(value);
+              }}
+            >
+              {cursor !== null && (
+                <i
+                  className="roll-playhead-head"
+                  aria-hidden="true"
+                  style={{ left: `${cursor}%` }}
+                />
+              )}
               {ticks.map((i) => (
                 <span key={i} style={{ left: `${(i / totalBeats) * 100}%` }}>
                   {i}
@@ -508,7 +569,13 @@ export function NoteRoll({
                   />
                 </>
               )}
-              {!compact && cursor !== null && <div className="roll-playhead" aria-hidden="true" style={{ left: `${cursor}%` }} />}
+              {!compact && cursor !== null && (
+                <div
+                  className="roll-playhead"
+                  aria-hidden="true"
+                  style={{ left: `${cursor}%` }}
+                />
+              )}
               {score.notes.map((original, index) => {
                 const n = draft?.id === original.id ? draft : original;
                 const span = compact
@@ -577,7 +644,7 @@ export function NoteRoll({
                       />
                     </button>
                     <button
-                      className={`roll-note-resize ${compact && layer.reverse ? "reverse" : ""}`}
+                      className={`roll-note-resize ${compact && layer.content.reverse ? "reverse" : ""}`}
                       aria-label={t("roll.resize", index + 1)}
                       title={t("roll.resize", index + 1)}
                       {...events(original, "resize")}

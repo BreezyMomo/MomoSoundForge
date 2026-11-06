@@ -41,8 +41,8 @@ describe("editable audio compositions", () => {
       expected = renderProject(original),
       actual = renderProject(wrapped);
     expect(wrapped.layers).toHaveLength(1);
-    expect(wrapped.layers[0].type).toBe("composition");
-    expect(wrapped.layers[0].project).toEqual(original);
+    expect(wrapped.layers[0].content.type).toBe("composition");
+    expect(wrapped.layers[0].content.project).toEqual(original);
     expect(wrapped.master).toBe(1);
     expect(wrapped.echo).toBe(0);
     expect(
@@ -82,9 +82,9 @@ describe("editable audio compositions", () => {
       master: 0,
     }));
     expect(changed.layers[0]).toBe(first);
-    expect(changed.layers[0].project!.master).toBe(0.8);
-    expect(changed.layers[1].project!.master).toBe(0);
-    expect(root.layers[1].project!.master).toBe(0.8);
+    expect(changed.layers[0].content.project!.master).toBe(0.8);
+    expect(changed.layers[1].content.project!.master).toBe(0);
+    expect(root.layers[1].content.project!.master).toBe(0.8);
     expect(resolveProjectPath(changed, ["second"]).project.master).toBe(0);
     expect(resolveProjectPath(root, ["second", "missing"]).path).toEqual([
       "second",
@@ -150,7 +150,9 @@ describe("editable audio compositions", () => {
       ],
     };
     const saved = projectForSave(root);
-    expect(Object.keys(saved.layers[0].project!.assets)).toEqual(["shared"]);
+    expect(Object.keys(saved.layers[0].content.project!.assets)).toEqual([
+      "shared",
+    ]);
     const restored = parseProject(JSON.parse(JSON.stringify(saved))),
       expected = renderProject(root),
       actual = renderProject(restored);
@@ -163,10 +165,10 @@ describe("editable audio compositions", () => {
       true,
     );
   });
-  it("migrates existing v1 projects and rejects missing children, cycles and excessive depth", () => {
-    expect(
-      parseProject({ ...sound(), schema: "momo.soundforge/v1" }).schema,
-    ).toBe("momo.soundforge/v2");
+  it("rejects old projects, missing children, cycles and excessive depth", () => {
+    expect(() =>
+      parseProject({ ...sound(), schema: "momo.soundforge/v1" }),
+    ).toThrow();
     expect(() =>
       parseProject({
         ...empty(),

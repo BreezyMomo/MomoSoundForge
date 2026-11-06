@@ -29,7 +29,7 @@
 
 ## 机器可读格式
 
-工程沿用 `momo.soundforge/v2`，新增 `Layer.type = "instrument"` 和 `Layer.score`。旧 v1/v2 工程继续可读；旧应用不能读取包含新 layer 类型的工程。普通 layer 字段仍由 `makeLayer()` 创建，乐器声部通常设 `frequency=440, gain=1, attack=0, release=0, decay=0, cutoff=22000`。
+工程沿用 `momo.soundforge/v3`，新增 `Layer.type = "instrument"` 和 `Layer.score`。旧 v1/v2 工程继续可读；旧应用不能读取包含新 layer 类型的工程。普通 layer 字段仍由 `makeLayer()` 创建，乐器声部通常设 `frequency=440, gain=1, attack=0, release=0, decay=0, cutoff=22000`。
 
 `Score`：
 

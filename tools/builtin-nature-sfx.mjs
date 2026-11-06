@@ -55,14 +55,14 @@ export async function natureSfxProject(job, workspace, root, { makeLayer, encode
   };
   if (job.scene) for (const [i, [, , start, gain]] of job.scene.clips.entries()) await add(job.samples[i], start, gain);
   else await add(job.sample);
-  const project = { schema: "momo.soundforge/v2", name: job.nameKey, seed: 2048, duration,
+  const project = { schema: "momo.soundforge/v3", name: job.nameKey, seed: 2048, duration,
     master: job.scene ? .65 : 1, echo: 0, assets, layers };
   if (job.playback === "loop") project.loopRegion = { start: 0, end: duration, crossfade: 0 };
   if (job.scene?.control) {
     const [name, group, low, high] = job.scene.control;
     project.controls = [{ id: `nature-control-${name}`, name: `builtin.natureControl.${name}`,
       min: 0, max: 1, defaultValue: .5,
-      mappings: layers.filter(layer => job.samples.some(s => s.id === layer.assetId && s.groupId === `nature-${group}`))
+      mappings: layers.filter(layer => job.samples.some(s => s.id === layer.content.assetId && s.groupId === `nature-${group}`))
         .map(layer => ({ layerId: layer.id, parameter: "gain", low, high })) }];
   }
   return project;

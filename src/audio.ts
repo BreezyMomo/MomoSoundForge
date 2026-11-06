@@ -2,35 +2,70 @@ import type { Project, RenderResult } from "./model";
 import { clamp } from "./model";
 import { playbackPosition } from "./playback";
 function audioIdentity(project: Project): unknown {
-  return { ...project, name: undefined, videoReference: undefined,
-    layers: project.layers.map(layer => ({ ...layer, name: undefined,
-      project: layer.project ? audioIdentity(layer.project) : undefined,
+  return {
+    ...project,
+    name: undefined,
+    videoReference: undefined,
+    layers: project.layers.map((layer) => ({
+      ...layer,
+      name: undefined,
+      content: {
+        ...layer.content,
+        project: layer.content.project
+          ? audioIdentity(layer.content.project)
+          : undefined,
+      },
     })),
   };
 }
 export function createRenderer() {
-  type Job = { id: number; project: Project; key: string; resolve: (r: RenderResult) => void;
-    reject: (e: Error) => void; signal?: AbortSignal; abort: () => void };
-  let worker: Worker | undefined, active: Job | undefined, serial = 0, disposed = false;
+  type Job = {
+    id: number;
+    project: Project;
+    key: string;
+    resolve: (r: RenderResult) => void;
+    reject: (e: Error) => void;
+    signal?: AbortSignal;
+    abort: () => void;
+  };
+  let worker: Worker | undefined,
+    active: Job | undefined,
+    serial = 0,
+    disposed = false;
   const queue: Job[] = [];
   const cache = new Map<string, { result: RenderResult; bytes: number }>();
-  const forget = (job: Job) => job.signal?.removeEventListener("abort", job.abort);
+  const forget = (job: Job) =>
+    job.signal?.removeEventListener("abort", job.abort);
   const run = () => {
     if (active || disposed || !queue.length) return;
     active = queue.shift()!;
     if (!worker) {
-      worker = new Worker(new URL("./render.worker.ts", import.meta.url), { type: "module" });
+      worker = new Worker(new URL("./render.worker.ts", import.meta.url), {
+        type: "module",
+      });
       worker.onmessage = ({ data }) => {
         const job = active;
         if (!job || data.id !== job.id) return;
-        active = undefined; forget(job);
+        active = undefined;
+        forget(job);
         if (data.error) job.reject(Error(data.error));
         else {
           const result: RenderResult = data.result;
-          const arrays = new Set([result.left, result.right, ...Object.values(result.layers), ...Object.values(result.processedLayers ?? {})]);
+          const arrays = new Set([
+            result.left,
+            result.right,
+            ...Object.values(result.layers),
+            ...Object.values(result.processedLayers ?? {}),
+          ]);
           const bytes = [...arrays].reduce((n, a) => n + a.byteLength, 0);
           if (bytes <= 64 * 1024 * 1024) {
-            while (cache.size && (cache.size >= 2 || [...cache.values()].reduce((n, c) => n + c.bytes, bytes) > 64 * 1024 * 1024)) cache.delete(cache.keys().next().value!);
+            while (
+              cache.size &&
+              (cache.size >= 2 ||
+                [...cache.values()].reduce((n, c) => n + c.bytes, bytes) >
+                  64 * 1024 * 1024)
+            )
+              cache.delete(cache.keys().next().value!);
             cache.set(job.key, { result, bytes });
           }
           job.resolve(result);
@@ -38,9 +73,14 @@ export function createRenderer() {
         run();
       };
       worker.onerror = () => {
-        const job = active; active = undefined;
-        worker?.terminate(); worker = undefined;
-        if (job) { forget(job); job.reject(Error("error.render")); }
+        const job = active;
+        active = undefined;
+        worker?.terminate();
+        worker = undefined;
+        if (job) {
+          forget(job);
+          job.reject(Error("error.render"));
+        }
         run();
       };
     }
@@ -48,26 +88,49 @@ export function createRenderer() {
   };
   return {
     render: (project: Project, signal?: AbortSignal): Promise<RenderResult> => {
-      if (disposed || signal?.aborted) return Promise.reject(Error("cancelled"));
+      if (disposed || signal?.aborted)
+        return Promise.reject(Error("cancelled"));
       // Video alignment and labels do not change audio; reuse the exact same samples.
       const key = JSON.stringify(audioIdentity(project));
       const cached = cache.get(key);
       if (cached) return Promise.resolve(cached.result);
       return new Promise((resolve, reject) => {
-        const job: Job = { id: ++serial, project, key, resolve, reject, signal, abort: () => {
-          forget(job);
-          if (active === job) { worker?.terminate(); worker = undefined; active = undefined; }
-          else { const i = queue.indexOf(job); if (i >= 0) queue.splice(i, 1); }
-          reject(Error("cancelled")); run();
-        }};
+        const job: Job = {
+          id: ++serial,
+          project,
+          key,
+          resolve,
+          reject,
+          signal,
+          abort: () => {
+            forget(job);
+            if (active === job) {
+              worker?.terminate();
+              worker = undefined;
+              active = undefined;
+            } else {
+              const i = queue.indexOf(job);
+              if (i >= 0) queue.splice(i, 1);
+            }
+            reject(Error("cancelled"));
+            run();
+          },
+        };
         signal?.addEventListener("abort", job.abort, { once: true });
-        queue.push(job); run();
+        queue.push(job);
+        run();
       });
     },
     dispose: () => {
-      disposed = true; worker?.terminate();
-      for (const job of [...queue, ...(active ? [active] : [])]) { forget(job); job.reject(Error("disposed")); }
-      queue.length = 0; active = undefined; cache.clear();
+      disposed = true;
+      worker?.terminate();
+      for (const job of [...queue, ...(active ? [active] : [])]) {
+        forget(job);
+        job.reject(Error("disposed"));
+      }
+      queue.length = 0;
+      active = undefined;
+      cache.clear();
     },
   };
 }
@@ -132,8 +195,13 @@ export class AudioPlayer {
     this.duration = result.left.length / result.sampleRate;
     const start = clamp(region?.start ?? 0, 0, this.duration);
     const end = clamp(region?.end ?? this.duration, 0, this.duration);
-    this.loopRegion = loop && Number.isFinite(start) && Number.isFinite(end) && end - start >= 1 / result.sampleRate
-      ? { start, end } : undefined;
+    this.loopRegion =
+      loop &&
+      Number.isFinite(start) &&
+      Number.isFinite(end) &&
+      end - start >= 1 / result.sampleRate
+        ? { start, end }
+        : undefined;
     source.loopStart = this.loopRegion?.start ?? 0;
     source.loopEnd = this.loopRegion?.end ?? this.duration;
     this.startOffset = clamp(
@@ -141,7 +209,10 @@ export class AudioPlayer {
       0,
       Math.max(0, this.duration - 1 / result.sampleRate),
     );
-    if (this.loopRegion && (this.startOffset < start || this.startOffset >= end))
+    if (
+      this.loopRegion &&
+      (this.startOffset < start || this.startOffset >= end)
+    )
       this.startOffset = start;
     source.start(0, this.startOffset);
     return true;

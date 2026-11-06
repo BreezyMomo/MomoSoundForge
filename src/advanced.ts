@@ -1,3 +1,4 @@
+import { withLayerValue } from "./model";
 import type { Layer, Project } from "./model";
 export type CurvePoint = { time: number; value: number };
 export type AutomationKey = "gain" | "pan" | "cutoff";
@@ -91,7 +92,12 @@ export function resolveControls(
   values = { ...project.controlValues, ...values };
   const layers = project.layers.map((l) => ({
     ...l,
-    controlValues: l.controlValues ? { ...l.controlValues } : undefined,
+    content: {
+      ...l.content,
+      controlValues: l.content.controlValues
+        ? { ...l.content.controlValues }
+        : undefined,
+    },
   }));
   for (const control of project.controls) {
     const value = clamp(
@@ -108,9 +114,12 @@ export function resolveControls(
           ? m.low * Math.pow(m.high / m.low, u)
           : m.low + (m.high - m.low) * u;
       if (m.parameter === "control" && m.controlId)
-        layer.controlValues = { ...layer.controlValues, [m.controlId]: mapped };
+        layer.content.controlValues = {
+          ...layer.content.controlValues,
+          [m.controlId]: mapped,
+        };
       else if (m.parameter !== "control")
-        (layer[m.parameter] as number) = mapped;
+        Object.assign(layer, withLayerValue(layer, m.parameter, mapped));
     }
   }
   return { ...project, layers, controlValues: values };
@@ -199,7 +208,7 @@ export function validateAdvanced(project: Project) {
       )
         fail();
       const l = project.layers.find((l) => l.id === m.layerId),
-        child = l?.project?.controls?.find((c) => c.id === m.controlId);
+        child = l?.content.project?.controls?.find((c) => c.id === m.controlId);
       const range =
         m.parameter === "control" && child
           ? [child.min, child.max]
@@ -239,7 +248,7 @@ export function validateAdvanced(project: Project) {
   };
   validateValues(project.controlValues, project.controls);
   for (const l of project.layers) {
-    validateValues(l.controlValues, l.project?.controls);
+    validateValues(l.content.controlValues, l.content.project?.controls);
     if (l.automation !== undefined) {
       if (
         !l.automation ||
@@ -271,6 +280,7 @@ export function validateAdvanced(project: Project) {
   }
 }
 // Authored edits may remove layers/child controls. Repair their references, never imported data.
+// Authored edits may remove layers/child controls. Repair their references, never imported data.
 export function reconcileAdvanced(project: Project): Project {
   const values = (
     v: Record<string, number> | undefined,
@@ -285,11 +295,16 @@ export function reconcileAdvanced(project: Project): Project {
         )
       : undefined;
   const layers = project.layers.map((l) => {
-    const child = l.project ? reconcileAdvanced(l.project) : undefined;
+    const child = l.content.project
+      ? reconcileAdvanced(l.content.project)
+      : undefined;
     return {
       ...l,
-      ...(child ? { project: child } : {}),
-      controlValues: values(l.controlValues, child?.controls),
+      content: {
+        ...l.content,
+        ...(child ? { project: child } : {}),
+        controlValues: values(l.content.controlValues, child?.controls),
+      },
     };
   });
   const controls = project.controls?.map((c) => ({
@@ -298,7 +313,9 @@ export function reconcileAdvanced(project: Project): Project {
       const layer = layers.find((l) => l.id === m.layerId);
       if (!layer) return [];
       if (m.parameter !== "control") return [m];
-      const child = layer.project?.controls?.find((c) => c.id === m.controlId);
+      const child = layer.content.project?.controls?.find(
+        (c) => c.id === m.controlId,
+      );
       if (!child) return [];
       const low = clamp(m.low, child.min, child.max),
         high = clamp(m.high, child.min, child.max);

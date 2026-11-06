@@ -54,7 +54,7 @@ async function audit() {
           const digest = createHash('sha256').update(asset.channels.join(':')).digest('hex');
           if (!recordings.has(digest)) recordings.set(digest, { name: asset.name, ...levels(asset.channels.map(decodeSamples), asset.sampleRate) });
         }
-        for (const layer of p.layers) if (layer.type === 'composition' && layer.project) visit(layer.project);
+        for (const layer of p.layers) if (layer.content.type === 'composition' && layer.content.project) visit(layer.content.project);
       };
       visit(project);
       if (entries.length % 25 === 0) console.log(`Audited ${entries.length}/${catalog.sounds.length}`);

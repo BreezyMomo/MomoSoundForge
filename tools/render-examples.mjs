@@ -44,8 +44,8 @@ try {
     }),
   );
   await writeFile(
-    "test-results/audio/legacy-sample.soundforge",
-    JSON.stringify({ ...child, schema: "momo.soundforge/v1" }),
+    "test-results/audio/sample-content.soundforge",
+    JSON.stringify(child),
   );
   console.log("Examples rendered to test-results/audio/");
 } finally {

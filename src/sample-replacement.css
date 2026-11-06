@@ -1,0 +1,31 @@
+.sample-replacement { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; padding: 20px; overflow: auto; color: var(--ui-text); background: var(--ui-panel); border: 1px solid var(--ui-line-strong); border-radius: 8px; }
+.sample-replacement::backdrop { background: #0009; }
+.sample-replacement[open] { display: flex; flex-direction: column; }
+.sample-replacement > .field-help, .replacement-heading, .replacement-footer { flex-shrink: 0; }
+.replacement-entry { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+.replacement-entry span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ui-muted); font-size: 12px; }
+.replacement-entry button { flex: none; }
+.replacement-heading, .replacement-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.replacement-heading h2 { font-size: 16px; margin: 0; overflow-wrap: anywhere; }
+.replacement-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; margin: 16px 0; min-height: 0; overflow: auto; }
+.replacement-browser { display: flex; flex-direction: column; min-width: 0; gap: 10px; }
+.replacement-sources { display: flex; flex-wrap: wrap; gap: 6px; }
+.replacement-sources button { padding: 6px 9px; }
+.replacement-sources [aria-pressed=true], .replacement-candidate[aria-pressed=true] { background: var(--ui-hover); }
+.replacement-list { height: 310px; overflow: auto; }
+.replacement-candidate { width: 100%; display: flex; gap: 8px; text-align: left; border: 0; border-radius: 4px; padding: 9px 7px; background: transparent; }
+.replacement-candidate span { flex: 1; overflow-wrap: anywhere; }
+.replacement-candidate small { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.replacement-settings { min-width: 0; }
+.replacement-settings p { margin: 4px 0 12px; overflow-wrap: anywhere; }
+.replacement-settings fieldset { border: 0; padding: 0; margin: 12px 0; }
+.replacement-settings legend { margin-bottom: 8px; }
+.replacement-settings label { display: flex; align-items: center; gap: 7px; margin: 8px 0; }
+.replacement-timing { font-variant-numeric: tabular-nums; }
+.replacement-footer { flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--ui-line); }
+.replacement-footer .button-group { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 640px) {
+  .sample-replacement { padding: 14px; }
+  .replacement-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .replacement-list { height: 180px; }
+}

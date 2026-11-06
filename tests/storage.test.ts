@@ -23,15 +23,23 @@ const sound = () => fromPreset("deny", "Saved effect", (key) => key);
 describe("persistent editable sound library", () => {
   it("persists library classification independently of the editable sound", async () => {
     const project = sound();
-    const entry = await saveSoundToLibrary(project, renderProject(project), undefined, "magic");
+    const entry = await saveSoundToLibrary(
+      project,
+      renderProject(project),
+      undefined,
+      "magic",
+    );
     expect((await listSavedSounds())[0].category).toBe("magic");
     await renameSavedSound(entry.id, "Renamed", "motion");
     await setSavedSoundDeleted(entry.id, true);
     await setSavedSoundDeleted(entry.id, false);
     expect((await listSavedSounds())[0].category).toBe("motion");
-    expect(await readSavedSound(entry.id)).toEqual({ ...project, name: "Renamed" });
+    expect(await readSavedSound(entry.id)).toEqual({
+      ...project,
+      name: "Renamed",
+    });
   });
-  it("upgrades the existing database without losing a v1 draft", async () => {
+  it("upgrades the database without changing the native draft", async () => {
     const project = sound();
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open("momo-sound-forge", 1);
@@ -41,10 +49,7 @@ describe("persistent editable sound library", () => {
       request.onsuccess = () => {
         const db = request.result,
           tx = db.transaction("drafts", "readwrite");
-        tx.objectStore("drafts").put(
-          { ...project, schema: "momo.soundforge/v1" },
-          "current",
-        );
+        tx.objectStore("drafts").put(project, "current");
         tx.oncomplete = () => {
           db.close();
           resolve();
@@ -79,14 +84,15 @@ describe("persistent editable sound library", () => {
     const project = wrapProject(wrapProject(child)),
       expected = renderProject(project),
       entry = await saveSoundToLibrary(project, expected);
-    child.layers[0].frequency = 999;
-    project.layers[0].project!.master = 0;
+    child.layers[0].content.frequency = 999;
+    project.layers[0].content.project!.master = 0;
     const restored = await readSavedSound(entry.id),
       actual = renderProject(restored);
     expect(actual.left).toEqual(expected.left);
     expect(actual.right).toEqual(expected.right);
     expect(
-      restored.layers[0].project!.layers[0].project!.assets.sample,
+      restored.layers[0].content.project!.layers[0].content.project!.assets
+        .sample,
     ).toBeDefined();
     const index = await listSavedSounds();
     expect(index).toHaveLength(1);

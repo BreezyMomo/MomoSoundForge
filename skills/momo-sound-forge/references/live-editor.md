@@ -26,12 +26,12 @@ node scripts/server.mjs --port 8799 --allow-origin http://127.0.0.1:5180
 
 ```json
 {"operations":[
-  {"op":"add","layer":{"id":"pickup-tone","name":"拾取亮点","wave":"sine","frequency":880,"endFrequency":1320,"duration":0.3,"gain":0.25}},
+  {"op":"add","layer":{"id":"pickup-tone","name":"拾取亮点","content":{"wave":"sine","frequency":880,"endFrequency":1320},"duration":0.3,"gain":0.25}},
   {"op":"project","patch":{"duration":1}}
 ]}
 ```
 
-`insert` 使用目录返回的 `soundId`，或者完整 `project`。插入结果是可展开分组；再次 capture 后按实际子节点路径调整，不能猜自动 ID。每个节点有修饰 effects；修改 effects 或 score 是整体替换该字段，应保留未修改项。调整乐器音符时先读取原 score 的 instruments，然后替换 notes。修改分组内容会重新计算分组时长；作品时长需明确设置，超出作品范围的内容不会默认导出。
+`insert` 使用目录返回的 `soundId`，或者完整 `project`。插入结果是可展开分组；再次 capture 后按实际子节点路径调整，不能猜自动 ID。每个节点有修饰 effects；修改 effects 或 content.score 是整体替换该字段，应保留未修改项。调整乐器音符时先读取原 content.score 的 instruments，然后替换 notes。修改分组内容会重新计算分组时长；作品时长需明确设置，超出作品范围的内容不会默认导出。
 
 `sound_history` 按 fresh snapshot 撤销/重做。`sound_save_library` 保存为新的个人库资源，不覆盖同名旧项，先读回结果避免超时重试产生重复。`sound_project` 显式取得带采样的原生工程，可能较大。
 
@@ -62,3 +62,5 @@ low/mid/high 为 -100–100；feedback/wet/reverb 为 0–100；delayTime 仍是
 传 `variantSetId` 可批量下载候选 ZIP，包含音频、可编辑工程和 manifest；不能同时传 node 或 variant。单个导出可选 node 或 variant。与右上角导出共用尾音渲染、循环处理、静音裁剪、响度调整、重采样与编码流程。
 
 需要取得实际成品音频供客户端试听时，使用 `sound_render` 的 `output:"export",settings:{...}`；返回实际编码的文件，metrics 标注为编码前的处理结果。此模式不能同时使用 start/end 或 beforePolish。原生试听仍默认 WAV；成品响应上限 8 MiB，过大时直接下载。OGG/MP3/FLAC 首次使用会加载本地编码器。离线 CLI 的 render 目前仍只输出原生 WAV。
+
+原生工程为 momo.soundforge/v3。声层的发声参数位于 content；例如 patch: {content: {frequency: 880}}。content 采用浅合并，score、project 等内部对象需完整传入。声层位置、音量、声像、effects 留在外层。读取嵌套组合使用 layer.content.project，读取音符使用 layer.content.score；group 的控件值使用 layer.content.controlValues。普通 patch 不允许改变内容 type、assetId 或 project。

@@ -27,7 +27,7 @@ describe("individual layer audition", () => {
     expect(render.left.subarray(0, 480).some((x) => Math.abs(x) > 0.01)).toBe(
       true,
     );
-    expect(preview.layers[0].noiseSeed).toBe(layer.noiseSeed);
+    expect(preview.layers[0].content.noiseSeed).toBe(layer.content.noiseSeed);
     expect(preview.master).toBe(1);
     expect(preview.echo).toBe(0);
     expect(JSON.stringify(project)).toBe(before);
@@ -175,9 +175,9 @@ describe("portable sample projects", () => {
   it("respects source trimming and reverse playback", () => {
     const p = sampleProject(),
       original = renderProject(p).left;
-    p.layers[0].reverse = true;
+    p.layers[0].content.reverse = true;
     expect(renderProject(p).left).not.toEqual(original);
-    p.layers[0].trim = 2;
+    p.layers[0].content.trim = 2;
     expect(renderProject(p).peak).toBe(0);
   });
   it("preserves phase-inverted stereo through filtering and draws nonempty layer data", () => {

@@ -117,7 +117,8 @@ export async function saveSoundToLibrary(
   let layerCount = 0;
   const count = (p: Project) => {
     layerCount += p.layers.length;
-    for (const layer of p.layers) if (layer.project) count(layer.project);
+    for (const layer of p.layers)
+      if (layer.content.project) count(layer.content.project);
   };
   count(project);
   const channels = [audio.left, audio.right];
@@ -175,7 +176,11 @@ export async function setSavedSoundDeleted(id: string, deleted: boolean) {
     db.close();
   }
 }
-export async function renameSavedSound(id: string, name: string, category?: SoundCategory) {
+export async function renameSavedSound(
+  id: string,
+  name: string,
+  category?: SoundCategory,
+) {
   const nextName = name.trim();
   if (!nextName || nextName.length > 120) throw Error("Invalid sound name");
   const db = await database();
@@ -192,7 +197,14 @@ export async function renameSavedSound(id: string, name: string, category?: Soun
         tx.abort();
         return;
       }
-      result = { ...entry.result, name: nextName, updatedAt: Date.now(), ...(category && SOUND_CATEGORIES.includes(category) ? { category } : {}) };
+      result = {
+        ...entry.result,
+        name: nextName,
+        updatedAt: Date.now(),
+        ...(category && SOUND_CATEGORIES.includes(category)
+          ? { category }
+          : {}),
+      };
       sounds.put({ ...project.result, name: nextName }, id);
       index.put(result, id);
     };

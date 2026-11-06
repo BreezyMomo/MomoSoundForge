@@ -3,6 +3,12 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 
 const SCENES = [
+  ...[
+    ['wood-impact', 'wood-heavy', 95, 'noise'],
+    ['metal-impact', 'metal-heavy', 115, 'triangle'],
+    ['body-impact', 'body-thud', 70, 'noise'],
+  ].map(([id, material, frequency, detail]) => ({ id, category: 'impacts',
+    keywords: `${material} impact hit 命中 撞击`, clips: [[material, 1, 0, .85]], quick: { frequency, detail } })),
   { id: "wooden-landing", category: "footsteps", keywords: "wood land jump fall 木地板 跳跃 落地", clips: [
     ["footstep-wood", 1, 0, .9], ["body-thud", 1, .025, .55],
   ], bass: true, control: ["weight", "body-thud", .2, .9] },
@@ -90,14 +96,35 @@ export async function gameSfxProject(job, root, collectionRoot, { makeLayer, enc
       wave: "saw", frequency: 70, endFrequency: 180, start: .09, duration: .32,
       gain: .12, attack: .02, release: .14, decay: 1, cutoff: 900, noiseSeed: 2048 }));
   }
-  const project = { schema: "momo.soundforge/v2", name: job.nameKey, seed: 2048, master: .5, echo: 0,
+  const project = { schema: "momo.soundforge/v3", name: job.nameKey, seed: 2048, master: .5, echo: 0,
     duration: Math.max(.1, ...layers.map(layer => layer.start + layer.duration)), assets, layers };
   if (job.scene?.control) {
     const [name, group, low, high] = job.scene.control;
     project.controls = [{ id: `control-${name}`, name: `builtin.gameControl.${name}`,
       min: 0, max: 1, defaultValue: .5,
-      mappings: layers.filter(layer => layer.assetId && job.samples.some(s => s.id === layer.assetId && s.groupId === `game-${group}`))
+      mappings: layers.filter(layer => layer.content.assetId && job.samples.some(s => s.id === layer.content.assetId && s.groupId === `game-${group}`))
         .map(layer => ({ layerId: layer.id, parameter: "gain", low, high })) }];
+  }
+  if (job.scene?.quick) {
+    const { frequency, detail } = job.scene.quick;
+    const body = layers[0];
+    body.name = 'builtin.gameLayer.body';
+    Object.assign(body.content, { cutoff: 16000, release: .015 });
+    layers.push(makeLayer({ id: 'layer-weight', name: 'builtin.gameLayer.weight', frequency, endFrequency: 42,
+      duration: .16, gain: .2, attack: .002, release: .055, decay: 4, cutoff: 500 }));
+    layers.push(makeLayer({ id: 'layer-detail', name: 'builtin.gameLayer.detail', wave: detail,
+      frequency: detail === 'triangle' ? 1700 : 440, endFrequency: detail === 'triangle' ? 1100 : 440,
+      start: .018, duration: detail === 'triangle' ? .25 : .1, gain: .06, attack: .005, release: .06, decay: 4, cutoff: 8500 }));
+    project.controls = [
+      { id: 'impact', name: 'builtin.gameControl.impact', min: 0, max: 100, defaultValue: 50,
+        mappings: [{ layerId: 'layer-weight', parameter: 'gain', low: .05, high: .36 }] },
+      { id: 'brightness', name: 'builtin.gameControl.brightness', min: 0, max: 100, defaultValue: 65,
+        mappings: [{ layerId: body.id, parameter: 'cutoff', low: 1800, high: 20000, logarithmic: true }] },
+      { id: 'detail', name: 'builtin.gameControl.detail', min: 0, max: 100, defaultValue: 35,
+        mappings: [{ layerId: 'layer-detail', parameter: 'gain', low: 0, high: .15 }] },
+    ];
+    project.master = 1;
+    project.duration = Math.max(.1, ...layers.map(l => l.start + l.duration));
   }
   return project;
 }

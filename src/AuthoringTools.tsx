@@ -1,3 +1,4 @@
+import { layerValue } from "./model";
 import { useState, useRef } from "react";
 import { Range } from "./Inspector";
 import { t } from "./i18n";
@@ -23,13 +24,19 @@ export function exposeParameter(
     layer.automation?.[key as AutomationKey]?.length
   )
     return project;
-  const [min, max] = key === "start" ? [0, Math.max(project.duration, layer.start)] : PARAMS[key];
+  const [min, max] =
+    key === "start"
+      ? [0, Math.max(project.duration, layer.start)]
+      : PARAMS[key];
   const control: Macro = {
     id: uid(),
     name: `${layer.name} · ${t(`pro.param.${key}`)}`.slice(0, 120),
     min,
     max,
-    defaultValue: Math.max(min, Math.min(max, layer[key])),
+    defaultValue: Math.max(
+      min,
+      Math.min(max, layerValue(layer, key) as number),
+    ),
     mappings: [{ layerId: layer.id, parameter: key, low: min, high: max }],
   };
   return { ...project, controls: [...(project.controls ?? []), control] };
@@ -232,12 +239,14 @@ export function MacroEditor({
           </div>
           {c.mappings.map((m, i) => {
             const layer = project.layers.find((l) => l.id === m.layerId),
-              child = layer?.project?.controls?.find(
+              child = layer?.content.project?.controls?.find(
                 (c) => c.id === m.controlId,
               ),
               range = child
                 ? [child.min, child.max]
-                : m.parameter === "start" ? [0, Math.max(project.duration, m.low, m.high)] : PARAMS[m.parameter as Parameter];
+                : m.parameter === "start"
+                  ? [0, Math.max(project.duration, m.low, m.high)]
+                  : PARAMS[m.parameter as Parameter];
             const change = (patch: Partial<Mapping>) =>
               update(c.id, {
                 mappings: c.mappings.map((v, j) =>
@@ -339,13 +348,15 @@ export function MacroEditor({
                   return;
                 }
                 const layer = project.layers.find((l) => l.id === layerId)!;
-                const child = layer.project?.controls?.find(
+                const child = layer.content.project?.controls?.find(
                     (x) => x.id === controlId,
                   ),
                   range =
                     parameter === "control" && child
                       ? [child.min, child.max]
-                      : parameter === "start" ? [0, Math.max(project.duration, layer.start)] : PARAMS[parameter as Parameter];
+                      : parameter === "start"
+                        ? [0, Math.max(project.duration, layer.start)]
+                        : PARAMS[parameter as Parameter];
                 setError("");
                 update(c.id, {
                   mappings: [
@@ -368,7 +379,7 @@ export function MacroEditor({
                     .filter(
                       (k) =>
                         !l.automation?.[k as AutomationKey]?.length &&
-                        (l.type !== "composition" ||
+                        (l.content.type !== "composition" ||
                           ["start", "gain", "pan"].includes(k)),
                     )
                     .map((k) => (
@@ -380,7 +391,7 @@ export function MacroEditor({
                         {t(`pro.param.${k}`)}
                       </option>
                     ))}
-                  {l.project?.controls?.map((child) => (
+                  {l.content.project?.controls?.map((child) => (
                     <option
                       key={child.id}
                       value={JSON.stringify([l.id, "control", child.id])}
@@ -440,7 +451,7 @@ export function AutomationEditor({
         }}
       >
         {(["gain", "pan", "cutoff"] as const)
-          .filter((k) => layer.type !== "composition" || k !== "cutoff")
+          .filter((k) => layer.content.type !== "composition" || k !== "cutoff")
           .map((k) => (
             <option key={k} value={k}>
               {t(`pro.param.${k}`)}
@@ -456,8 +467,8 @@ export function AutomationEditor({
             commit(
               e.target.checked
                 ? [
-                    { time: 0, value: layer[key] },
-                    { time: 1, value: layer[key] },
+                    { time: 0, value: layerValue(layer, key) as number },
+                    { time: 1, value: layerValue(layer, key) as number },
                   ]
                 : [],
             )

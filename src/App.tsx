@@ -1,12 +1,21 @@
+import {
+  layerValue,
+  withLayerValue,
+  type LayerField,
+  type LayerValue,
+} from "./model";
+import { patchLayer, type LayerPatch } from "./model";
 import { NotesWorkspace } from "./NotesWorkspace";
 import { Button } from "@momo/workbench/react";
 import { HelpDialog } from "./HelpDialog";
 import { SupportDialog } from "./SupportDialog";
-import { AITools } from './AITools';
-import { useAIEditor } from './useAIEditor';
-import { generateVariants } from './aiCapabilities';
-import { renderExport } from './exportPipeline';
-import { flushSync } from 'react-dom';
+import { AITools } from "./AITools";
+import { useAIEditor } from "./useAIEditor";
+import { ContentReplacementDialog } from "./ContentReplacementDialog";
+import { localContentCandidate } from "./contentReplacement";
+import { generateVariants } from "./aiCapabilities";
+import { renderExport } from "./exportPipeline";
+import { flushSync } from "react-dom";
 import { VideoReferencePanel } from "./VideoReferencePanel";
 import { appendInstrumentNode } from "./instrumentNode";
 import { TreeTimeline } from "./TreeTimeline";
@@ -123,6 +132,10 @@ function readBuiltinSound(id: string) {
 }
 export default function App() {
   const lang = useLanguage();
+  const [replacement, setReplacement] = useState<{
+    base: Project;
+    address: NodeAddress;
+  }>();
   const [librarySaveHost, setLibrarySaveHost] = useState<HTMLDivElement | null>(
     null,
   );
@@ -146,9 +159,10 @@ export default function App() {
   const [selected, setSelected] = useState("ice-0"),
     [ready, setReady] = useState(false),
     [saveState, setSaveState] = useState("status.loading"),
-    [notice, setNotice] = useState<{ key: string; values: unknown[] } | null>(
-      null,
-    );
+    [notice, setNotice] = useState<{
+      key: string;
+      values: unknown[];
+    } | null>(null);
   const [rendered, setRendered] = useState<{
       project: Project;
       result: RenderResult;
@@ -168,7 +182,10 @@ export default function App() {
   const encodedCache = useRef<{
     project: Project;
     settings: string;
-    promise: Promise<{ output: ExportResult; bytes: Uint8Array<ArrayBuffer> }>;
+    promise: Promise<{
+      output: ExportResult;
+      bytes: Uint8Array<ArrayBuffer>;
+    }>;
   } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [cropMode, setCropMode] = useState(false);
@@ -179,13 +196,20 @@ export default function App() {
   const selectionAnchor = useRef<string | null>(null);
   const selectedIds = selection.includes(selected)
     ? selection.filter((id) => project.layers.some((l) => l.id === id))
-    : project.layers.some((layer) => layer.id === selected) ? [selected] : [];
+    : project.layers.some((layer) => layer.id === selected)
+      ? [selected]
+      : [];
   const [exportSettings, setExportSettings] =
     useState<ExportSettings>(readExportSettings);
   const [exportOutput, setExportOutput] = useState<ExportResult | null>(null);
   const [exportPreparing, setExportPreparing] = useState(false);
   const [exportPreparationError, setExportPreparationError] = useState("");
-  const exportRenderCache = useRef<{ project: Project; settings: string; signal?: AbortSignal; promise: Promise<ExportResult> } | null>(null);
+  const exportRenderCache = useRef<{
+    project: Project;
+    settings: string;
+    signal?: AbortSignal;
+    promise: Promise<ExportResult>;
+  } | null>(null);
   const outputVersion = useRef(0);
   useEffect(() => {
     try {
@@ -207,7 +231,11 @@ export default function App() {
   }, [history.project, exportSettings]);
   const selectLayer = (
     id: string,
-    event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
+    event?: {
+      ctrlKey: boolean;
+      metaKey: boolean;
+      shiftKey: boolean;
+    },
   ) => {
     if (event?.shiftKey) {
       const anchor = selectionAnchor.current ?? selected;
@@ -234,7 +262,7 @@ export default function App() {
     }
     setSelected(id);
   };
-  const transformLayers = (p: Project, l: Layer, next: Partial<Layer>) => {
+  const transformLayers = (p: Project, l: Layer, next: LayerPatch) => {
     const ids = selectedIds.includes(l.id) ? selectedIds : [l.id];
     if (
       (Math.abs((next.start ?? l.start) - l.start) > 1e-6 ||
@@ -368,19 +396,33 @@ export default function App() {
     );
   }, [stop]);
   const ai = useAIEditor({
-    project: history.project, ready, exportSettings,
+    project: history.project,
+    ready,
+    exportSettings,
     publishVariants: (base, items, path) => {
-      stop(); scopeEpoch.current++;
-      setEditPath(path); setSelection([]); setSelected('');
-      setVariations(items); setVariationBase(base);
-      manager.current?.show('variants');
+      stop();
+      scopeEpoch.current++;
+      setEditPath(path);
+      setSelection([]);
+      setSelected("");
+      setVariations(items);
+      setVariationBase(base);
+      manager.current?.show("variants");
     },
     commit: (expected, next) => {
-      if (rootCurrent.current !== expected) throw Error('ai.stale');
-      stop(); editGroup.current = { key: '', time: 0 };
-      flushSync(() => setHistory(h => ({ past: [...h.past, h.project].slice(-50), project: next, future: [] })));
+      if (rootCurrent.current !== expected) throw Error("ai.stale");
+      stop();
+      editGroup.current = { key: "", time: 0 };
+      flushSync(() =>
+        setHistory((h) => ({
+          past: [...h.past, h.project].slice(-50),
+          project: next,
+          future: [],
+        })),
+      );
     },
-    undo: () => flushSync(undo), redo: () => flushSync(redo),
+    undo: () => flushSync(undo),
+    redo: () => flushSync(redo),
   });
   const save = useCallback(() => {
     download(
@@ -411,7 +453,6 @@ export default function App() {
       .finally(() => {
         if (!cancelled) setReady(true);
       });
-
     return () => {
       cancelled = true;
       alive.current = false;
@@ -602,13 +643,14 @@ export default function App() {
     nodes.some(
       (node) =>
         previous.has(node.id) ||
-        (node.project && sharesNode(node.project.layers, previous)),
+        (node.content.project &&
+          sharesNode(node.content.project.layers, previous)),
     );
   const previousIds = new Set<string>();
   const collectIds = (nodes: Layer[]) =>
     nodes.forEach((node) => {
       previousIds.add(node.id);
-      if (node.project) collectIds(node.project.layers);
+      if (node.content.project) collectIds(node.content.project.layers);
     });
   if (rendered) collectIds(rendered.project.layers);
   const displayResult =
@@ -756,11 +798,11 @@ export default function App() {
   };
   const enterComposition = (id: string) => {
     const layer = current.current.layers.find((l) => l.id === id);
-    if (layer?.type !== "composition" || !layer.project) return;
+    if (layer?.content.type !== "composition" || !layer.content.project) return;
     stop();
     scopeEpoch.current++;
     setEditPath([...pathRef.current, id]);
-    setSelected(layer.project.layers[0]?.id ?? "");
+    setSelected(layer.content.project.layers[0]?.id ?? "");
     updateCue(0);
     setVariations([]);
     manager.current?.show("editor");
@@ -782,7 +824,11 @@ export default function App() {
   };
   const treeSelect = (
     address: NodeAddress,
-    event?: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean },
+    event?: {
+      ctrlKey: boolean;
+      metaKey: boolean;
+      shiftKey: boolean;
+    },
   ) => {
     stop();
     if (JSON.stringify(address.path) === JSON.stringify(context.path))
@@ -825,7 +871,7 @@ export default function App() {
   const previewNote = (address: NodeAddress, note: NoteEvent) => {
     const isolated = isolatedNode(rootCurrent.current, address);
     const layer = isolated.layers[0],
-      score = layer.score;
+      score = layer.content.score;
     if (!score) return;
     // Resolve with the original ordering so round-robin audition matches the score.
     const counters = new Map<string, number>();
@@ -834,7 +880,7 @@ export default function App() {
       const chosen = selectRegion(
         score.instruments.find((i) => i.id === n.instrumentId),
         n,
-        isolated.seed ^ layer.noiseSeed,
+        isolated.seed ^ layer.content.noiseSeed,
         counters,
       );
       if (n.id === note.id) {
@@ -859,17 +905,20 @@ export default function App() {
       {
         ...layer,
         duration,
-        sourceDuration: undefined,
-        trim: 0,
-        reverse: false,
-        cropStart: 0,
-        cropEnd: 1,
-        attack: 0,
-        release: 0,
-        score: {
-          ...score,
-          instruments: [{ ...instrument, regions: [region] }],
-          notes: [single],
+        content: {
+          ...layer.content,
+          sourceDuration: undefined,
+          trim: 0,
+          reverse: false,
+          cropStart: 0,
+          cropEnd: 1,
+          attack: 0,
+          release: 0,
+          score: {
+            ...score,
+            instruments: [{ ...instrument, regions: [region] }],
+            notes: [single],
+          },
         },
       },
     ];
@@ -939,7 +988,7 @@ export default function App() {
     if (current.current.layers.length >= 16) throw Error("error.layers");
     if (
       child.layers.length === 1 &&
-      child.layers[0].type === "instrument" &&
+      child.layers[0].content.type === "instrument" &&
       !child.effects &&
       !child.echo &&
       !child.controls?.length
@@ -968,19 +1017,23 @@ export default function App() {
     manager.current?.show("editor");
     flash("status.compositionImported", child.name);
   }
-  const changeLayer = (key: keyof Layer, value: Layer[keyof Layer]) =>
+  const changeLayer = (key: LayerField, value: LayerValue) =>
     edit(
       (p) => ({
         ...p,
         layers: p.layers.map((l) =>
           l.id === selected && !boundControl(p, l.id, key)
-            ? {
-                ...l,
-                ...(key === "duration"
-                  ? { sourceDuration: l.sourceDuration ?? l.duration }
-                  : {}),
-                [key]: value,
-              }
+            ? withLayerValue(
+                key === "duration"
+                  ? patchLayer(l, {
+                      content: {
+                        sourceDuration: l.content.sourceDuration ?? l.duration,
+                      },
+                    })
+                  : l,
+                key,
+                value,
+              )
             : l,
         ),
       }),
@@ -1031,19 +1084,25 @@ export default function App() {
     setSelected(copies[0].id);
   };
   const removeLayers = (ids: string[]) => {
-    if (!project.layers.some(layer => ids.includes(layer.id))) return;
-    edit(p => ({ ...p, layers: p.layers.filter(layer => !ids.includes(layer.id)) }));
+    if (!project.layers.some((layer) => ids.includes(layer.id))) return;
+    edit((p) => ({
+      ...p,
+      layers: p.layers.filter((layer) => !ids.includes(layer.id)),
+    }));
     setSelection([]);
     setSelected("");
     selectionAnchor.current = null;
   };
   const removeNode = (address: NodeAddress) => {
-    editRoot(root => {
-      const next = structuredClone(root), parent = nodeParent(next, address.path);
-      parent.layers = parent.layers.filter(layer => layer.id !== address.id);
+    editRoot((root) => {
+      const next = structuredClone(root),
+        parent = nodeParent(next, address.path);
+      parent.layers = parent.layers.filter((layer) => layer.id !== address.id);
       return next;
     });
-    const removesContext = [...address.path, address.id].every((id, index) => context.path[index] === id);
+    const removesContext = [...address.path, address.id].every(
+      (id, index) => context.path[index] === id,
+    );
     if (removesContext) {
       scopeEpoch.current++;
       setEditPath(address.path);
@@ -1051,18 +1110,34 @@ export default function App() {
       setSelected("");
       selectionAnchor.current = null;
     } else if (JSON.stringify(address.path) === JSON.stringify(context.path)) {
-      const remaining = selectedIds.filter(id => id !== address.id);
+      const remaining = selectedIds.filter((id) => id !== address.id);
       setSelection(remaining);
       if (selected === address.id) setSelected(remaining[0] ?? "");
-      if (selectionAnchor.current === address.id) selectionAnchor.current = null;
+      if (selectionAnchor.current === address.id)
+        selectionAnchor.current = null;
     }
   };
-  function finalOutput(p: Project, settings = exportSettings, signal?: AbortSignal): Promise<ExportResult> {
-    const key = JSON.stringify(settings), cached = exportRenderCache.current;
-    if (cached?.project === p && cached.settings === key && !cached.signal?.aborted) return cached.promise;
-    const promise = renderExport(p, settings, project => renderer.current!.render(project, signal));
+  function finalOutput(
+    p: Project,
+    settings = exportSettings,
+    signal?: AbortSignal,
+  ): Promise<ExportResult> {
+    const key = JSON.stringify(settings),
+      cached = exportRenderCache.current;
+    if (
+      cached?.project === p &&
+      cached.settings === key &&
+      !cached.signal?.aborted
+    )
+      return cached.promise;
+    const promise = renderExport(p, settings, (project) =>
+      renderer.current!.render(project, signal),
+    );
     exportRenderCache.current = { project: p, settings: key, signal, promise };
-    promise.catch(() => { if (exportRenderCache.current?.promise === promise) exportRenderCache.current = null; });
+    promise.catch(() => {
+      if (exportRenderCache.current?.promise === promise)
+        exportRenderCache.current = null;
+    });
     return promise;
   }
   useEffect(() => {
@@ -1071,11 +1146,21 @@ export default function App() {
     setExportPreparing(true);
     setExportPreparationError("");
     setExportOutput(null);
-    void finalOutput(history.project, exportSettings, controller.signal).then(output => {
-      if (!controller.signal.aborted) setExportOutput(output);
-    }).catch(error => {
-      if (!controller.signal.aborted) setExportPreparationError(error instanceof Error && error.message === "error.renderBudget" ? error.message : "error.render");
-    }).finally(() => { if (!controller.signal.aborted) setExportPreparing(false); });
+    void finalOutput(history.project, exportSettings, controller.signal)
+      .then((output) => {
+        if (!controller.signal.aborted) setExportOutput(output);
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          setExportPreparationError(
+            error instanceof Error && error.message === "error.renderBudget"
+              ? error.message
+              : "error.render",
+          );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setExportPreparing(false);
+      });
     return () => controller.abort();
   }, [exportOpen, history.project, exportSettings]);
   async function encodedOutput(p: Project, settings = exportSettings) {
@@ -1282,6 +1367,27 @@ export default function App() {
       setIoBusy(false);
     }
   }
+  async function importReplacement(file: File) {
+    if (file.size > MAX_ASSET_BYTES) throw Error("error.fileSize");
+    const buffer = await player.current!.decode(await file.arrayBuffer());
+    if (
+      buffer.length > MAX_SAMPLE_FRAMES ||
+      buffer.length * Math.min(2, buffer.numberOfChannels) * 4 > MAX_ASSET_BYTES
+    )
+      throw Error("error.budget");
+    return localContentCandidate(
+      {
+        id: uid(),
+        name: file.name.slice(0, 120),
+        sampleRate: buffer.sampleRate,
+        channels: Array.from(
+          { length: Math.min(2, buffer.numberOfChannels) },
+          (_, i) => encodeSamples(buffer.getChannelData(i)),
+        ),
+      },
+      Math.max(0.01, buffer.duration),
+    );
+  }
   async function generate() {
     if (!renderer.current || busy) return;
     ai.invalidateVariants();
@@ -1368,10 +1474,17 @@ export default function App() {
       setIoBusy(false);
     }
   }
-  const fullContentEnd = result ? contentRange(history.project, result).tailEnd : history.project.duration;
-  const extendedDuration = Math.max(history.project.duration, Math.ceil(fullContentEnd * 1000) / 1000);
-  const truncated = !!result && fullContentEnd > history.project.duration + 1 / result.sampleRate;
-  const compareName = project.layers.find(l => l.id === selected)?.name ?? "";
+  const fullContentEnd = result
+    ? contentRange(history.project, result).tailEnd
+    : history.project.duration;
+  const extendedDuration = Math.max(
+    history.project.duration,
+    Math.ceil(fullContentEnd * 1000) / 1000,
+  );
+  const truncated =
+    !!result &&
+    fullContentEnd > history.project.duration + 1 / result.sampleRate;
+  const compareName = project.layers.find((l) => l.id === selected)?.name ?? "";
   const library = (
     <SoundLibrary
       project={history.project}
@@ -1569,8 +1682,19 @@ export default function App() {
           disabled={!auditionResult}
           version={history.project}
           onLoopBegin={stop}
-          onLoopChange={loopRegion => editRoot(p => ({ ...p, loopRegion: { ...p.loopRegion!, ...loopRegion,
-            crossfade: Math.min(p.loopRegion?.crossfade ?? 0, (loopRegion.end - loopRegion.start) / 2) } }))}
+          onLoopChange={(loopRegion) =>
+            editRoot((p) => ({
+              ...p,
+              loopRegion: {
+                ...p.loopRegion!,
+                ...loopRegion,
+                crossfade: Math.min(
+                  p.loopRegion?.crossfade ?? 0,
+                  (loopRegion.end - loopRegion.start) / 2,
+                ),
+              },
+            }))
+          }
           onSeekStart={beginSeek}
           onSeek={updateCue}
           onSeekEnd={endSeek}
@@ -1588,15 +1712,40 @@ export default function App() {
                 : t(auditionResult ? "editor.ready" : "editor.rendering")}
           </span>
         </div>
-        <WaveformTools project={history.project} cue={cue} ready={!!result} busy={!result || ioBusy}
-          truncated={truncated} extendedDuration={extendedDuration} tailLimited={!!result?.tailLimited}
-          onChange={next => editRoot(() => next)} onLoop={() => auditionLoop()} onSeam={() => auditionLoop(true)} />
+        <WaveformTools
+          project={history.project}
+          cue={cue}
+          ready={!!result}
+          busy={!result || ioBusy}
+          truncated={truncated}
+          extendedDuration={extendedDuration}
+          tailLimited={!!result?.tailLimited}
+          onChange={(next) => editRoot(() => next)}
+          onLoop={() => auditionLoop()}
+          onSeam={() => auditionLoop(true)}
+        />
       </div>
       <div className="layers-heading">
-        <div className="layer-title-status"><h2>{t("tree.title")}</h2>
-          <span className="field-help" role="status" title={!auditionResult ? t("tree.waveUpdating") : originalAudition && comparisonReady
-            ? t("tree.waveBefore", compareName) : t("tree.waveAfter")}>
-            {!auditionResult ? t("tree.waveUpdating") : t(originalAudition && comparisonReady ? "tree.waveBeforeShort" : "tree.waveAfterShort")}
+        <div className="layer-title-status">
+          <h2>{t("tree.title")}</h2>
+          <span
+            className="field-help"
+            role="status"
+            title={
+              !auditionResult
+                ? t("tree.waveUpdating")
+                : originalAudition && comparisonReady
+                  ? t("tree.waveBefore", compareName)
+                  : t("tree.waveAfter")
+            }
+          >
+            {!auditionResult
+              ? t("tree.waveUpdating")
+              : t(
+                  originalAudition && comparisonReady
+                    ? "tree.waveBeforeShort"
+                    : "tree.waveAfterShort",
+                )}
           </span>
         </div>
         <div className="button-group">
@@ -1627,26 +1776,55 @@ export default function App() {
         </div>
       </div>
       <TreeTimeline
-        renderToolbar={tools => <LayerToolbar {...tools}
-          path={context.path} ids={selectedIds} cropMode={cropMode} onCrop={() => setCropMode(value => !value)}
-          canResetCrop={!!selectedLayer && ((selectedLayer.cropStart ?? 0) > 0 || (selectedLayer.cropEnd ?? 1) < 1)}
-          onResetCrop={() =>
-            edit((p) => ({
-              ...p,
-              layers: p.layers.map((l) =>
-                l.id === selected ? { ...l, cropStart: 0, cropEnd: 1 } : l,
-              ),
-            }))
-          }
-
-          snap={snap} onSnap={setSnap} zoom={zoom} onZoom={setZoom} duration={timelineDuration}
-          canDuplicate={!!selectedLayer} onDuplicate={duplicate} canGroup={!!selectedIds.length && ready} onGroup={wrapCurrent}
-          onDelete={() => removeLayers(selectedIds)}
-          onMove={target => treeMove(context.path, selectedIds, target)}
-          waveformHelp={!auditionResult ? t("tree.waveUpdating") : originalAudition && comparisonReady
-            ? t("tree.waveBefore", compareName) : t("tree.waveAfter")}
-          tailLimited={!!result?.tailLimited}>
-
+        renderToolbar={(tools) => (
+          <LayerToolbar
+            {...tools}
+            path={context.path}
+            ids={selectedIds}
+            cropMode={cropMode}
+            onCrop={() => setCropMode((value) => !value)}
+            canResetCrop={
+              !!selectedLayer &&
+              ((selectedLayer.content.cropStart ?? 0) > 0 ||
+                (selectedLayer.content.cropEnd ?? 1) < 1)
+            }
+            onResetCrop={() =>
+              edit((p) => ({
+                ...p,
+                layers: p.layers.map((l) =>
+                  l.id === selected
+                    ? {
+                        ...l,
+                        content: {
+                          ...l.content,
+                          cropStart: 0,
+                          cropEnd: 1,
+                        },
+                      }
+                    : l,
+                ),
+              }))
+            }
+            snap={snap}
+            onSnap={setSnap}
+            zoom={zoom}
+            onZoom={setZoom}
+            duration={timelineDuration}
+            canDuplicate={!!selectedLayer}
+            onDuplicate={duplicate}
+            canGroup={!!selectedIds.length && ready}
+            onGroup={wrapCurrent}
+            onDelete={() => removeLayers(selectedIds)}
+            onMove={(target) => treeMove(context.path, selectedIds, target)}
+            waveformHelp={
+              !auditionResult
+                ? t("tree.waveUpdating")
+                : originalAudition && comparisonReady
+                  ? t("tree.waveBefore", compareName)
+                  : t("tree.waveAfter")
+            }
+            tailLimited={!!result?.tailLimited}
+          >
             <button
               className="secondary"
               disabled={!selectedLayer}
@@ -1719,7 +1897,7 @@ export default function App() {
                 !selectedLayer ||
                 selectedIds.some(
                   (id) =>
-                    project.layers.find((l) => l.id === id)?.type ===
+                    project.layers.find((l) => l.id === id)?.content.type ===
                     "composition",
                 )
               }
@@ -1735,13 +1913,17 @@ export default function App() {
             >
               {t("action.apply")}
             </button>
-
-        </LayerToolbar>}
+          </LayerToolbar>
+        )}
         root={history.project}
         selected={{ path: context.path, id: selected }}
         ids={selectedIds}
         result={displayResult ?? null}
-        beforeKey={originalAudition && comparisonReady ? nodeKey({ path: context.path, id: selected }) : undefined}
+        beforeKey={
+          originalAudition && comparisonReady
+            ? nodeKey({ path: context.path, id: selected })
+            : undefined
+        }
         ready={!!auditionResult}
         cue={cue}
         duration={timelineDuration}
@@ -1996,7 +2178,6 @@ export default function App() {
           <AITools project={history.project} {...ai} />
           <SupportDialog />
           <HelpDialog />
-
         </div>
       </header>
       <main className={!ready ? "restoring" : ""}>
@@ -2016,17 +2197,19 @@ export default function App() {
                 onSelect={(id) => treeSelect({ path: context.path, id })}
                 onBegin={stop}
                 onChange={(note) => {
-                  if (selectedLayer?.score)
+                  if (selectedLayer?.content.score)
                     editRoot((root) =>
                       editNode(
                         root,
                         { path: context.path, id: selectedLayer.id },
                         {
-                          score: {
-                            ...selectedLayer.score!,
-                            notes: selectedLayer.score!.notes.map((n) =>
-                              n.id === note.id ? note : n,
-                            ),
+                          content: {
+                            score: {
+                              ...selectedLayer.content.score!,
+                              notes: selectedLayer.content.score!.notes.map(
+                                (n) => (n.id === note.id ? note : n),
+                              ),
+                            },
                           },
                         },
                       ),
@@ -2096,14 +2279,30 @@ export default function App() {
             editor,
             inspector: (
               <Inspector
+                onReplaceContent={
+                  ready && !ioBusy
+                    ? () => {
+                        stop();
+                        setReplacement({
+                          base: rootCurrent.current,
+                          address: { path: [...pathRef.current], id: selected },
+                        });
+                      }
+                    : undefined
+                }
                 sourceEditor={
-                  selectedLayer?.type === "instrument" ? (
+                  selectedLayer?.content.type === "instrument" ? (
                     <ScoreEditor
                       key={selectedLayer.id}
                       project={project}
                       layer={selectedLayer}
                       onChange={(next) => edit(() => next)}
-                      onAudition={(note) => previewNote({ path: context.path, id: selectedLayer.id }, note)}
+                      onAudition={(note) =>
+                        previewNote(
+                          { path: context.path, id: selectedLayer.id },
+                          note,
+                        )
+                      }
                     />
                   ) : undefined
                 }
@@ -2222,6 +2421,25 @@ export default function App() {
           setExportOpen(false);
         }}
       />
+      {replacement && (
+        <ContentReplacementDialog
+          base={replacement.base}
+          address={replacement.address}
+          stale={history.project !== replacement.base}
+          onClose={() => setReplacement(undefined)}
+          onStop={stop}
+          onImport={importReplacement}
+          onPlay={(p, id) => void play(() => renderer.current!.render(p), id)}
+          onApply={(next) => {
+            if (rootCurrent.current !== replacement.base) {
+              flash("error.scopeChanged");
+              return;
+            }
+            editRoot((p) => (p === replacement.base ? next : p));
+            setReplacement(undefined);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,10 @@
 import {
+  layerValue,
+  withLayerValue,
+  type LayerField,
+  type LayerValue,
+} from "./model";
+import {
   WorkbenchNumberInput,
   WorkbenchSlider,
   Field,
@@ -145,17 +151,20 @@ export function Inspector({
   onExpose,
   postProcessing,
   sourceEditor,
+  onReplaceContent,
 }: {
   postProcessing?: ReactNode;
   sourceEditor?: ReactNode;
+  onReplaceContent?: () => void;
   layer?: Layer;
   project: Project;
-  onChange: (key: keyof Layer, value: Layer[keyof Layer]) => void;
+  onChange: (key: LayerField, value: LayerValue) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onEnter: () => void;
   onExpose: (key: Parameter) => void;
 }) {
+  const contentEditor = useRef<HTMLDivElement>(null);
   if (!layer)
     return (
       <div className="empty-state">
@@ -166,7 +175,7 @@ export function Inspector({
   const effective =
     resolveControls(project).layers.find((l) => l.id === layer.id) ?? layer;
   const range = (
-    key: keyof Layer,
+    key: LayerField,
     label: string,
     min: number,
     max: number,
@@ -179,7 +188,7 @@ export function Inspector({
       <div key={key} className="exposable-field">
         <Range
           label={t(label)}
-          value={effective[key] as number}
+          value={layerValue(effective, key) as number}
           min={min}
           max={max}
           step={step}
@@ -210,11 +219,11 @@ export function Inspector({
         <div>
           <span className="eyebrow">
             {t(
-              layer.type === "sample"
+              layer.content.type === "sample"
                 ? "editor.sample"
-                : layer.type === "instrument"
+                : layer.content.type === "instrument"
                   ? "score.title"
-                  : layer.type === "composition"
+                  : layer.content.type === "composition"
                     ? "editor.composition"
                     : "editor.synth",
             )}
@@ -249,134 +258,78 @@ export function Inspector({
           onCommit={(v) => onChange("name", v)}
         />
       </label>
-      {sourceEditor}
-      {postProcessing}
-      <section className="property-section">
-        <h3>{t("prop.source")}</h3>
-        {layer.type === "synth" ? (
-          <label className="text-field">
-            <span>{t("prop.wave")}</span>
-            <select
-              value={layer.wave}
-              onChange={(e) => onChange("wave", e.target.value)}
-            >
-              {["sine", "triangle", "saw", "square", "noise"].map((w) => (
-                <option value={w} key={w}>
-                  {t(`wave.${w}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          <>
-            <div className="asset-name">
-              {layer.type === "instrument"
-                ? t("score.editHint")
-                : layer.type === "composition"
-                  ? layer.project?.name
-                  : project.assets[layer.assetId!]?.name}
-            </div>
-            {layer.type === "sample" && project.assets[layer.assetId!]?.source && (() => {
-              const source = project.assets[layer.assetId!]!.source!;
-              return <p className="field-help">
-                {t(source.quality === 'preview' ? 'ai.samplePreview' : 'ai.sampleOriginal')} · {source.license}
-                {' · '}<a href={source.url} target="_blank" rel="noopener noreferrer">{t('ai.sampleSource')}: {source.provider} / {source.author}</a>
-              </p>;
-            })()}
-            {layer.type === "composition" && (
-              <>
-                <p className="field-help">
-                  {t(
-                    "composition.sourceInfo",
-                    layer.project?.layers.length ?? 0,
-                    layer.project?.duration.toFixed(2) ?? "0",
-                  )}
-                </p>
-                {layer.project?.controls
-                  ?.filter((c) => !c.hidden)
-                  .map((c) => {
-                    const driver = project.controls?.find((x) =>
-                      x.mappings.some(
-                        (m) =>
-                          m.layerId === layer.id &&
-                          m.parameter === "control" &&
-                          m.controlId === c.id,
-                      ),
-                    );
-                    return (
-                      <div key={c.id}>
-                        <Range
-                          label={c.name}
-                          value={
-                            effective.controlValues?.[c.id] ??
-                            layer.project?.controlValues?.[c.id] ??
-                            c.defaultValue
-                          }
-                          min={c.min}
-                          max={c.max}
-                          step={(c.max - c.min) / 1000}
-                          disabled={!!driver}
-                          onChange={(v) =>
-                            onChange("controlValues", {
-                              ...layer.controlValues,
-                              [c.id]: v,
-                            })
-                          }
-                        />
-                        {driver && (
-                          <small>{t("pro.controlled", driver.name)}</small>
-                        )}
-                      </div>
-                    );
-                  })}
-                <button className="secondary wide" onClick={onEnter}>
-                  {t("composition.enter")}
-                </button>
-              </>
+      <div className="replacement-entry">
+        <span>{t(`content.${layer.content.type}`)}</span>
+        <button
+          className="secondary"
+          onClick={() =>
+            layer.content.type === "composition"
+              ? onEnter()
+              : contentEditor.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+          }
+        >
+          {t("content.edit")}
+        </button>
+        <button
+          className="secondary"
+          disabled={!onReplaceContent}
+          onClick={onReplaceContent}
+        >
+          {t("replace.title")}
+        </button>
+      </div>
+      {layer.content.type === "composition" && (
+        <section className="property-section">
+          <h3>{t("pro.controls")}</h3>
+          <p className="field-help">
+            {t(
+              "composition.sourceInfo",
+              layer.content.project?.layers.length ?? 0,
+              layer.content.project?.duration.toFixed(2) ?? "0",
             )}
-            {layer.type !== "composition" && (
-              <>
-                <Range
-                  label={t("prop.rate")}
-                  min={0.1}
-                  max={4}
-                  step={0.01}
-                  value={effective.frequency / 440}
-                  disabled={!!boundControl(project, layer.id, "frequency")}
-                  unit="×"
-                  onChange={(v) => onChange("frequency", v * 440)}
-                />
-                {!boundControl(project, layer.id, "frequency") && (
-                  <button
-                    className="expose-button"
-                    onClick={() => onExpose("frequency")}
-                  >
-                    {t("pro.expose")}
-                  </button>
-                )}
-                <p className="field-help">{t("prop.speedHint")}</p>
-                {range("trim", "prop.trim", 0, 30, 0.01, "s")}
-                <label className="check-field">
-                  <input
-                    type="checkbox"
-                    checked={layer.reverse}
-                    onChange={(e) => onChange("reverse", e.target.checked)}
+          </p>
+          {layer.content.project?.controls
+            ?.filter((c) => !c.hidden && c.mappings.length > 0)
+            .map((c) => {
+              const driver = project.controls?.find((x) =>
+                x.mappings.some(
+                  (m) =>
+                    m.layerId === layer.id &&
+                    m.parameter === "control" &&
+                    m.controlId === c.id,
+                ),
+              );
+              return (
+                <div key={c.id}>
+                  <Range
+                    label={c.name}
+                    value={
+                      effective.content.controlValues?.[c.id] ??
+                      layer.content.project?.controlValues?.[c.id] ??
+                      c.defaultValue
+                    }
+                    min={c.min}
+                    max={c.max}
+                    step={(c.max - c.min) / 1000}
+                    disabled={!!driver}
+                    onChange={(v) =>
+                      onChange("controlValues", {
+                        ...layer.content.controlValues,
+                        [c.id]: v,
+                      })
+                    }
                   />
-                  {t("prop.reverse")}
-                </label>
-              </>
-            )}
-          </>
-        )}
-        {layer.type === "synth" && layer.wave !== "noise" && (
-          <>
-            {range("frequency", "prop.frequency", 20, 20000, 1, "Hz")}
-            {range("endFrequency", "prop.endFrequency", 20, 20000, 1, "Hz")}
-          </>
-        )}
-      </section>
+                  {driver && <small>{t("pro.controlled", driver.name)}</small>}
+                </div>
+              );
+            })}
+        </section>
+      )}
       <section className="property-section">
-        <h3>{t("prop.timing")}</h3>
+        <h3>{t("content.outer")}</h3>
         {range(
           "start",
           "prop.start",
@@ -385,71 +338,173 @@ export function Inspector({
           0.01,
           "s",
         )}
-        {layer.type !== "composition" && (
-          <>
-            {range(
-              "duration",
-              "prop.duration",
-              0.01,
-              Math.max(project.duration, layer.duration),
-              0.01,
-              "s",
-            )}
-            {range(
-              "attack",
-              "prop.attack",
-              0,
-              Math.min(3, layer.duration),
-              0.001,
-              "s",
-            )}
-            {range(
-              "release",
-              "prop.release",
-              0,
-              Math.min(5, layer.duration),
-              0.001,
-              "s",
-            )}
-            {range("decay", "prop.decay", 0, 10, 0.1)}
-            <Range
-              label={t("pro.cropStart")}
-              min={0}
-              max={Math.max(0, (layer.cropEnd ?? 1) * layer.duration - 0.001)}
-              step={0.001}
-              unit="s"
-              value={(layer.cropStart ?? 0) * layer.duration}
-              onChange={(v) => onChange("cropStart", v / layer.duration)}
-            />
-            <Range
-              label={t("pro.cropEnd")}
-              min={(layer.cropStart ?? 0) * layer.duration + 0.001}
-              max={layer.duration}
-              step={0.001}
-              unit="s"
-              value={(layer.cropEnd ?? 1) * layer.duration}
-              onChange={(v) => onChange("cropEnd", v / layer.duration)}
-            />
-            <p className="field-help">
-              {t(
-                "pro.speed",
-                (
-                  (layer.sourceDuration ?? layer.duration) / layer.duration
-                ).toFixed(3),
-              )}
-            </p>
-          </>
-        )}
-      </section>
-      <section className="property-section">
-        <h3>{t("prop.timbre")}</h3>
         {range("gain", "prop.volume", 0, 1.5, 0.01)}
         {range("pan", "prop.pan", -1, 1, 0.01)}
-        {layer.type !== "composition" &&
-          range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
-        {layer.type !== "composition" &&
-          range("drive", "prop.drive", 0, 10, 0.1)}
       </section>
+      {postProcessing}
+      <div ref={contentEditor}>
+        {sourceEditor}
+        <section className="property-section">
+          <h3>{t("prop.source")}</h3>
+          {layer.content.type === "synth" ? (
+            <label className="text-field">
+              <span>{t("prop.wave")}</span>
+              <select
+                value={layer.content.wave}
+                onChange={(e) => onChange("wave", e.target.value)}
+              >
+                {["sine", "triangle", "saw", "square", "noise"].map((w) => (
+                  <option value={w} key={w}>
+                    {t(`wave.${w}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <>
+              <div className="asset-name">
+                {layer.content.type === "instrument"
+                  ? t("score.editHint")
+                  : layer.content.type === "composition"
+                    ? layer.content.project?.name
+                    : project.assets[layer.content.assetId!]?.name}
+              </div>
+              {layer.content.type === "sample" &&
+                project.assets[layer.content.assetId!]?.source &&
+                (() => {
+                  const source =
+                    project.assets[layer.content.assetId!]!.source!;
+                  return (
+                    <p className="field-help">
+                      {t(
+                        source.quality === "preview"
+                          ? "ai.samplePreview"
+                          : "ai.sampleOriginal",
+                      )}{" "}
+                      · {source.license}
+                      {" · "}
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t("ai.sampleSource")}: {source.provider} /{" "}
+                        {source.author}
+                      </a>
+                    </p>
+                  );
+                })()}
+              {layer.content.type !== "composition" && (
+                <>
+                  <Range
+                    label={t("prop.rate")}
+                    min={0.1}
+                    max={4}
+                    step={0.01}
+                    value={effective.content.frequency / 440}
+                    disabled={!!boundControl(project, layer.id, "frequency")}
+                    unit="×"
+                    onChange={(v) => onChange("frequency", v * 440)}
+                  />
+                  {!boundControl(project, layer.id, "frequency") && (
+                    <button
+                      className="expose-button"
+                      onClick={() => onExpose("frequency")}
+                    >
+                      {t("pro.expose")}
+                    </button>
+                  )}
+                  <p className="field-help">{t("prop.speedHint")}</p>
+                  {range("trim", "prop.trim", 0, 30, 0.01, "s")}
+                  <label className="check-field">
+                    <input
+                      type="checkbox"
+                      checked={layer.content.reverse}
+                      onChange={(e) => onChange("reverse", e.target.checked)}
+                    />
+                    {t("prop.reverse")}
+                  </label>
+                </>
+              )}
+            </>
+          )}
+          {layer.content.type === "synth" && layer.content.wave !== "noise" && (
+            <>
+              {range("frequency", "prop.frequency", 20, 20000, 1, "Hz")}
+              {range("endFrequency", "prop.endFrequency", 20, 20000, 1, "Hz")}
+            </>
+          )}
+        </section>
+        <section className="property-section">
+          <h3>{t("prop.timing")}</h3>
+          {layer.content.type !== "composition" && (
+            <>
+              {range(
+                "duration",
+                "prop.duration",
+                0.01,
+                Math.max(project.duration, layer.duration),
+                0.01,
+                "s",
+              )}
+              {range(
+                "attack",
+                "prop.attack",
+                0,
+                Math.min(3, layer.duration),
+                0.001,
+                "s",
+              )}
+              {range(
+                "release",
+                "prop.release",
+                0,
+                Math.min(5, layer.duration),
+                0.001,
+                "s",
+              )}
+              {range("decay", "prop.decay", 0, 10, 0.1)}
+              <Range
+                label={t("pro.cropStart")}
+                min={0}
+                max={Math.max(
+                  0,
+                  (layer.content.cropEnd ?? 1) * layer.duration - 0.001,
+                )}
+                step={0.001}
+                unit="s"
+                value={(layer.content.cropStart ?? 0) * layer.duration}
+                onChange={(v) => onChange("cropStart", v / layer.duration)}
+              />
+              <Range
+                label={t("pro.cropEnd")}
+                min={(layer.content.cropStart ?? 0) * layer.duration + 0.001}
+                max={layer.duration}
+                step={0.001}
+                unit="s"
+                value={(layer.content.cropEnd ?? 1) * layer.duration}
+                onChange={(v) => onChange("cropEnd", v / layer.duration)}
+              />
+              <p className="field-help">
+                {t(
+                  "pro.speed",
+                  (
+                    (layer.content.sourceDuration ?? layer.duration) /
+                    layer.duration
+                  ).toFixed(3),
+                )}
+              </p>
+            </>
+          )}
+        </section>
+        <section className="property-section">
+          <h3>{t("prop.timbre")}</h3>
+          {layer.content.type !== "composition" &&
+            range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
+          {layer.content.type !== "composition" &&
+            range("drive", "prop.drive", 0, 10, 0.1)}
+        </section>
+      </div>
       <AutomationEditor
         key={`automation-${layer.id}`}
         layer={layer}
