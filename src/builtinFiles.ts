@@ -46,7 +46,10 @@ export function createBuiltinFileLoader(
         || !Number.isInteger(file.decodedBytes) || file.decodedBytes < 1 || file.decodedBytes > 36 * 1024 * 1024) throw failed();
       const response = await fetcher(`${base}sound-library/${file.file}`);
       if (!response.ok || !response.body) throw failed();
-      if (Number(response.headers.get('Content-Length')) > file.compressedBytes) {
+      // Fetch decodes HTTP content encoding, but Content-Length still describes
+      // the wire bytes. Recompressing an already-gzipped asset can increase them.
+      const encoding = response.headers.get('Content-Encoding')?.trim().toLowerCase();
+      if ((!encoding || encoding === 'identity') && Number(response.headers.get('Content-Length')) > file.compressedBytes) {
         await response.body.cancel(); throw failed();
       }
       const bytes = await readBounded(response.body, file.compressedBytes);

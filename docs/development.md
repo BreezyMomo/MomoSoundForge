@@ -69,8 +69,8 @@ Pages sites are limited to 1 GB. The build check fails at that limit. Verify the
 
 ## 数据与排障 / Data and troubleshooting
 
-- 空白页面或音源加载失败：检查 assets、wasm 和 soundforge.bin 是否完整。不要为 soundforge.bin 自动设置 Content-Encoding: gzip，它由应用解压。
-- Blank page or failed sounds: verify deployed resources. Do not serve soundforge.bin with automatic gzip content encoding; the app decompresses it.
+- 空白页面或音源加载失败：检查 assets、wasm 和音源 bin 文件是否完整。文件自身的 gzip 由应用解压，不应直接标记成 HTTP Content-Encoding；CDN 在文件外额外执行的 HTTP 压缩则由浏览器自动解码。加载器校验解码后的文件大小与哈希，不把此时的 Content-Length 当作文件大小。
+- Blank page or failed sounds: verify deployed resources. The app decompresses the asset's own gzip format; do not label those bytes as HTTP Content-Encoding. Additional HTTP compression by a CDN is supported: Fetch decodes it, and the loader verifies the resulting asset size and hash rather than its encoded Content-Length.
 - 不同地址使用独立草稿与文件夹连接；重新打开同一本地库文件夹可读取相同资源，作品通过 soundforge 文件转移。
 - Origins have separate drafts and folder connections. Reopen the same local library folder to read its resources; transfer works using project files.
 - 压缩音频导出首次按需加载约 32 MB 编码器；WAV 不需要额外编码器。生成速度取决于用户设备。
