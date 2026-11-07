@@ -130,3 +130,14 @@ Chrome 实测工具栏放大、手形拖动改变 scrollLeft 且撤销仍不可�
 - 此次没有更改音频输入包或锁文件，也未提交、推送、发布。后续部署需同步新生成的运行音库目录，不能只发布应用代码。
 - 验证：406 项单元测试、9 项相关资源测试、完整 npm run build 及静态站检查通过。来源审计测试因本机缺少 audit-001～009 输入包未运行，未下载归档包；本次未改原始音频。
 - Chrome：乐器选择 112→78 项，长笛定义绑定成功；声音库搜索中提琴显示 3 份独立录音。用户 5202 页面原本已使用本地目录，刷新订阅后显示 78 项；临时 5203 页此前使用线上旧目录，已改为本地验证。用户本地库既有“资源无效”提示仍存在，未更改其个人资源文件。截图 test-results/instrument-definitions-only.png、test-results/standalone-recordings.png。
+
+
+### 线上音库同步发布（2026-11-08）
+
+- 用户授权将本地整理结果与配套应用一起发布，无需额外账号操作。代码 `0bf51eb7a4a2c107aab2bb0118eb958d235d5814`（包含此前 `680bee7` 的创作交互改进）已推送 main。
+- [音库任务](https://github.com/BreezyMomo/MomoSoundForge-assets/actions/runs/42398187315) 成功：从固定提交重建，通过 406 项单元测试、23 项完整资源测试和目录一致性检查后发布。
+- 正式音库 `https://breezymomo.github.io/MomoSoundForge-assets/index.json` 与本地生成字节一致，共 1366 项资源，其中 78 个乐器定义、1258 份录音、30 个作品。输入 Release 与锁文件未改。
+- 本机 `node tools/check-static-site.mjs --origin https://breezymomo.github.io` 全量下载、哈希、字节和 CORS 校验通过，外置主站 37.1 MiB。第一次因传输连接中断失败，完整重试通过，未跳过验证。
+- 正式浏览器已验证中提琴三份独立录音可搜索并进入试听播放；用户 5202 开发页订阅已恢复为正式线上目录。
+- [主站任务](https://github.com/BreezyMomo/MomoSoundForge/actions/runs/42399453802) 已成功构建和部署。正式页面 JS/CSS 文件名与本地外置构建一致；Chrome 确认新版添加轨道、时间轴导航入口，以及选择乐器中 78 个定义。验证创建的空轨道已撤销，截图 test-results/published-instrument-library.png。
+- 正式入口：https://breezymomo.github.io/MomoSoundForge/ 。本轮部署与应用验证完成；此前个人本地库“资源无效”问题未在本轮处理。
