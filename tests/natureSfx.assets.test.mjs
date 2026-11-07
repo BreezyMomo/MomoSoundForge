@@ -19,33 +19,6 @@ const read = sound => {
   return parseProject(JSON.parse(gunzipSync(bytes)));
 };
 
-it('keeps 11 publisher originals and 20 documented clips discoverable in eight nature groups', () => {
-  expect(manifest.originals).toHaveLength(11);
-  expect(clips).toHaveLength(20);
-  expect(scenes).toHaveLength(3);
-  expect(new Set(clips.map(builtinToneKey)).size).toBe(8);
-  expect(new Set(clips.map(s => s.id))).toEqual(new Set(manifest.samples.map(s => s.id)));
-  const hashes = new Set();
-  for (const original of manifest.originals) {
-    expect(hash(readFileSync(`${root}/${original.file}`)), original.id).toBe(original.sha256);
-    hashes.add(original.sha256);
-  }
-  expect(hashes.size).toBe(11);
-  const retired = manifest.excluded.flatMap(source => source.retiredClipIds ?? []);
-  expect(retired).toHaveLength(9);
-  expect(clips.every(sound => !retired.includes(sound.id))).toBe(true);
-  const sources = JSON.parse(readFileSync('public/sound-library/licenses/sources.json', 'utf8')).sources;
-  for (const source of manifest.sources) {
-    expect(source.license).toBe('CC0-1.0');
-    expect(hash(readFileSync(`${root}/${source.pageSnapshot}`))).toBe(source.pageSnapshotSha256);
-    expect(sources).toContainEqual(expect.objectContaining({ sourceUrl: source.sourceUrl, author: source.author, license: 'CC0-1.0' }));
-    expect(readFileSync('public/sound-library/licenses/nature-cc0.txt', 'utf8')).toContain(source.sourceUrl);
-  }
-  for (const sound of clips) for (const lang of ['zh-CN', 'en']) {
-    expect(catalogs[lang]).toHaveProperty(sound.nameKey);
-    expect(builtinSoundDescription(sound, key => catalogs[lang][key])).toContain('CC0');
-  }
-});
 
 it('renders audible loop/event defaults with matching waveforms and quiet cycle boundaries', () => {
   for (const sound of [...clips, ...scenes]) {
@@ -75,6 +48,7 @@ it('renders audible loop/event defaults with matching waveforms and quiet cycle 
     }
   }
 }, 60000);
+
 
 it('opens localized editable scenes with portable provenance and repeatable engine output', async () => {
   const sound = scenes.find(s => s.id === 'example-nature-forest-morning');

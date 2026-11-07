@@ -3,6 +3,7 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { reportDestination } from './inventory-sound-assets.mjs';
 import { sha256 } from './audio-audit-core.mjs';
+import { assetResolver, loadLock } from './sound-asset-store.mjs';
 
 const args = process.argv.slice(2);
 let output = 'test-results/source-review', python = process.env.SOUNDFORGE_AUDIT_PYTHON ?? 'python', audio = false;
@@ -14,9 +15,12 @@ for (let i = 0; i < args.length; i++) {
 }
 output = reportDestination(output);
 await mkdir(output, { recursive: true });
+const resolveAsset = await assetResolver(process.cwd(), {profile:'archive'}), lock = await loadLock();
+const assetMap = path.join(output, 'local-asset-paths.json');
+await writeFile(assetMap, JSON.stringify(Object.fromEntries(lock.packs.flatMap(p => p.files.map(f => [f.path, resolveAsset(f.path)])))));
 const commands = [
   [process.execPath, ['tools/inventory-sound-assets.mjs', output]],
-  [python, ['tools/audit-source-audio.py', '--output', path.join(output, 'sources.json')]],
+  [python, ['tools/audit-source-audio.py', '--asset-map', assetMap, '--output', path.join(output, 'sources.json')]],
   [process.execPath, ['tools/diagnose-instruments.mjs', output, ...(audio ? ['--write-audio'] : [])]],
 ];
 const results = [];

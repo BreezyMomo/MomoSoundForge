@@ -62,6 +62,8 @@ npm run audit:sources -- --python test-results/audio-audit-env/Scripts/python.ex
 
 ## 当天后续修复与替换候选
 
+本节保留 `bb22572` 阶段记录。其后的 Kawai 完整钢琴已经接入默认库，详见 [完整钢琴接入交接](vcsl-piano-integration.md)；下文“仍是候选”和旧数量不是当前实现状态。
+
 用户提供了另一位 AI 整理的来源目录，并允许从中选取。优先采用 VCSL 的作者整理集合；它的 README 明确允许商业软件使用 CC0 素材。IndiPiano、BandLab、Virtual Piano 和 Online Sequencer 此轮未用作可再分发原始采样来源。VCSL 也包含部分 VSCO 内容，必须核对具体文件，不把换目录当作换录音。
 
 ### 已完成的修复

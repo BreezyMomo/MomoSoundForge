@@ -149,7 +149,7 @@ it("keeps a library synthesizer as a generator and fails without mutating the in
   const prepared = await instrumentSource(resourceFromDefinition(BASIC_SYNTH), async () => { throw Error("must not render a synth"); });
   expect(prepared.source.type).toBe("synth"); expect(prepared.assets).toEqual({});
   await expect(instrumentSource(resourceFromDefinition(structuredClone(d)), async () => { throw Error(); })).rejects.toThrow("instrument.invalidSource");
-  const full = { ...d, instrument: { ...d.instrument, regions: Array.from({ length: 128 }, (_, index) => ({ ...d.instrument.regions[0], id: `region-${index}` })) } };
+  const full = { ...d, instrument: { ...d.instrument, regions: Array.from({ length: 512 }, (_, index) => ({ ...d.instrument.regions[0], id: `region-${index}` })) } };
   expect(() => bindInstrumentNote(full, 61, prepared.source)).toThrow();
   expect(d).toEqual(snapshot);
 });

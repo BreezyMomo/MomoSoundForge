@@ -1,3 +1,4 @@
+import { sampleFrames } from './sampleReference';
 import { CONTENT_KEYS, patchLayer, type LayerPatch } from "./model";
 import { RESOURCE_SCHEMA } from './resourceSchema';
 import {
@@ -238,15 +239,8 @@ export function describeProject(project: Project): unknown {
         {
           ...asset,
           channels: undefined,
-          channelCount: asset.channels.length,
-          frames:
-            ((asset.channels[0].length * 3) / 4 -
-              (asset.channels[0].endsWith("==")
-                ? 2
-                : asset.channels[0].endsWith("=")
-                  ? 1
-                  : 0)) /
-            4,
+          channelCount: asset.reference ? 2 : asset.channels.length,
+          frames: sampleFrames(asset),
         },
       ]),
     ),

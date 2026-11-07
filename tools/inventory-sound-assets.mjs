@@ -6,9 +6,11 @@ import { sha256 } from './audio-audit-core.mjs';
 import { instrumentJobs } from './builtin-instruments.mjs';
 import { gameSfxJobs } from './builtin-game-sfx.mjs';
 import { natureSfxJobs } from './builtin-nature-sfx.mjs';
+import { pianoJob } from './builtin-vcsl-piano.mjs';
+import { assetResolver, loadLock } from './sound-asset-store.mjs';
 
 export async function collections(root = process.cwd()) {
-  const names = ['cc0-starter-20261104', 'orchestra-basics-20261104', 'orchestra-expanded-20261105', 'game-sfx-starter-20261105', 'nature-ambience-20261105'];
+  const names = ['cc0-starter-20261104', 'orchestra-basics-20261104', 'orchestra-expanded-20261105', 'game-sfx-starter-20261105', 'nature-ambience-20261105', 'vcsl-kawai-20261107'];
   return Promise.all(names.map(async name => {
     const base = `samples/${name}`, manifest = JSON.parse(await readFile(path.join(root, base, 'manifest.json'), 'utf8'));
     let quarantine = [];
@@ -19,7 +21,7 @@ export async function collections(root = process.cwd()) {
 }
 
 export async function buildInputPaths(root = process.cwd()) {
-  const [fx, basics, expanded, game, nature] = await collections(root);
+  const [fx, basics, expanded, game, nature, piano] = await collections(root);
   const quality = JSON.parse(await readFile(path.join(root, 'tools/builtin-quality.json'), 'utf8'));
   const excluded = new Set(quality.excludedStandaloneSamples.map(s => s.id));
   const replaced = new Set(expanded.manifest.samples.map(s => s.instrumentId));
@@ -28,7 +30,8 @@ export async function buildInputPaths(root = process.cwd()) {
     ...fx.manifest.samples.map(s => `${fx.base}/${s.projectFile}`),
     ...recipes.map(s => `${fx.base}/${s.projectFile}`),
     ...basics.manifest.samples.filter(s => !excluded.has(s.id) && !replaced.has(s.instrumentId)).map(s => `${basics.base}/${s.wavFile}`),
-    ...instrumentJobs(expanded.manifest, expanded.base).flatMap(j => j.sourceFiles),
+    ...instrumentJobs({ ...expanded.manifest, samples: expanded.manifest.samples.filter(s => s.instrumentId !== 'upright-piano') }, expanded.base).flatMap(j => j.sourceFiles),
+    ...pianoJob(piano.manifest, piano.base).sourceFiles,
     ...gameSfxJobs(game.manifest, game.base).flatMap(j => j.sourceFiles ?? [j.source]),
     ...natureSfxJobs(nature.manifest, nature.base).flatMap(j => j.sourceFiles ?? [j.source]),
     `${basics.base}/examples/forest-departure-8s.soundforge`,
@@ -47,16 +50,18 @@ export function reportDestination(value) {
 
 export async function inventory(destination) {
   const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
-  const paths = git('ls-files', '-z').split('\0').filter(Boolean), inputs = await buildInputPaths(), files = [];
+  const lock = await loadLock(), resolveAsset = await assetResolver(process.cwd(), {profile:'archive'});
+  const paths = [...new Set([...git('ls-files', '--cached', '--others', '--exclude-standard', '-z').split('\0').filter(Boolean),
+    ...lock.packs.flatMap(p => p.files.map(f => f.path))])].sort(), inputs = await buildInputPaths(), files = [];
   const knownInputs = new Set();
   for (const name of paths) {
-    const bytes = await readFile(name);
+    const bytes = await readFile(resolveAsset(name));
     const binaryAsset = /\.(wav|ogg|mp3|flac|sfresource|soundforge|sfinstrument|zip)$/i.test(name);
     const role = inputs.has(name) ? 'build-input' : binaryAsset ? 'archive-until-reproducibility-proven' : 'keep-in-git';
     if (inputs.has(name)) knownInputs.add(name);
     files.push({ path: name, bytes: bytes.length, sha256: sha256(bytes), role });
   }
-  for (const name of inputs) if (!knownInputs.has(name)) throw Error(`Build input is not tracked: ${name}`);
+  for (const name of inputs) if (!knownInputs.has(name)) throw Error(`Build input is not inventoried: ${name}`);
   const duplicateGroups = [...Map.groupBy(files.filter(f => f.role !== 'keep-in-git'), f => f.sha256).values()]
     .filter(group => group.length > 1).map(group => ({ sha256: group[0].sha256, bytes: group[0].bytes, paths: group.map(f => f.path) }));
   const catalog = JSON.parse(await readFile('src/data/builtin-catalog.json', 'utf8'));

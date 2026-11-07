@@ -20,7 +20,7 @@ jobs:
       contents: read
       pages: read
     steps:
-      - name: Checkout source and samples
+      - name: Checkout source
         uses: actions/checkout@v6
         with:
           persist-credentials: false
@@ -33,6 +33,15 @@ jobs:
         run: npm ci
       - name: Test
         run: npm test
+      - name: Restore pinned sound asset cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/sound-assets
+          key: sound-assets-v1-${{ runner.os }}-${{ hashFiles('sound-assets.lock.json') }}
+      - name: Sync and verify build assets
+        run: npm run assets:sync
+      - name: Test complete built-in library
+        run: npm run test:assets
       - name: Build app and sound library
         run: npm run build
       - name: Check deployment files

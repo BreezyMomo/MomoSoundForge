@@ -1,3 +1,4 @@
+import { readAsset } from './sound-asset-store.mjs';
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -60,7 +61,7 @@ export async function gameSfxProject(job, root, collectionRoot, { makeLayer, enc
   const assets = {}, inputs = [];
   const add = async (sample, start = 0, gain = 1) => {
     if (!assets[sample.id]) {
-      const bytes = await readFile(path.join(root, collectionRoot, sample.wavFile));
+      const bytes = await readAsset(root, `${collectionRoot}/${sample.wavFile}`);
       if (createHash("sha256").update(bytes).digest("hex") !== sample.wavSha256 ||
         bytes.toString("ascii", 0, 4) !== "RIFF" || bytes.toString("ascii", 36, 40) !== "data" ||
         bytes.readUInt32LE(24) !== 48000 || bytes.readUInt16LE(22) !== 2 || bytes.readUInt16LE(34) !== 16)

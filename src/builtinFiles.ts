@@ -63,8 +63,12 @@ export function createBuiltinFileLoader(
     pending.set(file.id, promise);
     try { return await promise; } finally { pending.delete(file.id); }
   }
-  return {
+  const loader = {
     invalidate,
+    async loadFile(file: BuiltinFile): Promise<Uint8Array> {
+      entries.set(file.id, file);
+      try { return await loader.load(file.id); } finally { entries.delete(file.id); }
+    },
     async load(id: string) {
       const file = entries.get(id);
       if (!file) throw failed();
@@ -77,4 +81,5 @@ export function createBuiltinFileLoader(
       } catch { invalidate(id); throw failed(); }
     },
   };
+  return loader;
 }

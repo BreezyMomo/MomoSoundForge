@@ -1,6 +1,7 @@
 import { parseDefinition } from './soundDefinitions';
 import { decodeSamples, makeLayer, makeProject, parseProject, type SampleAsset } from './model';
 import type { SampleRegion } from './instruments';
+import { sampleFrames } from './sampleReference';
 
 export type RecordingDefinition = {
   schema: 'momo.recording/v1'; asset: SampleAsset; rootMidi: number | null;
@@ -27,7 +28,7 @@ export function parseRecording(raw: unknown): RecordingDefinition {
 /** A recording always previews its own complete audio, without an instrument performance. */
 export function recordingProject(raw: unknown, name: string) {
   const d=parseRecording(raw),p=makeProject(name);
-  const duration=decodeSamples(d.asset.channels[0]).length/d.asset.sampleRate;
+  const duration=sampleFrames(d.asset)/d.asset.sampleRate;
   const amplitude=10**(d.gainDb/20),gain=Math.min(1.5,amplitude),level=Math.min(8,Math.max(1,amplitude/1.5));
   p.master=amplitude/(gain*level);
   p.assets={[d.asset.id]:structuredClone(d.asset)};

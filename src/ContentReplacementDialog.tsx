@@ -1,3 +1,4 @@
+import { sampleFrames } from './sampleReference';
 import { fitPlayerRange, hasReadOverflow } from "./playerPlayback";
 import { updateProjectAtPath } from "./model";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -70,15 +71,7 @@ export function ContentReplacementDialog({
               ),
           }))
         : Object.values(parent.assets).map((asset) => {
-            const duration =
-              ((asset.channels[0].length * 3) / 4 -
-                (asset.channels[0].endsWith("==")
-                  ? 2
-                  : asset.channels[0].endsWith("=")
-                    ? 1
-                    : 0)) /
-              4 /
-              asset.sampleRate;
+            const duration = sampleFrames(asset) / asset.sampleRate;
             return {
               id: asset.id,
               name: asset.name,

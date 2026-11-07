@@ -8,6 +8,7 @@ import type { RecordingSummary } from "./recordingSources";
 export type BuiltinSound = {
   id: string;
   revision?: number;
+  completeInstrument?: boolean;
   nameKey: string;
   kind: "instrument" | "sample" | "example";
   category: SoundCategory;
@@ -51,6 +52,7 @@ export function builtinChoiceName(
   sound: BuiltinSound,
   translate: Translate = t,
 ) {
+  if (sound.completeInstrument) return `${midiLabel(sound.keyLow!)}–${midiLabel(sound.keyHigh!)}`;
   if (sound.recordingGroup)
     return translate("builtin.recordingChoice", sound.recording);
   return sound.tone
@@ -81,6 +83,7 @@ export function builtinSoundName(
   short = false,
 ) {
   const name = translate(sound.nameKey);
+  if (sound.completeInstrument) return name;
   if (sound.recordingGroup)
     return short
       ? name
@@ -111,6 +114,7 @@ export function builtinSoundDescription(
   sound: BuiltinSound,
   translate: Translate = t,
 ) {
+  if (sound.completeInstrument) return translate('resources.completeInstrument');
   if (sound.playback)
     return translate(
       sound.playback === "loop"

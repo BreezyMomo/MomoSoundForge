@@ -13,7 +13,7 @@ export async function instrumentSource(resource: SoundResource, render: (project
   const clean = parseResource(structuredClone(resource));
   if(clean.kind==='recording'){
     const d=clean.payload as RecordingDefinition;
-    const reused=Object.values(existing).find(a=>a.sampleRate===d.asset.sampleRate&&a.channels.length===d.asset.channels.length&&a.channels.every((c,i)=>c===d.asset.channels[i]));
+    const reused=Object.values(existing).find(a=>JSON.stringify(a.reference)===JSON.stringify(d.asset.reference)&&a.sampleRate===d.asset.sampleRate&&a.channels.length===d.asset.channels.length&&a.channels.every((c,i)=>c===d.asset.channels[i]));
     const id=reused?.id??uid();
     return {source:{type:'recording',assetId:id,...(d.rootMidi!==null?{rootMidi:d.rootMidi}:{fixedPitch:true}),tuneCents:d.tuneCents,gainDb:d.gainDb,
       releaseSeconds:d.releaseSeconds,...(d.loop?{loop:structuredClone(d.loop)}:{})} as NoteSource,
@@ -56,7 +56,7 @@ export function bindInstrumentNote(definition: InstrumentDefinition, midi: numbe
     velocityLow: 1, velocityHigh: 127, articulation: previous?.articulation ?? "sustain", roundRobin: 0,
     tuneCents: 0, gainDb: 0, releaseSeconds: 0.15 };
   // Loops, release recordings and generator values belong to the previous sound source.
-  const { assetId: _asset, synth: _synth, synthValues: _values, loop: _loop, releaseAssetId: _release, fixedPitch:_fixed, playback, ...settings } = selected ?? (previous ? {...previous,id,...(playbackGroup?{playbackGroup}:{})} : defaults);
+  const { assetId: _asset, synth: _synth, synthValues: _values, loop: _loop, releaseAssetId: _release, releaseVoice:_voice, sampleOffset:_offset, envelope:_envelope, fixedPitch:_fixed, playback, ...settings } = selected ?? (previous ? {...previous,id,...(playbackGroup?{playbackGroup}:{})} : defaults);
   const region: SampleRegion = { ...settings, ...(playbackGroup?{playbackGroup}:{}), id, rootMidi: keepRange?settings.rootMidi:midi, keyLow: keepRange?settings.keyLow:midi, keyHigh: keepRange?settings.keyHigh:midi,
     ...(source.type === "synth" ? { assetId: "", synth: structuredClone(source.synth) } : {
       assetId:source.assetId,rootMidi:source.rootMidi??midi,

@@ -29,21 +29,22 @@ export function recordingSummaries(definition: InstrumentDefinition): RecordingS
       else grouped.set(id, { region, release, low: region.velocityLow, high: region.velocityHigh });
     }
   }
-  const entries = [...grouped].sort(([idA, a], [idB, b]) => a.region.rootMidi - b.region.rootMidi
+  const root = (entry: { region: SampleRegion; release: boolean }) => entry.release && entry.region.releaseVoice ? entry.region.releaseVoice.rootMidi : entry.region.rootMidi;
+  const entries = [...grouped].sort(([idA, a], [idB, b]) => root(a) - root(b)
     || a.low - b.low || a.high - b.high || a.region.articulation.localeCompare(b.region.articulation)
     || Number(a.release) - Number(b.release) || a.region.roundRobin - b.region.roundRobin || idA.localeCompare(idB, "en"));
   const variants = new Map<string, number>();
   return entries.map(([id, { region, release, low, high }]) => {
-    const group = JSON.stringify([region.rootMidi, low, high, region.articulation, release]);
+    const group = JSON.stringify([root({ region, release }), low, high, region.articulation, release]);
     const variant = (variants.get(group) ?? 0) + 1;
     variants.set(group, variant);
-    return { id, regionId: region.id, name: definition.assets[id].name, rootMidi: region.rootMidi,
+    return { id, regionId: region.id, name: definition.assets[id].name, rootMidi: release && region.releaseVoice ? region.releaseVoice.rootMidi : region.rootMidi,
       velocityLow: low, velocityHigh: high, articulation: region.articulation, variant, ...(release ? { release: true } : {}),...(region.fixedPitch?{unpitched:true}:{}) };
   });
 }
 
 export function parseRecordingSummaries(raw: unknown): RecordingSummary[] {
-  if (!Array.isArray(raw) || raw.length > 64) throw Error("resources.invalid");
+  if (!Array.isArray(raw) || raw.length > 512) throw Error("resources.invalid");
   const text = (value: unknown, limit: number) => typeof value === "string" && value.length > 0 && value.length <= limit;
   const integer = (value: unknown, min: number, max: number) => Number.isInteger(value) && Number(value) >= min && Number(value) <= max;
   const ids = new Set<string>();
@@ -68,6 +69,7 @@ export function recordingResource(parent: SoundResource, recordingId: string, na
   const original = definition.instrument.regions.find(r => r.id === summary.regionId)!;
   const region = structuredClone(original);
   region.assetId = summary.id;
+  if (summary.release && region.releaseVoice) Object.assign(region, region.releaseVoice);
   // The source is this recording alone, rather than its performance variants.
   region.roundRobin = 0;
   delete region.releaseAssetId;

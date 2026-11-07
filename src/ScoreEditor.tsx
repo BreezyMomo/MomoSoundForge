@@ -267,7 +267,7 @@ export function ScoreEditor({
   const quantize = (n: number) => (snap ? Math.round(n / snap) * snap : n);
   const addNote = () => {
     if (!inst) return;
-    const r = inst.regions[0],
+    const r = inst.regions.find(r => project.assets[r.assetId]?.reference && r.keyLow <= 60 && r.keyHigh >= 60 && r.velocityLow <= 90 && r.velocityHigh >= 90) ?? inst.regions[0],
       start = quantize(
         score.notes.reduce((m, n) => Math.max(m, n.start + n.duration), 0),
       );

@@ -1,3 +1,5 @@
+import { assetResolver, fileDigest, walkFiles } from './sound-asset-store.mjs';
+import { pianoJob, pianoProject } from './builtin-vcsl-piano.mjs';
 import { createServer } from "vite";
 import { gzipSync } from "node:zlib";
 import { createHash } from "node:crypto";
@@ -11,6 +13,7 @@ import { gameSfxJobs, gameSfxProject } from "./builtin-game-sfx.mjs";
 import { natureSfxJobs, natureSfxProject } from "./builtin-nature-sfx.mjs";
 
 const root = process.cwd();
+const resolveAsset = await assetResolver(root);
 const output = path.join(root, "public/sound-library");
 const catalogFile = path.join(root, "src/data/builtin-catalog.json");
 const stampFile = path.join(output, ".source-fingerprint");
@@ -26,6 +29,8 @@ const orchestra = await readJson(`${orchestraRoot}/manifest.json`);
 const expanded = await readJson(`${expandedRoot}/manifest.json`);
 const game = await readJson(`${gameRoot}/manifest.json`);
 const nature = await readJson(`${natureRoot}/manifest.json`);
+const pianoRoot = "samples/vcsl-kawai-20261107";
+const piano = await readJson(`${pianoRoot}/manifest.json`);
 const quality = await readJson("tools/builtin-quality.json");
 const excludedStandalone = new Set(quality.excludedStandaloneSamples.map(entry => entry.id));
 const fxExamples = await readJson(`${fxRoot}/examples/recipes.json`);
@@ -69,8 +74,9 @@ for (const sample of orchestra.samples) {
     keywords: `${sample.instrumentId} ${sample.sourcePath} ${sample.rootMidi ?? ""} ${sample.rootNote ?? ""}`,
   });
 }
-jobs.push(...instrumentJobs(expanded, expandedRoot));
-const legacyLevels = legacyInstrumentLevels(jobs.filter(job => job.kind === "instrument" && !job.tone).map(job => job.sample));
+jobs.push(...instrumentJobs({...expanded, samples: expanded.samples.filter(s => s.instrumentId !== "upright-piano")}, expandedRoot));
+jobs.push(pianoJob(piano, pianoRoot));
+const legacyLevels = legacyInstrumentLevels(jobs.filter(job => job.kind === "instrument" && !job.tone && !job.completeInstrument).map(job => job.sample));
 const effectCategories = ["impacts", "interface", "magic", "motion", "motion", "liquid", "liquid", "foley"];
 for (const [index, entry] of fxExamples.entries()) jobs.push({
   id: `example-${entry.id}`, kind: "example", nameKey: `builtin.example.${entry.id.slice(3)}`,
@@ -88,26 +94,36 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 
 const sourceFiles = [...new Set([
   "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts", "src/playerPlayback.ts", "src/effectTypes.ts", "src/synthesizers.ts", "src/synthExpression.ts",
-  "src/recordingSources.ts", "tools/builtin-velocity-regions.mjs", "tools/builtin-recordings.mjs", `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
+  "src/recordingSources.ts", "tools/builtin-velocity-regions.mjs", "tools/builtin-recordings.mjs", "tools/builtin-vcsl-piano.mjs", "src/sampleReference.ts", "src/prepareSamples.ts", `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   `${expandedRoot}/manifest.json`,
   `${gameRoot}/manifest.json`, ...game.sources.map(s => `${gameRoot}/${s.includedLicenseFile}`),
   `${natureRoot}/manifest.json`, `${natureRoot}/licenses/nature-cc0.txt`,
   ...jobs.flatMap((job) => job.sourceFiles ?? [job.source]),
 ])];
-const fingerprint = hash(JSON.stringify(await Promise.all(sourceFiles.map(async (name) => {
-  const info = await stat(path.join(root, name));
-  return [name, info.size, info.mtimeMs];
-}))));
+// Hash all engine/build dependencies, not an easy-to-forget handpicked subset.
+const dependencies = ["package.json", "package-lock.json", "vite.config.ts", "tsconfig.json", "sound-assets.lock.json"];
+for (const base of ["src", "tools", "vendor"]) for (const name of await walkFiles(path.join(root, base))) {
+  const logical = base + "/" + name;
+  if (logical !== "src/data/builtin-catalog.json" && !logical.includes("/__pycache__/")) dependencies.push(logical);
+}
+const inputs = [];
+for (const name of [...new Set([...sourceFiles, ...dependencies])].sort()) inputs.push([name, (await fileDigest(resolveAsset(name))).sha256]);
+const fingerprint = hash(JSON.stringify(inputs));
 try {
-  if (!process.argv.includes("--force") && (await readFile(stampFile, "utf8")) === fingerprint) {
+  const stamp = JSON.parse(await readFile(stampFile, "utf8"));
+  if (!process.argv.includes("--force") && stamp.fingerprint === fingerprint) {
     const previous = await readJson("src/data/builtin-catalog.json");
-    await Promise.all([...previous.sounds, ...previous.recordings].map((sound) => stat(path.join(output, sound.file))));
-    await Promise.all(["vsco-cc0.txt", "kenney-cc0.txt", "game-impact-sounds.txt", "game-rpg-audio.txt", "nature-cc0.txt", "sources.json"].map((file) => stat(path.join(output, "licenses", file))));
-    console.log(`Built-in library ready: ${previous.sounds.length} sounds.`);
+    if (stamp.catalog !== hash(await readFile(catalogFile))) throw Error("Catalog changed");
+    for (const sound of [...previous.sounds, ...previous.recordings]) {
+      if ((await fileDigest(path.join(output, sound.file))).sha256 !== sound.sha256) throw Error("Generated resource changed");
+    }
+    for (const [name, expected] of Object.entries(stamp.licenses))
+      if ((await fileDigest(path.join(output, "licenses", name))).sha256 !== expected) throw Error("License changed");
+    console.log(`Built-in library ready: ${previous.sounds.length} sounds (content verified).`);
     process.exit(0);
   }
-} catch { /* Generate all resources on a fresh checkout or after a missing file. */ }
+} catch { /* Generate after changed inputs, missing or corrupt outputs. No network. */ }
 
 await mkdir(output, { recursive: true });
 await mkdir(path.dirname(catalogFile), { recursive: true });
@@ -124,17 +140,24 @@ try {
     if (input.player.type === 'instrument') input.player.noiseSeed = (input.player.noiseSeed ^ 2048) >>> 0;
     return input;
   };
+  const { createSamplePreparer } = await server.ssrLoadModule('/src/prepareSamples.ts');
+  const prepare = createSamplePreparer(async url => new Response(await readFile(path.join(output, path.basename(url)))), '/');
+  const renderAudio = async p => renderProject(await prepare(p));
   const sounds = [], recordings = new Map();
+  let fullPiano;
   for (const job of jobs) {
     let source;
     const assetGains = [];
-    if (job.natureSfx) {
+    if (job.completeInstrument) {
+      source = await pianoProject(job, root, { makeLayer });
+      fullPiano = source;
+    } else if (job.natureSfx) {
       source = await natureSfxProject(job, root, natureRoot, { makeLayer, encodeSamples });
     } else if (job.gameSfx) {
       source = await gameSfxProject(job, root, gameRoot, { makeLayer, encodeSamples });
     } else if (job.tone) {
       source = await instrumentProject(job, root, { makeLayer, encodeSamples });
-      let raw = renderProject(parseProject(source));
+      let raw = await renderAudio(parseProject(source));
       // A naturally weak low-register note need not be the first sound a novice
       // hears. Pick a nearby audible root without changing sample/velocity gains.
       if (levels([raw.left, raw.right], raw.sampleRate).status !== "ok") {
@@ -143,7 +166,7 @@ try {
           .filter(midi => midi !== originalMidi).sort((a, b) => Math.abs(a - originalMidi) - Math.abs(b - originalMidi));
         for (const midi of roots) {
           const candidate = await instrumentProject(job, root, { makeLayer, encodeSamples }, midi);
-          const audio = renderProject(parseProject(candidate));
+          const audio = await renderAudio(parseProject(candidate));
           if (levels([audio.left, audio.right], audio.sampleRate).status === "ok") {
             source = candidate; raw = audio; break;
           }
@@ -152,7 +175,7 @@ try {
       // One gain for the entire range keeps the relative velocity dynamics intact.
       if (raw.sourcePeak > .8) source.master = .8 / raw.sourcePeak;
     } else if (job.kind === "instrument") {
-      const wav = await readFile(path.join(root, job.source));
+      const wav = await readFile(resolveAsset(job.source));
       if (hash(wav) !== job.sample.wavSha256 || wav.toString("ascii", 36, 40) !== "data" ||
           wav.readUInt32LE(24) !== 48000 || wav.readUInt16LE(22) !== 2 || wav.readUInt16LE(34) !== 16)
         throw Error(`Invalid built-in source WAV: ${job.id}`);
@@ -179,18 +202,26 @@ try {
               velocity: 100, articulation: job.sample.articulation }] },
           duration, frequency: 440, endFrequency: 440, gain: 1.3, attack: .002, release, decay: 0, cutoff: 22000, noiseSeed: 2048 })],
       };
-    } else source = parseProject(JSON.parse(await readFile(path.join(root, job.source), "utf8")));
+    } else source = parseProject(JSON.parse(await readFile(resolveAsset(job.source), "utf8")));
+    if (job.id === 'example-expanded-piano') {
+      source.assets = structuredClone(fullPiano.assets);
+      for (const input of source.inputs) if (input.player.score) {
+        const instrument = structuredClone(fullPiano.inputs[0].player.score.instruments[0]);
+        input.player.score.instruments = [instrument];
+        input.player.score.notes = input.player.score.notes.map(n => ({ ...n, instrumentId: instrument.id, articulation: 'single-hit' }));
+      }
+    }
     let project = parseProject(projectForSave(source));
-    let audio = renderProject(project);
+    let audio = await renderAudio(project);
     if (job.gameSfx || job.natureSfx) {
       const measured = levels([audio.left, audio.right], audio.sampleRate);
       if (measured.status === "silent" || audio.sourcePeak >= 1) throw Error(`Review SFX default: ${job.id}`);
       const gainDb = Math.min((job.natureSfx ? -23 : -20) - measured.activeRmsDb, -6 - 20 * Math.log10(audio.sourcePeak));
       project.master = Math.min(1.5, project.master * 10 ** (gainDb / 20));
       project = parseProject(projectForSave(project));
-      audio = renderProject(project);
+      audio = await renderAudio(project);
     }
-    if (job.kind === "instrument" && !job.tone) {
+    if (job.kind === "instrument" && !job.tone && !job.completeInstrument) {
       const boostDb = standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate));
       if (boostDb > 0) {
         const region = project.inputs[0].player.score.instruments[0].regions[0];
@@ -202,12 +233,12 @@ try {
           asset.channels = asset.channels.map(channel => encodeSamples(Float32Array.from(decodeSamples(channel), x => x * gain)));
         }
         project = parseProject(projectForSave(project));
-        audio = renderProject(project);
+        audio = await renderAudio(project);
       }
     }
     if (levels([audio.left, audio.right], audio.sampleRate).status !== "ok")
       throw Error(`Built-in default is silent or too quiet; review its source/mapping: ${job.id}`);
-    if (job.kind === "instrument" && !job.tone && standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate)) > .1)
+    if (job.kind === "instrument" && !job.tone && !job.completeInstrument && standaloneBoostDb(levels([audio.left, audio.right], audio.sampleRate)) > .1)
       throw Error(`Standalone default lacks usable loudness: ${job.id}`);
     const waveform = Array.from({ length: 160 }, (_, bin) => {
       const start = Math.floor(bin * audio.left.length / 160), end = Math.floor((bin + 1) * audio.left.length / 160);
@@ -216,19 +247,20 @@ try {
       return Number(peak.toFixed(6));
     });
     const json = Buffer.from(JSON.stringify(projectDocument(project)));
-    const compressed = gzipSync(json, { level: 6 });
+    // Lossless transport compression keeps the complete audio library within the static-site budget.
+    const compressed = gzipSync(json, { level: 9 });
     if (json.length > 36 * 1024 * 1024 || compressed.length > 12 * 1024 * 1024)
       throw Error(`Built-in sound exceeds the loader budget: ${job.id}`);
     // A .gz suffix makes some static servers set Content-Encoding automatically,
     // so fetch would receive decoded JSON. Keep the explicit gzip envelope binary.
     const digest = hash(compressed), file = `${digest}.soundforge.bin`;
     await writeFile(path.join(output, file), compressed);
-    const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback } = job;
+    const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback, completeInstrument } = job;
     const summaries = kind === 'instrument' ? recordingSummaries({schema:'momo.instrument/v1',instrument:project.inputs[0].player.score.instruments[0],assets:project.assets}) : undefined;
     if (summaries) for (const recording of await buildRecordings(job, project, summaries, assetGains, root, output))
       if (!recordings.has(recording.id)) recordings.set(recording.id, recording);
-    const revision = kind === 'instrument' && project.inputs[0].player.score.instruments[0].regions.some(r => /-velocity-\d+-\d+$/.test(r.id)) ? 2 : 1;
-    sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback,
+    const revision = job.id === 'example-expanded-piano' || (kind === 'instrument' && !completeInstrument && project.inputs[0].player.score.instruments[0].regions.some(r => /-velocity-\d+-\d+$/.test(r.id))) ? 2 : 1;
+    sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback, ...(completeInstrument ? { completeInstrument } : {}),
       ...(revision > 1 ? { revision } : {}), ...(summaries ? { recordings: summaries } : {}),
       duration: project.duration, file, compressedBytes: compressed.length, projectBytes: json.length, sha256: digest, waveform });
   }
@@ -237,12 +269,14 @@ try {
   try { previous = await readFile(catalogFile, "utf8"); } catch {}
   if (catalog !== previous) await writeFile(catalogFile, catalog);
   await mkdir(path.join(output, "licenses"), { recursive: true });
+  await copyFile(path.join(root, pianoRoot, "licenses/VCSL-README.md"), path.join(output, "licenses/vcsl-cc0.md"));
   await copyFile(path.join(root, `${orchestraRoot}/licenses/VSCO-LICENSE`), path.join(output, "licenses/vsco-cc0.txt"));
   await copyFile(path.join(root, `${fxRoot}/licenses/kenney-impact-License.txt`), path.join(output, "licenses/kenney-cc0.txt"));
   await copyFile(path.join(root, `${natureRoot}/licenses/nature-cc0.txt`), path.join(output, "licenses/nature-cc0.txt"));
   for (const source of game.sources) await copyFile(path.join(root, gameRoot, source.includedLicenseFile), path.join(output, `licenses/game-${source.id.replace("kenney-", "")}.txt`));
   await writeFile(path.join(output, "licenses/sources.json"), JSON.stringify({
     license: "CC0-1.0", sources: [
+      { author: "Versilian Studios / VCSL contributors", sourceUrl: piano.source, sourceCommit: piano.sourceCommit, license: piano.license, includedLicenseFile: "licenses/vcsl-cc0.md" },
       ...fx.sources,
       ...nature.sources.map(source => ({ ...source, includedLicenseFile: "licenses/nature-cc0.txt" })),
       ...game.sources.map(source => ({ ...source, includedLicenseFile: `licenses/game-${source.id.replace("kenney-", "")}.txt` })),
@@ -258,6 +292,8 @@ try {
   for (const entry of await readdir(resolvedOutput, { withFileTypes: true }))
     if (entry.isFile() && /^[a-f0-9]{64}\.(soundforge|recording)\.(gz|bin)$/.test(entry.name) && !currentFiles.has(entry.name))
       await unlink(path.join(resolvedOutput, entry.name));
-  await writeFile(stampFile, fingerprint);
+  const licenses = {};
+  for (const name of await walkFiles(path.join(output, "licenses"))) licenses[name] = (await fileDigest(path.join(output, "licenses", name))).sha256;
+  await writeFile(stampFile, JSON.stringify({ fingerprint, catalog: hash(await readFile(catalogFile)), licenses }));
   console.log(`Built ${sounds.length} built-in sounds (${Math.round(sounds.reduce((sum, sound) => sum + sound.compressedBytes, 0) / 1048576)} MiB, loaded on demand).`);
 } finally { await server.close(); }

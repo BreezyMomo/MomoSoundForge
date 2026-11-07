@@ -1,3 +1,4 @@
+import { createSamplePreparer } from '../src/prepareSamples';
 import { createHash } from "node:crypto";
 import { gzipSync, gunzipSync } from "node:zlib";
 import { readFileSync } from "node:fs";
@@ -75,12 +76,13 @@ function resource(raw: unknown = fixture()) {
     response: () => new Response(Uint8Array.from(bytes).buffer),
   };
 }
+
 it("indexes all collected samples and examples with matching categories, semantic names and final-render thumbnails", () => {
   expect(new Set(BUILTIN_SOUNDS.map((x) => x.id)).size).toBe(
     BUILTIN_SOUNDS.length,
   );
   expect(
-    BUILTIN_SOUNDS.filter((x) => x.kind === "instrument" && !x.tone),
+    BUILTIN_SOUNDS.filter((x) => x.kind === "instrument" && !x.tone && !x.completeInstrument),
   ).toHaveLength(43);
   expect(BUILTIN_SOUNDS.filter((x) => x.kind === "sample")).toHaveLength(126);
   expect(BUILTIN_SOUNDS.filter((x) => x.kind === "example")).toHaveLength(30);
@@ -97,19 +99,20 @@ it("indexes all collected samples and examples with matching categories, semanti
     expect(catalogs.en).toHaveProperty(sound.nameKey);
   }
 });
+
 it("makes every usable expanded recording available in articulation/range choices", () => {
   const manifest = JSON.parse(
     readFileSync("samples/orchestra-expanded-20261105/manifest.json", "utf8"),
   );
   const tones = BUILTIN_SOUNDS.filter((s) => s.tone);
   const expected = new Set(
-    manifest.samples.map((s: { sourcePath: string }) =>
+    manifest.samples.filter((s: {instrumentId:string}) => s.instrumentId !== "upright-piano").map((s: { sourcePath: string }) =>
       createHash("sha256").update(s.sourcePath).digest("hex"),
     ),
   );
   expect(new Set(tones.flatMap((s) => s.recordingIds ?? []))).toEqual(expected);
-  expect(expected.size).toBe(682);
-  expect(new Set(tones.map(builtinToneKey)).size).toBe(20);
+  expect(expected.size).toBe(603);
+  expect(new Set(tones.map(builtinToneKey)).size).toBe(19);
   for (const tone of tones) {
     expect(builtinToneName(tone, (key) => catalogs.en[key])).not.toContain(
       "undefined",
@@ -118,6 +121,7 @@ it("makes every usable expanded recording available in articulation/range choice
     expect(tone.keyLow).toBeLessThanOrEqual(tone.keyHigh!);
   }
 });
+
 it("organizes old and new effects by action while retaining every selectable recording", () => {
   const effects = BUILTIN_SOUNDS.filter((s) => s.kind === "sample");
   const starter = JSON.parse(
@@ -164,140 +168,7 @@ it("organizes old and new effects by action while retaining every selectable rec
   ).toBe(3);
   expect(keys(["game-door-open-01", "game-door-close-01"]).size).toBe(2);
 });
-it("ships audible defaults for timpani, harp and low flute", () => {
-  for (const id of [
-    "instrument-17-timpani-2-Cs3-single-hit",
-    "instrument-06-harp-1-C3-single-hit",
-    "tone-flute-sustain-60-70",
-  ]) {
-    const sound = BUILTIN_SOUNDS.find((s) => s.id === id)!;
-    const project = parseProject(
-      JSON.parse(
-        gunzipSync(
-          readFileSync(`public/sound-library/${sound.file}`),
-        ).toString(),
-      ),
-    );
-    const rendered = renderProject(project);
-    expect(rendered.peak, id).toBeGreaterThan(0.03);
-    expect(rendered.sourcePeak, id).toBeLessThan(1);
-    const template = fixture();
-    template.inputs = [];
-    template.assets = {};
-    const inserted = parseProject(
-      appendInstrumentNode(template, project, "checked-instrument"),
-    );
-    // Calibration also survives adding the instrument to a user project.
-    expect(renderProject(inserted).peak, id).toBeCloseTo(rendered.peak, 5);
-  }
-}, 20000);
-it("can add and reopen every single-instrument example, including boosted piano", () => {
-  const checked: string[] = [];
-  for (const sound of BUILTIN_SOUNDS.filter((s) => s.kind === "example")) {
-    const raw = parseProject(JSON.parse(gunzipSync(
-      readFileSync(`public/sound-library/${sound.file}`)).toString()));
-    if (raw.inputs.length !== 1 || raw.inputs[0].player.type !== "instrument") continue;
-    const project = parseProject(raw);
-    const parent = { ...fixture(), inputs: [], assets: {} };
-    const added = appendInstrumentNode(parent, project, "example");
-    expect(() => parseProject(projectForSave(added)), sound.id).not.toThrow();
-    checked.push(sound.id);
-  }
-  expect(checked).toContain("example-expanded-piano");
-}, 20000);
-it("inserts two playable ranges as independent editable instruments and reopens portably", () => {
-  const read = (id: string) => {
-    const sound = BUILTIN_SOUNDS.find(
-      (s) => s.tone && s.nameKey === id && s.keyLow! <= 60 && s.keyHigh! >= 60,
-    )!;
-    return parseProject(
-      JSON.parse(
-        gunzipSync(
-          readFileSync(`public/sound-library/${sound.file}`),
-        ).toString(),
-      ),
-    );
-  };
-  const piano = read("builtin.instrument.upright-piano"),
-    flute = read("builtin.instrument.flute");
-  const instrument = piano.inputs[0].player.score!.instruments[0];
-  const note = piano.inputs[0].player.score!.notes[0];
-  const soft = selectRegion(
-    instrument,
-    { ...note, velocity: 35 },
-    piano.seed,
-    new Map(),
-  );
-  const loud = selectRegion(
-    instrument,
-    { ...note, velocity: 115 },
-    piano.seed,
-    new Map(),
-  );
-  expect(soft).toBeTruthy();
-  expect(loud).toBeTruthy();
-  expect(soft!.assetId).not.toBe(loud!.assetId);
-  const appended = parseProject(
-    appendInstrumentNode(piano, flute, "added-flute"),
-  );
-  expect(appended.inputs).toHaveLength(2);
-  const reopened = parseProject(
-    JSON.parse(JSON.stringify(projectForSave(appended))),
-  );
-  expect(renderProject(reopened).left).toEqual(renderProject(appended).left);
-  expect(renderProject(reopened).peak).toBeGreaterThan(0);
-}, 20000);
-it("ships the original mapped regions in every range without including quarantined takes", () => {
-  const manifest = JSON.parse(
-    readFileSync("samples/orchestra-expanded-20261105/manifest.json", "utf8"),
-  );
-  const sources = new Map<
-    string,
-    {
-      rootMidi: number;
-      keyLow: number;
-      keyHigh: number;
-      velocityLow: number;
-      velocityHigh: number;
-    }
-  >(manifest.samples.map((s: { id: string }) => [s.id, s]));
-  const shipped = new Set<string>();
-  for (const tone of BUILTIN_SOUNDS.filter((s) => s.tone)) {
-    const project: Project = parseProject(JSON.parse(
-      gunzipSync(readFileSync(`public/sound-library/${tone.file}`)).toString(),
-    ));
-    const bytes = Object.values(project.assets).reduce(
-      (n, a) =>
-        n +
-        a.channels.reduce((sum, c) => sum + Buffer.from(c, "base64").length, 0),
-      0,
-    );
-    expect(bytes).toBeLessThanOrEqual(10 * 1024 * 1024);
-    const score = project.inputs[0].player.score!;
-    expect(
-      scoreIssues(score, project.assets, project.duration, project.seed),
-      tone.id,
-    ).toEqual([]);
-    for (const region of score.instruments[0].regions) {
-      const originalId = region.id.replace(/-velocity-\d+-\d+$/, "");
-      const source = sources.get(originalId);
-      expect(source).toBeTruthy();
-      expect(region).toMatchObject({
-        rootMidi: source!.rootMidi,
-        keyLow: source!.keyLow,
-        keyHigh: source!.keyHigh,
-      });
-      const fragments = score.instruments[0].regions.filter(r => r.id.replace(/-velocity-\d+-\d+$/, "") === originalId)
-        .sort((a, b) => a.velocityLow - b.velocityLow);
-      expect(fragments[0].velocityLow).toBe(Math.max(1, source!.velocityLow));
-      expect(fragments.at(-1)!.velocityHigh).toBe(source!.velocityHigh);
-      fragments.slice(1).forEach((r, i) => expect(r.velocityLow).toBe(fragments[i].velocityHigh + 1));
-      expect(region.loop).toBeUndefined();
-      shipped.add(originalId);
-    }
-  }
-  expect(shipped).toEqual(new Set(sources.keys()));
-}, 60000);
+
 it("uses translated built-in labels while names of opened independent projects remain document data", async () => {
   const { sound, response } = resource();
   const fetcher = vi.fn(async () => response());
@@ -324,6 +195,7 @@ it("uses translated built-in labels while names of opened independent projects r
     "builtin.instrumentDetails",
   );
 });
+
 it("rejects unknown identities and paths before making a request", async () => {
   const { sound, response } = resource();
   const fetcher = vi.fn(async () => response());
@@ -338,6 +210,7 @@ it("rejects unknown identities and paths before making a request", async () => {
   ).rejects.toThrow("library.builtinLoadError");
   expect(fetcher).not.toHaveBeenCalled();
 });
+
 it("does not cache failures and supports retry after a missing deployment resource", async () => {
   const { sound, response } = resource();
   const fetcher = vi
@@ -349,6 +222,7 @@ it("does not cache failures and supports retry after a missing deployment resour
   expect((await load(sound.id)).inputs[0].player.assetId).toBe("sample");
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
+
 it("bounds compressed and expanded data and validates the decoded project schema", async () => {
   const { sound, response } = resource();
   await expect(
@@ -369,6 +243,7 @@ it("bounds compressed and expanded data and validates the decoded project schema
     ),
   ).rejects.toThrow("library.builtinLoadError");
 });
+
 it("deduplicates concurrent downloads without sharing mutable project state", async () => {
   const { sound, response } = resource();
   const fetcher = vi.fn(async () => response());

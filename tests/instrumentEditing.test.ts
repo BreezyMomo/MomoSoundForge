@@ -81,7 +81,7 @@ it('keeps recording roots and fixed pitch while filling a range and obeys the ex
   expect(Object.keys(filled.assets)).toEqual(['a']);
   expect(chosen(filled, 72)).toMatchObject({ rootMidi: 60, fixedPitch: true, assetId: 'a' });
   const over = definition();
-  over.instrument.regions = Array.from({ length: 128 }, (_, i) => ({ ...over.instrument.regions[0], id: `r${i}`, roundRobin: i }));
+  over.instrument.regions = Array.from({ length: 512 }, (_, i) => ({ ...over.instrument.regions[0], id: `r${i}`, roundRobin: i % 128 }));
   expect(() => addInstrumentVariant(over, 60, 'r0', { type: 'style', name: 'new' }, source)).toThrow('score.invalid');
 });
 

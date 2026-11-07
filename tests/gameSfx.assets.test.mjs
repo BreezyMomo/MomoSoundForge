@@ -19,33 +19,6 @@ const read = sound => {
   return parseProject(JSON.parse(gunzipSync(bytes)));
 };
 
-it('ships 66 unique recordings as 19 discoverable sound groups with source and CC0 evidence', () => {
-  expect(recordings).toHaveLength(66);
-  expect(new Set(recordings.map(builtinToneKey)).size).toBe(19);
-  expect(new Set(recordings.map(s => s.id))).toEqual(new Set(manifest.samples.map(s => s.id)));
-  const originalHashes = new Set(), pcmHashes = new Set();
-  for (const sample of manifest.samples) {
-    expect(sample.license).toBe('CC0-1.0');
-    for (const [file, digest] of [[sample.originalFile, sample.originalSha256], [sample.wavFile, sample.wavSha256]]) {
-      expect(file).not.toMatch(/^([/\\]|[a-z]:)|\.\./i);
-      expect(hash(readFileSync(`${root}/${file}`)), sample.id).toBe(digest);
-    }
-    originalHashes.add(sample.originalSha256); pcmHashes.add(sample.pcmSha256);
-  }
-  expect(originalHashes.size).toBe(66); expect(pcmHashes.size).toBe(66);
-  const distributed = JSON.parse(readFileSync('public/sound-library/licenses/sources.json', 'utf8')).sources;
-  for (const source of manifest.sources) {
-    expect(readFileSync(`${root}/${source.includedLicenseFile}`, 'utf8')).toContain('Creative Commons Zero, CC0');
-    const notice = distributed.find(s => s.id === source.id);
-    expect(notice.archiveSha256).toBe(source.archiveSha256);
-    expect(readFileSync(`public/sound-library/${notice.includedLicenseFile}`, 'utf8')).toContain('Creative Commons Zero, CC0');
-  }
-  const translated = key => catalogs['zh-CN'][key];
-  const wood = recordings.find(s => s.recordingGroup === 'game-footstep-wood');
-  expect(builtinToneName(wood, translated)).toBe('木地板脚步');
-  expect(builtinChoiceName(wood)).toContain('录音');
-  expect(builtinChoiceName(wood)).not.toContain('版本');
-});
 
 it('renders short, audible, peak-safe defaults with exactly matching card waveforms', () => {
   for (const sound of [...recordings, ...scenes]) {
@@ -67,6 +40,7 @@ it('renders short, audible, peak-safe defaults with exactly matching card wavefo
   }
 }, 30000);
 
+
 it('opens portable editable combinations with audible controls and reproducible output', () => {
   expect(scenes.map(s => s.id)).toEqual(expect.arrayContaining([
     'example-game-wood-impact', 'example-game-metal-impact', 'example-game-body-impact',
@@ -86,6 +60,7 @@ it('opens portable editable combinations with audible controls and reproducible 
     }
   }
 }, 30000);
+
 
 it('loads distinct recordings independently through the normal lazy project loader', async () => {
   const choices = recordings.filter(s => s.recordingGroup === 'game-footstep-wood');

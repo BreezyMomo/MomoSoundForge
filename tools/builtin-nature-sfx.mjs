@@ -1,3 +1,4 @@
+import { readAsset } from './sound-asset-store.mjs';
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -37,7 +38,7 @@ export async function natureSfxProject(job, workspace, root, { makeLayer, encode
   const assets = {}, inputs = [], duration = job.scene ? 12 : job.sample.duration;
   const add = async (sample, start = 0, gain = 1) => {
     if (!assets[sample.id]) {
-      const wav = await readFile(path.join(workspace, root, sample.wavFile));
+      const wav = await readAsset(workspace, `${root}/${sample.wavFile}`);
       if (createHash("sha256").update(wav).digest("hex") !== sample.wavSha256 ||
           wav.toString("ascii", 36, 40) !== "data" || wav.readUInt32LE(24) !== 48000 ||
           wav.readUInt16LE(22) !== 2 || wav.readUInt16LE(34) !== 16 || wav.length !== 44 + sample.frames * 4)

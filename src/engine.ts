@@ -3,6 +3,7 @@ import { effectTail, MAX_RENDER_SAMPLES } from "./nodeEffects";
 import { renderScore } from "./instruments";
 import { synthSample, expressionVoice } from "./synthesizers";
 import { compileExpression } from './synthExpression';
+import { sampleFrames, embeddedFrames } from './sampleReference';
 import { resolveControls, curveValue, processEffects } from "./advanced";
 import {
   SAMPLE_RATE,
@@ -18,6 +19,7 @@ import {
 } from "./model";
 const sampleCache = new WeakMap<SampleAsset, Float32Array[]>();
 function samples(asset: SampleAsset) {
+  if (asset.reference && embeddedFrames(asset) < sampleFrames(asset)) throw Error('error.sampleUnavailable');
   const cached = sampleCache.get(asset);
   if (cached) return cached;
   const data = asset.channels.map(decodeSamples);

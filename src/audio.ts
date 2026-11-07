@@ -1,6 +1,7 @@
 import type { Project, RenderResult } from "./model";
 import { clamp } from "./model";
 import { playbackPosition } from "./playback";
+import { prepareProjectSamples, projectHasReferences } from './prepareSamples';
 function audioIdentity(project: Project): unknown {
   return {
     ...project,
@@ -84,7 +85,14 @@ export function createRenderer() {
         run();
       };
     }
-    worker.postMessage({ id: active.id, project: active.project });
+    const job = active;
+    if (!projectHasReferences(job.project)) { worker.postMessage({ id: job.id, project: job.project }); return; }
+    void prepareProjectSamples(job.project, job.signal).then(project => {
+      if (!disposed && active === job) worker!.postMessage({ id: job.id, project });
+    }).catch(error => {
+      if (active !== job) return;
+      active = undefined; forget(job); job.reject(error); run();
+    });
   };
   return {
     render: (project: Project, signal?: AbortSignal): Promise<RenderResult> => {

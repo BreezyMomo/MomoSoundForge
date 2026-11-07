@@ -1,3 +1,4 @@
+import { prepareProjectSamples } from './prepareSamples';
 import { projectDocument } from './model';
 import { useEffect, useRef, useState } from 'react';
 import { createAIConnection, type ConnectionStatus } from './aiConnection';
@@ -202,7 +203,7 @@ export function useAIEditor(props: Props) {
             if (bytes.byteLength > 8 * 1024 * 1024) throw Error('ai.previewBudget');
             return { audio: bytesBase64(bytes), mimeType: AUDIO_MIME[settings.format], settings, snapshotId: args.snapshotId, duration: audio.left.length / audio.sampleRate, metrics: { peak: audio.peak, rms: audio.rms, gainReduction: audio.gainReduction }, metricsScope: 'prepared audio before codec encoding; returned audio is encoded export', instrumentIssues: projectScoreIssues(project) };
           }
-          const document = args.includeProject !== false ? JSON.stringify(projectDocument(project)) : undefined;
+          const document = args.includeProject !== false ? JSON.stringify(projectDocument(await prepareProjectSamples(project))) : undefined;
           totalBytes += bytes.byteLength + (document?.length ?? 0) * 2;
           if (totalBytes > 128 * 1024 * 1024) throw Error('ai.exportBudget');
           if (zip) {
@@ -239,7 +240,7 @@ export function useAIEditor(props: Props) {
         return { audio: bytesBase64(new Uint8Array(encodeWav({ ...audio, left: audio.left.slice(a, b), right: audio.right.slice(a, b) }))), mimeType: 'audio/wav',
           snapshotId: args.snapshotId, start, end, instrumentIssues: projectScoreIssues(project), metrics: { peak: audio.peak, sourcePeak: audio.sourcePeak, rms: audio.rms, gainReduction: audio.gainReduction, tailLimited: audio.tailLimited }, metricsScope: 'whole requested project or node; listening still required' };
       }
-      if (op === 'project') return { project: projectDocument(target()) };
+      if (op === 'project') return { project: projectDocument(await prepareProjectSamples(target())) };
       if (op === 'import-audio') {
         const old = fresh();
         if (typeof args.base64 !== 'string' || args.base64.length > 16 * 1024 * 1024) throw Error('error.fileSize');

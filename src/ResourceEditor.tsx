@@ -1,3 +1,4 @@
+import { portableResource } from './portableResource';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button, Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter, WorkbenchNumberInput } from '@momo/workbench/react';
 import { t } from './i18n';
@@ -14,7 +15,7 @@ import type { RecordingDefinition } from './recordingDefinition';
 import { pitchName } from './noteEditing';
 import './resources.css';
 
-export const resourceError = (e:unknown) => t(e instanceof Error && /^(instrument\.|resources\.|error\.|score\.|definition\.)/.test(e.message) ? e.message : 'resources.error');
+export const resourceError = (e:unknown) => t(e instanceof Error && /^(instrument\.|resources\.|library\.|error\.|score\.|definition\.)/.test(e.message) ? e.message : 'resources.error');
 export function NumberSetting({label,value,min=-1e6,max=1e6,step=1,onChange}: {label:string;value:number;min?:number;max?:number;step?:number;onChange:(n:number)=>void}) {
   return <label className="resource-field"><span>{label}</span><WorkbenchNumberInput label={label} value={value} min={min} max={max} step={step} onValueCommit={onChange}/></label>;
 }
@@ -79,6 +80,7 @@ export function ResourceEditor({initial,owned=false,onClose,onUse,onOpen,onPrevi
     <div className="button-group resource-history"><Button variant="outline" disabled={busy||!history.past.length} onClick={()=>travel()}>{t("resources.undo")}</Button><Button variant="outline" disabled={busy||!history.future.length} onClick={()=>travel(true)}>{t("resources.redo")}</Button></div>
     <div className="resource-editor-scroll"><fieldset disabled={busy} className="resource-editor-fields">
       <p>{t('resources.'+draft.kind+'Help')}</p>
+      {draft.kind==='instrument'&&Object.values((draft.payload as InstrumentDefinition).assets).some(a=>a.reference)&&<p className="field-help">{t('resources.referencedInstrument')}</p>}
       <div className={draft.kind==='instrument'?'instrument-name-field':'resource-metadata'}>
         <label className="resource-field"><span>{t('resources.name')}</span><input maxLength={120} value={draft.name} onChange={e=>change({...draft,name:e.target.value})}/></label>
         {draft.kind!=='instrument'&&<label className="resource-field"><span>{t('resources.category')}</span><input maxLength={120} value={SOUND_CATEGORIES.includes(draft.category as never)?t('library.'+draft.category):draft.category} onChange={e=>change({...draft,category:e.target.value})}/></label>}
@@ -104,7 +106,7 @@ export function ResourceEditor({initial,owned=false,onClose,onUse,onOpen,onPrevi
         <Button variant="outline" onClick={onStop}>{t('resources.stop')}</Button></>}
         <Button variant={onSaved?'default':'outline'} disabled={busy||emptyInstrument||!folderLibrary.connected} onClick={()=>save()}>{onSaved?t('instrument.saveAndBind',saveAndBindNote):t(isOwn?'resources.update':'resources.save')}</Button>
         {!onSaved&&<Button variant="outline" disabled={busy||emptyInstrument||!folderLibrary.connected} onClick={()=>save(true)}>{t('resources.copy')}</Button>}
-        <Button variant="outline" disabled={busy||emptyInstrument} onClick={()=>void act(()=>{const r=clean();download(JSON.stringify(r,null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
+        <Button variant="outline" disabled={busy||emptyInstrument} onClick={()=>void act(async()=>{const r=await portableResource(clean());download(JSON.stringify(r,null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
         <Button disabled={busy||emptyInstrument} onClick={()=>void act(()=>onUse(clean()))}>{onSaved?t('instrument.useDraft',saveAndBindNote):t(binding?'resources.bind':draft.kind==='synth'?'resources.useSynth':draft.kind==='instrument'?'resources.useInstrument':draft.kind==='recording'?'resources.useRecording':'resources.use')}</Button>
       </div>
       {(error||status||busy)&&<p role={error?'alert':'status'}>{error|| (busy?t('resources.working'):status)}</p>}

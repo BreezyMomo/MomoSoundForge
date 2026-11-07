@@ -17,7 +17,7 @@ No account is required. Synthesis, mixing and export run on your device. Factory
 ## What you can create
 
 - **Game effects:** confirm, deny, pickup, impact, laser, charge, whoosh and explosion presets, plus recorded impacts, liquids, cloth and other sounds.
-- **A basic sound library:** 108 choices covering 48 instrument/articulation combinations, 52 CC0 sound-effect groups and eight synth presets. Instruments use 725 distinct recordings and effects provide 126 selectable clips, with search, audition, favorites, range and recording selection.
+- **A basic sound library:** instruments and articulations, CC0 sound effects and synth presets. Instruments use 868 distinct recordings and effects provide 126 selectable clips, with search, audition, favorites, range and recording selection.
 - **Instrument parts:** piano, strings, woodwinds, brass and percussion. Edit pitch, beat timing and velocity, with sample mappings for ranges, dynamics and articulations.
 - **Multitrack arrangement:** move selected tracks together, resize, crop non-destructively, fade, mute and solo. Compact note contours expand into an editable piano roll.
 - **Compositions and reuse:** groups, nested projects, editable examples, a local library and macro controls that adjust several parameters together.
@@ -82,10 +82,13 @@ Requires Node.js 22 or later.
 
 ```sh
 npm ci
+npm run assets:sync
 npm run dev
 ```
 
 Open the printed URL, normally `http://127.0.0.1:5180/`, or run `start.bat` on Windows. The pinned MomoWorkbench package is included in `vendor/`; sibling repositories are not required.
+
+Assets restore from the fixed release URLs in the lock file. Use `npm run assets:sync -- --from <PACKAGE_DIRECTORY>` for offline synchronization. Ordinary `npm test` needs no large audio files; `npm run test:assets` validates the complete library. See [migration handoff](docs/asset-storage-implementation.md).
 
 ```sh
 npm test

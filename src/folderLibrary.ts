@@ -1,4 +1,5 @@
 import { resourceFromDefinition, parseResource, resourceProject, RESOURCE_BYTES, type SoundResource, type ResourceKind } from './soundResources';
+import { portableResource } from './portableResource';
 import { uid } from './model';
 import { recordingResource, recordingSummaries, parseRecordingSummaries, type RecordingSummary } from './recordingSources';
 import type { InstrumentDefinition } from './soundDefinitions';
@@ -134,7 +135,7 @@ export class FolderLibrary {
   private sourceFingerprint(r:SoundResource){
     if(r.kind==='synth'){const {id:_id,name:_name,...synth}=r.payload as import('./synthesizers').SynthDefinition;return hash(encode.encode(JSON.stringify(synth)));}
     const d=r.payload as RecordingDefinition;
-    return hash(encode.encode(JSON.stringify({sampleRate:d.asset.sampleRate,channels:d.asset.channels,rootMidi:d.rootMidi,
+    return hash(encode.encode(JSON.stringify({sampleRate:d.asset.sampleRate,reference:d.asset.reference,channels:d.asset.channels,rootMidi:d.rootMidi,
       tuneCents:d.tuneCents,gainDb:d.gainDb,releaseSeconds:d.releaseSeconds,loop:d.loop})));
   }
   private async writeResource(folder:Directory,r:SoundResource):Promise<ResourceEntry>{
@@ -178,7 +179,7 @@ export class FolderLibrary {
     });
   }
   async save(raw: SoundResource, expectedVersion?: number, expectedDestination = this.destination, isActive:()=>boolean = ()=>true) {
-    const r = parseResource(raw);
+    const r = await portableResource(raw);
     return this.mutate(async (folder, state, check) => {
       const activeCheck=()=>{check();if(!isActive())throw Error('resources.conflict');};activeCheck();
       if(expectedDestination!==this.destination)throw Error('resources.conflict');

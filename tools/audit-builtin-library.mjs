@@ -39,18 +39,21 @@ async function audit() {
   try {
     const { parseProject, decodeSamples } = await server.ssrLoadModule('/src/model.ts');
     const { renderProject } = await server.ssrLoadModule('/src/engine.ts');
+    const { createSamplePreparer } = await server.ssrLoadModule('/src/prepareSamples.ts');
+    const prepare = createSamplePreparer(async url => new Response(await readFile(`public/sound-library/${path.basename(url)}`)), '/');
     for (const sound of catalog.sounds) {
       const bytes = await readFile(`public/sound-library/${sound.file}`);
       if (createHash('sha256').update(bytes).digest('hex') !== sound.sha256) throw Error(`Checksum: ${sound.id}`);
-      const project = parseProject(JSON.parse(gunzipSync(bytes)));
+      const project = await prepare(parseProject(JSON.parse(gunzipSync(bytes))));
       const rendered = renderProject(project);
       const entry = { id: sound.id, kind: sound.kind, ...levels([rendered.left, rendered.right], rendered.sampleRate),
         sourcePeakDb: rendered.sourcePeak > 0 ? Number((20 * Math.log10(rendered.sourcePeak)).toFixed(2)) : null };
-      if (sound.kind === 'instrument' && !sound.tone && entry.status === 'ok' && standaloneBoostDb(entry) > .1)
+      if (sound.kind === 'instrument' && !sound.tone && !sound.completeInstrument && entry.status === 'ok' && standaloneBoostDb(entry) > .1)
         entry.status = 'quiet-default';
       entries.push(entry);
       const visit = p => {
         for (const asset of Object.values(p.assets)) {
+          if (!asset.channels.length) continue; // Unplayed references are covered by source/coverage audits.
           const digest = createHash('sha256').update(asset.channels.join(':')).digest('hex');
           if (!recordings.has(digest)) recordings.set(digest, { name: asset.name, ...levels(asset.channels.map(decodeSamples), asset.sampleRate) });
         }

@@ -2,6 +2,7 @@ import type { SampleAsset } from "./model";
 import { decodeSamples, stableHash, rng } from "./model";
 import { parseSynth, synthValues, expressionVoice, synthSample, type SynthDefinition } from './synthesizers';
 import { compileExpression } from './synthExpression';
+import { sampleFrames, embeddedFrames } from './sampleReference';
 export const MAX_SCORE_NOTES = 256;
 export const MAX_TOTAL_NOTES = 1024;
 export type SampleRegion = {
@@ -25,6 +26,10 @@ export type SampleRegion = {
   gainDb: number;
   releaseSeconds: number;
   releaseAssetId?: string;
+  /** Authored sample playback, independent of the parent layer's mix envelope. */
+  sampleOffset?: number;
+  envelope?: { attack: number; decay: number; sustain: number };
+  releaseVoice?: { rootMidi: number; tuneCents: number; gainDb: number; offset: number; decayDbPerSecond: number };
   loop?: { start: number; end: number; crossfade: number; verified: true };
 };
 export type Instrument = {
@@ -102,7 +107,7 @@ export function validateScore(
     const regionIds = new Set<string>();
     for (const r of inst.regions) {
       if (
-        ++regions > 128 ||
+        ++regions > 512 ||
         !r ||
         !text(r.id) ||
         regionIds.has(r.id) ||
@@ -119,10 +124,16 @@ export function validateScore(
         (r.playbackGroup!==undefined&&!text(r.playbackGroup)) ||
         !number(r.tuneCents, -1200, 1200) ||
         !number(r.gainDb, -60, 24) ||
-        !number(r.releaseSeconds, 0.005, 3)
+        !number(r.releaseSeconds, 0.005, 30)
       )
         fail();
       regionIds.add(r.id);
+      if (r.sampleOffset !== undefined && (r.synth || !assets[r.assetId] || !integer(r.sampleOffset, 0, sampleFrames(assets[r.assetId]) - 1))) fail();
+      if (r.envelope !== undefined && (!r.envelope || !number(r.envelope.attack, 0, 30) || !number(r.envelope.decay, 0, 100) || !number(r.envelope.sustain, 0, 1) || r.synth)) fail();
+      if (r.releaseVoice !== undefined && (!r.releaseVoice || !r.releaseAssetId || !assets[r.releaseAssetId] || !integer(r.releaseVoice.rootMidi, 0, 127)
+        || !number(r.releaseVoice.tuneCents, -1200, 1200) || !number(r.releaseVoice.gainDb, -60, 24)
+        || !integer(r.releaseVoice.offset, 0, sampleFrames(assets[r.releaseAssetId]) - 1)
+        || !number(r.releaseVoice.decayDbPerSecond, 0, 200) || r.synth)) fail();
       if (inst.keyRange && (r.keyLow < inst.keyRange.low || r.keyHigh > inst.keyRange.high)) fail();
       if (r.synth) {
         r.synth = parseSynth(r.synth); r.synthValues = synthValues(r.synth,r.synthValues);
@@ -134,7 +145,7 @@ export function validateScore(
       )
         fail();
       if (r.loop) {
-        const frames = channels(assets[r.assetId])[0].length,
+        const frames = sampleFrames(assets[r.assetId]),
           loop = r.loop;
         if (
           loop.verified !== true ||
@@ -176,6 +187,23 @@ export function orderedNotes(score: Score) {
   return [...score.notes].sort(
     (a, b) => a.start - b.start || a.id.localeCompare(b.id, "en"),
   );
+}
+/** Source prefixes needed by this exact deterministic performance, not the entire keyboard. */
+export function requiredScoreAssets(score: Score, assets: Record<string, SampleAsset>, seed: number) {
+  const required = new Map<string, number>(), counters = new Map<string, number>();
+  const add = (id: string, frames: number) => {
+    if (assets[id]) required.set(id, Math.max(required.get(id) ?? 0, Math.min(sampleFrames(assets[id]), Math.ceil(frames) + 2)));
+  };
+  for (const note of orderedNotes(score)) {
+    const r = selectRegion(score.instruments.find(i => i.id === note.instrumentId), note, seed, counters);
+    if (!r || r.synth || !assets[r.assetId]) continue;
+    const a = assets[r.assetId], held = beatsToSeconds(note.duration, score.bpm);
+    const rate = 2 ** (((r.fixedPitch ? 0 : note.midi - r.rootMidi) + r.tuneCents / 100) / 12);
+    add(r.assetId, r.playback === 'one-shot' ? sampleFrames(a) : r.loop ? r.loop.end : (r.sampleOffset ?? 0) + (held + r.releaseSeconds) * a.sampleRate * rate);
+    if (r.playback !== 'one-shot' && r.releaseAssetId && assets[r.releaseAssetId]) add(r.releaseAssetId, r.releaseVoice
+      ? sampleFrames(assets[r.releaseAssetId]) : r.releaseSeconds * assets[r.releaseAssetId].sampleRate * rate);
+  }
+  return required;
 }
 export function compareNoteRegions(midi: number, a: SampleRegion, b: SampleRegion) {
   // Explicit assignments to a single key override broader shared ranges.
@@ -241,7 +269,7 @@ export function noteEndSeconds(
   if (!region || !assets[region.assetId]) return start + held;
   const a = assets[region.assetId],
     rate = 2 ** (((region.fixedPitch ? 0 : note.midi - region.rootMidi) + region.tuneCents / 100) / 12);
-  const available = channels(a)[0].length / a.sampleRate / rate;
+  const available = (sampleFrames(a) - (region.sampleOffset ?? 0)) / a.sampleRate / rate;
   if (region.playback === 'one-shot') return start + available;
   const main = region.loop
     ? held + region.releaseSeconds
@@ -251,10 +279,11 @@ export function noteEndSeconds(
     : undefined;
   const releaseEnd = release
     ? held +
-      Math.min(
+      (region.releaseVoice ? (sampleFrames(release) - region.releaseVoice.offset) / release.sampleRate
+        / 2 ** ((note.midi - region.releaseVoice.rootMidi + region.releaseVoice.tuneCents / 100) / 12) : Math.min(
         region.releaseSeconds,
-        channels(release)[0].length / release.sampleRate / rate,
-      )
+        sampleFrames(release) / release.sampleRate / rate,
+      ))
     : 0;
   return start + Math.max(main, releaseEnd);
 }
@@ -285,7 +314,7 @@ export function scoreIssues(
       continue;
     }
     const rate = 2 ** (((r.fixedPitch ? 0 : n.midi - r.rootMidi) + r.tuneCents / 100) / 12);
-    const available = channels(asset)[0].length / asset.sampleRate / rate;
+    const available = (sampleFrames(asset) - (r.sampleOffset ?? 0)) / asset.sampleRate / rate;
     if (r.playback !== 'one-shot' && !r.loop && beatsToSeconds(n.duration, score.bpm) > available)
       warn("score.noSustain");
     if (noteEndSeconds(n, r, assets, score.bpm) > duration + 0.001)
@@ -316,6 +345,8 @@ export function renderScore(
   seed: number,
   budget = {synthOperations:0},
 ) {
+  for (const [id, frames] of requiredScoreAssets(score, assets, seed))
+    if (assets[id].reference && embeddedFrames(assets[id]) < frames) throw Error('error.sampleUnavailable');
   const left = new Float32Array(Math.round(seconds * sampleRate)),
     right = new Float32Array(left.length),
     counters = new Map<string, number>();
@@ -365,8 +396,12 @@ export function renderScore(
       gain = (note.velocity / 127) * 10 ** (region.gainDb / 20),
       loop = region.playback === 'one-shot' ? undefined : region.loop;
     const oneShot = region.playback === 'one-shot';
-    const frames = oneShot ? Math.ceil(data[0].length / step) : held + tail;
-    let pos = 0;
+    const releaseVoice = region.releaseVoice;
+    const releaseStep = releaseVoice && releaseAsset ? releaseAsset.sampleRate / sampleRate * 2 ** ((note.midi - releaseVoice.rootMidi + releaseVoice.tuneCents / 100) / 12) : step * (releaseAsset?.sampleRate ?? asset.sampleRate) / asset.sampleRate;
+    const releaseGain = releaseVoice ? (note.velocity / 127) * 10 ** ((releaseVoice.gainDb - releaseVoice.decayDbPerSecond * held / sampleRate) / 20) : gain;
+    const releaseFrames = releaseVoice && releaseAsset ? Math.ceil((sampleFrames(releaseAsset) - releaseVoice.offset) / releaseStep) : tail;
+    const frames = oneShot ? Math.ceil((sampleFrames(asset) - (region.sampleOffset ?? 0)) / step) : held + Math.max(tail, releaseFrames);
+    let pos = region.sampleOffset ?? 0;
     for (let i = 0; i < frames && start + i < left.length; i++) {
       const off = !oneShot && i >= held;
       if (loop && pos >= loop.end)
@@ -374,13 +409,18 @@ export function renderScore(
           loop.start +
           loop.crossfade +
           ((pos - loop.end) % (loop.end - loop.start - loop.crossfade));
-      const attack = Math.min(1, i / (sampleRate * 0.003));
+      const envelope = region.envelope;
+      const attackTime = envelope?.attack ?? .003;
+      const envelopeTime = (envelope && !oneShot ? Math.min(i, held) : i) / sampleRate;
+      const attack = attackTime === 0 ? 1 : Math.min(1, envelopeTime / attackTime);
+      const decay = !envelope || envelopeTime < envelope.attack ? 1 : envelope.decay > 0
+        ? Math.max(envelope.sustain, 1 - (1 - envelope.sustain) * (envelopeTime - envelope.attack) / envelope.decay) : envelope.sustain;
       const fade = off
         ? Math.max(
             0,
             1 -
               (i - held) /
-                (releaseData ? Math.min(tail, sampleRate * 0.03) : tail),
+                (releaseData && !releaseVoice ? Math.min(tail, sampleRate * 0.03) : tail),
           )
         : 1;
       for (let ch = 0; ch < 2; ch++) {
@@ -398,30 +438,30 @@ export function renderScore(
             ? 1
             : Math.min(
                 1,
-                Math.max(0, (c.length - 1 - pos) / (step * sampleRate * 0.005)),
+                Math.max(0, (sampleFrames(asset) - 1 - pos) / (step * sampleRate * 0.005)),
               )) *
           attack *
+          decay *
           fade;
+        value *= gain;
         if (off && releaseData && releaseAsset) {
           const p =
-              ((i - held) * step * releaseAsset.sampleRate) / asset.sampleRate,
+              (releaseVoice?.offset ?? 0) + (i - held) * releaseStep,
             rc = releaseData[ch] ?? releaseData[0];
           value +=
-            read(rc, p) *
+            read(rc, p) * releaseGain *
             Math.min(
               1,
               (i - held) / (sampleRate * 0.003),
-              Math.max(0, (held + tail - i) / (sampleRate * 0.005)),
+              Math.max(0, (held + releaseFrames - i) / (sampleRate * 0.005)),
               Math.max(
                 0,
                 (rc.length - 1 - p) /
-                  (((step * releaseAsset.sampleRate) / asset.sampleRate) *
-                    sampleRate *
-                    0.005),
+                  (releaseStep * sampleRate * 0.005),
               ),
             );
         }
-        (ch === 0 ? left : right)[start + i] += value * gain;
+        (ch === 0 ? left : right)[start + i] += value;
       }
       pos += step;
     }

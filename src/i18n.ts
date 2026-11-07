@@ -1051,6 +1051,8 @@ const words: Record<string, [string, string]> = {
     "工程采样总量最多 24 MiB（解码后），单声道最多 576 万个采样点。",
     "Total decoded sample data is limited to 24 MiB, with up to 5.76 million samples per channel.",
   ],
+  "error.sampleReference": ["录音引用无效或文件校验失败，请重新选择内置乐器。", "Invalid recording reference or checksum. Select the factory instrument again."],
+  "error.sampleUnavailable": ["这段声音需要的录音尚未加载。请连接网络后重试；保存工程会携带已使用的声音。", "Required recordings are not loaded. Connect and retry; saved projects include the audio in use."],
   "error.fileSize": [
     "文件过大，工程限制为 36 MiB，音频文件限制为 24 MiB。",
     "File too large. Project limit: 36 MiB; audio file limit: 24 MiB.",

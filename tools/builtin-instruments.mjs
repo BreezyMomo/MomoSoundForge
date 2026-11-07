@@ -1,3 +1,4 @@
+import { readAsset } from './sound-asset-store.mjs';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -42,7 +43,7 @@ export function instrumentJobs(manifest, base) {
 export async function instrumentProject(job, root, { makeLayer, encodeSamples }, preferredMidi = 60) {
   const assets = {}, authoredRegions = [];
   for (const s of job.samples) {
-    const id = recordingId(s), wav = await readFile(path.join(root, job.base, s.wavFile));
+    const id = recordingId(s), wav = await readAsset(root, `${job.base}/${s.wavFile}`);
     if (createHash('sha256').update(wav).digest('hex') !== s.wavSha256 || wav.toString('ascii', 36, 40) !== 'data' ||
         wav.readUInt32LE(24) !== 48000 || wav.readUInt16LE(22) !== 2 || wav.readUInt16LE(34) !== 16)
       throw Error(`Invalid tone source: ${s.id}`);

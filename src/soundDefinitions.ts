@@ -25,7 +25,7 @@ export function definitionProject(raw: SoundDefinition, preview = false): Projec
   } else {
     const instrument = structuredClone(d.instrument), score = { ...emptyScore(), instruments: [instrument] };
     if (preview) {
-      const r = instrument.regions[0];
+      const r = instrument.regions.find(r => d.assets[r.assetId]?.reference && r.keyLow <= 60 && r.keyHigh >= 60 && r.velocityLow <= 90 && r.velocityHigh >= 90) ?? instrument.regions[0];
       score.notes = [{ id: 'definition-audition', instrumentId: instrument.id, midi: Math.max(r.keyLow,Math.min(r.keyHigh,r.rootMidi)),
         velocity: Math.round((r.velocityLow + r.velocityHigh) / 2), articulation: r.articulation, start: 0, duration: 1 }];
       p.duration = Math.max(p.duration, noteEndSeconds(score.notes[0], r, d.assets, score.bpm));

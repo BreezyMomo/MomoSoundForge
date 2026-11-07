@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, it, expect } from 'vitest';
+import { beforeAll, afterAll, it, expect, vi } from 'vitest';
 import { build } from 'esbuild';
 import { mkdtemp, mkdir, copyFile, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -7,6 +7,8 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 let root, cli;
+// These tests launch several real Node processes; allow cold starts during builds.
+vi.setConfig({ testTimeout: 30000, hookTimeout: 30000 });
 const exec = promisify(execFile);
 const run = (...args) => exec(process.execPath, [cli, ...args], { cwd: root, timeout: 15000 });
 beforeAll(async () => {
@@ -16,7 +18,7 @@ beforeAll(async () => {
   await copyFile('skills/momo-sound-forge/assets/lesson-recipes.json', join(root, 'assets/lesson-recipes.json'));
   await build({ entryPoints: [resolve('tools/ai-cli.ts')], outfile: cli, bundle: true, platform: 'node', format: 'esm', target: 'node22', external: ['@ffmpeg/*'] });
 });
-afterAll(async () => { if (root && root.startsWith(join(tmpdir(), 'soundforge-ai-test-'))) await rm(root, { recursive: true, force: true }); });
+afterAll(async () => { if (root && root.startsWith(join(tmpdir(), 'soundforge-ai-test-'))) await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); });
 
 it('runs outside the repository, renders deterministically and refuses to overwrite', async () => {
   await run('new', '--preset', 'pickup', '--out', 'a.soundforge');

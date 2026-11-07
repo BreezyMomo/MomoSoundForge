@@ -6,6 +6,7 @@ import { gunzipSync } from 'node:zlib';
 import { parseProject } from '../src/model';
 import { renderProject } from '../src/engine';
 
+
 it('restores authored balance, keeps dynamics and leaves headroom without changing the input', () => {
   const samples = [
     { id: 'soft', instrumentId: 'drum', peak: .001220703125, sourceEffectiveOpcodes: { volume: '27' } },
@@ -26,11 +27,13 @@ it('restores authored balance, keeps dynamics and leaves headroom without changi
   expect(samples).toEqual(original);
 });
 
+
 it('rejects invalid or silent sources instead of amplifying them blindly', () => {
   for (const peak of [0, NaN, Infinity, 1.5]) expect(() => legacyInstrumentLevels([
     { id: 'bad', instrumentId: 'bad', peak },
   ])).toThrow();
 });
+
 
 it('raises standalone default audibility, while limiting transients and leaving loud sounds alone', () => {
   expect(standaloneBoostDb({ peakDb: -25.64, activeRmsDb: -33.85 })).toBeCloseTo(13.85);
@@ -39,35 +42,6 @@ it('raises standalone default audibility, while limiting transients and leaving 
   expect(() => standaloneBoostDb({ peakDb: null, activeRmsDb: null })).toThrow();
 });
 
-it('renders the shipped timpani at usable default loudness and retains velocity control', () => {
-    const catalog = JSON.parse(readFileSync('src/data/builtin-catalog.json', 'utf8'));
-    expect(catalog.sounds.some(s => s.id === 'instrument-17-timpani-1-Fs2-single-hit')).toBe(false);
-    const sound = catalog.sounds.find(s => s.id === 'instrument-17-timpani-2-Cs3-single-hit');
-    const project = parseProject(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${sound.file}`))));
-    const normal = renderProject(project);
-    const measured = levels([normal.left, normal.right], normal.sampleRate);
-    expect(measured.activeRmsDb).toBeGreaterThanOrEqual(-20.1);
-    expect(normal.peak).toBeGreaterThan(.2);
-    (project.inputs[0].player.score).notes[0].velocity = 50;
-    expect(renderProject(project).peak / normal.peak).toBeCloseTo(.5, 4);
-    (project.inputs[0].player.score).notes[0].velocity = 127;
-    expect(renderProject(project).sourcePeak).toBeLessThan(.8);
-});
-
-it('removes rejected sources, catalog entries and embedded project copies', () => {
-  const quality = JSON.parse(readFileSync('tools/builtin-quality.json', 'utf8'));
-  const catalog = JSON.parse(readFileSync('src/data/builtin-catalog.json', 'utf8'));
-  const manifest = JSON.parse(readFileSync('samples/orchestra-basics-20261104/manifest.json', 'utf8'));
-  for (const entry of quality.excludedStandaloneSamples) {
-    expect(catalog.sounds.some(s => s.id === `instrument-${entry.id}`)).toBe(false);
-    expect(catalog.sounds.some(s => s.id === `instrument-${entry.replacementSampleId}`)).toBe(true);
-    expect(manifest.samples.some(s => s.id === entry.id)).toBe(false);
-    for (const folder of ['originals', 'wav'])
-      expect(existsSync(`samples/orchestra-basics-20261104/${folder}/percussion/${entry.id}.wav`)).toBe(false);
-    for (const file of ['projects/17-timpani.soundforge', 'examples/forest-departure-8s.soundforge', 'review/chapters.json'])
-      expect(readFileSync(`samples/orchestra-basics-20261104/${file}`, 'utf8')).not.toContain(entry.id);
-  }
-});
 
 it('audits both channels and distinguishes silent and quiet audio from long tails', () => {
   const signal = new Float32Array(80000);

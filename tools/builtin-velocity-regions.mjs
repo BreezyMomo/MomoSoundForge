@@ -1,7 +1,7 @@
 // The author sometimes uses different velocity boundaries for alternate takes.
 // Compile their intersections into equal native ranges so every eligible take can
 // cycle. This changes imported definitions only; saved user projects keep their rules.
-export const sourceRegionId = id => id.replace(/-velocity-\d+-\d+$/, '');
+export const sourceRegionId = id => id.replace(/-key-\d+-\d+(?=-velocity-)/, '').replace(/-velocity-\d+-\d+$/, '');
 
 export function compileVelocityRegions(regions) {
   const groups = Map.groupBy(regions, r => JSON.stringify([r.rootMidi, r.keyLow, r.keyHigh, r.articulation]));

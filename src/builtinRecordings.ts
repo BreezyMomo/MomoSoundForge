@@ -19,7 +19,7 @@ export function createBuiltinRecordingLoader(
   return async (id: string, name?: string) => {
     try {
       const r = entries.get(id);
-      if (!r || !Number.isInteger(r.frames) || r.frames < 1 || r.frames > 30 * 48000
+      if (!r || !Number.isInteger(r.frames) || r.frames < 1 || r.frames > 120 * 48000
         || !Array.isArray(r.assetGains) || r.assetGains.length > 2 || r.assetGains.some(g => !Number.isFinite(g) || g <= 0 || g > 1000))
         throw Error('library.builtinLoadError');
       const bytes = await files.load(id), view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

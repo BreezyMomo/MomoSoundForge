@@ -1,3 +1,4 @@
+import { portableResource } from './portableResource';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, Dialog, DialogContent, DialogTitle } from '@momo/workbench/react';
@@ -90,7 +91,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const seenRecordings=new Set<string>();
   for(const s of BUILTIN_SOUNDS){
     const parent:Card={key:'builtin-'+s.id,relatedKeys:['builtin-'+builtinToneKey(s)],name:builtinSoundName(s),kind:s.kind==='instrument'?'instrument':s.kind==='sample'?'recording':'sound',source:'builtin',category:s.category,
-      description:s.kind==='instrument'?t('resources.instrumentDetail',s.recordings?.length??0)+(s.tone?' · '+t('resources.performanceExcerpt',s.maxSourceSeconds):''):builtinSoundDescription(s),preview:s.waveform,
+      description:s.completeInstrument?builtinSoundDescription(s):s.kind==='instrument'?t('resources.instrumentDetail',s.recordings?.length??0)+(s.tone?' · '+t('resources.performanceExcerpt',s.maxSourceSeconds):''):builtinSoundDescription(s),preview:s.waveform,
       load:async()=>{
         const p=await loadBuiltinSound(s.id,builtinSoundName(s));
         if(s.kind==='instrument')return {...resourceFromDefinition({schema:'momo.instrument/v1',instrument:p.inputs[0].player.score!.instruments[0],assets:p.assets},'builtin-'+s.id),category:s.category,version:s.revision??1};
@@ -159,7 +160,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
       </div>{!sourceSelection&&<details><summary>{t('resources.actions')}</summary><div className="button-group">
         <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const destination=folderLibrary.destination,r=await c.load();if(c.entry&&destination!==folderLibrary.destination)throw Error('resources.conflict');openEditor(r,!!c.entry);})}>{t('resources.edit')}</Button>
         {c.kind==='sound'&&!bindingType&&<Button variant="outline" disabled={busy||!ready} onClick={()=>void run(async()=>{const base=latest.current,destination=folderLibrary.destination,r=await c.load();if(base!==latest.current||destination!==folderLibrary.destination)throw Error('error.scopeChanged');onOpen(resourceProject(r),c.entry?resourceOrigin(r,destination):undefined);})}>{t('resources.open')}</Button>}
-        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const r=await c.load();download(JSON.stringify(r,null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
+        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const r=await c.load();download(JSON.stringify(await portableResource(r),null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
         {c.entry&&<Button variant="outline" disabled={busy} onClick={()=>setDeleting({...c.entry!,destination:folderLibrary.destination})}>{t('resources.delete')}</Button>}
       </div></details>}
     </article>)}</div>

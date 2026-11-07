@@ -1,3 +1,5 @@
+import { createSamplePreparer } from '../src/prepareSamples';
+import { portableResource } from '../src/portableResource';
 import { projectDocument } from '../src/model';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
@@ -23,7 +25,17 @@ const need = (key: string) => { if (!options[key]) throw Error(`Missing ${key}`)
 const json = async (path: string) => { const bytes = await readFile(path); if (bytes.length > 36 * 1024 * 1024) throw Error('Input exceeds budget'); return JSON.parse(bytes.toString('utf8')); };
 const input = async () => parseProject(await json(need('--input')));
 const write = async (path: string, value: string | Uint8Array) => { await mkdir(dirname(resolve(path)), { recursive: true }); await writeFile(path, value, { flag: 'wx' }); };
-const save = (p: Project) => write(need('--out'), JSON.stringify(projectDocument(parseProject(projectForSave(p))), null, 2));
+const sampleBase = () => {
+  if (!options['--site']) return '/';
+  const site = new URL(options['--site']);
+  if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
+  site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = ''; return site.href;
+};
+const prepare = createSamplePreparer(url => {
+  if (!options['--site']) throw Error('Required recording is not embedded; pass --site EDITOR_URL to load it.');
+  return fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' });
+}, sampleBase());
+const save = async (p: Project) => write(need('--out'), JSON.stringify(projectDocument(await prepare(parseProject(projectForSave(p)))), null, 2));
 
 export function decodePCM(bytes: Buffer, name: string, id: string) {
   if (bytes.length > 24 * 1024 * 1024 || bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WAVE') throw Error('Use a PCM WAV file <=24 MiB');
@@ -55,10 +67,10 @@ async function run() {
     const bytes=await readFile(need('--input'));if(bytes.length>RESOURCE_BYTES)throw Error('Resource exceeds budget');
     const r=importResource(JSON.parse(bytes.toString('utf8')));
     if(command==='resource-validate')return console.log(JSON.stringify({valid:true,id:r.id,name:r.name,kind:r.kind,version:r.version}));
-    if(command==='resource-pack')return write(need('--out'),JSON.stringify(r,null,2));
+    if(command==='resource-pack')return write(need('--out'),JSON.stringify(await portableResource(r,prepare),null,2));
     const p=resourceProject(r,command==='resource-render');
     if(command==='resource-project')return save(p);
-    const audio=renderProject(p);await write(need('--out'),new Uint8Array(encodeWav(audio)));
+    const audio=renderProject(await prepare(p));await write(need('--out'),new Uint8Array(encodeWav(audio)));
     return console.log(JSON.stringify({peak:audio.peak,rms:audio.rms,listeningVerified:false}));
   }
   if (command === 'catalog') return console.log(JSON.stringify({ presets: PRESETS.map(p => ({ id: p.id, duration: p.duration })), sounds: catalog.sounds.map(({ waveform, ...s }) => s), recordings: catalog.recordings }));
@@ -72,7 +84,7 @@ async function run() {
     return console.log(JSON.stringify({ valid: true, name: p.name, duration: p.duration, instrumentIssues: projectScoreIssues(p) }));
   }
   if (command === 'render') {
-    const p = await input(), audio = renderProject(p), wav = new Uint8Array(encodeWav(audio));
+    const p = await input(), audio = renderProject(await prepare(p)), wav = new Uint8Array(encodeWav(audio));
     await write(need('--out'), wav);
     return console.log(JSON.stringify({ peak: audio.peak, rms: audio.rms, sourcePeak: audio.sourcePeak, gainReduction: audio.gainReduction, tailLimited: audio.tailLimited, duration: audio.left.length / audio.sampleRate, sha256: createHash('sha256').update(wav).digest('hex'), listeningVerified: false }));
   }

@@ -9,6 +9,7 @@ Requires Node.js 22+. The pinned workbench package is included in vendor/.
 
 ```sh
 npm ci
+npm run assets:sync
 npm run dev
 ```
 
@@ -19,6 +20,7 @@ Development uses port 5180; production preview uses port 4180.
 
 ```sh
 npm test
+npm run test:assets
 npm run build
 node tools/check-static-site.mjs
 ```
@@ -31,10 +33,17 @@ Run the library audit for a loudness report; numerical checks do not replace lis
 
 ## 音源构建 / Library generation
 
-`predev`、`pretest` 与 `prebuild` 从已入库的采样、示例和工具生成 `public/sound-library/`，更新 `src/data/builtin-catalog.json`；未变化的资源复用缓存，Vite 将资源复制到 `dist/sound-library/`。全新克隆也可直接运行测试。
-The predev/pretest/prebuild hook generates the runtime library from versioned samples and examples, reusing unchanged resources. Tests also work on a fresh checkout; Vite copies the library into the deployment.
+`predev` 与 `prebuild` 从已校验的本地资源缓存生成 `public/sound-library/`，更新 `src/data/builtin-catalog.json`。构建不联网；需先显式执行 `assets:sync`。资源锁定版本、大小与 SHA-256，缓存命中也检查生成文件内容。Vite 将完整资源复制到 `dist/sound-library/`。
+The predev/prebuild hooks consume verified local asset packs, without network access. Sync assets explicitly first. Cache hits verify generated content hashes. Vite copies the complete library into the deployment.
 
-- 原始资料 / Sources: `samples/` and versioned examples.
+资源包已发布到 [MomoSoundForge-assets Releases](https://github.com/BreezyMomo/MomoSoundForge-assets/releases/tag/2026.11.07-1)，同步使用锁文件中的固定地址。离线可用 `npm run assets:sync -- --from <PACKAGE_DIRECTORY>`。详细流程见 [资源迁移交接](asset-storage-implementation.md)。
+Packages are published as versioned release attachments. Sync uses pinned URLs and hashes; an explicit local package directory also works offline.
+
+`npm test` 为离线普通测试，不生成音库。`npm run test:assets` 验证构建包并测试完整音库。`npm run test:provenance` 还需 `assets:sync -- --profile audit`，校验原录音、工作副本与来源记录。测试不会根据文件是否存在而跳过。
+Unit tests run without large assets. The asset suite requires the build profile; provenance tests require the audit profile. Missing assets fail explicitly.
+
+- 元数据、映射与授权 / Metadata, mappings and notices: `samples/`.
+- 大型构建输入与原始资料 / Large build inputs and originals: `sound-assets.lock.json` → `.cache/sound-assets/` (or `SOUNDFORGE_ASSET_CACHE`).
 - 生成资源 / Generated library: `public/sound-library/` (Git ignored).
 - 完整网站 / Website: `dist/` (Git ignored).
 
@@ -46,7 +55,7 @@ The predev/pretest/prebuild hook generates the runtime library from versioned sa
 Select GitHub Actions as the Pages publishing source.
 
 [pages.yml](../.github/workflows/pages.yml) 在推送 main 或手动触发后安装依赖、测试、构建、检查并上传 dist，只有 main 可以发布。构建任务只读，发布任务使用 Pages 与 OIDC 权限。构建产物保留一天，不创建 gh-pages 分支。
-The workflow installs, tests, builds, checks and uploads dist on pushes to main or manual dispatch. Only main deploys. Build permissions are read-only; deployment uses Pages and OIDC. Artifacts are retained for one day, with no gh-pages branch.
+The workflow installs, runs unit tests, explicitly syncs locked assets, runs library tests, builds, checks and uploads dist on pushes to main or manual dispatch. Only main deploys. Build permissions are read-only; deployment uses Pages and OIDC. Artifacts are retained for one day, with no gh-pages branch.
 
 默认网址 / Default URL: <https://breezymomo.github.io/MomoSoundForge/>
 

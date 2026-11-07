@@ -1,4 +1,5 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { assetResolver } from './sound-asset-store.mjs';
 import { execFileSync } from 'node:child_process';
 import { gunzipSync } from 'node:zlib';
 import path from 'node:path';
@@ -9,6 +10,7 @@ import { sourceRegionId } from './builtin-velocity-regions.mjs';
 import { compareEmbedded, mappingCoverage, measure, pcmHash, representativeRegions, sha256, workingPcm } from './audio-audit-core.mjs';
 
 const args = process.argv.slice(2);
+const resolveAsset = await assetResolver(process.cwd(), {profile:'audit'});
 const output = reportDestination(args.find(a => !a.startsWith('--')) ?? 'test-results/source-review');
 const writeAudio = args.includes('--write-audio');
 if (args.some(a => a.startsWith('--') && a !== '--write-audio')) throw Error('Unknown argument');
@@ -48,6 +50,9 @@ const sourceFingerprint = sha256(JSON.stringify(await Promise.all(runtimeFiles.m
 try {
   const { parseProject, projectDocument, makeLayer, decodeSamples } = await server.ssrLoadModule('/src/model.ts');
   const { renderProject, encodeWav } = await server.ssrLoadModule('/src/engine.ts');
+  const { createSamplePreparer } = await server.ssrLoadModule('/src/prepareSamples.ts');
+  const prepare = createSamplePreparer(async url => new Response(await readFile(`public/sound-library/${path.basename(url)}`)), '/');
+  const { sampleFrames } = await server.ssrLoadModule('/src/sampleReference.ts');
   const { selectRegion, renderScore, scoreIssues, noteEndSeconds } = await server.ssrLoadModule('/src/instruments.ts');
   const { recordingProject } = await server.ssrLoadModule('/src/recordingDefinition.ts');
   const { resourceFromDefinition } = await server.ssrLoadModule('/src/soundResources.ts');
@@ -65,6 +70,7 @@ try {
   }
   async function inspectAssets(project, soundId, location = '') {
     for (const [assetId, asset] of Object.entries(project.assets)) {
+      if (!asset.channels.length) continue; // Unused references remain in mapping/source coverage, not embedded PCM statistics.
       const key = sha256(JSON.stringify([asset.sampleRate, asset.channels]));
       let metrics = measuredAssets.get(key);
       if (!metrics) { metrics = measure(asset.channels.map(decodeSamples), asset.sampleRate); measuredAssets.set(key, metrics); }
@@ -83,7 +89,7 @@ try {
         const workingPath = `${source.base}/${source.sample.wavFile}`;
         let working = workingCache.get(workingPath);
         if (!working) {
-          const bytes = await readFile(workingPath);
+          const bytes = await readFile(resolveAsset(workingPath));
           if (sha256(bytes) !== source.sample.wavSha256) throw Error(`Source hash mismatch: ${workingPath}`);
           working = workingPcm(bytes);
           // Bounded cache; the full orchestra should not stay decoded in memory.
@@ -106,7 +112,7 @@ try {
     try {
       const bytes = await readFile(`public/sound-library/${sound.file}`);
       if (sha256(bytes) !== sound.sha256) throw Error('Generated package hash mismatch');
-      const project = parseProject(JSON.parse(gunzipSync(bytes)));
+      const project = await prepare(parseProject(JSON.parse(gunzipSync(bytes))));
       const rendered = renderProject(project);
       const entry = { id: sound.id, kind: sound.kind, packageSha256: sound.sha256, projectSha256: sha256(JSON.stringify(projectDocument(project))),
         render: summarizeRender(rendered), instruments: [], subjectiveAudition: 'pending' };
@@ -129,23 +135,23 @@ try {
         const input = project.inputs[0], instrument = input.player.score.instruments[0];
         for (const region of instrument.regions.filter(r => representatives.has(sourceRegionId(r.id)))) {
           const source = sourceByRegion.get(sourceRegionId(region.id));
-          const asset = project.assets[region.assetId], channels = asset.channels.map(decodeSamples);
+          const asset = project.assets[region.assetId];
           const caseId = sha256(`${sound.id}:${region.id}`).slice(0, 20);
           const midi = Math.max(region.keyLow, Math.min(region.rootMidi, region.keyHigh));
           const velocity = Math.round((region.velocityLow + region.velocityHigh) / 2);
           const rate = 2 ** (((region.fixedPitch ? 0 : midi - region.rootMidi) + region.tuneCents / 100) / 12);
-          const available = channels[0].length / asset.sampleRate / rate;
+          const available = (sampleFrames(asset) - (region.sampleOffset ?? 0)) / asset.sampleRate / rate;
           const performance = [];
           const isolated = { ...instrument, regions: [region] };
           for (const held of [...new Set([.08, .6, Math.min(29, available + .25)])]) {
             const note = { id: 'audit-note', instrumentId: instrument.id, midi, velocity, articulation: region.articulation, start: 0, duration: held * 2 };
             const score = { schema: 'momo.score/v1', bpm: 120, instruments: [isolated], notes: [note] };
             const seconds = Math.max(.1, noteEndSeconds(note, region, project.assets, 120) + .05);
-            const neutral = renderScore(score, project.assets, seconds, 48000, 2048);
-            const neutralMetrics = measure([neutral.left, neutral.right], 48000);
-            const minimal = parseProject({ schema: 'momo.soundforge/v4', name: 'Audit', seed: 2048, duration: seconds, master: 1, echo: 0,
+            const minimal = await prepare(parseProject({ schema: 'momo.soundforge/v4', name: 'Audit', seed: 2048, duration: seconds, master: 1, echo: 0,
               assets: project.assets, inputs: [makeLayer({ id: 'audit-layer', name: 'Audit', type: 'instrument', duration: seconds, score,
-                gain: 1, level: 1, attack: 0, release: 0, decay: 0, cutoff: 22000, noiseSeed: 2048 })] });
+                gain: 1, level: 1, attack: 0, release: 0, decay: 0, cutoff: 22000, noiseSeed: 2048 })] }));
+            const neutral = renderScore(score, minimal.assets, seconds, 48000, 2048);
+            const neutralMetrics = measure([neutral.left, neutral.right], 48000);
             const timeline = renderProject(minimal), exportBytes = Buffer.from(encodeWav(timeline));
             const reopened = renderProject(parseProject(projectDocument(minimal)));
             if (pcmHash([timeline.left, timeline.right], 48000) !== pcmHash([reopened.left, reopened.right], 48000))
@@ -157,7 +163,9 @@ try {
           }
           const definition = { schema: 'momo.instrument/v1', instrument, assets: project.assets };
           const independent = recordingResource(resourceFromDefinition(definition, `audit-${caseId}`), region.assetId, asset.name);
-          const recordingPreview = renderProject(recordingProject(independent.payload, asset.name));
+          const recordingReady = await prepare(recordingProject(independent.payload, asset.name));
+          const channels = recordingReady.assets[asset.id].channels.map(decodeSamples);
+          const recordingPreview = renderProject(recordingReady);
           comparisons.push({ caseId, soundId: sound.id, regionId: region.id, assetId: region.assetId, collection: source?.collection,
             instrumentId: source?.sample.instrumentId, articulation: region.articulation,
             original: source ? { path: `${source.base}/${source.sample.originalFile}`, sha256: source.sample.originalSha256, nativeSpeed: true } : null,
@@ -186,6 +194,7 @@ try {
     limitations: ['No subjective listening or browser interaction certification.', 'Source decoding report is separate (sources.json).',
       'No automatic pitch correction, gain normalization, isolation or source deletion.',
       'Representatives cover active low/middle/high roots and available velocity bands, not all possible rendered notes.',
+      'Unused lazy references are excluded from embedded PCM statistics; referenced representative recordings are resolved in full.',
       'PCM16 audition exports may clip an overloaded stage; raw peak and limiter gain remain in the report.'] };
   await writeFile(path.join(output, 'instruments.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(report.summary));

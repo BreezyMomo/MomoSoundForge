@@ -46,8 +46,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', default='.')
     parser.add_argument('--output', required=True)
+    parser.add_argument('--asset-map', help='Verified local cache mapping from review-sound-sources.mjs')
     args = parser.parse_args()
     root = pathlib.Path(args.root).resolve()
+    asset_map = json.loads(pathlib.Path(args.asset_map).read_text('utf8')) if args.asset_map else {}
+
+    def physical(target):
+        return pathlib.Path(asset_map.get(target.relative_to(root).as_posix(), str(target)))
     output = pathlib.Path(args.output).resolve()
     # No writes below samples, exports, src or public, even if accidentally requested.
     if root in output.parents and output.relative_to(root).parts[0] != 'test-results':
@@ -64,11 +69,11 @@ def main():
     def decode(target):
         key = target.relative_to(root).as_posix()
         if key not in files:
-            data = target.read_bytes()
-            info = sf.info(target)
+            data = physical(target).read_bytes()
+            info = sf.info(physical(target))
             if info.channels not in (1, 2) or info.frames <= 0 or info.frames * info.channels > 100_000_000:
                 raise ValueError('Unsupported audio layout or frame budget')
-            audio, rate = sf.read(target, dtype='float64', always_2d=True)
+            audio, rate = sf.read(physical(target), dtype='float64', always_2d=True)
             files[key] = dict(path=key, bytes=len(data), sha256=sha(data), format=info.format, subtype=info.subtype,
                               gitBlobSha1=hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest(), **metrics(audio, rate))
         return files[key]
@@ -101,7 +106,7 @@ def main():
                         else:
                             entry['checks'].append('source-git-blob')
                     if kind == 'working':
-                        with wave.open(str(target), 'rb') as wav:
+                        with wave.open(str(physical(target)), 'rb') as wav:
                             pcm = wav.readframes(wav.getnframes())
                         if sha(pcm) != sample['pcmSha256']:
                             entry['issues'].append('working-pcm16-hash-mismatch')
@@ -118,9 +123,9 @@ def main():
                         entry['issues'].append('mapping-hash-mismatch')
                     else:
                         entry['checks'].append('author-mapping-file-hash')
-                if base.name.startswith('orchestra-expanded') and entry['working'] not in {c['working'] for c in conversions}:
+                if base.name.startswith(('orchestra-expanded', 'vcsl-kawai')) and entry['working'] not in {c['working'] for c in conversions}:
                     # Independently replay the documented fixed conversion, without writing a WAV.
-                    audio, rate = sf.read(root/entry['original'], dtype='float64', always_2d=True)
+                    audio, rate = sf.read(physical(root/entry['original']), dtype='float64', always_2d=True)
                     if audio.shape[1] == 1:
                         audio = np.repeat(audio, 2, axis=1)
                     divisor = math.gcd(rate, 48000)

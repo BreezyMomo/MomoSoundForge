@@ -1,4 +1,5 @@
 import { ProjectResourceOrigins, type ResourceOrigin } from './resourceOrigin';
+import { prepareProjectSamples } from './prepareSamples';
 import { projectDocument } from './model';
 import { timeAtPath, timeFromPath, fitPlayerRange, resetPlayerRange, playerDuration } from "./playerPlayback";
 import {
@@ -439,13 +440,16 @@ export default function App() {
     undo: () => flushSync(undo),
     redo: () => flushSync(redo),
   });
-  const save = useCallback(() => {
-    download(
-      JSON.stringify(projectDocument(rootCurrent.current)),
-      `${safeFilename(rootCurrent.current.name)}.soundforge`,
-      "application/json",
-    );
-    flash("status.saved");
+  const save = useCallback(async () => {
+    try {
+      const snapshot = await prepareProjectSamples(rootCurrent.current);
+      download(
+        JSON.stringify(projectDocument(snapshot)),
+        `${safeFilename(snapshot.name)}.soundforge`,
+        "application/json",
+      );
+      flash("status.saved");
+    } catch (error) { flash(error instanceof Error ? error.message : 'error.project'); }
   }, [flash]);
   useEffect(() => {
     alive.current = true;
@@ -943,22 +947,21 @@ export default function App() {
       `note-${nodeKey(address)}-${note.id}`,
     );
   };
-  const saveCurrentSound = () => {
-    download(
-      JSON.stringify(
-        projectDocument(
-          context.path.length
-            ? isolatedNode(history.project, {
-                path: context.path.slice(0, -1),
-                id: context.path.at(-1)!,
-              })
-            : history.project,
-        ),
-      ),
-      `${safeFilename(current.current.name)}.soundforge`,
-      "application/json",
-    );
-    flash("status.componentSaved");
+  const saveCurrentSound = async () => {
+    try {
+      const snapshot = await prepareProjectSamples(context.path.length
+        ? isolatedNode(history.project, {
+            path: context.path.slice(0, -1),
+            id: context.path.at(-1)!,
+          })
+        : history.project);
+      download(
+        JSON.stringify(projectDocument(snapshot)),
+        `${safeFilename(snapshot.name)}.soundforge`,
+        "application/json",
+      );
+      flash("status.componentSaved");
+    } catch (error) { flash(error instanceof Error ? error.message : 'error.project'); }
   };
   async function openLibrarySound(id: string) {
     const next = await readSavedSound(id);
@@ -1450,7 +1453,7 @@ export default function App() {
         zip.file(`${name}.${exportSettings.format}`, bytes);
         zip.file(
           `${name}.soundforge`,
-          JSON.stringify(projectDocument(v.project)),
+          JSON.stringify(projectDocument(await prepareProjectSamples(v.project))),
         );
         manifest.push({
           file: `${name}.${exportSettings.format}`,

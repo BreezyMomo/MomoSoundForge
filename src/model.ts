@@ -1,4 +1,5 @@
 import { effectTail } from "./nodeEffects";
+import { parseSampleReference, type SampleReference } from './sampleReference';
 import { BASIC_SYNTH, parseSynth, synthValues, type SynthDefinition } from "./synthesizers";
 import { playerDuration } from "./playerPlayback";
 import { validateVideoReference, type VideoReference } from "./videoReference";
@@ -146,6 +147,7 @@ export function withLayerValue(
 export type LayerInit = Partial<Omit<PlayerInput, "player">> &
   Partial<Omit<Player, "duration">> & { player?: Partial<Player> };
 export type SampleAsset = {
+  reference?: SampleReference;
   source?: SampleSource;
   id: string;
   name: string;
@@ -363,7 +365,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
     Array.isArray(r.assets)
   )
     return fail();
-  if (Object.keys(r.assets).length > 64) return fail();
+  if (Object.keys(r.assets).length > 512 || Object.values(r.assets).filter(a => !a.reference).length > 64) return fail();
   const assets: Project["assets"] = Object.create(null);
   for (const [id, a] of Object.entries(r.assets)) {
     if (
@@ -373,10 +375,12 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       !str(a.name) ||
       !num(a.sampleRate, 8000, 192000) ||
       !Array.isArray(a.channels) ||
-      a.channels.length < 1 ||
+      (a.channels.length < 1 && !a.reference) ||
       a.channels.length > 2
     )
       return fail();
+    const reference = a.reference === undefined ? undefined : parseSampleReference(a.reference);
+    if (reference && (a.sampleRate !== 48000 || (a.channels.length !== 0 && a.channels.length !== 2))) return fail();
     const lengths: number[] = [];
     for (const channel of a.channels) {
       if (
@@ -390,7 +394,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       if (!decoded.length || decoded.length > MAX_SAMPLE_FRAMES) return fail();
       lengths.push(decoded.length);
     }
-    if (lengths.some((l) => l !== lengths[0])) return fail();
+    if (lengths.some((l) => l !== lengths[0]) || (reference && lengths[0] > reference.frames)) return fail();
     assets[id] = {
       ...(a.source !== undefined
         ? { source: validateSampleSource(a.source) }
@@ -399,6 +403,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       name: a.name,
       sampleRate: a.sampleRate,
       channels: [...a.channels],
+      ...(reference ? { reference } : {}),
     };
   }
   const ids = new Set<string>();
@@ -659,7 +664,7 @@ export function assertProjectLimits(project: Project) {
     if (depth > MAX_COMPOSITION_DEPTH || stack.has(p) || p.inputs.length > 16)
       throw Error("error.compositionLimit");
     stack.add(p);
-    if (Object.keys(p.assets).length > 64) throw Error("error.budget");
+    if (Object.keys(p.assets).length > 512 || Object.values(p.assets).filter(a => !a.reference).length > 64) throw Error("error.budget");
     for (const asset of Object.values(p.assets))
       for (const channel of asset.channels) {
         bytes += channel.length * 0.75;

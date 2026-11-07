@@ -86,14 +86,12 @@ it("counts release recordings separately and never makes the primary recording p
   expect(release).not.toHaveProperty("releaseAssetId");
 });
 
-it("exposes all six real C3 piano recordings as independent recording resources", () => {
-  const piano = BUILTIN_SOUNDS.find(s => s.id === "tone-upright-piano-single-hit-46-51")!;
-  expect(piano.recordings).toHaveLength(6);
-  expect(new Set(piano.recordings!.map(r => r.id)).size).toBe(6);
-  expect(piano.recordings!.every(r => r.rootMidi === 48)).toBe(true);
-  expect(piano.recordings!.map(r => [r.velocityLow, r.velocityHigh, r.variant])).toEqual([
-    [1, 60, 1], [1, 60, 2], [61, 110, 1], [61, 110, 2], [111, 127, 1], [111, 127, 2],
-  ]);
+it("exposes all attack and release recordings of the complete piano independently", () => {
+  const piano = BUILTIN_SOUNDS.find(s => s.id === "instrument-vcsl-kawai")!;
+  expect(piano.recordings).toHaveLength(222);
+  expect(new Set(piano.recordings!.map(r => r.id)).size).toBe(222);
+  expect(piano.recordings!.filter(r => r.release)).toHaveLength(84);
+  expect(piano.recordings!.filter(r => !r.release)).toHaveLength(138);
   for (const sound of BUILTIN_SOUNDS.filter(s => s.kind === "instrument")) {
     expect(parseRecordingSummaries(sound.recordings)).toHaveLength(new Set(sound.recordingIds).size);
   }

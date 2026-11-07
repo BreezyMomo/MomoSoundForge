@@ -16,7 +16,7 @@ for (const sound of [...catalog.sounds, ...catalog.recordings]) {
     throw Error(`Missing or corrupt deployed sound: ${sound.id}`);
   }
 }
-for (const file of ["vsco-cc0.txt", "kenney-cc0.txt", "sources.json"]) {
+for (const file of ["vcsl-cc0.md", "vsco-cc0.txt", "kenney-cc0.txt", "sources.json"]) {
   await stat(path.join(root, "sound-library/licenses", file));
 }
 const assets = await readdir(path.join(root, "assets"));
