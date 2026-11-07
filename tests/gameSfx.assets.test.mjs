@@ -1,3 +1,4 @@
+import { projectFromGraph, prepareTestProject } from './helpers/resourceGraph';
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
@@ -13,16 +14,16 @@ const manifest = JSON.parse(readFileSync(`${root}/manifest.json`, 'utf8'));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const recordings = BUILTIN_SOUNDS.filter(s => s.recordingGroup?.startsWith('game-'));
 const scenes = BUILTIN_SOUNDS.filter(s => s.id.startsWith('example-game-'));
-const read = sound => {
+const read = async sound => {
   const bytes = readFileSync(`public/sound-library/${sound.file}`);
   expect(hash(bytes), sound.id).toBe(sound.sha256);
-  return parseProject(JSON.parse(gunzipSync(bytes)));
+  return prepareTestProject(await projectFromGraph(JSON.parse(gunzipSync(bytes))));
 };
 
 
-it('renders short, audible, peak-safe defaults with exactly matching card waveforms', () => {
+it('renders short, audible, peak-safe defaults with exactly matching card waveforms', async () => {
   for (const sound of [...recordings, ...scenes]) {
-    const project = read(sound), audio = renderProject(project);
+    const project = await read(sound), audio = renderProject(project);
     const measured = levels([audio.left, audio.right], audio.sampleRate);
     expect(measured.status, sound.id).toBe('ok');
     expect(audio.sourcePeak, sound.id).toBeLessThanOrEqual(.502);
@@ -41,13 +42,13 @@ it('renders short, audible, peak-safe defaults with exactly matching card wavefo
 }, 30000);
 
 
-it('opens portable editable combinations with audible controls and reproducible output', () => {
+it('opens portable editable combinations with audible controls and reproducible output', async () => {
   expect(scenes.map(s => s.id)).toEqual(expect.arrayContaining([
     'example-game-wood-impact', 'example-game-metal-impact', 'example-game-body-impact',
     'example-game-wooden-landing', 'example-game-solid-punch',
   ]));
   for (const sound of scenes) {
-    const project = read(sound);
+    const project = await read(sound);
     expect(project.recipe).toBeUndefined();
     expect(project.inputs.length).toBeGreaterThan(1);
     const saved = parseProject(JSON.parse(JSON.stringify(projectForSave(project))));

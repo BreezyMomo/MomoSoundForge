@@ -47,3 +47,11 @@ it.each(['oversized', 'corrupt'])('still rejects %s asset bodies under HTTP cont
   }), '/');
   await expect(loader.load(file.id)).rejects.toThrow('library.builtinLoadError');
 });
+
+it('accepts decoded cross-origin bytes when CORS hides Content-Encoding but exposes wire length', async () => {
+  const { original, packed, file } = fixture();
+  const loader = createBuiltinFileLoader([file], async () => new Response(packed, {
+    headers: { 'Content-Length': String(packed.length + 30) },
+  }), '/', 'https://audio.example/v1/');
+  expect(await loader.load(file.id)).toEqual(original);
+});

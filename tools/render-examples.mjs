@@ -10,13 +10,14 @@ try {
     await server.ssrLoadModule("/src/engine.ts");
   const { makeLayer, encodeSamples, projectDocument } =
     await server.ssrLoadModule("/src/model.ts");
+  const {packProject}=await server.ssrLoadModule("/src/resourcePackage.ts");
   await mkdir("test-results/audio", { recursive: true });
   for (const id of ["ice", "confirm", "laser", "explosion"]) {
     const p = fromPreset(id, id, (key) => key);
     const r = renderProject(p);
     await writeFile(`test-results/audio/${id}.wav`, Buffer.from(encodeWav(r)));
     if (id === "ice")
-      await writeFile("test-results/audio/ice.soundforge", JSON.stringify(projectDocument(p)));
+      await writeFile("test-results/audio/ice.soundforge", await packProject(p));
   }
   const child = fromPreset("confirm", "QA Sample Child", (key) => key);
   const samples = Float32Array.from(
@@ -45,7 +46,7 @@ try {
   );
   await writeFile(
     "test-results/audio/sample-content.soundforge",
-    JSON.stringify(projectDocument(child)),
+    await packProject(child),
   );
   console.log("Examples rendered to test-results/audio/");
 } finally {

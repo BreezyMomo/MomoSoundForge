@@ -1,5 +1,9 @@
+import { openResourceGraph } from '../src/resourceGraph';
 import { createSamplePreparer } from '../src/prepareSamples';
-import { portableResource } from '../src/portableResource';
+import { createPublishedLibraryFetcher } from '../src/builtinDistribution.mjs';
+import { packProject, unpackProject, packResource, unpackResource } from '../src/resourcePackage';
+import { createAudioReader } from '../src/sharedAudio';
+import { PACKAGE_BYTES } from '../src/resourceGraph';
 import { projectDocument } from '../src/model';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
@@ -23,7 +27,7 @@ for (let i = 0; i < args.length; i += 2) {
 }
 const need = (key: string) => { if (!options[key]) throw Error(`Missing ${key}`); return options[key]; };
 const json = async (path: string) => { const bytes = await readFile(path); if (bytes.length > 36 * 1024 * 1024) throw Error('Input exceeds budget'); return JSON.parse(bytes.toString('utf8')); };
-const input = async () => parseProject(await json(need('--input')));
+const input = async () => unpackProject(new Uint8Array(await readFile(need('--input'))));
 const write = async (path: string, value: string | Uint8Array) => { await mkdir(dirname(resolve(path)), { recursive: true }); await writeFile(path, value, { flag: 'wx' }); };
 const sampleBase = () => {
   if (!options['--site']) return '/';
@@ -31,11 +35,14 @@ const sampleBase = () => {
   if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
   site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = ''; return site.href;
 };
+const download = options['--site'] ? createPublishedLibraryFetcher(sampleBase(), url =>
+  fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' })) : undefined;
 const prepare = createSamplePreparer(url => {
   if (!options['--site']) throw Error('Required recording is not embedded; pass --site EDITOR_URL to load it.');
-  return fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' });
+  return download!(url);
 }, sampleBase());
-const save = async (p: Project) => write(need('--out'), JSON.stringify(projectDocument(await prepare(parseProject(projectForSave(p)))), null, 2));
+const audioReader = createAudioReader(url => { if (!download) throw Error('Pass --site to collect built-in audio dependencies.'); return download(url); }, sampleBase());
+const save = async (p: Project) => write(need('--out'), await packProject(parseProject(projectForSave(p)),audioReader));
 
 export function decodePCM(bytes: Buffer, name: string, id: string) {
   if (bytes.length > 24 * 1024 * 1024 || bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WAVE') throw Error('Use a PCM WAV file <=24 MiB');
@@ -64,10 +71,10 @@ async function run() {
   if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; fetch-recording --id ID --site URL --out RESOURCE; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
   if (command === 'schema') return console.log(JSON.stringify(AUTHORING_SCHEMA, null, 2));
   if (['resource-validate','resource-pack','resource-project','resource-render'].includes(command)) {
-    const bytes=await readFile(need('--input'));if(bytes.length>RESOURCE_BYTES)throw Error('Resource exceeds budget');
-    const r=importResource(JSON.parse(bytes.toString('utf8')));
+    const bytes=await readFile(need('--input'));if(bytes.length>PACKAGE_BYTES)throw Error('Resource exceeds budget');
+    const r=bytes[0]===123 ? importResource(JSON.parse(bytes.toString('utf8'))) : await unpackResource(new Uint8Array(bytes));
     if(command==='resource-validate')return console.log(JSON.stringify({valid:true,id:r.id,name:r.name,kind:r.kind,version:r.version}));
-    if(command==='resource-pack')return write(need('--out'),JSON.stringify(await portableResource(r,prepare),null,2));
+    if(command==='resource-pack')return write(need('--out'),await packResource(r,audioReader));
     const p=resourceProject(r,command==='resource-render');
     if(command==='resource-project')return save(p);
     const audio=renderProject(await prepare(p));await write(need('--out'),new Uint8Array(encodeWav(audio)));
@@ -92,9 +99,9 @@ async function run() {
     const site = new URL(need('--site'));
     if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
     site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = '';
-    const loader = createBuiltinRecordingLoader(undefined, url => fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' }), site.href);
+    const loader = createBuiltinRecordingLoader(undefined, download!, site.href);
     const resource = await loader(need('--id').replace(/^recording:/, ''));
-    await write(need('--out'), JSON.stringify(resource, null, 2) + '\n');
+    await write(need('--out'), await packResource(resource,audioReader));
     return console.log(JSON.stringify({ id: resource.id, version: resource.version, kind: resource.kind, listeningVerified: false }));
   }
   if (command === 'fetch-sound') {
@@ -102,13 +109,13 @@ async function run() {
     const site = new URL(need('--site')); if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
     site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = '';
     const url = new URL(`sound-library/${entry.file}`, site);
-    const response = await fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' });
+    const response = await download!(url.href);
     if (!response.ok || !response.body) throw Error(`Sound download failed: ${response.status}`);
     const reader = response.body.getReader(), chunks: Uint8Array[] = []; let size = 0;
     try { for (;;) { const item = await reader.read(); if (item.done) break; size += item.value.length; if (size > entry.compressedBytes) throw Error('Sound exceeds catalog budget'); chunks.push(item.value); } } finally { await reader.cancel(); }
     const bytes = Buffer.concat(chunks);
     if (bytes.length !== entry.compressedBytes || createHash('sha256').update(bytes).digest('hex') !== entry.sha256) throw Error('Catalog version or checksum mismatch; update the skill');
-    return save(parseProject(JSON.parse(gunzipSync(bytes, { maxOutputLength: entry.projectBytes }).toString('utf8'))));
+    return save(resourceProject((await openResourceGraph(JSON.parse(gunzipSync(bytes, { maxOutputLength: entry.projectBytes }).toString('utf8')))).resource));
   }
   if (command === 'import-wav') {
     const meta = await json(need('--metadata'));

@@ -374,13 +374,15 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       a.id !== id ||
       !str(a.name) ||
       !num(a.sampleRate, 8000, 192000) ||
+      !Number.isInteger(a.sampleRate) ||
       !Array.isArray(a.channels) ||
       (a.channels.length < 1 && !a.reference) ||
       a.channels.length > 2
     )
       return fail();
     const reference = a.reference === undefined ? undefined : parseSampleReference(a.reference);
-    if (reference && (a.sampleRate !== 48000 || (a.channels.length !== 0 && a.channels.length !== 2))) return fail();
+    if (reference && (a.sampleRate !== (reference.schema === 'momo.audio-reference/v1' ? reference.sampleRate : 48000)
+      || (a.channels.length !== 0 && a.channels.length !== (reference.schema === 'momo.audio-reference/v1' ? reference.channelCount : 2)))) return fail();
     const lengths: number[] = [];
     for (const channel of a.channels) {
       if (
@@ -394,7 +396,7 @@ function readProject(raw: unknown, budget: ReadBudget, depth: number): Project {
       if (!decoded.length || decoded.length > MAX_SAMPLE_FRAMES) return fail();
       lengths.push(decoded.length);
     }
-    if (lengths.some((l) => l !== lengths[0]) || (reference && lengths[0] > reference.frames)) return fail();
+    if (lengths.some((l) => l !== lengths[0]) || (reference && lengths[0] > (reference.frameLimit ?? reference.frames))) return fail();
     assets[id] = {
       ...(a.source !== undefined
         ? { source: validateSampleSource(a.source) }

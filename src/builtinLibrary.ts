@@ -4,6 +4,8 @@ import { parseProject, type Project } from "./model";
 import type { SoundCategory } from "./libraryPreferences";
 import { t } from "./i18n";
 import type { RecordingSummary } from "./recordingSources";
+import { openResourceGraph } from './resourceGraph';
+import { resourceProject } from './soundResources';
 
 export type BuiltinSound = {
   id: string;
@@ -155,9 +157,7 @@ export function createBuiltinLoader(
     if (!sound) throw failed();
     try {
       const json = await files.load(id);
-      const project = parseProject(
-        JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(json)),
-      );
+      const project = resourceProject((await openResourceGraph(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(json)))).resource);
       if (name) {
         project.name = name.slice(0, 120);
         for (const layer of project.inputs)

@@ -1,3 +1,4 @@
+import { unpackProject } from '../src/resourcePackage';
 import { beforeAll, afterAll, it, expect, vi } from 'vitest';
 import { build } from 'esbuild';
 import { mkdtemp, mkdir, copyFile, readFile, writeFile, rm } from 'node:fs/promises';
@@ -35,8 +36,8 @@ it('imports PCM with provenance and diagnoses uncovered instrument notes', async
   const source = { provider: 'Test', url: 'https://example.org/sample', author: 'Tester', license: 'CC0', licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/', quality: 'original', retrievedAt: '2026-11-05T00:00:00Z' };
   await writeFile(join(root, 'metadata.json'), JSON.stringify({ name: 'Fixture', source }));
   await run('import-wav', '--audio', 'source.wav', '--metadata', 'metadata.json', '--out', 'sample.soundforge');
-  const sample = JSON.parse(await readFile(join(root, 'sample.soundforge'), 'utf8'));
-  expect(Object.values(sample.root.mix.assets)[0].source).toEqual(source);
+  const sample = await unpackProject(await readFile(join(root, 'sample.soundforge')));
+  expect(Object.values(sample.assets)[0].source).toEqual(source);
   await writeFile(join(root, 'instrument.json'), JSON.stringify({ schema: 'momo.soundforge.instrument-input/v1', name: 'Test instrument', instrumentId: 'test', duration: 2, bpm: 120,
     regions: [{ file: 'source.wav', rootMidi: 60, keyLow: 60, keyHigh: 60, articulation: 'sustain', source }],
     notes: [{ id: 'n1', instrumentId: 'test', midi: 61, start: 0, duration: 1, velocity: 80, articulation: 'sustain' }] }));
@@ -49,8 +50,8 @@ it('builds every included original lesson recipe as a valid native project', asy
   const bank = JSON.parse(await readFile(join(root, 'assets/lesson-recipes.json'), 'utf8'));
   for (const recipe of bank.recipes) {
     await run('lesson', '--id', recipe.id, '--out', `${recipe.id}.soundforge`);
-    const p = JSON.parse(await readFile(join(root, `${recipe.id}.soundforge`), 'utf8'));
-    expect(p.root.mix.inputs.length).toBe(recipe.notes.length);
+    const p = await unpackProject(await readFile(join(root, `${recipe.id}.soundforge`)));
+    expect(p.inputs.length).toBe(recipe.notes.length);
   }
 }, 30000);
 
@@ -63,8 +64,8 @@ it('packages an AI-authored algorithm outside the repository and preserves it th
   await run('resource-project','--input','custom.sfresource','--out','custom.soundforge');
   await run('render','--input','custom.soundforge','--out','custom-native.wav');
   expect(await readFile(join(root,'custom-preview.wav'))).toEqual(await readFile(join(root,'custom-native.wav')));
-  const project=JSON.parse(await readFile(join(root,'custom.soundforge'),'utf8'));
-  expect(project.root.mix.inputs[0].player.synth.program.expression).toBe(synth.program.expression);
+  const project=await unpackProject(await readFile(join(root,'custom.soundforge')));
+  expect(project.inputs[0].player.synth.program.expression).toBe(synth.program.expression);
   await expect(run('resource-pack','--input','custom.sfsynth','--out','custom.sfresource')).rejects.toThrow();
   synth.program.expression='globalThis.process.exit(0)';await writeFile(join(root,'invalid.sfsynth'),JSON.stringify(synth));
   await expect(run('resource-validate','--input','invalid.sfsynth')).rejects.toThrow();

@@ -1,4 +1,4 @@
-import { portableResource } from './portableResource';
+import { packResource, readResourceFile } from './resourcePackage';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, Dialog, DialogContent, DialogTitle } from '@momo/workbench/react';
@@ -12,7 +12,6 @@ import { BUILTIN_SOUNDS, builtinSoundName, builtinSoundDescription, builtinToneK
 import { PRESETS, fromPreset } from './presets';
 import { makeProject, uid, encodeSamples, type Project, type RenderResult, type SampleAsset } from './model';
 import { parseDefinition, type SoundDefinition, type InstrumentDefinition } from './soundDefinitions';
-import { legacyResourceCount, migrateBrowserLibrary } from './libraryMigration';
 import { download, safeFilename } from './storage';
 import { Waveform } from './Waveform';
 import { SOUND_CATEGORIES, rememberSound } from './libraryPreferences';
@@ -63,7 +62,7 @@ export function ResourceManager({onClose,...props}:Props&{onClose:()=>void}) {
 function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const {project,ready,playback,onInsert,onOpen,onPreview,onStop,onImportAudio,onRender,bindingType,onBind,stale,sourceSelection}=props;
   const [entries,setEntries]=useState<ResourceEntry[]>([]),[query,setQuery]=useState(''),[kind,setKind]=useState<LibraryKind|''>(bindingType??'source'),[source,setSource]=useState('');
-  const [error,setError]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false),[legacy,setLegacy]=useState(0);
+  const [error,setError]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
   const [editor,setEditor]=useState<{resource:SoundResource;owned:boolean;base:Project;current?:boolean}|null>(null),[deleting,setDeleting]=useState<(ResourceEntry&{destination:number})|null>(null);
   const [noteSource,setNoteSource]=useState<{midi:number;label?:string;onSelect:(r:SoundResource)=>Promise<void>}|null>(null);
   const [preferences,setPreferences]=useResourcePreferences();
@@ -71,7 +70,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const audioMode=useRef<'recording'|'sound'>('recording');
   const file=useRef<HTMLInputElement>(null),audio=useRef<HTMLInputElement>(null),latest=useRef(project),alive=useRef(true);
   latest.current=project;
-  const refresh=async()=>{try{await libraryReady;const list=await folderLibrary.list(),count=await legacyResourceCount(list.map(e=>e.id));if(alive.current){setEntries(list);setLegacy(count);setError('');}}catch(e){if(alive.current)setError(resourceError(e));}};
+  const refresh=async()=>{try{await libraryReady;const list=await folderLibrary.list();if(alive.current){setEntries(list);setError('');}}catch(e){if(alive.current)setError(resourceError(e));}};
   useEffect(()=>{alive.current=true;void refresh();
     const off=onLibraryChange(()=>void refresh());return()=>{alive.current=false;off();};},[]);
   const run=async(fn:()=>Promise<void>|void)=>{if(busy)return;setBusy(true);setError('');setStatus('');try{await fn();}catch(e){if((e as DOMException).name!=='AbortError'&&alive.current)setError(resourceError(e));}finally{if(alive.current)setBusy(false);}};
@@ -107,7 +106,6 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     }
   }
   const locals=entries.map<Card>(entry=>({key:'local-'+entry.id,name:entry.name,kind:entry.kind,source:'local',category:entry.category,description:entry.description,preview:entry.preview,entry,load:()=>folderLibrary.load(entry.id)}));
-  const unindexed=entries.filter(e=>e.kind==='instrument'&&e.sourceResourceIds===undefined);
   const cards=[...builtins,...locals];
   const [category,setCategory]=useState('');
   useEffect(()=>setDisplayLimit(48),[query,kind,source,category,preferences.filter]);
@@ -117,7 +115,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const matchingInstruments=!sourceSelection&&!bindingType&&query.trim()&&kind!==''&&kind!=='instrument'?cards.filter(c=>c.kind==='instrument'&&matches(c)).length:0;
   const visible=cards.filter(c=>matches(c)&&(!kind||c.kind===kind||kind==='source'&&(c.kind==='recording'||c.kind==='synth')))
     .sort((a,b)=>preferences.filter==='recent'?Math.min(...filterKeys(a).map(k=>preferences.recent.indexOf(k)).filter(i=>i>=0))-Math.min(...filterKeys(b).map(k=>preferences.recent.indexOf(k)).filter(i=>i>=0)):0);
-  const fileImport=async(f:File)=>{if(f.size>RESOURCE_BYTES)throw Error('resources.budget');const r=importResource(JSON.parse(await f.text()));if(sourceSelection&&r.kind!=='recording'&&r.kind!=='synth')throw Error('instrument.invalidSource');openEditor(r);};
+  const fileImport=async(f:File)=>{const r=await readResourceFile(f);if(sourceSelection&&r.kind!=='recording'&&r.kind!=='synth')throw Error('instrument.invalidSource');openEditor(r);};
   const current=()=>void run(async()=>{const snapshot=latest.current,audio=await onRender(snapshot);const preview=Array.from({length:160},(_,i)=>{let peak=0;for(let n=Math.floor(i*audio.left.length/160);n<Math.floor((i+1)*audio.left.length/160);n++)if(Math.abs(audio.left[n])>Math.abs(peak))peak=audio.left[n];return Math.max(-1,Math.min(1,peak));});const origin=props.origin?.destination===folderLibrary.destination&&folderLibrary.connected?props.origin:undefined;const resource=resourceFromProject(snapshot,preview);openEditor(origin?{...resource,id:origin.id,version:origin.version,category:origin.category,description:origin.description}:resource,!!origin,snapshot,true);});
   return <div className={'resource-browser '+(props.expanded?'resource-browser-expanded':'')}>
     {props.saveHost&&createPortal(<Button variant="outline" disabled={!ready||busy} onClick={current}>{t('resources.current')}</Button>,props.saveHost)}
@@ -141,13 +139,11 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
       <p className="field-help">{folderLibrary.connected?t('resources.folder')+' · '+folderLibrary.name:t('resources.noFolder')}</p>
       <div className="button-group"><Button variant="outline" disabled={busy} onClick={()=>void run(()=>folderLibrary.choose())}>{t(folderLibrary.connected?'resources.switch':'resources.choose')}</Button>
         {folderLibrary.connected&&<><Button variant="outline" disabled={busy} onClick={()=>void run(()=>folderLibrary.authorize())}>{t('resources.authorize')}</Button><Button variant="outline" disabled={busy} onClick={()=>void run(()=>folderLibrary.disconnect())}>{t('resources.disconnect')}</Button></>}</div>
-      {unindexed.length>0&&<><p className="field-help">{t('resources.indexSourcesHint',unindexed.length)}</p><Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const destination=folderLibrary.destination;for(const entry of unindexed)await folderLibrary.indexInstrumentSources(entry.id,entry.version,destination);})}>{t('resources.indexSources')}</Button></>}
       <h3>{t('resources.create')}</h3><div className="button-group">
         {(['synth','instrument']as const).filter(k=>(!bindingType||k===bindingType)&&(!sourceSelection||k!=='instrument')).map(k=><Button variant="outline" key={k} disabled={busy} onClick={()=>openEditor(fresh(k))}>{t('definition.'+(k==='synth'?'newSynth':'newInstrument'))}</Button>)}
         {!bindingType&&<><Button variant="outline" disabled={busy||!ready} onClick={()=>{audioMode.current='recording';audio.current?.click();}}>{t('resources.addRecording')}</Button>{!sourceSelection&&<Button variant="outline" disabled={busy||!ready} onClick={()=>onOpen(makeProject(t('resources.sound')))}>{t('resources.newMusic')}</Button>}{!sourceSelection&&<Button variant="outline" disabled={busy||!ready} onClick={()=>{audioMode.current='sound';audio.current?.click();}}>{t('resources.importAudio')}</Button>}{!sourceSelection&&<Button variant="outline" disabled={busy||!ready} onClick={current}>{t('resources.current')}</Button>}</>}
         <Button variant="outline" disabled={busy} onClick={()=>file.current?.click()}>{t('resources.import')}</Button>
       </div><p className="field-help">{t('resources.importHint')}</p>
-      {legacy>0&&<><p className="field-help">{t('resources.migrationHint',legacy)}</p><Button variant="outline" disabled={busy||!folderLibrary.connected} onClick={()=>void run(async()=>{await migrateBrowserLibrary();setStatus(t('resources.migrated'));})}>{t('resources.migrate')}</Button></>}
     </details>}
     {(error||status||busy)&&<p role={error?'alert':'status'} className="resource-status">{error||(busy?t('resources.working'):status)}</p>}
     <div className={'resource-cards resource-view-'+preferences.view}>{visible.slice(0,displayLimit).map(c=><article key={c.key} className="resource-card" aria-label={c.name} data-recording-id={c.recording?.id??(c.kind==='recording'?c.key:undefined)}>
@@ -160,7 +156,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
       </div>{!sourceSelection&&<details><summary>{t('resources.actions')}</summary><div className="button-group">
         <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const destination=folderLibrary.destination,r=await c.load();if(c.entry&&destination!==folderLibrary.destination)throw Error('resources.conflict');openEditor(r,!!c.entry);})}>{t('resources.edit')}</Button>
         {c.kind==='sound'&&!bindingType&&<Button variant="outline" disabled={busy||!ready} onClick={()=>void run(async()=>{const base=latest.current,destination=folderLibrary.destination,r=await c.load();if(base!==latest.current||destination!==folderLibrary.destination)throw Error('error.scopeChanged');onOpen(resourceProject(r),c.entry?resourceOrigin(r,destination):undefined);})}>{t('resources.open')}</Button>}
-        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const r=await c.load();download(JSON.stringify(await portableResource(r),null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
+        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const r=await c.load();download(new Uint8Array(await packResource(r)).buffer,safeFilename(r.name)+'.sfresource','application/zip');})}>{t('resources.export')}</Button>
         {c.entry&&<Button variant="outline" disabled={busy} onClick={()=>setDeleting({...c.entry!,destination:folderLibrary.destination})}>{t('resources.delete')}</Button>}
       </div></details>}
     </article>)}</div>
@@ -175,7 +171,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     {noteSource&&<ResourceManager {...props} bindingType={undefined} onBind={undefined} initialDefinition={undefined} saveHost={null}
       sourceSelection={{note:noteSource.label??pitchName(noteSource.midi),onSelect:noteSource.onSelect}} onClose={()=>{onStop();setNoteSource(null);}}/>}
     {deleting&&<Dialog open onOpenChange={v=>{if(!v)setDeleting(null);}}><DialogContent><DialogTitle>{t('resources.delete')}</DialogTitle><p>{t('resources.deleteConfirm',deleting.name)}</p><div className="button-group"><Button variant="outline" disabled={busy} onClick={()=>setDeleting(null)}>{t('resources.cancel')}</Button><Button disabled={busy} onClick={()=>void run(async()=>{await folderLibrary.remove(deleting.id,deleting.version,deleting.destination);setDeleting(null);})}>{t('resources.delete')}</Button></div></DialogContent></Dialog>}
-    <input hidden ref={file} type="file" accept=".sfresource,.sfsynth,.sfinstrument,.soundforge,.json" onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void run(()=>fileImport(f));}}/>
+    <input hidden ref={file} type="file" accept=".sfresource,.soundforge" onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void run(()=>fileImport(f));}}/>
     <input hidden ref={audio} type="file" accept="audio/*,.wav,.mp3,.ogg,.flac" onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void run(async()=>{const p=await onImportAudio(f);openEditor(audioMode.current==='recording'?resourceFromRecording(Object.values(p.assets)[0]):resourceFromProject(p));});}}/>
   </div>;
 }

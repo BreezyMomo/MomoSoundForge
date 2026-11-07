@@ -16,7 +16,7 @@ export const RESOURCE_MESSAGES: Record<string,[string,string]> = {
  'resources.soundSources':['音源（录音与合成器）','Sound sources (recordings and synthesizers)'],
  'resources.instrumentDetail':['乐器定义 · 引用 {0} 份录音','Instrument definition · Uses {0} recordings'],
  'resources.completeInstrument':['完整钢琴 · 88 键 · 按使用的音符加载录音','Complete piano · 88 keys · Recordings load as notes need them'],
- 'resources.referencedInstrument':['此乐器按需加载内置录音。保存乐器会保留绑定关系；保存作品会携带当前音符需要的声音，可离线重放。添加未用过的音符或延长音符可能需要联网。','This instrument loads built-in recordings as needed. Saving the instrument keeps its mappings; saving a project embeds the audio needed by its current notes for offline playback. New or longer notes may need a connection.'],
+ 'resources.referencedInstrument':['试听按需加载录音。保存或分享时会收齐此乐器的全部录音，之后可离线添加其他音符；首次保存可能需要一些时间。','Preview loads recordings as needed. Saving or sharing collects every recording in this instrument so you can add other notes offline. The first save may take a while.'],
  'builtin.instrument.vcsl-kawai':['钢琴 · Kawai 三角钢琴','Piano · Kawai grand'],
  'resources.completeRecording':['完整录音 · {0} 秒','Complete recording · {0} s'],
  'resources.performanceExcerpt':['演奏片段最长 {0} 秒；完整录音可在音源中使用','Performance clips up to {0} s; full recordings are available under Sources'],

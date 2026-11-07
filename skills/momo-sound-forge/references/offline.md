@@ -23,7 +23,7 @@ node scripts/cli.mjs fetch-recording --id <catalog.recordings中的ID> --site <�
 
 `fetch-recording` 获取独立完整录音资源，保留原始音高、调音与增益，可继续使用 `resource-project` / `resource-render`。`fetch-sound` 中的部分乐器只内嵌最长 4 秒的演奏片段；不要从这些片段提取音频并称为完整录音。两条路径都按需下载并校验大小与哈希。
 
-完整钢琴 `instrument-vcsl-kawai` 已改为按需加载：定义覆盖 A0–C8，演奏时只加载实际音符、力度与松键声需要的录音。`fetch-sound`、保存和导出作品会携带当前演奏所需 PCM，原曲可离线重放；未使用琴键仍保留内置内容引用。新增琴键、换力度或延长音符可能需要补充录音，此时给 `edit`、`render`、`resource-project`、`resource-render` 或 `resource-pack` 增加 `--site <编辑器URL>`。不要把仅含映射的乐器定义称为全琴键离线包。单工程 24 MiB PCM 预算仍生效，超限会明确报错，不会自动截短尾音。
+完整钢琴 `instrument-vcsl-kawai` 定义覆盖 A0–C8。试听按需解码，正式 `fetch-sound`、保存和分享则收集完整乐器（包括未演奏过的音符、力度和松键声）的依赖。`.soundforge` / `.sfresource` 为 ZIP 格式，不能直接 JSON.parse；通过 CLI 打开和修改。初次收集内置素材需要 `--site <编辑器URL>`，完成后新增琴键或改变力度可以离线工作。单次渲染 24 MiB PCM 预算保持不变，分享包完整依赖与实时解码是不同预算。用户创作的定义 JSON 可交给 `resource-pack` 封存，不能把它直接当分享包。
 
 目录版本不匹配时更新 Skill。离线没有网络时使用用户提供的带采样工程。生成音符后修改原有乐器声部的 player.score，保留实际映射；不要伪造乐器覆盖。
 
@@ -53,7 +53,7 @@ node scripts/cli.mjs import-wav --audio original.wav --metadata source.json --ou
  "notes":[{"id":"n1","instrumentId":"piano","midi":60,"start":0,"duration":1,"velocity":80,"articulation":"sustain"}]}
 ```
 
-路径相对 manifest 文件解析；输出工程内嵌 PCM，不依赖原路径。映射必须来自真实录音清单，示例默认只覆盖根音，不虚构音域。工具验证原生资源预算和映射格式，validate 再检查每个音符的覆盖/尾音问题。不要逐录音独立归一化以破坏力度层动态。
+路径相对 manifest 文件解析；输出工程包含按内容 ID 去重的完整音频依赖，不依赖原路径。映射必须来自真实录音清单，示例默认只覆盖根音，不虚构音域。工具验证原生资源预算和映射格式，validate 再检查每个音符的覆盖/尾音问题。不要逐录音独立归一化以破坏力度层动态。
 
 ## 原创旋律练习
 

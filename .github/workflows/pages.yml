@@ -43,9 +43,13 @@ jobs:
       - name: Test complete built-in library
         run: npm run test:assets
       - name: Build app and sound library
+        env:
+          VITE_SOUND_LIBRARY_URL: ${{ vars.SOUND_LIBRARY_URL }}
         run: npm run build
       - name: Check deployment files
-        run: node tools/check-static-site.mjs
+        env:
+          SOUND_LIBRARY_ORIGIN: ${{ vars.SOUND_LIBRARY_ORIGIN || format('https://{0}.github.io', github.repository_owner) }}
+        run: node tools/check-static-site.mjs --origin "$SOUND_LIBRARY_ORIGIN"
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload website

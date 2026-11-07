@@ -51,6 +51,8 @@ try {
   const { parseProject, projectDocument, makeLayer, decodeSamples } = await server.ssrLoadModule('/src/model.ts');
   const { renderProject, encodeWav } = await server.ssrLoadModule('/src/engine.ts');
   const { createSamplePreparer } = await server.ssrLoadModule('/src/prepareSamples.ts');
+    const {openResourceGraph}=await server.ssrLoadModule('/src/resourceGraph.ts');
+    const {resourceProject}=await server.ssrLoadModule('/src/soundResources.ts');
   const prepare = createSamplePreparer(async url => new Response(await readFile(`public/sound-library/${path.basename(url)}`)), '/');
   const { sampleFrames } = await server.ssrLoadModule('/src/sampleReference.ts');
   const { selectRegion, renderScore, scoreIssues, noteEndSeconds } = await server.ssrLoadModule('/src/instruments.ts');
@@ -112,7 +114,7 @@ try {
     try {
       const bytes = await readFile(`public/sound-library/${sound.file}`);
       if (sha256(bytes) !== sound.sha256) throw Error('Generated package hash mismatch');
-      const project = await prepare(parseProject(JSON.parse(gunzipSync(bytes))));
+      const project = await prepare(resourceProject((await openResourceGraph(JSON.parse(gunzipSync(bytes)))).resource));
       const rendered = renderProject(project);
       const entry = { id: sound.id, kind: sound.kind, packageSha256: sound.sha256, projectSha256: sha256(JSON.stringify(projectDocument(project))),
         render: summarizeRender(rendered), instruments: [], subjectiveAudition: 'pending' };

@@ -1,3 +1,6 @@
+import { sealResource } from '../src/resourceGraph';
+import { resourceFromProject } from '../src/soundResources';
+import { cacheAudio } from '../src/sharedAudio';
 import { createSamplePreparer } from '../src/prepareSamples';
 import { createHash } from "node:crypto";
 import { gzipSync, gunzipSync } from "node:zlib";
@@ -58,7 +61,8 @@ const fixture = (): Project => ({
     },
   },
 });
-function resource(raw: unknown = fixture()) {
+async function resource(raw: unknown = fixture()) {
+  if ((raw as Project).schema === "momo.soundforge/v4") raw=await sealResource(resourceFromProject(raw as Project),async(ref,bytes)=>cacheAudio(ref.audioId,bytes));
   const json = Buffer.from(JSON.stringify(raw)),
     bytes = gzipSync(json);
   const sha256 = createHash("sha256").update(bytes).digest("hex");
@@ -170,7 +174,7 @@ it("organizes old and new effects by action while retaining every selectable rec
 });
 
 it("uses translated built-in labels while names of opened independent projects remain document data", async () => {
-  const { sound, response } = resource();
+  const { sound, response } = await resource();
   const fetcher = vi.fn(async () => response());
   const load = createBuiltinLoader([sound], fetcher, "/nested/");
   expect(fetcher).not.toHaveBeenCalled();
@@ -183,7 +187,7 @@ it("uses translated built-in labels while names of opened independent projects r
   expect(pristine.name).toBe("Factory piano");
   expect(pristine.assets.sample.name).toBe("piano.wav");
   expect(pristine.inputs[0].gain).not.toBe(0);
-  expect(renderProject(pristine).left).toEqual(renderProject(fixture()).left);
+  expect(renderProject(await createSamplePreparer()(pristine)).left).toEqual(renderProject(fixture()).left);
   expect(opened.name).toBe("我的钢琴");
   const instrument = BUILTIN_SOUNDS.find((x) => x.kind === "instrument")!;
   const translate = (key: string, ...args: unknown[]) =>
@@ -197,7 +201,7 @@ it("uses translated built-in labels while names of opened independent projects r
 });
 
 it("rejects unknown identities and paths before making a request", async () => {
-  const { sound, response } = resource();
+  const { sound, response } = await resource();
   const fetcher = vi.fn(async () => response());
   await expect(
     createBuiltinLoader([sound], fetcher)("missing"),
@@ -212,7 +216,7 @@ it("rejects unknown identities and paths before making a request", async () => {
 });
 
 it("does not cache failures and supports retry after a missing deployment resource", async () => {
-  const { sound, response } = resource();
+  const { sound, response } = await resource();
   const fetcher = vi
     .fn()
     .mockResolvedValueOnce(new Response("missing", { status: 404 }))
@@ -224,7 +228,7 @@ it("does not cache failures and supports retry after a missing deployment resour
 });
 
 it("bounds compressed and expanded data and validates the decoded project schema", async () => {
-  const { sound, response } = resource();
+  const { sound, response } = await resource();
   await expect(
     createBuiltinLoader(
       [{ ...sound, compressedBytes: sound.compressedBytes - 1 }],
@@ -236,7 +240,7 @@ it("bounds compressed and expanded data and validates the decoded project schema
       response(),
     )(sound.id),
   ).rejects.toThrow("library.builtinLoadError");
-  const invalid = resource({ ...fixture(), schema: "future-version" });
+  const invalid = await resource({ ...fixture(), schema: "future-version" });
   await expect(
     createBuiltinLoader([invalid.sound], async () => invalid.response())(
       invalid.sound.id,
@@ -245,7 +249,7 @@ it("bounds compressed and expanded data and validates the decoded project schema
 });
 
 it("deduplicates concurrent downloads without sharing mutable project state", async () => {
-  const { sound, response } = resource();
+  const { sound, response } = await resource();
   const fetcher = vi.fn(async () => response());
   const load = createBuiltinLoader([sound], fetcher);
   const [a, b] = await Promise.all([load(sound.id), load(sound.id)]);

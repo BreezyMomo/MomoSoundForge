@@ -4,7 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { createSamplePreparer } from '../src/prepareSamples';
 import { makeProject, makeLayer, encodeSamples, parseProject, projectDocument, type SampleAsset } from '../src/model';
 import { renderProject } from '../src/engine';
-import { embeddedFrames } from '../src/sampleReference';
+import { embeddedFrames, sampleFrames } from '../src/sampleReference';
 import { selectRegion } from '../src/instruments';
 
 function fixture() {
@@ -27,6 +27,23 @@ function fixture() {
   full.assets.a.channels = [encodeSamples(channel), encodeSamples(channel)];
   return { p, full, packed };
 }
+
+it('shares a full recording while preserving an excerpt boundary and exact rendered PCM', async () => {
+  const { p, full, packed } = fixture(), frames = 4800;
+  p.assets.a.reference!.frameLimit = frames;
+  full.assets.a.reference!.frameLimit = frames;
+  full.assets.a.channels = full.assets.a.channels.map(c => Buffer.from(c, 'base64').subarray(0, frames * 4).toString('base64'));
+  const ready = await createSamplePreparer(async () => new Response(packed), '/')(p);
+  expect(sampleFrames(ready.assets.a)).toBe(frames);
+  expect(embeddedFrames(ready.assets.a)).toBe(frames);
+  expect(renderProject(ready).left).toEqual(renderProject(full).left);
+  const reopened = parseProject(JSON.parse(JSON.stringify(projectDocument(ready))));
+  await expect(createSamplePreparer(async () => { throw Error('must be offline'); }, '/')(reopened)).resolves.toEqual(reopened);
+  for (const frameLimit of [0, -1, .5, 48000 * 6 + 1]) {
+    p.assets.a.reference!.frameLimit = frameLimit;
+    expect(() => parseProject(p)).toThrow();
+  }
+});
 
 it('loads only played keys, keeps the full keyboard, and reopens the saved performance offline without altering PCM', async () => {
   const { p, full, packed } = fixture(), snapshot = structuredClone(p);
@@ -61,9 +78,9 @@ it('resolves longer holds and region offsets instead of treating an embedded pre
 
 it('rejects unsafe references and excessive decoded dependencies before making requests; cancellation does not mutate input', async () => {
   const { p, packed } = fixture(), fetcher = vi.fn(async () => new Response(packed)), prepare = createSamplePreparer(fetcher, '/');
-  const unsafe = structuredClone(p); unsafe.assets.a.reference!.file = '../private.wav';
+  const unsafe = structuredClone(p); (unsafe.assets.a.reference as import('../src/sampleReference').BuiltinSampleReference).file = '../private.wav';
   await expect(prepare(unsafe)).rejects.toThrow('error.sampleReference');
-  const big = structuredClone(p); big.assets.a.reference!.frames = 5_760_000; big.assets.a.reference!.decodedBytes = 44 + 5_760_000 * 4;
+  const big = structuredClone(p); big.assets.a.reference!.frames = 5_760_000; (big.assets.a.reference as import('../src/sampleReference').BuiltinSampleReference).decodedBytes = 44 + 5_760_000 * 4;
   big.inputs[0].player.score!.notes[0].duration = 240;
   await expect(prepare(big)).rejects.toThrow('error.budget');
   const controller = new AbortController(); controller.abort();

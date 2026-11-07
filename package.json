@@ -24,7 +24,9 @@
     "assets:pack": "node tools/sound-assets.mjs pack",
     "assets:sync": "node tools/sound-assets.mjs sync",
     "assets:verify": "node tools/sound-assets.mjs verify",
-    "assets:status": "node tools/sound-assets.mjs status"
+    "assets:status": "node tools/sound-assets.mjs status",
+    "library:stage": "node tools/sound-distribution.mjs stage",
+    "library:check": "node tools/sound-distribution.mjs check"
   },
   "dependencies": {
     "@ffmpeg/core": "0.12.10",

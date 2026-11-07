@@ -1,3 +1,4 @@
+import { projectFromGraph, prepareTestProject } from './helpers/resourceGraph';
 import { assetResolver } from '../tools/sound-asset-store.mjs';
 const resolveAsset = await assetResolver(process.cwd(), {profile:'audit'});
 const readFileSync = (name, ...options) => nodeReadFileSync(resolveAsset(name), ...options);
@@ -16,14 +17,14 @@ const manifest = JSON.parse(readFileSync(`${root}/manifest.json`, 'utf8'));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const clips = BUILTIN_SOUNDS.filter(s => s.id.startsWith('nature-'));
 const scenes = BUILTIN_SOUNDS.filter(s => s.id.startsWith('example-nature-'));
-const read = sound => {
+const read = async sound => {
   const bytes = readFileSync(`public/sound-library/${sound.file}`);
   expect(hash(bytes), sound.id).toBe(sound.sha256);
-  return parseProject(JSON.parse(gunzipSync(bytes)));
+  return prepareTestProject(await projectFromGraph(JSON.parse(gunzipSync(bytes))));
 };
 
 
-it('keeps 11 publisher originals and 20 documented clips discoverable in eight nature groups', () => {
+it('keeps 11 publisher originals and 20 documented clips discoverable in eight nature groups', async () => {
   expect(manifest.originals).toHaveLength(11);
   expect(clips).toHaveLength(20);
   expect(scenes).toHaveLength(3);

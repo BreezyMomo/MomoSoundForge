@@ -1,3 +1,4 @@
+import { packProject } from './resourcePackage';
 import { prepareProjectSamples } from './prepareSamples';
 import { projectDocument } from './model';
 import { useEffect, useRef, useState } from 'react';
@@ -203,14 +204,14 @@ export function useAIEditor(props: Props) {
             if (bytes.byteLength > 8 * 1024 * 1024) throw Error('ai.previewBudget');
             return { audio: bytesBase64(bytes), mimeType: AUDIO_MIME[settings.format], settings, snapshotId: args.snapshotId, duration: audio.left.length / audio.sampleRate, metrics: { peak: audio.peak, rms: audio.rms, gainReduction: audio.gainReduction }, metricsScope: 'prepared audio before codec encoding; returned audio is encoded export', instrumentIssues: projectScoreIssues(project) };
           }
-          const document = args.includeProject !== false ? JSON.stringify(projectDocument(await prepareProjectSamples(project))) : undefined;
+          const document = args.includeProject !== false ? await packProject(project) : undefined;
           totalBytes += bytes.byteLength + (document?.length ?? 0) * 2;
           if (totalBytes > 128 * 1024 * 1024) throw Error('ai.exportBudget');
           if (zip) {
             zip.file(`${name}.${settings.format}`, bytes); if (document) zip.file(`${name}.soundforge`, document);
           } else {
             download(bytes, `${name}.${settings.format}`, AUDIO_MIME[settings.format]);
-            if (document) download(document, `${name}.soundforge`, 'application/json');
+            if (document) download(new Uint8Array(document).buffer, `${name}.soundforge`, 'application/zip');
           }
           manifest.push({ file: `${name}.${settings.format}`, ...(document ? { project: `${name}.soundforge` } : {}), seed: project.seed, sampleRate: audio.sampleRate, duration: audio.left.length / audio.sampleRate });
         }

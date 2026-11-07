@@ -2,11 +2,13 @@ import { createBuiltinFileLoader } from './builtinFiles';
 import { parseSampleReference, sampleFrames, embeddedFrames } from './sampleReference';
 import { requiredScoreAssets } from './instruments';
 import { encodeSamples, parseProject, MAX_ASSET_BYTES, type Project } from './model';
+import { audioChannels, createAudioReader } from './sharedAudio';
 export const projectHasReferences = (p: Project): boolean => Object.values(p.assets).some(a => a.reference)
   || p.inputs.some(l => l.player.mix && projectHasReferences(l.player.mix));
 
 export function createSamplePreparer(fetcher: (url: string) => Promise<Response> = url => fetch(url), base = import.meta.env?.BASE_URL ?? '/') {
   const files = createBuiltinFileLoader([], fetcher, base);
+  const readAudio = createAudioReader(fetcher, base);
   return async (raw: Project, signal?: AbortSignal): Promise<Project> => {
     const project = parseProject(raw), jobs: { project: Project; id: string; frames: number }[] = [];
     let bytes = 0;
@@ -24,7 +26,7 @@ export function createSamplePreparer(fetcher: (url: string) => Promise<Response>
       for (const [id, asset] of Object.entries(p.assets)) {
         if (!asset.reference) { bytes += asset.channels.reduce((n, c) => n + c.length * .75, 0); continue; }
         const frames = required.get(id) ?? 0;
-        bytes += frames * 8;
+        bytes += frames * 4 * (asset.reference.schema === 'momo.audio-reference/v1' ? asset.reference.channelCount : 2);
         if (!frames) { asset.channels = []; continue; }
         if (embeddedFrames(asset) >= frames) {
           // Keeping only the needed prefix avoids accumulating all previously played notes.
@@ -43,6 +45,9 @@ export function createSamplePreparer(fetcher: (url: string) => Promise<Response>
     // Sequential decoding bounds transient PCM memory; compressed requests share a bounded cache.
     for (const job of jobs) {
       check(); const asset = job.project.assets[job.id], r = parseSampleReference(asset.reference);
+      if(r.schema === 'momo.audio-reference/v1') {
+        asset.channels = audioChannels(await readAudio(asset),job.frames).map(encodeSamples); check(); continue;
+      }
       const wav = await files.loadFile({ ...r, id: r.sha256 }); check();
       const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
       const tag = (n: number) => String.fromCharCode(...wav.subarray(n, n + 4));

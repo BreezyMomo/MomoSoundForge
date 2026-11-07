@@ -12,10 +12,11 @@ const server = await createServer({
   appType: "custom",
 });
 try {
-  const { parseProject } = await server.ssrLoadModule("/src/model.ts");
+  const { unpackProject } = await server.ssrLoadModule("/src/resourcePackage.ts");
+  const {prepareProjectSamples:prepare}=await server.ssrLoadModule("/src/prepareSamples.ts");
   const { renderProject, encodeWav } =
     await server.ssrLoadModule("/src/engine.ts");
-  const project = parseProject(JSON.parse(await readFile(projectPath, "utf8")));
+  const project = await prepare(await unpackProject(await readFile(projectPath)));
   const expected = Buffer.from(encodeWav(renderProject(project))),
     actual = await readFile(wavPath);
   assert.equal(
@@ -27,9 +28,7 @@ try {
     manifest = JSON.parse(await archive.file("manifest.json").async("string"));
   assert.equal(manifest.variations.length, 5);
   for (const entry of manifest.variations) {
-    const p = parseProject(
-      JSON.parse(await archive.file(entry.project).async("string")),
-    );
+    const p = await prepare(await unpackProject(await archive.file(entry.project).async("uint8array")));
     assert.equal(p.seed, entry.seed);
     const wav = await archive.file(entry.file).async("nodebuffer");
     assert.equal(

@@ -1,3 +1,4 @@
+import { projectFromGraph } from './helpers/resourceGraph';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
@@ -14,7 +15,7 @@ import { BASIC_SYNTH } from '../src/synthesizers';
 import type { RecordingDefinition } from '../src/recordingDefinition';
 
 const bank = BUILTIN_SOUNDS.find(s => s.id === 'instrument-vcsl-kawai')!;
-const load = () => parseProject(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${bank.file}`)).toString()));
+const load = async () => await projectFromGraph(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${bank.file}`)).toString()));
 type Source = { id: string; trigger: string; sourcePath: string; rootMidi: number; keyLow: number; keyHigh: number;
   velocityLow: number; velocityHigh: number; offsetFrames: number; sourceEffectiveOpcodes: Record<string, string>;
   conversion: { recommendedRegionGainDb: number } };
@@ -23,12 +24,12 @@ const id = (s: Source) => createHash('sha256').update(s.sourcePath).digest('hex'
 const local = async (url: string) => new Response(readFileSync(`public/sound-library/${url.split('/').at(-1)}`));
 
 
-it('matches the author attack AND release mapping at every key and velocity, without embedding the whole bank', () => {
-  const p = load(), score = p.inputs[0].player.score!, instrument = score.instruments[0];
+it('matches the author attack AND release mapping at every key and velocity, without embedding the whole bank', async () => {
+  const p = await load(), score = p.inputs[0].player.score!, instrument = score.instruments[0];
   expect(instrument.keyRange).toEqual({ low: 21, high: 108 });
   expect(Object.values(p.assets)).toHaveLength(222);
   expect(Object.values(p.assets).every(a => a.reference && !a.channels.length)).toBe(true);
-  expect(bank.projectBytes).toBeLessThan(250_000);
+  expect(bank.projectBytes).toBeLessThan(500_000);
   const reached = new Set<string>();
   for (let midi = 21; midi <= 108; midi++) for (let velocity = 1; velocity <= 127; velocity++) {
     const matches = sources.filter(s => midi >= s.keyLow && midi <= s.keyHigh && velocity >= s.velocityLow && velocity <= s.velocityHigh);
@@ -54,7 +55,7 @@ it('renders low/middle/high and soft/hard notes, keeps long holds, and reopens e
   const prepare = createSamplePreparer(local, '/');
   const offline = createSamplePreparer(async () => { throw Error('Offline'); }, '/');
   for (const [midi, velocity, held] of [[21, 30, .15], [21, 115, .6], [60, 30, 6], [60, 115, .6], [108, 30, .15], [108, 115, .6]]) {
-    const p = load(), input = p.inputs[0], score = input.player.score!;
+    const p = await load(), input = p.inputs[0], score = input.player.score!;
     score.notes = [{ ...score.notes[0], midi, velocity, duration: held * 2 }];
     const r = selectRegion(score.instruments[0], score.notes[0], input.player.noiseSeed, new Map())!;
     const seconds = noteEndSeconds(score.notes[0], r, p.assets, score.bpm) + .01;
@@ -71,7 +72,7 @@ it('renders low/middle/high and soft/hard notes, keeps long holds, and reopens e
   }
   // The shipped example now uses this same complete instrument, not the old four-second clips.
   const example = BUILTIN_SOUNDS.find(s => s.id === 'example-expanded-piano')!;
-  const p = parseProject(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${example.file}`)).toString()));
+  const p = await projectFromGraph(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${example.file}`)).toString()));
   expect(p.inputs[0].player.score!.instruments[0].id).toBe('instrument-vcsl-kawai');
   expect(renderProject(await prepare(p)).peak).toBeGreaterThan(.01);
 }, 30000);

@@ -1,3 +1,4 @@
+import { normalizeLibraryUrl } from './builtinDistribution.mjs';
 /** Bounded, verified transport shared by factory projects and complete recordings. */
 export type BuiltinFile = { id: string; file: string; compressedBytes: number; decodedBytes: number; sha256: string };
 const LIMIT = 12 * 1024 * 1024;
@@ -27,7 +28,9 @@ export function createBuiltinFileLoader(
   files: readonly BuiltinFile[],
   fetcher: (url: string) => Promise<Response>,
   base: string,
+  externalBase = import.meta.env?.VITE_SOUND_LIBRARY_URL ?? '',
 ) {
+  const libraryBase = normalizeLibraryUrl(externalBase) || `${base}sound-library/`;
   const entries = new Map(files.map(f => [f.id, f]));
   const cache = new Map<string, Uint8Array>(), pending = new Map<string, Promise<Uint8Array>>();
   let cacheBytes = 0;
@@ -44,14 +47,10 @@ export function createBuiltinFileLoader(
       if (!/^[a-f0-9]{64}\.(soundforge|recording)\.bin$/.test(file.file) || !/^[a-f0-9]{64}$/.test(file.sha256)
         || !Number.isInteger(file.compressedBytes) || file.compressedBytes < 1 || file.compressedBytes > LIMIT
         || !Number.isInteger(file.decodedBytes) || file.decodedBytes < 1 || file.decodedBytes > 36 * 1024 * 1024) throw failed();
-      const response = await fetcher(`${base}sound-library/${file.file}`);
+      const response = await fetcher(`${libraryBase}${file.file}`);
       if (!response.ok || !response.body) throw failed();
-      // Fetch decodes HTTP content encoding, but Content-Length still describes
-      // the wire bytes. Recompressing an already-gzipped asset can increase them.
-      const encoding = response.headers.get('Content-Encoding')?.trim().toLowerCase();
-      if ((!encoding || encoding === 'identity') && Number(response.headers.get('Content-Length')) > file.compressedBytes) {
-        await response.body.cancel(); throw failed();
-      }
+      // Fetch decodes HTTP encoding; cross-origin responses may hide that header
+      // while exposing the encoded Content-Length. Bound the actual body instead.
       const bytes = await readBounded(response.body, file.compressedBytes);
       if (bytes.length !== file.compressedBytes) throw failed();
       if (globalThis.crypto?.subtle) {

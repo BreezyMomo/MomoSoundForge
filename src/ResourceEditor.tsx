@@ -1,4 +1,4 @@
-import { portableResource } from './portableResource';
+import { packResource } from './resourcePackage';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button, Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter, WorkbenchNumberInput } from '@momo/workbench/react';
 import { t } from './i18n';
@@ -106,7 +106,7 @@ export function ResourceEditor({initial,owned=false,onClose,onUse,onOpen,onPrevi
         <Button variant="outline" onClick={onStop}>{t('resources.stop')}</Button></>}
         <Button variant={onSaved?'default':'outline'} disabled={busy||emptyInstrument||!folderLibrary.connected} onClick={()=>save()}>{onSaved?t('instrument.saveAndBind',saveAndBindNote):t(isOwn?'resources.update':'resources.save')}</Button>
         {!onSaved&&<Button variant="outline" disabled={busy||emptyInstrument||!folderLibrary.connected} onClick={()=>save(true)}>{t('resources.copy')}</Button>}
-        <Button variant="outline" disabled={busy||emptyInstrument} onClick={()=>void act(async()=>{const r=await portableResource(clean());download(JSON.stringify(r,null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
+        <Button variant="outline" disabled={busy||emptyInstrument} onClick={()=>void act(async()=>{const r=clean();download(new Uint8Array(await packResource(r)).buffer,safeFilename(r.name)+'.sfresource','application/zip');})}>{t('resources.export')}</Button>
         <Button disabled={busy||emptyInstrument} onClick={()=>void act(()=>onUse(clean()))}>{onSaved?t('instrument.useDraft',saveAndBindNote):t(binding?'resources.bind':draft.kind==='synth'?'resources.useSynth':draft.kind==='instrument'?'resources.useInstrument':draft.kind==='recording'?'resources.useRecording':'resources.use')}</Button>
       </div>
       {(error||status||busy)&&<p role={error?'alert':'status'}>{error|| (busy?t('resources.working'):status)}</p>}

@@ -25,7 +25,7 @@
 - **变化与循环**：固定种子生成五个可重复的变体，锁定需要保留的声音层；循环区域、交叉淡化与接缝试听。
 - **视频参考**：导入本地视频，按帧定位并添加标记，配合时间轴制作同步音效。
 - **自定义工作区**：面板停靠、布局保存、主题和中英文界面；切换编排、音符等任务布局。
-- **交付与备份**：WAV、OGG、MP3、FLAC、批量变体 ZIP，以及内嵌所用采样的 `.soundforge` 可编辑工程。
+- **交付与备份**：WAV、OGG、MP3、FLAC、批量变体 ZIP，以及携带乐器完整依赖、按音频 ID 去重的 `.soundforge` 可编辑工程包。
 
 SoundForge 在 Workbench 中注册专属主题“声夜 · 紫蓝”：近黑工作区、低饱和暗紫面板、紫色主要操作与青蓝色调节控件。新安装默认使用该主题；已有外观偏好会保留，可从顶部“外观”手动选择，原有七种共享主题仍可用。产品只提供主题数据和文案，菜单、弹窗、控件结构与交互继续复用 Workbench。切换主题只重绘波形显示，不重新生成或改变声音。
 
@@ -69,6 +69,8 @@ MCP 还支持候选变体生成、试听与应用，声音修饰与原声对比�
 - [长笛示例](examples/instruments/flute/)：可编辑工程、乐器包和音符数据。
 - [开发与部署](docs/development.md)：本地运行、资源构建、验证与 GitHub Pages。
 - [内置资源维护](docs/builtin-resource-maintenance.md)：两个仓库的职责、新增音频、资源包发布顺序及 AI 交接要求。
+- [运行音频分发](docs/runtime-audio-distribution.md)：网站与播放音库分开构建、上传候选和跨域验收；尚未切换线上。
+- [GitHub 音库 Pages](docs/github-audio-pages.md)：选定的免费分发方案、无损去重结果和两个站点的发布顺序。
 - [声音资源与本地库](docs/sound-resources.md)：统一资源管理、文件夹库、自定义合成算法、音符绑定、迁移及 AI 资源格式。
 - [产品目标](docs/product-vision.md)：面向非专业游戏开发者的设计方向。
 
@@ -106,3 +108,5 @@ npm run preview
 ## 反馈
 
 反馈时请附上复现步骤、浏览器版本、截图，以及可以分享的最小 `.soundforge` 工程。[GitHub 仓库](https://github.com/BreezyMomo/MomoSoundForge)和仓库内文档的访问权限以仓库设置为准。
+
+共享资源与文件格式见 [不可变资源架构](docs/immutable-resource-architecture.md)。

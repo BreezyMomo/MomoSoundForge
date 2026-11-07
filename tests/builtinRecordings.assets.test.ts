@@ -1,11 +1,14 @@
+import {createAudioReader,audioChannels} from '../src/sharedAudio';
+import { projectFromGraph } from './helpers/resourceGraph';
 import { encodeWav } from '../src/engine';
+import { createSamplePreparer } from '../src/prepareSamples';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { expect, it, vi } from 'vitest';
 import { BUILTIN_RECORDINGS, createBuiltinRecordingLoader, type BuiltinRecording } from '../src/builtinRecordings';
 import { BUILTIN_SOUNDS } from '../src/builtinLibrary';
-import { decodeSamples, parseProject } from '../src/model';
+import { decodeSamples, encodeSamples, parseProject, makeLayer } from '../src/model';
 import { parseResource, resourceProject } from '../src/soundResources';
 import type { RecordingDefinition } from '../src/recordingDefinition';
 
@@ -14,7 +17,7 @@ const load = createBuiltinRecordingLoader(BUILTIN_RECORDINGS, async url => new R
 const sha = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 
 
-it('ships exactly one complete, verified working WAV per instrument recording', () => {
+it('ships exactly one complete, verified working WAV per instrument recording', async () => {
   const expected = new Set(BUILTIN_SOUNDS.flatMap(s => (s.recordings ?? []).map(r => r.id)));
   expect(new Set(BUILTIN_RECORDINGS.map(r => r.id))).toEqual(expected);
   expect(BUILTIN_RECORDINGS.length).toBe(expected.size);
@@ -44,8 +47,12 @@ it('loads the complete flute tail without a parent download and preserves the or
   const d = a.payload as RecordingDefinition;
   expect(decodeSamples(d.asset.channels[0]).length).toBe(r.frames);
   const parent = BUILTIN_SOUNDS.find(s => s.recordings?.some(x => x.id === r.id))!;
-  const p = parseProject(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${parent.file}`)).toString()));
-  const prefix = decodeSamples(p.assets[r.id].channels[0]), complete = decodeSamples(d.asset.channels[0]);
+  const p = await projectFromGraph(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${parent.file}`)).toString()));
+  // Hydrate this particular take at its full excerpt length, independently of
+  // whichever take the factory preview note happens to trigger.
+  p.inputs = [makeLayer({ type: 'sample', assetId: r.id, duration: p.duration })];
+  const prepared = await createSamplePreparer(async url => new Response(readFileSync(`public${url}`)), '/')(p);
+  const prefix = decodeSamples(prepared.assets[r.id].channels[0]), complete = decodeSamples(d.asset.channels[0]);
   expect(prefix.length).toBeLessThan(complete.length);
   expect(complete.slice(0, prefix.length)).toEqual(prefix);
   expect(resourceProject(a).duration).toBeCloseTo(r.duration / 2 ** (r.tuneCents / 1200), 5);
@@ -59,8 +66,9 @@ it('keeps legacy gain passes and unpitched percussion metadata', async () => {
   for (const r of [BUILTIN_RECORDINGS.find(r => r.assetGains.length)!, BUILTIN_RECORDINGS.find(r => r.unpitched)!]) {
     const full = await load(r.id), d = full.payload as RecordingDefinition;
     const parent = BUILTIN_SOUNDS.find(s => s.recordings?.some(x => x.id === r.id))!;
-    const p = parseProject(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${parent.file}`)).toString()));
-    expect(d.asset.channels).toEqual(p.assets[r.id].channels);
+    const p = await projectFromGraph(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${parent.file}`)).toString()));
+    const bytes=await createAudioReader(async url=>new Response(readFileSync('public'+url)),'/')(p.assets[r.id]);
+    expect(d.asset.channels.map(c=>createHash('sha256').update(c).digest('hex'))).toEqual(audioChannels(bytes).map(encodeSamples).map(c=>createHash('sha256').update(c).digest('hex')));
     expect(d.rootMidi).toBe(r.unpitched ? null : r.rootMidi);
     expect(d.asset.source?.license).toBe('CC0-1.0');
   }

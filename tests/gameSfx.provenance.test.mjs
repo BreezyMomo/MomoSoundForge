@@ -1,3 +1,4 @@
+import { projectFromGraph, prepareTestProject } from './helpers/resourceGraph';
 import { assetResolver } from '../tools/sound-asset-store.mjs';
 const resolveAsset = await assetResolver(process.cwd(), {profile:'audit'});
 const readFileSync = (name, ...options) => nodeReadFileSync(resolveAsset(name), ...options);
@@ -16,14 +17,14 @@ const manifest = JSON.parse(readFileSync(`${root}/manifest.json`, 'utf8'));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const recordings = BUILTIN_SOUNDS.filter(s => s.recordingGroup?.startsWith('game-'));
 const scenes = BUILTIN_SOUNDS.filter(s => s.id.startsWith('example-game-'));
-const read = sound => {
+const read = async sound => {
   const bytes = readFileSync(`public/sound-library/${sound.file}`);
   expect(hash(bytes), sound.id).toBe(sound.sha256);
-  return parseProject(JSON.parse(gunzipSync(bytes)));
+  return prepareTestProject(await projectFromGraph(JSON.parse(gunzipSync(bytes))));
 };
 
 
-it('ships 66 unique recordings as 19 discoverable sound groups with source and CC0 evidence', () => {
+it('ships 66 unique recordings as 19 discoverable sound groups with source and CC0 evidence', async () => {
   expect(recordings).toHaveLength(66);
   expect(new Set(recordings.map(builtinToneKey)).size).toBe(19);
   expect(new Set(recordings.map(s => s.id))).toEqual(new Set(manifest.samples.map(s => s.id)));

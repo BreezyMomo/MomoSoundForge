@@ -36,24 +36,15 @@ One source initially responds to every velocity at different volumes; three stre
 
 Narrowing a range cannot silently delete assigned sources. More settings retains shared ranges and precise velocity/gain controls, affecting every covered note. Extension actions reject ambiguous overlapping velocity mappings outside alternate groups; resolve them explicitly before copying so pitch priorities cannot silently select a different source.
 
-## Folder storage and migration
+## Folder storage
 
-```text
-My sound library/
-  index.json
-  resources/
-    <resourceID>-v<version>-<SHA256>.sfresource
-```
+The v2 folder separates `index.json` (listings), `resources/*.sfresource` (listing manifests), `objects/*.json` (immutable definitions), and `audio/*.pcm.gz` (shared audio). Content IDs change with sound data, while names and attribution stay in metadata. Listing IDs and versions handle concurrent saves; they are not content IDs.
 
-The `momo.sound-library/v1` index contains library identity and metadata/preview arrays. Saving/importing an instrument also saves its recordings and synthesizers as independent library entries. Matching audio/settings reuse existing entries. Deleting an instrument retains its sources, while embedded snapshots keep works portable and stable. Older folder libraries offer Add older instrument sources to the library, which adds sources/index metadata without changing instrument files or versions.
+Saving an instrument creates independently usable source listings; opening an imported package does not. Repeated audio is stored once. Deleting a listing retains shared objects and snapshots, so other works and undo remain valid. There is no automatic garbage collection.
 
-Each `momo.sound-resource/v1` JSON file contains all algorithms, definitions and recordings required for editing. Saves write and read-verify a new package before publishing the index. Version conflicts are rejected; browser locks serialize writes and commits recheck the index and folder connection. Deletion confirms and removes only that resource's tool-owned files. There is no trash or version-history browser.
+Downloaded `.sfresource` and `.soundforge` files are ZIP packages containing the complete dependency closure, including unused instrument notes. They differ from the folder's small listing manifests. IndexedDB caches shared compressed audio for open works and drafts; keep packages or the whole folder as durable backups.
 
-Closing a library disconnects it. Switching folders does not copy or merge resources. IndexedDB stores folder connections and work drafts; ordinary resource reads/writes never fall back to the old browser stores. Folder access requires desktop Chrome/Edge; embedded browser support depends on its host. Reauthorize expired access. Back up by copying the folder or exporting packages. Opening the same folder from another origin reads the same resources.
-
-**Migrate old browser resources** imports legacy sounds and definitions, verifies each round trip, and retains originals as backup. Stable migration IDs make retries idempotent; differing content is reported as a conflict. Legacy originals are not a second editable library.
-
-Each package is limited to 40 MiB. Existing decoded recording, note, nesting and layer limits still apply. Indexes allow 2000 resources and 4 MiB. Remote-provider identity and reading interfaces are reserved; remote subscription, fetching, updating and synchronization are not implemented.
+Legacy files and libraries are unsupported before release. Packages allow 768 MiB compressed and 1.5 GiB complete PCM dependencies; active rendering keeps its 24 MiB PCM budget. See [the immutable resource specification](immutable-resource-architecture.md).
 
 ## Custom synthesizers
 

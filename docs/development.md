@@ -54,6 +54,9 @@ Unit tests run without large assets. The asset suite requires the build profile;
 
 ## GitHub Pages
 
+独立运行音库已支持，但尚未切换线上。未设置地址时保持下述同源部署；设置 Actions variable `SOUND_LIBRARY_URL` 后，网站省去音频二进制并在发布前验证远端文件及 CORS。操作顺序、候选导出和回退见 [运行音频分发](runtime-audio-distribution.md)。
+External audio delivery is supported but not deployed yet. Without configuration the site remains self-contained. The `SOUND_LIBRARY_URL` Actions variable enables external delivery; deployment then verifies remote hashes and CORS. See the [distribution guide](runtime-audio-distribution.md) before switching.
+
 仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
 Select GitHub Actions as the Pages publishing source.
 

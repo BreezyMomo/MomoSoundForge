@@ -202,14 +202,14 @@ try {
     notes,
   };
   const project = parseProject({
-    schema: "momo.soundforge/v2",
+    schema: "momo.soundforge/v4",
     name: `${instrument.name} · 五音动机`,
     seed: 2048,
     duration: 3,
     master: 0.8,
     echo: 0,
     assets,
-    layers: [
+    inputs: [
       makeLayer({
         id: "instrument-part",
         name: instrument.name,
@@ -226,6 +226,8 @@ try {
       }),
     ],
   });
+  const {packProject,packResource}=await server.ssrLoadModule("/src/resourcePackage.ts");
+  const {resourceFromDefinition}=await server.ssrLoadModule("/src/soundResources.ts");
   const saved = projectForSave(project),
     reopened = parseProject(JSON.parse(JSON.stringify(saved))),
     rendered = renderProject(saved),
@@ -234,10 +236,10 @@ try {
   assert.deepEqual(rendered.right, again.right);
   await mkdir(out, { recursive: true });
   await writeFile(
-    resolve(out, "instrument.sfinstrument"),
-    JSON.stringify({ schema: "momo.instrument/v1", instrument, assets }),
+    resolve(out, "instrument.sfresource"),
+    await packResource(resourceFromDefinition({ schema: "momo.instrument/v1", instrument, assets })),
   );
-  await writeFile(resolve(out, "phrase.soundforge"), JSON.stringify(saved));
+  await writeFile(resolve(out, "phrase.soundforge"), await packProject(saved));
   await writeFile(
     resolve(out, "phrase.wav"),
     new Uint8Array(encodeWav(rendered)),

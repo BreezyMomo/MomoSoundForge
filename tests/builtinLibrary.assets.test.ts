@@ -1,3 +1,4 @@
+import { projectFromGraph } from './helpers/resourceGraph';
 import { createSamplePreparer } from '../src/prepareSamples';
 import { createHash } from "node:crypto";
 import { gzipSync, gunzipSync } from "node:zlib";
@@ -77,20 +78,18 @@ function resource(raw: unknown = fixture()) {
   };
 }
 
-it("ships audible defaults for timpani, harp and low flute", () => {
+it("ships audible defaults for timpani, harp and low flute", async () => {
   for (const id of [
     "instrument-17-timpani-2-Cs3-single-hit",
     "instrument-06-harp-1-C3-single-hit",
     "tone-flute-sustain-60-70",
   ]) {
     const sound = BUILTIN_SOUNDS.find((s) => s.id === id)!;
-    const project = parseProject(
-      JSON.parse(
+    const project = await createSamplePreparer(async url => new Response(readFileSync(`public${url}`)), '/')(await projectFromGraph(JSON.parse(
         gunzipSync(
           readFileSync(`public/sound-library/${sound.file}`),
         ).toString(),
-      ),
-    );
+      )));
     const rendered = renderProject(project);
     expect(rendered.peak, id).toBeGreaterThan(0.03);
     expect(rendered.sourcePeak, id).toBeLessThan(1);
@@ -105,10 +104,10 @@ it("ships audible defaults for timpani, harp and low flute", () => {
   }
 }, 20000);
 
-it("can add and reopen every single-instrument example, including boosted piano", () => {
+it("can add and reopen every single-instrument example, including boosted piano", async () => {
   const checked: string[] = [];
   for (const sound of BUILTIN_SOUNDS.filter((s) => s.kind === "example")) {
-    const raw = parseProject(JSON.parse(gunzipSync(
+    const raw = await projectFromGraph(JSON.parse(gunzipSync(
       readFileSync(`public/sound-library/${sound.file}`)).toString()));
     if (raw.inputs.length !== 1 || raw.inputs[0].player.type !== "instrument") continue;
     const project = parseProject(raw);
@@ -121,20 +120,18 @@ it("can add and reopen every single-instrument example, including boosted piano"
 }, 20000);
 
 it("inserts a complete piano and a range as independent editable instruments and reopens portably", async () => {
-  const read = (id: string) => {
+  const read = async (id: string) => {
     const sound = BUILTIN_SOUNDS.find(
       (s) => (s.tone || s.completeInstrument) && s.nameKey === id && s.keyLow! <= 60 && s.keyHigh! >= 60,
     )!;
-    return parseProject(
-      JSON.parse(
+    return await projectFromGraph(JSON.parse(
         gunzipSync(
           readFileSync(`public/sound-library/${sound.file}`),
         ).toString(),
-      ),
-    );
+      ));
   };
-  const piano = read("builtin.instrument.vcsl-kawai"),
-    flute = read("builtin.instrument.flute");
+  const piano = await read("builtin.instrument.vcsl-kawai"),
+    flute = await read("builtin.instrument.flute");
   const instrument = piano.inputs[0].player.score!.instruments[0];
   const note = piano.inputs[0].player.score!.notes[0];
   const soft = selectRegion(
@@ -162,7 +159,7 @@ it("inserts a complete piano and a range as independent editable instruments and
   expect(renderProject(reopened).peak).toBeGreaterThan(0);
 }, 20000);
 
-it("ships the original mapped regions in every range without including quarantined takes", () => {
+it("ships the original mapped regions in every range without including quarantined takes", async () => {
   const manifest = JSON.parse(
     readFileSync("samples/orchestra-expanded-20261105/manifest.json", "utf8"),
   );
@@ -178,7 +175,7 @@ it("ships the original mapped regions in every range without including quarantin
   >(manifest.samples.filter((s: {instrumentId:string}) => s.instrumentId !== "upright-piano").map((s: { id: string }) => [s.id, s]));
   const shipped = new Set<string>();
   for (const tone of BUILTIN_SOUNDS.filter((s) => s.tone)) {
-    const project: Project = parseProject(JSON.parse(
+    const project: Project = await projectFromGraph(JSON.parse(
       gunzipSync(readFileSync(`public/sound-library/${tone.file}`)).toString(),
     ));
     const bytes = Object.values(project.assets).reduce(

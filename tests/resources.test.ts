@@ -1,3 +1,4 @@
+import { prepareProjectSamples } from '../src/prepareSamples';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
 import { FolderLibrary, folderLibrary } from '../src/folderLibrary';
@@ -58,6 +59,22 @@ const instrument=():InstrumentDefinition=>({schema:'momo.instrument/v1',instrume
 beforeEach(()=>{vi.stubGlobal('indexedDB',new IDBFactory());vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{});});
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
 
+it('stores one audio object across recordings and instruments, reuses identical imports, and preserves old content after edits',async()=>{
+  const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());
+  const asset={id:'shared',name:'Shared',sampleRate:8000,channels:[encodeSamples(new Float32Array(800).fill(.1))]};
+  const r=resourceFromRecording(asset,60),first=await lib.save(r),files=disk.files.size;
+  expect(await lib.save(r)).toEqual(first);expect(disk.files.size).toBe(files);
+  const d=instrument();d.assets={shared:asset};d.instrument.regions=[{...d.instrument.regions[0],synth:undefined,assetId:'shared'}];
+  await lib.save(resourceFromDefinition(d));
+  expect([...disk.files.keys()].filter(k=>k.startsWith('audio/'))).toHaveLength(1);
+  const old=await lib.load(r.id),before=renderProject(await prepareProjectSamples(resourceProject(old)),8000).left;
+  const changed=structuredClone(r);(changed.payload as {asset:typeof asset}).asset.channels=[encodeSamples(new Float32Array(800).fill(.2))];
+  const next=await lib.save(changed,1);expect(next.contentId).not.toBe(first.contentId);
+  expect([...disk.files.keys()].filter(k=>k.startsWith('audio/'))).toHaveLength(2);
+  await lib.remove(r.id,2);
+  expect(renderProject(await prepareProjectSamples(resourceProject(old)),8000).left).toEqual(before);
+});
+
 it('saves an opened work back to its original resource, advances undo snapshots, and refuses stale or switched destinations',async()=>{
   const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());
   const r=resourceFromProject(definitionProject(expression()));await lib.save(r);
@@ -100,11 +117,11 @@ it('keeps recordings as independent library entries when an instrument is saved,
   d.assets={[asset.id]:asset};d.instrument.regions=[{...d.instrument.regions[0],synth:undefined,assetId:asset.id,rootMidi:48}];
   const r=resourceFromDefinition(d),first=await lib.save(r),sources=await lib.list('recording');
   expect(sources).toHaveLength(1);expect(first.sourceResourceIds).toEqual([sources[0].id]);
-  const recording=await lib.load(sources[0].id);expect(recording.payload).toMatchObject({schema:'momo.recording/v1',rootMidi:48,asset});
-  const audio=renderProject(resourceProject(recording),8000).left;
+  const recording=await lib.load(sources[0].id);expect(recording.payload).toMatchObject({schema:'momo.recording/v1',rootMidi:48,asset:{...asset,channels:[],reference:expect.objectContaining({schema:'momo.audio-reference/v1'})}});
+  const audio=renderProject(await prepareProjectSamples(resourceProject(recording)),8000).left;
   await lib.save(r,1);expect(await lib.list('recording')).toHaveLength(1);
   await lib.remove(r.id,2);expect((await lib.load(sources[0].id)).payload).toEqual(recording.payload);
-  expect(renderProject(resourceProject(await lib.load(sources[0].id)),8000).left).toEqual(audio);
+  expect(renderProject(await prepareProjectSamples(resourceProject(await lib.load(sources[0].id))),8000).left).toEqual(audio);
 });
 
 it('reuses an existing recording despite asset ID remapping and backfills older instruments without changing their version',async()=>{
@@ -120,7 +137,7 @@ it('reuses an existing recording despite asset ID remapping and backfills older 
   disk.files.set('index.json',new TextEncoder().encode(JSON.stringify(index)));
   await lib.indexInstrumentSources(r.id,1);
   const after=(await lib.list('instrument'))[0];expect(after.version).toBe(1);expect(after.file).toBe(file);
-  expect(await lib.list('recording')).toHaveLength(1);expect((await lib.load(r.id)).payload).toEqual(r.payload);
+  expect(await lib.list('recording')).toHaveLength(1);expect((await lib.load(r.id)).payload).toMatchObject({instrument:JSON.parse(JSON.stringify(d.instrument))});
 });
 
 it('validates standalone recording metadata and renders even very short recordings as portable work',()=>{
@@ -139,7 +156,7 @@ it('adds synthesizers referenced by imported instruments as reusable generators'
   expect(sources).toHaveLength(1);expect(entry.sourceResourceIds).toEqual([sources[0].id]);
   expect((await lib.load(sources[0].id)).payload).toMatchObject({algorithm:'expression-v1',program:expression().program});
   await lib.save(r,1);expect(await lib.list('synth')).toHaveLength(1);
-  await lib.remove(r.id,2);expect(renderProject(resourceProject(await lib.load(sources[0].id)),8000).peak).toBeGreaterThan(0);
+  await lib.remove(r.id,2);expect(renderProject(await prepareProjectSamples(resourceProject(await lib.load(sources[0].id))),8000).peak).toBeGreaterThan(0);
 });
 
 it('persists portable definitions, versions and independent work instances in a folder, then reconnects',async()=>{
@@ -180,15 +197,15 @@ it('rejects stale destination tokens and inactive imports before publishing the 
   await lib.connect(b.handle());await expect(lib.save(resourceFromDefinition(expression()),undefined,token)).rejects.toThrow('resources.conflict');
   await expect(lib.save(resourceFromDefinition(expression()),undefined,lib.destination,()=>false)).rejects.toThrow('resources.conflict');expect(await lib.list()).toEqual([]);
 });
-it('serializes competing saves and deletes only exact resource files, keeping work snapshots',async()=>{
+it('serializes competing saves and removes listings while retaining immutable content and snapshots',async()=>{
   const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());const r=resourceFromDefinition(expression());await lib.save(r);
   const p=resourceProject(await lib.load(r.id)),audio=renderProject(p,8000).left;
   const result=await Promise.allSettled([lib.save({...r,name:'A'},1),lib.save({...r,name:'B'},1)]);
   expect(result.filter(r=>r.status==='fulfilled')).toHaveLength(1);
   disk.files.set('resources/keep.txt',new Uint8Array([1]));
   const neighbor={...r,id:r.id+'-v1',name:'Neighbor'};const other=await lib.save(neighbor);
-  await lib.remove(r.id,2);expect((await lib.list()).map(e=>e.id)).toEqual([neighbor.id]);
-  expect((await lib.load(neighbor.id)).name).toBe('Neighbor');expect([...disk.files.keys()].sort()).toEqual(['index.json','resources/keep.txt',other.file].sort());
+  const filesBefore=[...disk.files.keys()].sort();await lib.remove(r.id,2);expect((await lib.list()).map(e=>e.id)).toEqual([neighbor.id]);
+  expect((await lib.load(neighbor.id)).name).toBe('Neighbor');expect([...disk.files.keys()].sort()).toEqual(filesBefore);
   expect(renderProject(p,8000).left).toEqual(audio);
 });
 it('migrates both legacy stores, verifies round trips, retries idempotently and preserves originals',async()=>{

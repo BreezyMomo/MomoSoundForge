@@ -1,13 +1,14 @@
 import { assetResolver, fileDigest, walkFiles } from './sound-asset-store.mjs';
 import { pianoJob, pianoProject } from './builtin-vcsl-piano.mjs';
 import { createServer } from "vite";
-import { gzipSync } from "node:zlib";
+import { gzipSync, gunzipSync } from "node:zlib";
 import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir, stat, copyFile, readdir, realpath, unlink } from "node:fs/promises";
 import path from "node:path";
 import { instrumentJobs, instrumentProject, recordingId } from "./builtin-instruments.mjs";
 import { legacyInstrumentLevels, standaloneBoostDb } from "./builtin-levels.mjs";
 import { buildRecordings } from "./builtin-recordings.mjs";
+import { shareBuiltinRecordings } from './share-builtin-recordings.mjs';
 import { levels } from "./audit-builtin-library.mjs";
 import { gameSfxJobs, gameSfxProject } from "./builtin-game-sfx.mjs";
 import { natureSfxJobs, natureSfxProject } from "./builtin-nature-sfx.mjs";
@@ -115,7 +116,7 @@ try {
   if (!process.argv.includes("--force") && stamp.fingerprint === fingerprint) {
     const previous = await readJson("src/data/builtin-catalog.json");
     if (stamp.catalog !== hash(await readFile(catalogFile))) throw Error("Catalog changed");
-    for (const sound of [...previous.sounds, ...previous.recordings]) {
+    for (const sound of [...previous.sounds, ...previous.recordings, ...(previous.audio ?? [])]) {
       if ((await fileDigest(path.join(output, sound.file))).sha256 !== sound.sha256) throw Error("Generated resource changed");
     }
     for (const [name, expected] of Object.entries(stamp.licenses))
@@ -143,7 +144,12 @@ try {
   const { createSamplePreparer } = await server.ssrLoadModule('/src/prepareSamples.ts');
   const prepare = createSamplePreparer(async url => new Response(await readFile(path.join(output, path.basename(url)))), '/');
   const renderAudio = async p => renderProject(await prepare(p));
-  const sounds = [], recordings = new Map();
+  const {sealResource}=await server.ssrLoadModule('/src/resourceGraph.ts');
+  const {resourceFromProject}=await server.ssrLoadModule('/src/soundResources.ts');
+  const {createAudioReader,audioReference,builtinPCM}=await server.ssrLoadModule('/src/sharedAudio.ts');
+  const readAudio=createAudioReader(async url=>new Response(await readFile(path.join(output,path.basename(url)))),'/');
+  const sounds = [], recordings = new Map(), audioObjects=new Map();
+
   let fullPiano;
   for (const job of jobs) {
     let source;
@@ -246,7 +252,22 @@ try {
       for (let i = start; i < end; i++) for (const channel of [audio.left, audio.right]) if (Math.abs(channel[i]) > Math.abs(peak)) peak = channel[i];
       return Number(peak.toFixed(6));
     });
-    const json = Buffer.from(JSON.stringify(projectDocument(project)));
+    const summaries = job.kind === 'instrument' ? recordingSummaries({schema:'momo.instrument/v1',instrument:project.inputs[0].player.score.instruments[0],assets:project.assets}) : undefined;
+    const completeRecordings = summaries ? await buildRecordings(job, project, summaries, assetGains, root, output) : [];
+    for (const recording of completeRecordings) {
+      const pcm=builtinPCM(gunzipSync(await readFile(path.join(output,recording.file))),recording),ref=await audioReference(pcm);
+      recording.audioId=ref.audioId;
+      audioObjects.set(ref.audioId,{...recording,id:ref.audioId,format:'wav16'});
+      if (!recordings.has(recording.id)) recordings.set(recording.id, recording);
+    }
+    const stored = job.tone ? parseProject(await shareBuiltinRecordings(project, completeRecordings, output)) : project;
+    const graph=await sealResource(resourceFromProject(stored,[],job.id),async(ref,pcm)=>{
+      if(audioObjects.has(ref.audioId))return;
+      const bytes=gzipSync(pcm,{level:6}),sha256=hash(bytes),file=sha256+'.recording.bin';
+      await writeFile(path.join(output,file),bytes);
+      audioObjects.set(ref.audioId,{id:ref.audioId,format:'pcm',file,sha256,compressedBytes:bytes.length,decodedBytes:pcm.length,...ref});
+    },readAudio);
+    const json = Buffer.from(JSON.stringify(graph));
     // Lossless transport compression keeps the complete audio library within the static-site budget.
     const compressed = gzipSync(json, { level: 9 });
     if (json.length > 36 * 1024 * 1024 || compressed.length > 12 * 1024 * 1024)
@@ -256,15 +277,12 @@ try {
     const digest = hash(compressed), file = `${digest}.soundforge.bin`;
     await writeFile(path.join(output, file), compressed);
     const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback, completeInstrument } = job;
-    const summaries = kind === 'instrument' ? recordingSummaries({schema:'momo.instrument/v1',instrument:project.inputs[0].player.score.instruments[0],assets:project.assets}) : undefined;
-    if (summaries) for (const recording of await buildRecordings(job, project, summaries, assetGains, root, output))
-      if (!recordings.has(recording.id)) recordings.set(recording.id, recording);
     const revision = job.id === 'example-expanded-piano' || (kind === 'instrument' && !completeInstrument && project.inputs[0].player.score.instruments[0].regions.some(r => /-velocity-\d+-\d+$/.test(r.id))) ? 2 : 1;
     sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback, ...(completeInstrument ? { completeInstrument } : {}),
       ...(revision > 1 ? { revision } : {}), ...(summaries ? { recordings: summaries } : {}),
       duration: project.duration, file, compressedBytes: compressed.length, projectBytes: json.length, sha256: digest, waveform });
   }
-  const catalog = JSON.stringify({ schema: "momo.builtin-library/v1", sounds, recordings: [...recordings.values()] }, null, 2) + "\n";
+  const catalog = JSON.stringify({ schema: "momo.builtin-library/v1", sounds, recordings: [...recordings.values()], audio: [...audioObjects.values()] }, null, 2) + "\n";
   let previous;
   try { previous = await readFile(catalogFile, "utf8"); } catch {}
   if (catalog !== previous) await writeFile(catalogFile, catalog);
@@ -288,7 +306,7 @@ try {
   const expectedOutput = path.join(await realpath(root), "public/sound-library");
   if (path.resolve(resolvedOutput).toLowerCase() !== path.resolve(expectedOutput).toLowerCase())
     throw Error("Refusing to clean generated resources outside this workspace");
-  const currentFiles = new Set([...sounds, ...recordings.values()].map(sound => sound.file));
+  const currentFiles = new Set([...sounds, ...recordings.values(), ...audioObjects.values()].map(sound => sound.file));
   for (const entry of await readdir(resolvedOutput, { withFileTypes: true }))
     if (entry.isFile() && /^[a-f0-9]{64}\.(soundforge|recording)\.(gz|bin)$/.test(entry.name) && !currentFiles.has(entry.name))
       await unlink(path.join(resolvedOutput, entry.name));

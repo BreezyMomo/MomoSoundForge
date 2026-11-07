@@ -31,7 +31,15 @@ const licenses = [];
 for (const dependency of [...dependencies].sort()) {
   const dir = path.resolve(root, dependency), pkg = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8'));
   const files = (await readdir(dir)).filter(file => /^licen[cs]e|^copying|^notice/i.test(file));
-  if (!files.length) throw Error(`Missing bundled license: ${pkg.name}`);
+  if (!files.length) {
+    // isarray@1.0.0 distributes its complete MIT notice in README, without a LICENSE file.
+    if(pkg.name==='isarray'&&pkg.version==='1.0.0'){
+      const readme=await readFile(path.join(dir,'README.md'),'utf8'),notice=readme.slice(readme.indexOf('## License'));
+      if(!notice.includes('Copyright (c) 2013 Julian Gruber')||!notice.includes('Permission is hereby granted'))throw Error(`Missing bundled license: ${pkg.name}`);
+      licenses.push(`## ${pkg.name}@${pkg.version}\n${notice}`);continue;
+    }
+    throw Error(`Missing bundled license: ${pkg.name}`);
+  }
   for (const file of files) licenses.push(`## ${pkg.name}@${pkg.version}\n${await readFile(path.join(dir, file), 'utf8')}`);
 }
 folder.file('THIRD_PARTY_NOTICES.txt', licenses.join('\n\n'));

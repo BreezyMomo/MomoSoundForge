@@ -239,7 +239,7 @@ export function describeProject(project: Project): unknown {
         {
           ...asset,
           channels: undefined,
-          channelCount: asset.reference ? 2 : asset.channels.length,
+          channelCount: asset.reference?.schema === 'momo.audio-reference/v1' ? asset.reference.channelCount : asset.reference ? 2 : asset.channels.length,
           frames: sampleFrames(asset),
         },
       ]),

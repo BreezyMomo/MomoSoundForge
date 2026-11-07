@@ -1,3 +1,4 @@
+import { packProject, readProjectFile } from './resourcePackage';
 import { ProjectResourceOrigins, type ResourceOrigin } from './resourceOrigin';
 import { prepareProjectSamples } from './prepareSamples';
 import { projectDocument } from './model';
@@ -440,16 +441,20 @@ export default function App() {
     undo: () => flushSync(undo),
     redo: () => flushSync(redo),
   });
+  const savingPackage = useRef(false);
   const save = useCallback(async () => {
+    if(savingPackage.current)return;
+    savingPackage.current=true;setIoBusy(true);
     try {
-      const snapshot = await prepareProjectSamples(rootCurrent.current);
+      const snapshot = rootCurrent.current;
       download(
-        JSON.stringify(projectDocument(snapshot)),
+        new Uint8Array(await packProject(snapshot)).buffer,
         `${safeFilename(snapshot.name)}.soundforge`,
-        "application/json",
+        "application/zip",
       );
       flash("status.saved");
     } catch (error) { flash(error instanceof Error ? error.message : 'error.project'); }
+    finally {savingPackage.current=false;setIoBusy(false);}
   }, [flash]);
   useEffect(() => {
     alive.current = true;
@@ -948,20 +953,23 @@ export default function App() {
     );
   };
   const saveCurrentSound = async () => {
+    if(savingPackage.current)return;
+    savingPackage.current=true;setIoBusy(true);
     try {
-      const snapshot = await prepareProjectSamples(context.path.length
+      const snapshot = (context.path.length
         ? isolatedNode(history.project, {
             path: context.path.slice(0, -1),
             id: context.path.at(-1)!,
           })
         : history.project);
       download(
-        JSON.stringify(projectDocument(snapshot)),
+        new Uint8Array(await packProject(snapshot)).buffer,
         `${safeFilename(snapshot.name)}.soundforge`,
-        "application/json",
+        "application/zip",
       );
       flash("status.componentSaved");
     } catch (error) { flash(error instanceof Error ? error.message : 'error.project'); }
+    finally {savingPackage.current=false;setIoBusy(false);}
   };
   async function openLibrarySound(id: string) {
     const next = await readSavedSound(id);
@@ -1255,8 +1263,7 @@ export default function App() {
     if (!file) return;
     setIoBusy(true);
     try {
-      if (file.size > 36 * 1024 * 1024) throw Error("error.fileSize");
-      const next = nodeDocument(parseProject(JSON.parse(await file.text())));
+      const next = nodeDocument(await readProjectFile(file));
       editRoot(() => next,"",null);
       scopeEpoch.current++;
       setEditPath([]);
@@ -1281,8 +1288,7 @@ export default function App() {
     setIoBusy(true);
     const path = [...pathRef.current];
     try {
-      if (file.size > 36 * 1024 * 1024) throw Error("error.fileSize");
-      const child = parseProject(JSON.parse(await file.text()));
+      const child = await readProjectFile(file);
       if (JSON.stringify(path) !== JSON.stringify(pathRef.current))
         throw Error("error.scopeChanged");
       if (current.current.inputs.length >= 16) throw Error("error.layers");
@@ -1453,7 +1459,7 @@ export default function App() {
         zip.file(`${name}.${exportSettings.format}`, bytes);
         zip.file(
           `${name}.soundforge`,
-          JSON.stringify(projectDocument(await prepareProjectSamples(v.project))),
+          await packProject(v.project),
         );
         manifest.push({
           file: `${name}.${exportSettings.format}`,
@@ -2346,7 +2352,7 @@ export default function App() {
         type="file"
         hidden
         ref={projectInput}
-        accept=".soundforge,.json"
+        accept=".soundforge"
         onChange={(e) => {
           const input = e.currentTarget;
           void openProject(input.files?.[0]).finally(() => {
@@ -2358,7 +2364,7 @@ export default function App() {
         type="file"
         hidden
         ref={compositionInput}
-        accept=".soundforge,.json"
+        accept=".soundforge"
         onChange={(e) => {
           const input = e.currentTarget;
           void importComposition(input.files?.[0]).finally(() => {

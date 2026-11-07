@@ -40,11 +40,13 @@ async function audit() {
     const { parseProject, decodeSamples } = await server.ssrLoadModule('/src/model.ts');
     const { renderProject } = await server.ssrLoadModule('/src/engine.ts');
     const { createSamplePreparer } = await server.ssrLoadModule('/src/prepareSamples.ts');
+    const {openResourceGraph}=await server.ssrLoadModule('/src/resourceGraph.ts');
+    const {resourceProject}=await server.ssrLoadModule('/src/soundResources.ts');
     const prepare = createSamplePreparer(async url => new Response(await readFile(`public/sound-library/${path.basename(url)}`)), '/');
     for (const sound of catalog.sounds) {
       const bytes = await readFile(`public/sound-library/${sound.file}`);
       if (createHash('sha256').update(bytes).digest('hex') !== sound.sha256) throw Error(`Checksum: ${sound.id}`);
-      const project = await prepare(parseProject(JSON.parse(gunzipSync(bytes))));
+      const project = await prepare(resourceProject((await openResourceGraph(JSON.parse(gunzipSync(bytes)))).resource));
       const rendered = renderProject(project);
       const entry = { id: sound.id, kind: sound.kind, ...levels([rendered.left, rendered.right], rendered.sampleRate),
         sourcePeakDb: rendered.sourcePeak > 0 ? Number((20 * Math.log10(rendered.sourcePeak)).toFixed(2)) : null };
