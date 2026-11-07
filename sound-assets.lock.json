@@ -3,16 +3,16 @@
   "packs": [
     {
       "id": "build-001",
-      "version": "2026.11.07-1",
+      "version": "2026.11.07-2",
       "profile": "build",
-      "file": "build-001-6af45024a0877e6478c277875425b2e1b8057bf9da2dd91eebdeb948ccbfbe0c.sfa.gz",
+      "file": "build-001-033761adc80bf5f45488d835330918246c305fdd062e8fd579b002824a686afa.sfa.gz",
       "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/build-001-6af45024a0877e6478c277875425b2e1b8057bf9da2dd91eebdeb948ccbfbe0c.sfa.gz"
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/build-001-033761adc80bf5f45488d835330918246c305fdd062e8fd579b002824a686afa.sfa.gz"
       ],
-      "bytes": 125291237,
-      "sha256": "6af45024a0877e6478c277875425b2e1b8057bf9da2dd91eebdeb948ccbfbe0c",
-      "manifestSha256": "8dc18dd418c0d579fb51223d0fbcca39e7edcd6a3cdf714114521cf9494a22bb",
-      "expandedBytes": 267973326,
+      "bytes": 151614682,
+      "sha256": "033761adc80bf5f45488d835330918246c305fdd062e8fd579b002824a686afa",
+      "manifestSha256": "7f2c7d0d6de31838d98547242602a81a0894978220ecbeacea80b32924f00377",
+      "expandedBytes": 268357118,
       "files": [
         {
           "path": "exports/piano-window-light-20261104/piano-window-light.soundforge",
@@ -695,21 +695,6 @@
           "sha256": "76162fb97f9915118b518f940182e145cb263bbfd5717ad3f8951f16c999f7f7"
         },
         {
-          "path": "samples/orchestra-basics-20261104/wav/brass/14-trombone-1-F2-sustain.wav",
-          "bytes": 1524700,
-          "sha256": "d850e5a544516ff75809f80e8bd9c48b93b8bccc7ce41bcb23417449035c46a9"
-        },
-        {
-          "path": "samples/orchestra-basics-20261104/wav/brass/14-trombone-2-F3-sustain.wav",
-          "bytes": 1907620,
-          "sha256": "1804005887bd753b4ad8490f3036bb9828332e62ace8cc20d4927f742443903d"
-        },
-        {
-          "path": "samples/orchestra-basics-20261104/wav/brass/14-trombone-3-As2-staccato.wav",
-          "bytes": 298300,
-          "sha256": "ae2c190656ad350ea544918cfa00bb2014ee5d5cd5b2884c42dde0fe22401263"
-        },
-        {
           "path": "samples/orchestra-basics-20261104/wav/brass/15-tuba-1-As1-sustain.wav",
           "bytes": 1430180,
           "sha256": "72f01b3ba48969a21f2461e9f805b837e6bb714e4dec7946d8d1e15017d68277"
@@ -790,21 +775,6 @@
           "sha256": "3f4b3e89f3d016a673bbad91b3cb3625b0d449539143b981115969c68b720150"
         },
         {
-          "path": "samples/orchestra-basics-20261104/wav/strings/02-solo-violin-1-C4-sustain.wav",
-          "bytes": 2540588,
-          "sha256": "e0af37afdef8d1ef453de76e3268c1471e00ba58313407eeeaa009c0e72148aa"
-        },
-        {
-          "path": "samples/orchestra-basics-20261104/wav/strings/02-solo-violin-2-C5-sustain.wav",
-          "bytes": 2718896,
-          "sha256": "6c15a1009e26e91bbf0c8bc6e89b7c9edced103fdfc8a25677f5422e7dffd43d"
-        },
-        {
-          "path": "samples/orchestra-basics-20261104/wav/strings/02-solo-violin-3-G4-spiccato.wav",
-          "bytes": 225784,
-          "sha256": "a671e0b88889368315e2c7298e90c4b3fe4dc8ba53a9a34beb12acea7008a7f7"
-        },
-        {
           "path": "samples/orchestra-basics-20261104/wav/strings/03-viola-section-1-G3-sustain.wav",
           "bytes": 2639372,
           "sha256": "bf56b4b801e44201b28d6ad6dd0d6040b724a811dbcb8f7405dca573a49233f1"
@@ -880,21 +850,6 @@
           "sha256": "73eff6a2d7bdb67763af581ee4144d716526c2d6790df3f6c210eb03f22fe877"
         },
         {
-          "path": "samples/orchestra-basics-20261104/wav/woodwinds/10-clarinet-1-As3-sustain.wav",
-          "bytes": 2078244,
-          "sha256": "7b32b954408498ca0f872113d7cb1aa3454d5d0566b532141d996f8ae42e3597"
-        },
-        {
-          "path": "samples/orchestra-basics-20261104/wav/woodwinds/10-clarinet-2-As4-sustain.wav",
-          "bytes": 1949540,
-          "sha256": "1419dea9ac9676f60e21853b0f5c70a6d25c7a65d64009be084ef71145731985"
-        },
-        {
-          "path": "samples/orchestra-basics-20261104/wav/woodwinds/10-clarinet-3-D4-staccato.wav",
-          "bytes": 109972,
-          "sha256": "7f76a27c6c019bc6ebb48d175c730e9072885a09c743d9a2246df1a5f862be96"
-        },
-        {
           "path": "samples/orchestra-basics-20261104/wav/woodwinds/11-bassoon-1-F2-sustain.wav",
           "bytes": 1544204,
           "sha256": "86b6774f69f0d16a58c7917e967edca89c915b593beca88a4e6393ce1e7cac2b"
@@ -908,6 +863,1386 @@
           "path": "samples/orchestra-basics-20261104/wav/woodwinds/11-bassoon-3-C3-staccato.wav",
           "bytes": 136624,
           "sha256": "7fbcd86d041d27fadf9be4caaf869aafe86114cc0ba5f7cdf4ce0fa64c91ecd6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0125a151a3d0fcd548bd.wav",
+          "bytes": 173844,
+          "sha256": "5fe3203415bf1e0c039e61b59ce36bf28c712f9b13bd7beffdf23f029ae8d86d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/014097f2d2e1b31092a2.wav",
+          "bytes": 196448,
+          "sha256": "2f87466f39a913542feb144e7a66fe1fd336d57036fd507794360ef6d2cb4378"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/02710914f079b8260f43.wav",
+          "bytes": 107060,
+          "sha256": "9bcf1315023292710b20a838ac66933f2d58f5f7aa62ecfc6ea938c6524ef1ae"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/02d3bbb2fc3083576209.wav",
+          "bytes": 225504,
+          "sha256": "c2ee8466cbebd0d431ec487151cb16577812d203d8ce8ee8a118241f10137d8b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/02e8af9094309f88dff0.wav",
+          "bytes": 3432636,
+          "sha256": "e1fdc2e0d70ca09029998bd3410a6bce50c07161b3298bcfbe9d0c1994428b31"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0427623c75cc201785f9.wav",
+          "bytes": 206392,
+          "sha256": "e6ece42a708bba52ac95fc6bd7095adc7ce4c72c2cafeb120e783e3cb9bf03f7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0755ebcaf809ec1a1a7f.wav",
+          "bytes": 94264,
+          "sha256": "9fc76f7c822127b254d45f7e7a704482dac34563ff7136a2014cf4257a81808d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0ba25ba92e941563cd48.wav",
+          "bytes": 2163124,
+          "sha256": "77bb3f3b9686a0f5ad17e0db922e4716dd7b0c7667ea71d2424c55729c8c530b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0c9f044dbd8b21b322ee.wav",
+          "bytes": 120932,
+          "sha256": "9bd036926f62b054f4b396e773b9b145acd645d86106ac0ea9070aa314dcac59"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0cb021a56780584d1b61.wav",
+          "bytes": 2483440,
+          "sha256": "753e57b9bc025cd1c7f183c99f44c90e555f0a8b89a9dfc75afd7abc9e572f1e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0cd1af0e280b6238d10b.wav",
+          "bytes": 226172,
+          "sha256": "c5cecbaba935d3afa8b83a5de22797a86207fca96b28aef447e5bbf9d98d6275"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0d383d598fe6ab59128f.wav",
+          "bytes": 2172584,
+          "sha256": "00fa26e846dd01bff82bd61f43b18d91046829b51b3b82f65ad155dd150be611"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/0f11d8d2e1d82ed786da.wav",
+          "bytes": 265432,
+          "sha256": "9de8b390f33f3876619ad41d19a24a0d8e5cc7ad50bb04e42a9203707788b937"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1048f7cb5e338b93f0db.wav",
+          "bytes": 193368,
+          "sha256": "29e4fd3f20dc103b657474823f6881c480b4c122284c60c7d809693b504176b8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/108bccc79a0df0c3b99e.wav",
+          "bytes": 1907620,
+          "sha256": "f1cc43b082ed888f35575903ec56c5ef3760b2336a8b53806d30c52b5f99bdb7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/10bb860a46b6f2f15f64.wav",
+          "bytes": 2252592,
+          "sha256": "47843aafbe30f36211fdfd4b61e0cbf6a05cdb43ea31850d335a0ecf8c213a5a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1158282f4a29d71ea101.wav",
+          "bytes": 355056,
+          "sha256": "2a3da9c0ac2640a6949949850e9fe0f3b8eeed70b21ab8025c15fe1bde624135"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/126f920a47e616635b83.wav",
+          "bytes": 213624,
+          "sha256": "4610085b91f446fce1bad961dae06368f285d426c0fd4c6efb623c0178792ed8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/13d78ff67144f92478de.wav",
+          "bytes": 120116,
+          "sha256": "3634765ea8617044b3b2db40901dda9d6598dff3818ac3c72717180c12b44bca"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1593b7b61a5088c3eb95.wav",
+          "bytes": 2830116,
+          "sha256": "3f50ab7bc118f27cffccd03cf77e6d2ebfa465887516445918546f7a45560264"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1692d1556af618d6a10b.wav",
+          "bytes": 1494848,
+          "sha256": "eeeac1bec80bbcccb903e98459943bdd8db6063cbd19923fb38c9bb2f0285c28"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/16d4ecc578e561b33340.wav",
+          "bytes": 1303888,
+          "sha256": "d5d6207b1220bb536ba25f611fac8844d9758b83fe90336b7c86d8b7f2794cd0"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1715857b507700451e1e.wav",
+          "bytes": 234692,
+          "sha256": "4f766538236a97cf631fffb575064ce9fdcc38a1277986e3c96dcadde1c6d2d8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/189b204f4cbd6ede54eb.wav",
+          "bytes": 194712,
+          "sha256": "806d802bda92d8eeab8179f3bdc8d6f796d8b249e9a28e2a072e08101ac1c98c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/19ea50680e4514161daf.wav",
+          "bytes": 106908,
+          "sha256": "4e720e58d63d6f279ebb9db2af08fb20fb4c9331a182ec5423559eada6484e5a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1a31dee5cffadd077a91.wav",
+          "bytes": 160944,
+          "sha256": "ea20ece7cced8bb850f191b3153937293e388a493ab1dba998c7a25b89f91c8e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1a6e146611a9c526b32d.wav",
+          "bytes": 178604,
+          "sha256": "2b68cd3f6901322330de5d2606900e85aa566d4ab943bcd6ff02245c93c2447f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1bc9e844ebf44b14dc32.wav",
+          "bytes": 184344,
+          "sha256": "7287d8ee56225429cda01225de964705149888dc5381bbfb6260bcf38388d978"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1db012bab491dfbf3681.wav",
+          "bytes": 1205624,
+          "sha256": "3aa40bf87cb80f2780f5625bb68d64421b8f391d3561fb7752bbab8a5b4c36d2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/1e960305ea98e3687f0f.wav",
+          "bytes": 110592,
+          "sha256": "ecb7c17d09ff6caf8012bfedcae63fc42d6323faa129e5b8deb135ac9c92eea0"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/20f36e5ff29208c24888.wav",
+          "bytes": 157144,
+          "sha256": "10f1ce2c3f4e87a62c1064a260e81640d4184f05f3aee0f5631c3f258befa25d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/2140ff585f7630a3997a.wav",
+          "bytes": 112880,
+          "sha256": "67493fde8aff6726507740a8ae663a890553637133fbe0d2e4bdb4975293e19d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/21553ce44b1c2f7aa412.wav",
+          "bytes": 1726552,
+          "sha256": "7d929bd034312fe1e222ccf51821f44e26e2353b82bba10fd07e41d56fa089f2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/218ee648730f550c3c5f.wav",
+          "bytes": 128288,
+          "sha256": "6b59cdcade7f22152d7a96696052f45e66a108408555ef31200ee48f3d72ff39"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/22014d56ceaa7a5ce535.wav",
+          "bytes": 219456,
+          "sha256": "4000ba3fcfba88d25390ce78ff1505fb8517d66a6be33d2f6195b56ba05390bd"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/222543b361fbf223ba09.wav",
+          "bytes": 2718896,
+          "sha256": "1e5d665fbc9c17d6bef0e6b26e6f37aba204af13179ab8ddbe6fd498531d2f64"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/235e6847d77290269df1.wav",
+          "bytes": 101628,
+          "sha256": "76634c7c229323b5a7c7dd3dea199aeee8c8403d3a6211ffa0213c34926795d8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/2639e05e3d2456dcdbde.wav",
+          "bytes": 2020268,
+          "sha256": "d564a767c8fc9eebb20646cff4e58411076616401cef17253608b87a351dfc85"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/264432d3c827931e562a.wav",
+          "bytes": 325580,
+          "sha256": "97c426f78703d1bfbe98f70cc4996348ed75321247b88166119325098f64e553"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/29c8885c1ef6ff5b9e81.wav",
+          "bytes": 1986744,
+          "sha256": "b33e3dba4299abe918b0375e64c521d55ef0f06724e7a6ed15b5564c8a92c502"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/29fb1adf03d5e15d3a16.wav",
+          "bytes": 105948,
+          "sha256": "00bc37fe00d85dff6e3f4f1ccf7505ef9635afeaba76fd8f11809d302ca5037a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/2bc1f9e33b804bde4eca.wav",
+          "bytes": 2788700,
+          "sha256": "47164549d403bcda076d5858d9ef7e9c908d5c088cc2e589b506fad9a9427f1d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/2d74d3d209ce83ed65bb.wav",
+          "bytes": 2162536,
+          "sha256": "94c2b565eadfb9b4b5b543ee6f0f03fb518f12ebbbd82e9876da9c7c4e7305ce"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/2e8045a19727c6866bbd.wav",
+          "bytes": 330660,
+          "sha256": "8f219f365275de9168f87280271283a0ef93b09c9cf39e924b9635f6e9b550ff"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/2e9eaa11655f9dc0107f.wav",
+          "bytes": 113412,
+          "sha256": "b9e4b2857ebdf64b61986a7487279fe49ed1127ebca3a135de64fc5813baabe3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/30f0b1ecee9af261e737.wav",
+          "bytes": 859996,
+          "sha256": "f3d5e4bd79e712f2dd830d31b112e0e3e7be35066be8c44fd269404e965bc74c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/31b0c5b6bb11261246ca.wav",
+          "bytes": 204940,
+          "sha256": "44c780fcc1614faffb9366ae63c92d0d4323bac4d39b770e1427acb63c06ec37"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/33064bf8dc1cef3603ae.wav",
+          "bytes": 1754572,
+          "sha256": "79fcb208a1d4b33fddc3666510b42bf768905cbddf598324dd9afd6b7f1f25e9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/36392a157f27e4bd557e.wav",
+          "bytes": 1928948,
+          "sha256": "138831b62b47ca9f2f9edb7322d7266ff5430a214f2e47c18aa48325e592102e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/36bb3d20e3c5e9c90128.wav",
+          "bytes": 282968,
+          "sha256": "c24cabb267bbf15711b917340013426ec2f07e8b0e29aa5e79c707912875e59a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/36d1e5f597a40cd0c064.wav",
+          "bytes": 107216,
+          "sha256": "6a75378f14a9e582cc81c42ca67048b5931fe1c9ddc73c76d65aef267a9cedbf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/39880c21eecf488e2452.wav",
+          "bytes": 226956,
+          "sha256": "aa9429f168d69937c7c7aff798e758c42c855cc7f423e826fb5285da7a7602d6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3a49e84754bc46dfa400.wav",
+          "bytes": 247032,
+          "sha256": "36b9cf102f5eb92a40c18ab55dbafd603bcb04ee094f9eaf8d087c5077a6cb3f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3b03d16bddb9a56f8b28.wav",
+          "bytes": 121576,
+          "sha256": "b36841f970d9b73ff67babe44ae0851bf3745e5d4083fca0ac6e07b970ff377f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3b75ff584453b9b109db.wav",
+          "bytes": 346164,
+          "sha256": "77e07a3885ff925319b6bc6809ab13950229e4a0702e5f2c153f6d6db62c5586"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3bf25a52b858891c36ee.wav",
+          "bytes": 372360,
+          "sha256": "947cfd4a67db51859125176002ec5697235f2759840d0644bc38801b4c936312"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3d4dfff54717d8becc4e.wav",
+          "bytes": 120784,
+          "sha256": "cc3f63dd24a5745d5a3384e14091643c775b28df84958f54943759c4008c2d40"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3e40b114e420f1b860a5.wav",
+          "bytes": 114884,
+          "sha256": "ef872606f6698a59650d6003ea7baa10d8b677520de6303550b95e01da201d1e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3ec2de4bec38f69d99c0.wav",
+          "bytes": 1842012,
+          "sha256": "4e4e287e97296c4c51321a7f21304412e74dbd099a77a3be6d1046bceef3373e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/3fe8f312e138fd93c022.wav",
+          "bytes": 1897916,
+          "sha256": "4113e19122d32ad11e9d8902342dbbaf7af607e7cf98a00b2ade2c731c348589"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/401d59cf970cb64cea3f.wav",
+          "bytes": 239980,
+          "sha256": "189e7ac8e1f9760c1ed615923e49826f52ca6e6d3cc8715befde46e61a7418d0"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4033fc0ff8c03bc4881b.wav",
+          "bytes": 285328,
+          "sha256": "f62c970102ed02259939d778447bb333c19644fb4eec508fba86ca1818143ba6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/40dadd23b146a04af81b.wav",
+          "bytes": 2428240,
+          "sha256": "4466c9e096a443610de6ba3fe65993ce0d784a9240f0c1a3c9c2b02dfc340cc1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/41e76d05919c337236c2.wav",
+          "bytes": 255328,
+          "sha256": "5304530af144de0fe9d5dbd104448954319f64aaafbf55f017c45a99df463aa8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/42d93c88744c7c5c3c04.wav",
+          "bytes": 178188,
+          "sha256": "58ed99005d42d597798068915451df06097c3831ad693bb5d8c6c86bf2586c66"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4420f1d28cb754f2d674.wav",
+          "bytes": 1804884,
+          "sha256": "df44923da2498bb83b30b74f5200445d3e9876dd94edda8b956883dcdf1a6534"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/45932703d4d32b79f79a.wav",
+          "bytes": 4662304,
+          "sha256": "684fc2c672758de2e7ed8fca8d0ab1c40d5ee5b1e0023bfd9226926940855b7b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/475e6648ca3f9951bb9f.wav",
+          "bytes": 107140,
+          "sha256": "af5fa1558ba917869489afdac758f690bfde2d68780fd048c8d76bea57e12d5d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4797f3f231009041ae37.wav",
+          "bytes": 225784,
+          "sha256": "89ccdafcfc6edaa0bf21a9a97a017aa79f3ab909cadf29aaa214852c3b6d68cf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4798951f8c80875b5e99.wav",
+          "bytes": 102136,
+          "sha256": "e12df587d7bc22c5be5d29b9ad60a8aeaea20fd5d39457f242fc7616667e5bd8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/47a301fc9ac70d46ae3f.wav",
+          "bytes": 127296,
+          "sha256": "2827cd18e13b22676e45bd2dd5bd9dc3e5e7380f00f2da429be62b3d637fe3b6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/484ff0f5a9a7a11f3025.wav",
+          "bytes": 227524,
+          "sha256": "634020e79032cc5420f691da863a47b44e5f93b20c913bb7e777dd3c31fa7db9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4a0182d44a2f8e408fdd.wav",
+          "bytes": 192904,
+          "sha256": "7298b40e1a9cf5bb065fbcd12405c4dc513550aad96b3579393b82a36689fca2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4beafd452796f42e9c7a.wav",
+          "bytes": 239976,
+          "sha256": "7417431ab9c610577f30aa924f1f8889bbcdf62a5144575475978c27d9827f62"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4c0f13eb914f053626c9.wav",
+          "bytes": 343760,
+          "sha256": "4192228c7f8bf8ffde102c9c0712276f47eb9c8a9b53d9d71954d9c371d94cde"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4d24ed183ef470c5d565.wav",
+          "bytes": 102824,
+          "sha256": "5a3cdcd72d7e49a16333332fd70158a91568b19965621f2047f2ab7b31938628"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4f1bb61a3d6fc48bcb65.wav",
+          "bytes": 185772,
+          "sha256": "b02f908df6f9c9764088d2b08096317627803f1ea6d5fa8a0ed8362b354d0a24"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/4fef9b762109df811310.wav",
+          "bytes": 364076,
+          "sha256": "c6b1a36805aa6a38ae1d0168e63fe4075a99e62b023b48083dd1738674dc2570"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/50a6e955c7817a9bb94d.wav",
+          "bytes": 158448,
+          "sha256": "d7e07feb77f384b34e711c647f188befada6af86657a21bd795261b092a767d7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/51d0e7eaa3322cd7ad29.wav",
+          "bytes": 2241260,
+          "sha256": "fee2cfdf3a8439b97824856885174ffd2047f6cb3036dc82c6da86dae3eaf27b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/51e10ab431094ee314d2.wav",
+          "bytes": 2354036,
+          "sha256": "3d6c3af2318ac4230fc2a0ac7a6a4f653b79a8e665767171c289d52ec8b5b9a4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/51e7f45431e1fdf9bdb7.wav",
+          "bytes": 230604,
+          "sha256": "ad829ae7c8973a150daf3e07d6a9b32f74674e940ed7fe85ca07790bc99492d8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/5267baa0a2fa0970d568.wav",
+          "bytes": 233264,
+          "sha256": "1ace4e8c79bab6832def2ae10f6f754378dd06a0d9f25593f97fcecc12b52105"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/527a9bfea220d6ae6e48.wav",
+          "bytes": 172976,
+          "sha256": "45a5b5061871d3fc1a7defde028f132eb7280020aec45190b24dbeca10c8dee1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/534967cb79733811a3f4.wav",
+          "bytes": 3370500,
+          "sha256": "07c796e8604a9cd68384694a4ce453f17938bc3c94a2e344f410e01b303f718f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/546eb94ec2050424c104.wav",
+          "bytes": 267592,
+          "sha256": "27a579a6153ce26628bdb941d0a0c7597cdc9f7de73a324177e81ffbb0796ebe"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/55457a202da566e7f61c.wav",
+          "bytes": 298648,
+          "sha256": "356684bad80526dfffab4360bc770165910d978b8d5e03513e81065c399db2a4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/56fa58db60d28f434688.wav",
+          "bytes": 1363204,
+          "sha256": "1f2a1565b32dae208b68b49efc976f0f20fa4999bd3f77bb443c83d49cd8f220"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/582a0041ac60ccc704c1.wav",
+          "bytes": 2052732,
+          "sha256": "56fdc3cd8be59b8c4f5011c7b8d651dafceb446b53e13a7adec7d6358d3ee073"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/5a24c70db5b3bcd6afc5.wav",
+          "bytes": 316472,
+          "sha256": "2183b2a94c4cbac95389c7656286d12b5c69e033824dfec8da55ad10579e1fec"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/5bb38997d315f21d96dc.wav",
+          "bytes": 259484,
+          "sha256": "60fdfd451c93b4caef64759cf3d9c2f01f81f18c2c9c18e35a17448f9d973984"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/5e6afae02f7d23f99f67.wav",
+          "bytes": 208612,
+          "sha256": "7d61dea2be4ec83d7fa29357cfa44ecb6af212fc3bec5901cfc667c7cf3d027c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6084839c5f6747e02b24.wav",
+          "bytes": 120608,
+          "sha256": "5ed537f3d573d07d8aa013a91e798ec392df16b438991968f23ec5cc059697ee"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/620f7c5f8fb96fb97cd6.wav",
+          "bytes": 285648,
+          "sha256": "f1e987785bb836586c507fc1a8a353aa0759a5abe6b8b8d95f39f287a2ee0786"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/623cc41da2312d8bf31c.wav",
+          "bytes": 2974876,
+          "sha256": "9f270e0f613813dadd61af86d6375b953637f21933eb177723fbc58763470447"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/62bf6e02840ee62930d0.wav",
+          "bytes": 114524,
+          "sha256": "91ae30e9d4f55d3cd49375b1651e67db46be03caca8297302014436dec606493"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/62c9c8def94555f3179b.wav",
+          "bytes": 4266804,
+          "sha256": "a01fbab4134842c1a911517583eae2b3562dbb31aafdeb6cf90002771a94af7a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/630729425260c628b382.wav",
+          "bytes": 358036,
+          "sha256": "4637d460c28a48340b125886df5dfe15e45d4638c1b04aae639d9f86a9c8ff11"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6676532b26c927a2a11f.wav",
+          "bytes": 117696,
+          "sha256": "d3f12177abcefcfc955b9b747ef6347d54d8fa4fc17275f2e94584247fa99086"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/66b41b4d16934fb549e0.wav",
+          "bytes": 109972,
+          "sha256": "36e28904c800374ab37d19e63713fa1159254111f84940bc4da9c19392734589"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/67ec51c46d8de7c3f7ed.wav",
+          "bytes": 3117800,
+          "sha256": "49353dfe6ceb3a708b0e794e947652405cb300e32a8ac40245d324c78bfa8036"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/68dc454f31d1ab40e436.wav",
+          "bytes": 2708596,
+          "sha256": "f492fdf9dff627b12dd5f6ecebb91bfe326d27d2bb9c4150259f2f31dafaed7a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/695e344d48f6f300d496.wav",
+          "bytes": 225112,
+          "sha256": "1c086f7a00c3ae41585d28c7403bf9ae7defc6e544cffbe3c2cfbcf5655ccb41"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6a4af5dc010f554ba607.wav",
+          "bytes": 1984456,
+          "sha256": "95dca81226057a31bcc22715aea8aa1cbe3eef5d561a6f6a57646f40e43a0da6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6c5722497934fa6519d4.wav",
+          "bytes": 97348,
+          "sha256": "035ed236a8a36c93a2108997f7bf87d9c6161f17a34f1152be2e59440be9d332"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6c7fed5c5d248534615e.wav",
+          "bytes": 2542084,
+          "sha256": "51cf4a1bb13368d3b65a48330d968c9266ba9c6afcb2526ec93658b35fd71b4c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6de86b6f01010eba265d.wav",
+          "bytes": 133056,
+          "sha256": "336a64d81b4330b5ea63efd0513c07f61c14d0f47e1b9191c7bf97c7d2a1759d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6e41c7901d709e0f39fa.wav",
+          "bytes": 256232,
+          "sha256": "01b3cdd940e663df40b83ca92202865f7532e54dc29a6a461aedd78728f57b57"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6f48508d13cf4c3093cc.wav",
+          "bytes": 2418616,
+          "sha256": "1e16adc93b3fe1dc05ddd0edce00bf72a7fc6a01df9e445a2a505425310c8da3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6f4a9e79b88e383ebd78.wav",
+          "bytes": 1886412,
+          "sha256": "7d19bec7c2180235a74a31408f400e7cb18b1dddc5f1bb6361456f98ba00d5a5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/6fd98c68a940c27b7cc9.wav",
+          "bytes": 139680,
+          "sha256": "511acac55a73c5433a7a9af8afff6c3124ee4bcd6939a06c6819b18925695a5b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/70696cdd5c5c6cb8342b.wav",
+          "bytes": 294008,
+          "sha256": "4a503043ad299d2ff0631bbeb8b5755d3feb4530261d4eae8ae0a8da9a37a6f3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/70dd73e51f8296132286.wav",
+          "bytes": 100568,
+          "sha256": "e15898ce10597d471b9343efcf4de440a034bb2f3819b18c4eab0c22f3cd3731"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/715b4b4c4fff6fc3cf9e.wav",
+          "bytes": 380816,
+          "sha256": "185c0685840e3f96c8560ad6b2aab2fecbd682bed82613ec8e82a1fc223720ef"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/71e2bcbb467f08dc2bed.wav",
+          "bytes": 1838544,
+          "sha256": "fb434a6bf79f1567d00b1eceac9776f6e0be5d7ef97a70953e76f271d8e321bb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7284991e945c58bffb0a.wav",
+          "bytes": 214336,
+          "sha256": "d3a32032abc083c9b5f5fed7a97247a22c33571d19bdefb38da009e98bdfebd9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7381136a5ead0f134a4f.wav",
+          "bytes": 3932288,
+          "sha256": "385513007e72cd07c9677ea6d65e1f3369e9367ccb1191eacd0743cba15b1b5f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/73f21077159965528535.wav",
+          "bytes": 123524,
+          "sha256": "68d5744c1762f33e123c39a2ffaa353e322cf2d257160c93bb5f757e5d5fdb95"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7403c0f7f1888368042c.wav",
+          "bytes": 244996,
+          "sha256": "402a53c7dd1eded4cda75fb6f8b51107e44b05193ba80529a7271d361bde7b69"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/745f4672cfe188eb9fe4.wav",
+          "bytes": 86312,
+          "sha256": "1ba0e2d5239564c1da67b56e229e86a1b284dd35d042db1351fcbc16deb0bbce"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7493354438e7e8925f33.wav",
+          "bytes": 1414824,
+          "sha256": "739a75b3934d3e6ae8480baa05d44437b15e9898012c26142d17424002737167"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/74f80992c81041c08d9a.wav",
+          "bytes": 102360,
+          "sha256": "17ce3dc56e0edd8f9620aaf1adb49a34160bb42290766d2c8edae04b604002aa"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/75a2caaca7cc49389fa5.wav",
+          "bytes": 2739692,
+          "sha256": "36eb771d7b17ca56ed5a1c1f12a4bfba70453bcb32f42c8481a7fea701970dd1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/765170fc16ea07cb627c.wav",
+          "bytes": 100836,
+          "sha256": "3d33594a9e49710e12dab82408208116666fe6906e08363f9a430146cacc7dd9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/76a7bc257d9e6da54789.wav",
+          "bytes": 1013192,
+          "sha256": "0297c34d7082839bff1b6f531f4da3a2ec66ad9caa01bfae603a77b7b1aea978"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7725a9a2121f0358508a.wav",
+          "bytes": 426536,
+          "sha256": "dc97932b941ef0ceb9e930d314910d13f16a474d45a5346c08829c74e1dff88f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7780dea3005d7cee951a.wav",
+          "bytes": 385108,
+          "sha256": "67564ae9305eb120dca6ff88b8a56629106a2a7cce280837948c63d12ec65586"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7868a4b09caaed8263fb.wav",
+          "bytes": 1264904,
+          "sha256": "9490fcfdd888ff42a5b7e4ec6bb3f16e18ea14d8f92725266626de1ef25b1c52"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7a259daf3971c4fba220.wav",
+          "bytes": 2826352,
+          "sha256": "70e615ad7b5491429bc40a630a005801883d2ac51a2948cac7652f46d44693c2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7a297abb62b0d5995288.wav",
+          "bytes": 922380,
+          "sha256": "5457cec040da8c9e7ba75f8ab6c3b63f901ea279cf16a6c0f4388cadc5e04dc6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7a3afc56aebb7368981d.wav",
+          "bytes": 270444,
+          "sha256": "f62b98d9095bdacf5616c3ddb8c53f6ec51653003c596a70cab7fe7d88580d3d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7b2e2f4497bff0eb4354.wav",
+          "bytes": 321260,
+          "sha256": "0b78f91e98758f7d3bd3422e498517e8589c262d18caecfea57ad0715864103a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7df0a6fa2c5b43c9c5c9.wav",
+          "bytes": 341768,
+          "sha256": "6590d0f031945e9997204847031b5f1a22d128a7bef25a5fd274a88a7ef05bfd"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/7f35e7a1cd63a5d0b990.wav",
+          "bytes": 317668,
+          "sha256": "37ff586ccd832263124fe7822df5450079fe61288e0001afa2bc5acb0f3907a5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8072713c4f4e8596fbc1.wav",
+          "bytes": 1524700,
+          "sha256": "e8661d9d9802eeae1d89891514dba2b61dbb75eef647c0d711e27be9b08d680b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/81358f42904ceed6b83f.wav",
+          "bytes": 196700,
+          "sha256": "f5ddd988debf44b30e75d00f07595279dc142c78f5dad37191a209ca02b1b77a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/84a45940128a984b6dcb.wav",
+          "bytes": 216892,
+          "sha256": "2dd59ee14f76c42969d90dfa7eceff44f9113a9a5a7659c6dd04198309946568"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/87a6da4ad05b8d60fd51.wav",
+          "bytes": 2572572,
+          "sha256": "a40090cfab0077fe90bb7d7d8e66ce57d3be1ce1fe5998cb2ae6cccfc69c18e2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/87b022487dbff92ed653.wav",
+          "bytes": 3168572,
+          "sha256": "41f36b790bb2b6f8716d714de26bf64d3608fc49f670ec9327e36d8d5c09928f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/88328db6c0cc3d6d430e.wav",
+          "bytes": 117284,
+          "sha256": "3d180920906c124cfb2c73591d5854ec931fc6e18a12fefd8c1c55cd9613af8c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/890c13e6c1d8aae481a9.wav",
+          "bytes": 129844,
+          "sha256": "a106a1f804da9bcd110f7caee81435147c56fc19e7d763f532fcd7dac10196a0"
+        }
+      ]
+    },
+    {
+      "id": "build-002",
+      "version": "2026.11.07-2",
+      "profile": "build",
+      "file": "build-002-d038079a616da9b7d2ba5215f77eb17411eeac6a11b08a31f1e9b5f2349e2ee1.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/build-002-d038079a616da9b7d2ba5215f77eb17411eeac6a11b08a31f1e9b5f2349e2ee1.sfa.gz"
+      ],
+      "bytes": 144897275,
+      "sha256": "d038079a616da9b7d2ba5215f77eb17411eeac6a11b08a31f1e9b5f2349e2ee1",
+      "manifestSha256": "bd7cd4857405d846cd070c8a78d2763e4ff21429a7aee39be19fe3089a68a621",
+      "expandedBytes": 268411812,
+      "files": [
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8b166b5c2f2e6cbe22cd.wav",
+          "bytes": 265260,
+          "sha256": "421c45e49e209044b2b043e3a6f31ad092cf3eef7026796a924979bbfca455b7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8b46b3c2f6cc5dd4d2ef.wav",
+          "bytes": 256788,
+          "sha256": "3f574f7970725a3e820e5d38d692070a11a639d5002f597096fe448f0180e0fe"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8c621e855c66e9c1f2b2.wav",
+          "bytes": 134872,
+          "sha256": "82fe49ff96f98bad2c98800520c45c48b1d0403a3dc62ad8265b36007c29e4a5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8cbc4d378ccfb95ac896.wav",
+          "bytes": 235808,
+          "sha256": "41c314eb86d4a3cdae76482ad85d1ba3b62789aef91332bb82075e4fab702c80"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8d87cb238a4ac5b10fec.wav",
+          "bytes": 229360,
+          "sha256": "6bfb63449e8638e8b00a1e3bbbbd8ef765c68f7619ce72056a9b8b8493d3ccd4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8e5348a157ad9b05c073.wav",
+          "bytes": 1918884,
+          "sha256": "de7fcf452b10e55c46f98553855d0bedaab168ceb1e04fd593216b60e49ae0c6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/8ffb23434bbbdc783ac0.wav",
+          "bytes": 108292,
+          "sha256": "e42e39e0f748ece91c25b1932562f0bdbe16963e369e106b2813dfd1d4b0e90d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/914183bc4802b51b20d7.wav",
+          "bytes": 120468,
+          "sha256": "7733b2f9b2242965169a8fd1bf730bcad790abd7d0d663de43d423dd9ba02615"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/91a2f1c85c77be7e7104.wav",
+          "bytes": 1949540,
+          "sha256": "754e976f349281dda187568b8b26f0f0bdfef2cd409859369fa40af520f50bea"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/9281b2a1ce8dc9a54f73.wav",
+          "bytes": 188544,
+          "sha256": "5fda3809363583648606a74aaf3a020253611e249d2d7c451a40d15a86abe987"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/93c591e9a59c4fb7893e.wav",
+          "bytes": 180644,
+          "sha256": "aa1a27e983282e92a89242a6e8905493409e79ea7fa1dc65f953bb0046f755c3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/94efd3acf79b5a5a4384.wav",
+          "bytes": 237088,
+          "sha256": "9f2fdfbffa527922e3ea8384e29af0c4118d09913a97f7b90b3da4876567bef2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/9537b33ece29e4f02a4e.wav",
+          "bytes": 195316,
+          "sha256": "d4f2ca1aa7a04d8824ad806ec1fdf6630e69b684432b7cca0e0bd493bba0a707"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/95397345c543cf11ec79.wav",
+          "bytes": 101408,
+          "sha256": "409fefe1557a5a8d8ee8cc57d06bac9d78b5eb91b0129b7fb9c4a07e81ca29fd"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/954259f17f2b308891b1.wav",
+          "bytes": 1116020,
+          "sha256": "76979510a23c6cc94cfa27bbe9010594a6c2f1fd57f9b0ab5ee265fe569e57cf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/9679ca25efeff5cf65b7.wav",
+          "bytes": 3196612,
+          "sha256": "96dc951050a44010eb36493850ca25cfbeccd5b3356a74c51280c928d7995edd"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/969aa5e84f5cf37301ca.wav",
+          "bytes": 215108,
+          "sha256": "2eb66a27c42b9bbc92789161108759a59f8bb8a81669262ab27fdb1daafbde40"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/96c63aeac1e4a372a9c1.wav",
+          "bytes": 283460,
+          "sha256": "32bb2e832984623dca97e69ac2ac6494ac549c189412db1d72b54082749ee5f7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/97abd2eee729a4072514.wav",
+          "bytes": 2475868,
+          "sha256": "a5948c39e707c59bd5e7086fcc2f196d1fed9b3bb7f5b4f4ec19f8a5595680b4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/9cc26af919eb0b375d32.wav",
+          "bytes": 118524,
+          "sha256": "1dd0e8cd1a570025544f572f0977f18d304bc00890f4200c13bb8e96254f1b94"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/9fe56041c661d77a4d13.wav",
+          "bytes": 241120,
+          "sha256": "e36bb1f5c2ea3128d97ab424eb5eaba7f6dca590f3705a439aab4e8964042939"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a08424fa38b1921248f4.wav",
+          "bytes": 213760,
+          "sha256": "b882b9879448dd8d758d073f96a0fc5d49a10c5444979f50e05add9684792893"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a14a9acadbef6ec70f7a.wav",
+          "bytes": 178448,
+          "sha256": "8549119477362c657fcbe37e7e1d4311759769f33b708571c619413c35f84ac6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a175d241a761dc1d606f.wav",
+          "bytes": 155660,
+          "sha256": "163911838117d671d18a93848aac0e1d379d03f543d56652d545b345ecf7bbb7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a2c2194736f094e8869b.wav",
+          "bytes": 2845284,
+          "sha256": "c097ec87e6523cd1d2cb34b97eed1945ccbe9703416d417252489e11ec191b29"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a390029d822b76a1d93a.wav",
+          "bytes": 201784,
+          "sha256": "caaca17a4fd684c70de1bd5f06e0e336c554f55b9b4facc28e869544016acda1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a7a33e5c59fa9504bfec.wav",
+          "bytes": 330176,
+          "sha256": "1036a980c7a00d903fdfa26d4ebcb5cc271cac0dac33429f8f60112a18c9ceae"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a81e2363d71bb452a0bc.wav",
+          "bytes": 2042108,
+          "sha256": "3e7b75118458637d63c1d40b712d89015099627927ac0985c4827bf6da98fc6e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a8c7f729ae288fb3f76a.wav",
+          "bytes": 185368,
+          "sha256": "9743ce7c8130bd121ecd5064b6a05718a34acb12527a0280977981ad9b74dbc1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a9244ff4be3f48e1f546.wav",
+          "bytes": 2316072,
+          "sha256": "01e15821e2b14d0612400709b58415f62af14e241976f3290dc06efb2f865b7e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a94d2905bf1b4c366a8d.wav",
+          "bytes": 230932,
+          "sha256": "6c541325a59c2397f6e3d7fa3d1613b1c1c2f213cc13f50da95a68a41b914cca"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/a97def8ac64eae5800c2.wav",
+          "bytes": 2223176,
+          "sha256": "474671ca527ee124a0b85d8b96b3bab1330499f8962dfe97bd7bce9d1a57153c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ab0eddf492a1b9483f0e.wav",
+          "bytes": 160356,
+          "sha256": "98a65a1763515267739e9633ab89f1ce25744644307f1fe491d3063d385894cf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ab6177a7b35b886a1036.wav",
+          "bytes": 2583420,
+          "sha256": "d6f9115809e65ed0ab9e67fe0e447ea1e26a086295422234a0f60189c271539a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/abdfa0f49e8529b1040a.wav",
+          "bytes": 109004,
+          "sha256": "6717ba610e98eb1b5ee9234bbdb02f44b4a2ed593552006b40dc4ec4cfbac25d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ac180084e6a570cd76f1.wav",
+          "bytes": 97416,
+          "sha256": "a75866adf5d290202c76b43285d964c8cf6e2a24ec814155715560932e1dc6b8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ac8aac90bf1f0deb865a.wav",
+          "bytes": 3817304,
+          "sha256": "c7e1d56274e1b4c3111a0e44858ce8dcdb6cbb396bc417411d04e3fb969bfba9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ac8fce7588e86b8dbc02.wav",
+          "bytes": 389676,
+          "sha256": "314a29b1b886e296322785fd988da0862d7c486dc43d7f975bf270a5bd68298e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ae34c2c8fe1fd513ce4b.wav",
+          "bytes": 127488,
+          "sha256": "7980fdcf5925183c3653b9757817b32805136749f732a77ed08373be3b9858eb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b04cb70b1ae5f00105a9.wav",
+          "bytes": 88568,
+          "sha256": "f8d9e807a399fa2d20f732ad4c102e6e0883c34d15087927d26127aedbf7fadf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b2405fb795fa324babf8.wav",
+          "bytes": 164168,
+          "sha256": "9200af2a4a61921baa10cd8673c86d7c7cca0601d1496d42e37e2714d4c94ee2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b349392d0c9b028c1a1a.wav",
+          "bytes": 1734584,
+          "sha256": "2b06d85da85a477a3048d48c83d774d263d8b953807cc395a606f0ace8366a2c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b3c055207eca7d7d6749.wav",
+          "bytes": 1269692,
+          "sha256": "63f260c2825c03d7f5505ad17dc068dcd631579c10ad24519694e65cf4f2fd4b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b5a6ae7d8b9487907548.wav",
+          "bytes": 257436,
+          "sha256": "9297ad198b92ba64f7c35562a4c5c2036a75e97e08058a51e1b6c3e219a9f05d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b638fcdc93312141c855.wav",
+          "bytes": 2567512,
+          "sha256": "5a6fb1c4a8d6b04ecfeddfa86a0de828405dda33fc7b5d2c70109d147717b8f7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b6803a717ae0e14dc357.wav",
+          "bytes": 175628,
+          "sha256": "20f99d6c79125df4b24f36900cb441d79d62ce658ae2643d5da7a8d3e11f911a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b6a14b97f75618786a9b.wav",
+          "bytes": 190452,
+          "sha256": "5a455c2db3787baebc09a0b4f790d776abd0b4fe5ca4cfe644a764c478a2a6c5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b7a47f121a163e2b7afc.wav",
+          "bytes": 126068,
+          "sha256": "076fb5769d7ff2d55a6966b033e5d0b45dc367f8e167ee6f9ff3b2748dba68a5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b819c003d15dd167eb6a.wav",
+          "bytes": 99252,
+          "sha256": "470f1a7cc8775a64ad5c0895f5eb73d0d9d1102086830e7d003b680a5fcaa487"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/b91e84275c9f316a2b6f.wav",
+          "bytes": 1470628,
+          "sha256": "d64f40933bc827f23fe70ef4107f59ef2d208f7e844b9b50c426f3fcf3ead83d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ba4690ff6aee8629b46c.wav",
+          "bytes": 118968,
+          "sha256": "c2c555206a3496ada2afc752ffdca8fa3ff600d15e7087078b37e83863ee4b3e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ba48ecbbecde5ee92fd6.wav",
+          "bytes": 250896,
+          "sha256": "12af356b99aab62e4a4fcb5d1eb8b1d01477255dd71dcaa443c1e024db5c86df"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/bc2c4446908e35679d56.wav",
+          "bytes": 261220,
+          "sha256": "e887d6c482f92a431c5a2fbf27c6932e4ab1a823aa59fe222b5f8ce701926e5b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/bdca46fbbdbb0a845bcc.wav",
+          "bytes": 170264,
+          "sha256": "dd2b00b42b074574ac1734ecc342e5d507f9c0750c1abfc944a092599e205a43"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/be10b482949d4b26f298.wav",
+          "bytes": 202648,
+          "sha256": "953d566007a9d54be6ec42b8c60e47b90db648aab4fc1bf822b8dc48425288a9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/bea832d9cc725ef69484.wav",
+          "bytes": 2737088,
+          "sha256": "f1017932006415790f803140e26c5974124935a75fffbdc34d50fc28ee300f04"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/bebbd8b55e977db912bf.wav",
+          "bytes": 121576,
+          "sha256": "a21022ddbbc66d328370abe63c330e39e91a673b4fb14528ce4fad744c23c844"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/befd7b2bb839de4d2441.wav",
+          "bytes": 4960044,
+          "sha256": "6712e73ff400c14d32ebb5a638bf022043a7f7923c4278e67d1edf2b024a730a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/bff5860220dff7196353.wav",
+          "bytes": 2719768,
+          "sha256": "aabadba5305ed701c7fe1c718052e3d4e5152446f2feeffb78da0ec9241f9d59"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c090ab3e51f6312b6a5c.wav",
+          "bytes": 2355400,
+          "sha256": "18edcd2808b8a097901f6b4f52f58182b572060e342d61db8af0aec1302ac092"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c0a12edeebaebb8a1838.wav",
+          "bytes": 222704,
+          "sha256": "5bfd8f698685188f90b94a8880da28be931f47ed959e1d1b0d4b2bf3bbe9d65e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c23e261dcd6cd4586ce6.wav",
+          "bytes": 2575288,
+          "sha256": "184860b678623bf6e0b30bde7e55b425825c09eedff1a8b571857fb6a47af43a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c35c8526d359c97d9be5.wav",
+          "bytes": 110452,
+          "sha256": "5963f8fdebc34bd2e97faa74906b694980212efa9fa942ac36efcb8aef22e6cc"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c3d156724b20aaa6c295.wav",
+          "bytes": 201908,
+          "sha256": "4993ab37897b19f85fcd3e2966fc98d2cf078a23020979f85fdf84c5865243ac"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c66ab054f388f1fc2a60.wav",
+          "bytes": 234956,
+          "sha256": "caff15496e2b566f2d5153b4b3d70b75ab53c844e32fb007352472efc9de5ddc"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c7a3791ccaa1d4f8c6c5.wav",
+          "bytes": 323996,
+          "sha256": "220129d3f6ab69a3536d8d2933f3b204b1383be422370d91789e628e3b8fa175"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c8a3cd2ea388fe5c968a.wav",
+          "bytes": 316364,
+          "sha256": "2ca4900d8c5159a6de1451386a54d0a0a285a09baff1d6d14ccf8346be019fe0"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/c9c5b95c1a64ee3a5447.wav",
+          "bytes": 1741372,
+          "sha256": "e0d6443b1e9cdef4cdc8e84486bc9ac3dba7052aad23da82100d54f443345db3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ca4b3f5d9767cc65bac5.wav",
+          "bytes": 2540588,
+          "sha256": "20c0fa53fd722e6767d364c1fa979dc4efa369efdd25c1f277be533b94775ade"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/cc25ffe86b81d831239c.wav",
+          "bytes": 110408,
+          "sha256": "fe56b0b08dc141461e0335974fd84f51f26fca50d522dd6c1152d980d9bd31c8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/cd393a6266dc6a246377.wav",
+          "bytes": 298300,
+          "sha256": "6b299934bf13d85ae4f836346cb12e7e09bb18cf8ac5c0f82902880e09939708"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/cd88e90320e51218071e.wav",
+          "bytes": 106688,
+          "sha256": "1f99ccafb0bfd1a601a742c769109107a95388b3222ef004087c872857e2c1e6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/cd9f553795b0ee57ca13.wav",
+          "bytes": 102928,
+          "sha256": "c6c76481ac1c0d7efa9ef400e048a42d8ae3b344ca9dc498b0ce12922596ff6a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ce6546e08235cf7e5c6d.wav",
+          "bytes": 800648,
+          "sha256": "bb0b8ac0aa487bb7a96dcbdf25ab0b854b29642d0688ce4e03d2be807ac677ed"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/cee0f7637f662158038d.wav",
+          "bytes": 1901972,
+          "sha256": "c89f6e35e7aa39e45d3edda4f1248c8ec993a827642745fc48f25509e2d48c4b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ceee207f256f5d27db3e.wav",
+          "bytes": 190584,
+          "sha256": "6c231aecf4e66f448851d05517a8b6784fb62c778695b00e68f3d19a50305910"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/cf0812d09d6dc45fbdd1.wav",
+          "bytes": 112668,
+          "sha256": "6f82c97a0315ce40c8d03ba84de2320b1e9ba2b731f8902f3f7b620a81226044"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/cfe3f65d53ddf781ca76.wav",
+          "bytes": 196276,
+          "sha256": "b67586744f0786770d262d95aa3f067bf5f2ad296cec7d4aa762df87f225c060"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d0375bbd4f666307b71c.wav",
+          "bytes": 124576,
+          "sha256": "af0a531157476952ef97d3825dbc1edc9818cd9c2dbc7d1e3606c6923f40e4f3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d07dff8cdf103f0b0f88.wav",
+          "bytes": 385176,
+          "sha256": "afcb21b9c0944ed9f9472cdaffa2297caf4cc4aca41eeb61f1c8620c57e6a7ac"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d156a006aac18ad00455.wav",
+          "bytes": 2271940,
+          "sha256": "5244c76eabd66e94d3e4d183f12bf84ab31cafdcde4e54d0eed7b36ada0c7bed"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d18dd97524684f6d8eb5.wav",
+          "bytes": 216276,
+          "sha256": "be6906bdf8808e8ce003967f0308798bf3ffcd2b7de8e14432cc93bafde474ce"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d1f0c98d9ae2e0381ed9.wav",
+          "bytes": 2214104,
+          "sha256": "0c68b2d088ee0cc0e01de1cb4eba224f072aec09e8aae5f4170554670d5a5140"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d25b698f59de24bf1b03.wav",
+          "bytes": 2644636,
+          "sha256": "fef8ec3123354f6c0523edc5341f95db0837d827c39735ec27b60684c00acead"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d359a149197f6e27aa26.wav",
+          "bytes": 102428,
+          "sha256": "a41144bdafb2221743554f0a333f7270802ea6bc96446c58691c96a789a21847"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d47e4f8aee1d4fada13f.wav",
+          "bytes": 2630272,
+          "sha256": "6c5d378aface916d0a58ff684e9cf29c0bcb85d363f1201b717e9cd64a0ad07e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d5ca8a21007c11419453.wav",
+          "bytes": 959844,
+          "sha256": "6d3dae06109160dbe4eebe2c1e4cf86ac5e566d6fa994d8fdb1747de954f4b68"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d660f6c622401e0898c3.wav",
+          "bytes": 2233740,
+          "sha256": "ae63b4d56c4caf95ee18d06e6f814fab4379dd9dbcb5cf1a58bfe46297d33d11"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d74a0e9d921f9a92fcdd.wav",
+          "bytes": 372492,
+          "sha256": "289cbcaeb84908ea3510fd11b6e2f50588ee6ec831a69a60531835b14713b958"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/d9f7dacd8b33aed9ee93.wav",
+          "bytes": 227972,
+          "sha256": "071b6aa4a630a373eaf3844850f747b0ad92f3b03ba83eddf140bbba44970d07"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/da7fe1aa40f28500658f.wav",
+          "bytes": 231312,
+          "sha256": "275624ddd7f63bb3e2d849e409ac3a25f5e27df6de6aff6870551a04d93ad9f4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/dab48d56d6273dbbba72.wav",
+          "bytes": 212824,
+          "sha256": "13048b02c70f16d4dcf28d6338c84cb004f4fe4ade18f799f1a5685e0e0962bd"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/dbd96e130dae67130809.wav",
+          "bytes": 279252,
+          "sha256": "85dc0a55b396d1dd5d7e2c5dc522996d748460cc145b050c0d2ab8b9e979a92c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/dcab5bf63fe945f9c8e1.wav",
+          "bytes": 1503892,
+          "sha256": "dc2635b8e2d7d41b293f704b441a3b6f28f68d3e75475585ce307811a7e84e32"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/dcce85d30040c6aa7a7d.wav",
+          "bytes": 1429248,
+          "sha256": "3c02445f8cf4057b1bc3348433bc79961c5c22c7c8c259310ca7b3557e079e63"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/dd35bbb393f63e85247f.wav",
+          "bytes": 877944,
+          "sha256": "de33fe588f7301171451a5c7972f385b9509543a439633f8f4f741211298cc14"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ddb9df047e93028af4fe.wav",
+          "bytes": 2368960,
+          "sha256": "b4e9d5c113175318f57e833075eb610755b94d4b5b81004b0b474c195319dba4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/de796e63b8301858680f.wav",
+          "bytes": 110672,
+          "sha256": "920848417fdd3a73b7c6256f35763a4d929bcfe2c22dfa40c2a507e9e5cb8b33"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/df8d8a43262e47832b20.wav",
+          "bytes": 224852,
+          "sha256": "318700bf7503b51cf24bcf2eda2db15646a68ee4f79fd5ec48bc4ba68a11dbf8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/dfbd1be1995a481f7cac.wav",
+          "bytes": 3035448,
+          "sha256": "7f8f2239ba405157a248ef25078001a16510fbc81d404b3244ebfb9bb49fbb34"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e1433ad9bedf29c241ba.wav",
+          "bytes": 246576,
+          "sha256": "eadc56deff451a0d867a02ba4bdeb00fb16367265825fb065ea85e369ce2a51a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e21538e1d16cf4c7a8de.wav",
+          "bytes": 107844,
+          "sha256": "cce75f3775b6d8349375e0751da6420a3be22a696b4eda09b40a12ba7b0eb76d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e233479a543842606c8a.wav",
+          "bytes": 2843120,
+          "sha256": "78d53cbb6a1da89b5d54f4dc156b6b62f5dd531855f7e9f3e578a38f39be888d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e24a0560d8a889c2c1c2.wav",
+          "bytes": 197532,
+          "sha256": "83f4e7ab3e54169eeb6f22a4df622727a0b43dfadf4ee39f605737f508013a4d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e338dca430e3ba998fb2.wav",
+          "bytes": 110948,
+          "sha256": "2fbab214d1f744e99acfe26616057c43a480783f1a55f5a161b74128e96851d3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e34d03976f0d70f836a1.wav",
+          "bytes": 378420,
+          "sha256": "1f6aacdd9548796cb37aa7cde5f63bbf3893b099919527fbabd26df08a2e47dc"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e47bb7cd013f544d75da.wav",
+          "bytes": 266156,
+          "sha256": "9228ef24c29a002f21da5127bdd4363e86f0679555b127dd46fd9f552174f676"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e84e1a982577ae31c8d2.wav",
+          "bytes": 128912,
+          "sha256": "507b45f6fc054198ac84292194d3bbad5b81e52812e5cf2b3222920127e6d912"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e8edf02e4a36d33338de.wav",
+          "bytes": 118192,
+          "sha256": "948d718cb4eff047ce53007cdef9f30d007ba9da586a130da8ab8a453ddeac33"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e930308ab0957ffc0e44.wav",
+          "bytes": 2078244,
+          "sha256": "9479865bad6703b800e3f3886ba4bd76fc57a84f731dfa2b433707741867c599"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e9861efa8dba6c481565.wav",
+          "bytes": 2574336,
+          "sha256": "4b9f53db783858f9c67f6614738c40ba7433a03ac6bbad59dde84dd7146b6cb1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/e9f1c6d463edcc1f5951.wav",
+          "bytes": 2263964,
+          "sha256": "e8cc9b2685fdcf7df5e75563c0c9c9acdb88b1cb9732944760eb4a058c80c689"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/eb9376f16b205f26c863.wav",
+          "bytes": 1348796,
+          "sha256": "4e92299ab2f8eb6fead33af6872aabbb6e9efe3af7e02050d35eabc7dc7ba913"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ebef612ade6c14f13cdb.wav",
+          "bytes": 240400,
+          "sha256": "ba17342c4cf905ae773fcd6502800965b46444f9860600e682edc93dee22d535"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ec18bd9b680b48cf45f9.wav",
+          "bytes": 2332308,
+          "sha256": "ec49e46e8e8ce1fa3ef42729cace375f3ea3db37007a1b0e37c12f99f077c64c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/ec471b09a71c7dc941dd.wav",
+          "bytes": 1662488,
+          "sha256": "05f26ffb02a73e195188e496f1bd86b3c09578ea57ecf03601aab2f6e8809682"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/eef5f4a6bfc25193511d.wav",
+          "bytes": 226756,
+          "sha256": "83b5f96f838f86023b4d6fa6816affe47794d04e16a520ab467fb5a79021a8d3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/f1a80390d500128916b3.wav",
+          "bytes": 103260,
+          "sha256": "037c6b9e04ecfdd5acd4425f943c02ef4d579001dbc0534068f605ec0004a1df"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/f64edb117faeb296d3a5.wav",
+          "bytes": 2823468,
+          "sha256": "f702d79da37abf277af7bbfc444c2dd4cacd891ea410e32a80accc2ff3fe4a13"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/f6a5b93e83968defaceb.wav",
+          "bytes": 216952,
+          "sha256": "c766e01f8152e140623f1cc19ffe315285083e017e1e96ac845a9dc6df467e1c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/f884ada0c26b754a9024.wav",
+          "bytes": 126332,
+          "sha256": "60c16532d9305eb2db9a23c3c1b6a7024043add9c877b8c67d91b1d1c59bfd62"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/f913aabd5673a12d21fb.wav",
+          "bytes": 351788,
+          "sha256": "6c066b721419faffacd2b275f66a55ead6d75db749ab5220473e5eb34182db05"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/faa6656deb99b4906cc5.wav",
+          "bytes": 127536,
+          "sha256": "630beabf12d3d5038d3bc6a576d5ad00d0139db36e7745220f2be27a3ae5cd8e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fb696d6509eed7c7090d.wav",
+          "bytes": 286936,
+          "sha256": "52445876d0d7e659c888d27ddcd2482f7e59e12e2011a0c0d603918e58f9215b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fba60319c67b4ec1575c.wav",
+          "bytes": 128024,
+          "sha256": "55dd2915e5a0e80e5ccfd85a6584d0c6971da75de1b9a4485eb1900dd6442305"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fbcce464e19b071e0394.wav",
+          "bytes": 2067780,
+          "sha256": "fb2503aecf65dce48b10421cc5cc7e71dbe2add867f08fb99c923dd2df9f4d34"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fbeb031d72bc25abdcc1.wav",
+          "bytes": 115220,
+          "sha256": "f08499c8e08016fd8a9c743d8a663269e111df324a6ca187cdfe57782a62998f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fd12fe4453cb511c0ce7.wav",
+          "bytes": 401280,
+          "sha256": "466a89c7b0b708c0e24cef16da1157afac8e243303838923cc3705c0afaf5e20"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fd1c102bdc29881e2fcc.wav",
+          "bytes": 2630984,
+          "sha256": "42737db5316d046e7f4414680232fa4e640529dcacea948e71cef616e6b3d680"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fd2f3f53f4dff69010c2.wav",
+          "bytes": 1997456,
+          "sha256": "ca26cde3f7efbe436351ec3c71037fad0ae32c8e6d90758207820fc67ba64341"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/fd734f6db3955c793fe7.wav",
+          "bytes": 206984,
+          "sha256": "78f4c51d19f32badd00be5173275fb44e6c780e908ecdc3fab37470a40cb2177"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/wav/feddda191aba538ff1e9.wav",
+          "bytes": 318208,
+          "sha256": "84b9588260e45ba351c1dbbf734256b14081724ca40884c7a3d376e7c8b18d79"
         },
         {
           "path": "samples/orchestra-expanded-20261105/demos/expanded-cello.soundforge",
@@ -1108,22 +2443,7 @@
           "path": "samples/orchestra-expanded-20261105/wav/0f2c4c72cfd5defbb065.wav",
           "bytes": 162052,
           "sha256": "3e834c54061e625c311712d56e5c29638a41f849035d715564b5832bbf6ce32c"
-        }
-      ]
-    },
-    {
-      "id": "build-002",
-      "version": "2026.11.07-1",
-      "profile": "build",
-      "file": "build-002-77e6047876ff3b9c05733d5f7defefe951e6537280d48a49a0fdf3d44bc3d2e0.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/build-002-77e6047876ff3b9c05733d5f7defefe951e6537280d48a49a0fdf3d44bc3d2e0.sfa.gz"
-      ],
-      "bytes": 174325989,
-      "sha256": "77e6047876ff3b9c05733d5f7defefe951e6537280d48a49a0fdf3d44bc3d2e0",
-      "manifestSha256": "cb6a3d198e52f36ed7c5e18fad9c97c10ddf20f970a1d57ea1dd4c0c14d18b0b",
-      "expandedBytes": 267277020,
-      "files": [
+        },
         {
           "path": "samples/orchestra-expanded-20261105/wav/0f648e68df49b5aa1396.wav",
           "bytes": 553028,
@@ -1318,7 +2638,22 @@
           "path": "samples/orchestra-expanded-20261105/wav/230f5289d07d494d0fb2.wav",
           "bytes": 217740,
           "sha256": "ad45f87740ef9914de4e3fd7331ff82b1e1f13a762b45946d20e590204693dcf"
-        },
+        }
+      ]
+    },
+    {
+      "id": "build-003",
+      "version": "2026.11.07-2",
+      "profile": "build",
+      "file": "build-003-55d26059e38fd7b9c1bc3c85c65db5a83a442a70b19cd1d7359ff2118d8cf483.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/build-003-55d26059e38fd7b9c1bc3c85c65db5a83a442a70b19cd1d7359ff2118d8cf483.sfa.gz"
+      ],
+      "bytes": 170408066,
+      "sha256": "55d26059e38fd7b9c1bc3c85c65db5a83a442a70b19cd1d7359ff2118d8cf483",
+      "manifestSha256": "7426d164d274b2d92deeb26b8bc6f898efebb7ae3c95bac0638ed3d6f8e1b98e",
+      "expandedBytes": 265847988,
+      "files": [
         {
           "path": "samples/orchestra-expanded-20261105/wav/2407b5a99bc05342674b.wav",
           "bytes": 167268,
@@ -2613,22 +3948,7 @@
           "path": "samples/orchestra-expanded-20261105/wav/8db52b2bd8eec1869763.wav",
           "bytes": 309300,
           "sha256": "3b308776357c77ffd58910b71ab3e50bdf18ceaad416ce8d0883ea3effde1c68"
-        }
-      ]
-    },
-    {
-      "id": "build-003",
-      "version": "2026.11.07-1",
-      "profile": "build",
-      "file": "build-003-163088b0e3e45ba28534b019b3a8dfcd7a399c6eb380cf234ae8522d04be4db3.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/build-003-163088b0e3e45ba28534b019b3a8dfcd7a399c6eb380cf234ae8522d04be4db3.sfa.gz"
-      ],
-      "bytes": 167912384,
-      "sha256": "163088b0e3e45ba28534b019b3a8dfcd7a399c6eb380cf234ae8522d04be4db3",
-      "manifestSha256": "1f1220d94423f57540256e3545da304a2363efc4db97ea58cadf3f12549db1ba",
-      "expandedBytes": 267338560,
-      "files": [
+        },
         {
           "path": "samples/orchestra-expanded-20261105/wav/8e864d5da843798d9370.wav",
           "bytes": 1721552,
@@ -2883,7 +4203,22 @@
           "path": "samples/orchestra-expanded-20261105/wav/a1d67e2a04bf55bc38bd.wav",
           "bytes": 2742256,
           "sha256": "fef7bebb028dcf882d6cbb9409fa63cb6051143aa591c24f85f1b39c54284cdf"
-        },
+        }
+      ]
+    },
+    {
+      "id": "build-004",
+      "version": "2026.11.07-2",
+      "profile": "build",
+      "file": "build-004-e2a492ac65bdeb6ea5e2a8024ece45b9cc5879054cc1bd37016b9b05dd52ac65.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/build-004-e2a492ac65bdeb6ea5e2a8024ece45b9cc5879054cc1bd37016b9b05dd52ac65.sfa.gz"
+      ],
+      "bytes": 166405919,
+      "sha256": "e2a492ac65bdeb6ea5e2a8024ece45b9cc5879054cc1bd37016b9b05dd52ac65",
+      "manifestSha256": "466b2ca2e54222770b3b1a91c68375c01d5df5a42bfded58149b40f4ead5fa7b",
+      "expandedBytes": 266580164,
+      "files": [
         {
           "path": "samples/orchestra-expanded-20261105/wav/a20b79693dc2a057dee3.wav",
           "bytes": 2658232,
@@ -4028,22 +5363,7 @@
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-009.wav",
           "bytes": 4183160,
           "sha256": "89e1b7934bb294f14d6b02b3a93fd96f054bb564a2874e66a134e44d58676f1d"
-        }
-      ]
-    },
-    {
-      "id": "build-004",
-      "version": "2026.11.07-1",
-      "profile": "build",
-      "file": "build-004-3c27e578e93806f827aabc3747edd329bebad2158c82c1e9ca05173730983f33.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/build-004-3c27e578e93806f827aabc3747edd329bebad2158c82c1e9ca05173730983f33.sfa.gz"
-      ],
-      "bytes": 114468048,
-      "sha256": "3c27e578e93806f827aabc3747edd329bebad2158c82c1e9ca05173730983f33",
-      "manifestSha256": "6d1cd42154551d96abeb9f30839a6144b56ca209d6219c3c017209821152b360",
-      "expandedBytes": 264323972,
-      "files": [
+        },
         {
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-010.wav",
           "bytes": 5075868,
@@ -4073,7 +5393,22 @@
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-015.wav",
           "bytes": 7073136,
           "sha256": "d42d0967ac85f7072687c9500b0edeb645883d59ef088140d3b5c8311422dbd1"
-        },
+        }
+      ]
+    },
+    {
+      "id": "build-005",
+      "version": "2026.11.07-2",
+      "profile": "build",
+      "file": "build-005-d3c8f12d2db026a093b04ca497a44d9a13c0d61c9f1746a38cbaf9cae01bb5ce.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/build-005-d3c8f12d2db026a093b04ca497a44d9a13c0d61c9f1746a38cbaf9cae01bb5ce.sfa.gz"
+      ],
+      "bytes": 109117153,
+      "sha256": "d3c8f12d2db026a093b04ca497a44d9a13c0d61c9f1746a38cbaf9cae01bb5ce",
+      "manifestSha256": "353e9b0115a0779ce51058e0b754f3b6360eb7b80019a6ed0b3714d6d9970b70",
+      "expandedBytes": 266726712,
+      "files": [
         {
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-016.wav",
           "bytes": 2686304,
@@ -4298,22 +5633,7 @@
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-060.wav",
           "bytes": 2584304,
           "sha256": "4d6245178553433379dabe5d710f1bca4bfcd3f3f33cf442a5e413a8ff664b32"
-        }
-      ]
-    },
-    {
-      "id": "build-005",
-      "version": "2026.11.07-1",
-      "profile": "build",
-      "file": "build-005-65b950f5599873f64af3b1b14b897f3185d01c979d64663f645104b7c474a24f.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/build-005-65b950f5599873f64af3b1b14b897f3185d01c979d64663f645104b7c474a24f.sfa.gz"
-      ],
-      "bytes": 69305305,
-      "sha256": "65b950f5599873f64af3b1b14b897f3185d01c979d64663f645104b7c474a24f",
-      "manifestSha256": "775bcd74d7e8ff0f813bf25e41a2f3305453cb0cf7553dbf895b7b6153ffe7ca",
-      "expandedBytes": 195889796,
-      "files": [
+        },
         {
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-061.wav",
           "bytes": 4662124,
@@ -4358,7 +5678,22 @@
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-069.wav",
           "bytes": 2933284,
           "sha256": "2086d9e8d1f4a8ecc3f27c058117791dc1a46887c5151c7a68702dc236131254"
-        },
+        }
+      ]
+    },
+    {
+      "id": "build-006",
+      "version": "2026.11.07-2",
+      "profile": "build",
+      "file": "build-006-a6decc276a5cfb74c8613bc386276d800b8f6481adec1936b2a228cbba624512.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/build-006-a6decc276a5cfb74c8613bc386276d800b8f6481adec1936b2a228cbba624512.sfa.gz"
+      ],
+      "bytes": 56628321,
+      "sha256": "a6decc276a5cfb74c8613bc386276d800b8f6481adec1936b2a228cbba624512",
+      "manifestSha256": "d8081bf3eb64cad0427fdbccaf38b52c5412c26d4e63e7e29d3d54714dba3cf0",
+      "expandedBytes": 160707280,
+      "files": [
         {
           "path": "samples/vcsl-kawai-20261107/wav/vcsl-kawai-070.wav",
           "bytes": 4171120,
@@ -5128,11 +6463,11 @@
     },
     {
       "id": "audit-001",
-      "version": "2026.11.07-1",
+      "version": "2026.11.07-2",
       "profile": "audit",
       "file": "audit-001-d980041d926c25f848e4c5c953b96fbf61408cdc4bc2fe07c31ea4d1bc7d1737.sfa.gz",
       "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-001-d980041d926c25f848e4c5c953b96fbf61408cdc4bc2fe07c31ea4d1bc7d1737.sfa.gz"
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-001-d980041d926c25f848e4c5c953b96fbf61408cdc4bc2fe07c31ea4d1bc7d1737.sfa.gz"
       ],
       "bytes": 198453574,
       "sha256": "d980041d926c25f848e4c5c953b96fbf61408cdc4bc2fe07c31ea4d1bc7d1737",
@@ -6093,11 +7428,11 @@
     },
     {
       "id": "audit-002",
-      "version": "2026.11.07-1",
+      "version": "2026.11.07-2",
       "profile": "audit",
       "file": "audit-002-34f6c09c3b4490e3ddb2ede0cc268ffb6b8493477284ca6b696318bd0cc0e201.sfa.gz",
       "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-002-34f6c09c3b4490e3ddb2ede0cc268ffb6b8493477284ca6b696318bd0cc0e201.sfa.gz"
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-002-34f6c09c3b4490e3ddb2ede0cc268ffb6b8493477284ca6b696318bd0cc0e201.sfa.gz"
       ],
       "bytes": 130882628,
       "sha256": "34f6c09c3b4490e3ddb2ede0cc268ffb6b8493477284ca6b696318bd0cc0e201",
@@ -6723,16 +8058,16 @@
     },
     {
       "id": "audit-003",
-      "version": "2026.11.07-1",
+      "version": "2026.11.07-2",
       "profile": "audit",
-      "file": "audit-003-ac65fb9bbbc1b86684713a42e506252360b009be05eda5368d49a162cc80d1d8.sfa.gz",
+      "file": "audit-003-c6dab7a8f4d19cccffe62ce91a228f059fa9f347d7d4f5982c03b7c74a8aa526.sfa.gz",
       "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-003-ac65fb9bbbc1b86684713a42e506252360b009be05eda5368d49a162cc80d1d8.sfa.gz"
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-003-c6dab7a8f4d19cccffe62ce91a228f059fa9f347d7d4f5982c03b7c74a8aa526.sfa.gz"
       ],
-      "bytes": 140210517,
-      "sha256": "ac65fb9bbbc1b86684713a42e506252360b009be05eda5368d49a162cc80d1d8",
-      "manifestSha256": "37d76ea2c8f37c955089e093ac800a77a3a1e67b2a32a1df2f4c8263bb9c7b79",
-      "expandedBytes": 264901449,
+      "bytes": 181800597,
+      "sha256": "c6dab7a8f4d19cccffe62ce91a228f059fa9f347d7d4f5982c03b7c74a8aa526",
+      "manifestSha256": "4def54dde9a17134d569f3ed9297ff5cef41c5bdb0c7aaaec1f98c93a24b52ee",
+      "expandedBytes": 268393419,
       "files": [
         {
           "path": "samples/orchestra-basics-20261104/validation/violin-section-59-dynamics-repeats.wav",
@@ -6788,6 +8123,21 @@
           "path": "samples/orchestra-basics-20261104/wav/brass/13-trumpet-3-G4-staccato.wav",
           "bytes": 228888,
           "sha256": "a752d87440881f1cd0abe1f7d71b86b4b16f89862a9625e46003e666c3a34ad6"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/brass/14-trombone-1-F2-sustain.wav",
+          "bytes": 1524700,
+          "sha256": "d850e5a544516ff75809f80e8bd9c48b93b8bccc7ce41bcb23417449035c46a9"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/brass/14-trombone-2-F3-sustain.wav",
+          "bytes": 1907620,
+          "sha256": "1804005887bd753b4ad8490f3036bb9828332e62ace8cc20d4927f742443903d"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/brass/14-trombone-3-As2-staccato.wav",
+          "bytes": 298300,
+          "sha256": "ae2c190656ad350ea544918cfa00bb2014ee5d5cd5b2884c42dde0fe22401263"
         },
         {
           "path": "samples/orchestra-basics-20261104/wav/keys/16-upright-piano-1-C3-single-hit.wav",
@@ -6955,6 +8305,21 @@
           "sha256": "daa485c8bf28b1b9422ab687179fe1f7829a63b3046afa7b3c6b2fc823c1cf33"
         },
         {
+          "path": "samples/orchestra-basics-20261104/wav/strings/02-solo-violin-1-C4-sustain.wav",
+          "bytes": 2540588,
+          "sha256": "e0af37afdef8d1ef453de76e3268c1471e00ba58313407eeeaa009c0e72148aa"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/strings/02-solo-violin-2-C5-sustain.wav",
+          "bytes": 2718896,
+          "sha256": "6c15a1009e26e91bbf0c8bc6e89b7c9edced103fdfc8a25677f5422e7dffd43d"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/strings/02-solo-violin-3-G4-spiccato.wav",
+          "bytes": 225784,
+          "sha256": "a671e0b88889368315e2c7298e90c4b3fe4dc8ba53a9a34beb12acea7008a7f7"
+        },
+        {
           "path": "samples/orchestra-basics-20261104/wav/strings/04-cello-section-1-G2-sustain.wav",
           "bytes": 2445724,
           "sha256": "c3d727d212d479b19d5623424eb249ac0db395c628b31bdb4f1714228a83b32d"
@@ -7068,6 +8433,1401 @@
           "path": "samples/orchestra-basics-20261104/wav/woodwinds/07-flute-9-E5-staccato.wav",
           "bytes": 130588,
           "sha256": "335a74abafcf07049c854271e170b4e662c24c72148cbb0ec8bee0304579beb1"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/woodwinds/10-clarinet-1-As3-sustain.wav",
+          "bytes": 2078244,
+          "sha256": "7b32b954408498ca0f872113d7cb1aa3454d5d0566b532141d996f8ae42e3597"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/woodwinds/10-clarinet-2-As4-sustain.wav",
+          "bytes": 1949540,
+          "sha256": "1419dea9ac9676f60e21853b0f5c70a6d25c7a65d64009be084ef71145731985"
+        },
+        {
+          "path": "samples/orchestra-basics-20261104/wav/woodwinds/10-clarinet-3-D4-staccato.wav",
+          "bytes": 109972,
+          "sha256": "7f76a27c6c019bc6ebb48d175c730e9072885a09c743d9a2246df1a5f862be96"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0125a151a3d0fcd548bd.wav",
+          "bytes": 159720,
+          "sha256": "b2eb0ffbf6133f352d7479562cde60174f21a4adb43d7c32d35f01b70c2bb120"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/014097f2d2e1b31092a2.wav",
+          "bytes": 180488,
+          "sha256": "100efcbdb1ea466876bbe2d99c636907adba20abb0b8e9574f05b67a17d67cf7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/02710914f079b8260f43.wav",
+          "bytes": 98364,
+          "sha256": "07bed093b00a621f95f3237fa9e6d66b7b644b20efae0824ad54e419c127aadf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/02d3bbb2fc3083576209.wav",
+          "bytes": 207184,
+          "sha256": "774c12e90c669fe93d1747e873358a89a26066b01ba96f614610ea4c1c28a7da"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/02e8af9094309f88dff0.wav",
+          "bytes": 3153736,
+          "sha256": "0d87a1004cbfeff3786f72731731cda752ec6f99d3b2a2e50cdd9a574b23272a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0427623c75cc201785f9.wav",
+          "bytes": 189624,
+          "sha256": "f0e65d7143f8e0c771d9dcbdea8d94ce2b07cfc250b55761f3296392360ad91a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0755ebcaf809ec1a1a7f.wav",
+          "bytes": 86608,
+          "sha256": "a417a1277eae1e56a3b2e9a9df76196f2a531073101bf47c0cd24b3e0d09bc37"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0ba25ba92e941563cd48.wav",
+          "bytes": 1987372,
+          "sha256": "61ff877d4b500c2e1b6b51f693cd1ea8df05c7473c2ea458a207b1450495e430"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0c9f044dbd8b21b322ee.wav",
+          "bytes": 111108,
+          "sha256": "7eb645355b9b8a09a1e6c819e37fe4c726c3129364e40c6f9fc6f3e70bb170de"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0cb021a56780584d1b61.wav",
+          "bytes": 2281664,
+          "sha256": "a33428ce832fe0108e5399026bc8a7687b43c1503a4d19bb38fe24cdff071b25"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0cd1af0e280b6238d10b.wav",
+          "bytes": 207796,
+          "sha256": "aad9c37bb7979bceabd9dd8fd1e1806d1cd5fe264233bd5048849ddedbc4b706"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0d383d598fe6ab59128f.wav",
+          "bytes": 1996064,
+          "sha256": "9669ede565f46af967a1ff72cb106a14736e0325680aa3b62ee148f8750efd88"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/0f11d8d2e1d82ed786da.wav",
+          "bytes": 243868,
+          "sha256": "fe962a6aa6e8c01de0e5d9cf2e498d3f2f9be66f944152ca8e4e73726d71c512"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1048f7cb5e338b93f0db.wav",
+          "bytes": 177660,
+          "sha256": "f82414bd98fe13e62a52034769a863da43b9694540f2d97977eceb7b6efdc42e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/108bccc79a0df0c3b99e.wav",
+          "bytes": 1752628,
+          "sha256": "9d4d0eeef23a823416724e150deebb141f85d5ff1a90226e947bc4ba13c00597"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/10bb860a46b6f2f15f64.wav",
+          "bytes": 2069572,
+          "sha256": "3c9a237651cd049cacdf4052ef85ff406da1d9e5d4f59439c20f45a7578ff431"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1158282f4a29d71ea101.wav",
+          "bytes": 326208,
+          "sha256": "365e59e228e7af42d9277381d16bbd088983d99190e746da6ae81f9b10cb48fe"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/126f920a47e616635b83.wav",
+          "bytes": 196268,
+          "sha256": "bada8ff79015d7d9129e205925331d3663b592e194ced971cf44c499c1cc0b7f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/13d78ff67144f92478de.wav",
+          "bytes": 110360,
+          "sha256": "f181c58a5a9337106722aaf5f1b4e0a9231c6ab74d46444838d914a6af6efcad"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1593b7b61a5088c3eb95.wav",
+          "bytes": 2600174,
+          "sha256": "57c5aec0678a5d582d87ab33cd2f8954fea26ffd04c932eb6753d6a78e08736b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1692d1556af618d6a10b.wav",
+          "bytes": 1373392,
+          "sha256": "7d70f3324d34c2f1d34d210b11bc2b43158f47b7dc77fa2f65c7157f0d786404"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/16d4ecc578e561b33340.wav",
+          "bytes": 1197948,
+          "sha256": "7993b96b4a0643f413332cd1321ce992c31a883343a992511d343b9b6ff979b6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1715857b507700451e1e.wav",
+          "bytes": 215624,
+          "sha256": "31ec1ba3c100ff966464f532baab9303e3cfe58c27367fba912ec01a5967de90"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/189b204f4cbd6ede54eb.wav",
+          "bytes": 178892,
+          "sha256": "b7ea30516346a214f22a9ed07e17e3e1ad1044513dc035fe2a44b3d8b8137878"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/19ea50680e4514161daf.wav",
+          "bytes": 98224,
+          "sha256": "3a65c0e360d463c28bdce410900c48f0c72c982b7dd5b29c8f493df610d1d534"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1a31dee5cffadd077a91.wav",
+          "bytes": 147868,
+          "sha256": "ef40155b657e6b13bf73e3035b51c146fea267abf5e8ba5378a82c58b6385303"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1a6e146611a9c526b32d.wav",
+          "bytes": 164096,
+          "sha256": "5113431498bacccaa3cbca023628dfb421ea526b77a578f19a02fc4c36026d13"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1bc9e844ebf44b14dc32.wav",
+          "bytes": 169368,
+          "sha256": "ed2da319deea36dc872cfb3c09828d51fc0ba02bf4626a8bc43b8075e59cfd14"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1db012bab491dfbf3681.wav",
+          "bytes": 1107668,
+          "sha256": "675abd9954c0bb01bd6049cb7f5dcf908f627c673668ac9393226a09ba0fad2a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/1e960305ea98e3687f0f.wav",
+          "bytes": 101608,
+          "sha256": "d9ab058176af0671a3913eb814a01a7dea05d9e128e8fe724ab47fbd2a9b7f60"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/20f36e5ff29208c24888.wav",
+          "bytes": 144376,
+          "sha256": "3deba0200c7d0fbb5428b4771ba675223d05f193cce70ac19fe536769e30d538"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/2140ff585f7630a3997a.wav",
+          "bytes": 103712,
+          "sha256": "f63242a3e71269f387eef432dd419d6e4b63b4a558dd3695a3c49bb6eabc2c5e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/21553ce44b1c2f7aa412.wav",
+          "bytes": 1586272,
+          "sha256": "13355ccf2ead9ed98142c0062682aecf3ed3c443df619e94a9b3ec7ef523f057"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/218ee648730f550c3c5f.wav",
+          "bytes": 117868,
+          "sha256": "b68eef92f29ee717ddbcc78a44f0ac7397e005753d74835b40e9a73e9559f75e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/22014d56ceaa7a5ce535.wav",
+          "bytes": 201628,
+          "sha256": "004ab9c49db15533ee5f47d626138a5af3f044f19131827a0911ec3648c0e68e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/222543b361fbf223ba09.wav",
+          "bytes": 2497990,
+          "sha256": "af72f852ef2892233699851dacf5f8d97d446822d8eb4ce9e0ec27d5a721b118"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/235e6847d77290269df1.wav",
+          "bytes": 93372,
+          "sha256": "5730b264624e636e261af60e9939588d9dc603f87adf34c0ef49bcdb4f71fa1c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/2639e05e3d2456dcdbde.wav",
+          "bytes": 1856124,
+          "sha256": "bec366e903704a8d267202b16c3f170c513aef18fc6727f5bc4ec424c27efeb3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/264432d3c827931e562a.wav",
+          "bytes": 299128,
+          "sha256": "7a28162f7366235ef932396f9d420c42780c57537d14e61243cbf25fc1d2bfd7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/29c8885c1ef6ff5b9e81.wav",
+          "bytes": 1825324,
+          "sha256": "f4e51e4addda4e87e84b0a57b1de21cb447adff0a2c1aa5c71b5d3ef5618a93e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/29fb1adf03d5e15d3a16.wav",
+          "bytes": 97340,
+          "sha256": "7dc717ad90fe1d0421efa28b8e5ec3dd0ab4a550a6544ee47896dda33760f7fb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/2bc1f9e33b804bde4eca.wav",
+          "bytes": 2562122,
+          "sha256": "204834bfb91ee62d53d3b2c9e9d37928617f643922f434323508a15a70ee591c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/2d74d3d209ce83ed65bb.wav",
+          "bytes": 1986834,
+          "sha256": "0558d79d23db55c710e664e6283b62619f5a582ce261a5c082700a0d01536627"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/2e8045a19727c6866bbd.wav",
+          "bytes": 303796,
+          "sha256": "c8749500734290d012793a583429dd7da7c95578176d9acd98825a09549e6b55"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/2e9eaa11655f9dc0107f.wav",
+          "bytes": 104200,
+          "sha256": "e0da437154dbff49447f416a66247211ce91b6aa403a05b08fd702b7787b8db4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/30f0b1ecee9af261e737.wav",
+          "bytes": 790124,
+          "sha256": "b957256f8057fef478fb8d713dd284ad9a1aa57f720ef9f18a4e0d1d59bbe65e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/31b0c5b6bb11261246ca.wav",
+          "bytes": 188292,
+          "sha256": "8da448495c03a3ea6ac3605bb351c06f5771467971b689a50fd35b8ca75ae1e1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/33064bf8dc1cef3603ae.wav",
+          "bytes": 1612016,
+          "sha256": "6858987188e6e87a24ea6b37d0f3c07921e8f891adafbdbd2c72bb8f7241e8ab"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/36392a157f27e4bd557e.wav",
+          "bytes": 1772224,
+          "sha256": "4cedd1d7bd779fe357529e34ff398bc0e80c5088fc3908944962d65fcdc94823"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/36bb3d20e3c5e9c90128.wav",
+          "bytes": 259980,
+          "sha256": "f13097ea48b5427ac7d34b49afcd4ab48c5b25883c0c3df0718a72bba3e1258f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/36d1e5f597a40cd0c064.wav",
+          "bytes": 98508,
+          "sha256": "a6e292260a175ab95b121402e429f53f0b4c2cbea6ca43e1cb07f29ff90b8674"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/39880c21eecf488e2452.wav",
+          "bytes": 208516,
+          "sha256": "0910dd0f25c3455cd8164de1037d35053164fe7b0b640be219fef281a415b2c7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3a49e84754bc46dfa400.wav",
+          "bytes": 226964,
+          "sha256": "2c9a17f8848c55c3fd94ac8b742e5e552a9815b417ccf2ff0696accd0c566c35"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3b03d16bddb9a56f8b28.wav",
+          "bytes": 111700,
+          "sha256": "0f229fd1bcd3b80ee8a0957d9747594d5a53d6c44bc7421e8b8cca09ee64dbdb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3b75ff584453b9b109db.wav",
+          "bytes": 318040,
+          "sha256": "db6d777a499c24f39ca3e7774460c5b855ab1ea5b047e84cb2bf790f5ce449e2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3bf25a52b858891c36ee.wav",
+          "bytes": 342108,
+          "sha256": "c7a1418539041e1428f6aff88f66aa184e9dfff61857b725acdefff4993c1435"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3d4dfff54717d8becc4e.wav",
+          "bytes": 110972,
+          "sha256": "7e838381ffa4376bb83e2245be807d16444baecd82c4daa04acdade6007117a4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3e40b114e420f1b860a5.wav",
+          "bytes": 105552,
+          "sha256": "317a52552509405422a4b76d8671a9c2287a2b36f96382e00213f3e2d6903318"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3ec2de4bec38f69d99c0.wav",
+          "bytes": 1692352,
+          "sha256": "0ed79db13dc312c9f5adaf11492f6fd871a5619a9e452434043c33d7a1608697"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/3fe8f312e138fd93c022.wav",
+          "bytes": 1743712,
+          "sha256": "6b434e88f724e46116dd71bdfe52dc82c9b1ec7cec5f512bf9719be51e646671"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/401d59cf970cb64cea3f.wav",
+          "bytes": 220484,
+          "sha256": "44b4570eb53c520163c0ddb40f78ed29d75992b444745e2614dce9bc80ccf263"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4033fc0ff8c03bc4881b.wav",
+          "bytes": 262148,
+          "sha256": "beca016210ea3c89f2d0ede6ae1b4e9ccb42c39beac478290b63903742af634d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/40dadd23b146a04af81b.wav",
+          "bytes": 2230948,
+          "sha256": "74ba0ec6cb0698f314b07cee2f63cd309d5fd30db262d10d1f69e6aec9cd5896"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/41e76d05919c337236c2.wav",
+          "bytes": 234584,
+          "sha256": "d8ed193a6acb37b13b3374c2a35d46ef9d8beb230970ab3985ed9bc15ae0cb9b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/42d93c88744c7c5c3c04.wav",
+          "bytes": 163712,
+          "sha256": "6cfe01a4c8f753c13a7be78be6cfd14b0d21c0a8956d41cd462ca5c936d7215e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4420f1d28cb754f2d674.wav",
+          "bytes": 1658240,
+          "sha256": "09d6fff28ec8d8a3ac83505c61cf4e2e95fce5b232f3ae4f7adfefddb7af56e1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/45932703d4d32b79f79a.wav",
+          "bytes": 4283492,
+          "sha256": "f8506296062218d14899d8c74cfc32149de105d65520aafe7282d3fd07c206c2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/475e6648ca3f9951bb9f.wav",
+          "bytes": 98436,
+          "sha256": "92399f890b826399c0e0a08eab49b3e2ccf55aecc120594d020d9f1c69530953"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4797f3f231009041ae37.wav",
+          "bytes": 207440,
+          "sha256": "af5163b8b919a07cb85abeb1fbb2f1f124889f9b0417e4f41571f6d7588f5665"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4798951f8c80875b5e99.wav",
+          "bytes": 93840,
+          "sha256": "558f2d5487dd02de5f8b5fe7d7c4bfa9ec36d7705a344bb0bbf2a5076b54160d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/47a301fc9ac70d46ae3f.wav",
+          "bytes": 116956,
+          "sha256": "d691b4b3c557a1fe2c3ed674f0264457e801b653ef007ac26cbafbd2b36cbd99"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/484ff0f5a9a7a11f3025.wav",
+          "bytes": 209040,
+          "sha256": "12b59cd786b629aba2fbae9138ad60b2cbff9491d5eb1523be8c060f8f0d18f3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4a0182d44a2f8e408fdd.wav",
+          "bytes": 177232,
+          "sha256": "ecae67d794c2d0f3494e6613ce49c4c53c25eeda5fb95beb75a00237c0471908"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4beafd452796f42e9c7a.wav",
+          "bytes": 220480,
+          "sha256": "293f6dfd8be16c2319ef704c5841cd7bb60d218411ee15b76a7ab33089489e34"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4c0f13eb914f053626c9.wav",
+          "bytes": 315832,
+          "sha256": "7b1025869c74c8a937ecbed90636f25c2adcfe94d3751879a4b9177a07b19fd4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4d24ed183ef470c5d565.wav",
+          "bytes": 94472,
+          "sha256": "b58f04fe4eb46ed124c843d355e6dcdfcc39ca6314de10062055ef4bd21eb275"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4f1bb61a3d6fc48bcb65.wav",
+          "bytes": 170680,
+          "sha256": "117335e8813878d528a9446d0f51afb194ddf136bf41cfd96349bffc0f5c51bf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/4fef9b762109df811310.wav",
+          "bytes": 334496,
+          "sha256": "d3579f437be1f0c713a0407fada47f75e26b18da1f4984a365356382bc6618f9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/50a6e955c7817a9bb94d.wav",
+          "bytes": 145576,
+          "sha256": "c8ed3700784728becc7834007b710356a3ee2003c68c2102e12b1a396696c57d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/51d0e7eaa3322cd7ad29.wav",
+          "bytes": 2059160,
+          "sha256": "29fc72eb3b93cc297095d6cdeb54b3d819de8e4070855c565302bb0a471b0a5c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/51e10ab431094ee314d2.wav",
+          "bytes": 2162774,
+          "sha256": "7ec8e0c2dde75282a4aaacccc713c84faa3e84daa9cf43df45ffc0e209964d46"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/51e7f45431e1fdf9bdb7.wav",
+          "bytes": 211868,
+          "sha256": "0071c0e2cf8ee18b6502f392015dc89ed39a6320f8a430779a50c48b1cb37f42"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/5267baa0a2fa0970d568.wav",
+          "bytes": 214312,
+          "sha256": "c951dfd9aa9548e4d63edc0e9a24240617b68a2a36ee98793f4084d51d4d4676"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/527a9bfea220d6ae6e48.wav",
+          "bytes": 158924,
+          "sha256": "b24d6b61e64d27aa6ccddbb56e9c64aea2ed504078d0f2b9e13ef8bec3c923a8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/534967cb79733811a3f4.wav",
+          "bytes": 3096650,
+          "sha256": "592ebf4404ccafc7164c13cc543911ba9a2fe5f5e70dbb200807e2ae37b25035"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/546eb94ec2050424c104.wav",
+          "bytes": 245852,
+          "sha256": "cda80f0f3d2deebc97d313581f810cb1b42b516cd26d617252e62e12ea205a1b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/55457a202da566e7f61c.wav",
+          "bytes": 274384,
+          "sha256": "430fdec828f24448ab1613086f2d8aae0866d602f04704cddd09a360c721bbb8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/56fa58db60d28f434688.wav",
+          "bytes": 1252444,
+          "sha256": "2f024789f1b2ecc25f0e07dcff06084e4c2def83ff74e693c098c28fbec319fc"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/582a0041ac60ccc704c1.wav",
+          "bytes": 1885948,
+          "sha256": "6867f47637a3a869504911814be53dbc5e01fa52c2705a87afee20d2b71fc5aa"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/5a24c70db5b3bcd6afc5.wav",
+          "bytes": 290760,
+          "sha256": "b4a9d9a85016a0ee4db54256d3a7384288823821b866df4bd1cd226a05cf2396"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/5bb38997d315f21d96dc.wav",
+          "bytes": 238404,
+          "sha256": "6705e51b4873b572600a5035a79a7798094d93e838ca18cc9702fe7882709be3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/5e6afae02f7d23f99f67.wav",
+          "bytes": 191664,
+          "sha256": "348a34eb4a954ad56554a1e03d5d2e78d1420b76099f914af99f4eba65517345"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6084839c5f6747e02b24.wav",
+          "bytes": 110812,
+          "sha256": "003155b931aaebfec089b9823c8bc903147f3b6d8d9a98878af8e421bef0230d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/620f7c5f8fb96fb97cd6.wav",
+          "bytes": 262440,
+          "sha256": "b9c82d49a3575fa514586b89de6f10c735dcb8a2e1c3b1408aa0715298479365"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/623cc41da2312d8bf31c.wav",
+          "bytes": 2733168,
+          "sha256": "44809d90ad88bcc42af6caa27749954886b7de5ea93c97dc490b2d52c627d853"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/62bf6e02840ee62930d0.wav",
+          "bytes": 105220,
+          "sha256": "2ca2e962c6a478feccc2d6ae97db0c3112bb88390e6238d867a02efe58e8e9d1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/62c9c8def94555f3179b.wav",
+          "bytes": 3920128,
+          "sha256": "a77fcd4bcdd66ae6a8c94045de492553b725a8b9b3489c9e817afb2ba08d1dc9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/630729425260c628b382.wav",
+          "bytes": 328948,
+          "sha256": "15fc0a2625e4cf3f6f55b4d4e251bb445d52bda4c1b59be49f816168ceec22fb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6676532b26c927a2a11f.wav",
+          "bytes": 108136,
+          "sha256": "8de93277e8d4a52d37723b4ea929d3235eb8fabdcdd9222675542d4fbb67c26a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/66b41b4d16934fb549e0.wav",
+          "bytes": 101040,
+          "sha256": "ffd6122784c9acb0e49890955be3130d9634c25b99fed501d03eed4e6d882d98"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/67ec51c46d8de7c3f7ed.wav",
+          "bytes": 2864482,
+          "sha256": "76934f3a85e4ba3b6518132c2fe6effa340c33fbb02f94e88c60b00073dc722f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/68dc454f31d1ab40e436.wav",
+          "bytes": 2488526,
+          "sha256": "19e5374658351508a9e2c929e871a43caff41e62d5e3363ead6f88428a9ab863"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/695e344d48f6f300d496.wav",
+          "bytes": 206824,
+          "sha256": "91777348f658929be4e864b525e752035899aff608e5690197e077264fccfd4c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6a4af5dc010f554ba607.wav",
+          "bytes": 1823220,
+          "sha256": "569e902693e7d04ecd20507f0a3dd0be92a7a3cdf14ab685d89aefacff2a34cb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6c5722497934fa6519d4.wav",
+          "bytes": 89440,
+          "sha256": "502b786af28107bde66d78a000edc14705f512dc1aa07bc03de4ff1bccf1d729"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6c7fed5c5d248534615e.wav",
+          "bytes": 2335540,
+          "sha256": "45db5a4eda1927cb627006145cd751d99bfd4449576730009d521191bfb8d746"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6de86b6f01010eba265d.wav",
+          "bytes": 122248,
+          "sha256": "eb4305356c58c5c14e3bcbe24aa888ee361024412016ac02acdda15668387c40"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6e41c7901d709e0f39fa.wav",
+          "bytes": 235416,
+          "sha256": "0b1887a463b3a0506fe2193ba5d6086849a603cd30dc761f5c77ff6bce658338"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6f48508d13cf4c3093cc.wav",
+          "bytes": 2222106,
+          "sha256": "b5bb27541d6187e6eeb20baf50625ca35fc9d44c7f113936a9369bc7ce490a68"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6f4a9e79b88e383ebd78.wav",
+          "bytes": 1733144,
+          "sha256": "f71a6d3914ac0daa656553cbd2b50af560897fd31920fb578ac85313d2787b36"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/6fd98c68a940c27b7cc9.wav",
+          "bytes": 128332,
+          "sha256": "e06dc8d1b9912bb7fd253f5b050ea60d592ee5f7045e7d281106aea8292e37d0"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/70696cdd5c5c6cb8342b.wav",
+          "bytes": 270120,
+          "sha256": "378b9f790ef731c18f9c8468faf973b0e848b8ff797795681d20812abbb25674"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/70dd73e51f8296132286.wav",
+          "bytes": 92400,
+          "sha256": "86f8fcb56a1b89a5e467bb846912c6a001b07b3b3e5cdeacc0e745f7a9feae28"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/715b4b4c4fff6fc3cf9e.wav",
+          "bytes": 349876,
+          "sha256": "8f06e79804de956fe5f04fe149cd13f063f4ec52f1d239439718c25d3bb6d54d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/71e2bcbb467f08dc2bed.wav",
+          "bytes": 1689164,
+          "sha256": "b1a793ff45d8f068dd83b591924b1a29bbece98e6e8177b31fc003f2f426fe00"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7284991e945c58bffb0a.wav",
+          "bytes": 196924,
+          "sha256": "4e854001e15c23bb42e1f9dd8ca276e54d279423c6dd94db9bab6385cd9641c2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7381136a5ead0f134a4f.wav",
+          "bytes": 3612792,
+          "sha256": "c9d6777e444e1076000b0dbbacce691739ce7f7f9968b410f29501e38214a764"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/73f21077159965528535.wav",
+          "bytes": 113488,
+          "sha256": "b498829247cbd00089d92a5636ab673b2f0a5f977c4754f71360d58f24c9f07a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7403c0f7f1888368042c.wav",
+          "bytes": 225092,
+          "sha256": "a6b5f0bff98ac81134f6ac53e3d639944e3d5d4d008e9757d56951b58163b239"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/745f4672cfe188eb9fe4.wav",
+          "bytes": 79300,
+          "sha256": "1337d8a970ca7090ef4c94a086f89715b2f312e77d7f12baeee4362da153a15b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7493354438e7e8925f33.wav",
+          "bytes": 1299872,
+          "sha256": "6f27199604f9f14254ae2fca7368b08cb17039f7401402fa95b9d9e2b7943420"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/74f80992c81041c08d9a.wav",
+          "bytes": 94044,
+          "sha256": "0941d8e0b631b7b587d0203a81279f1c840848579fc103d1bacc68a7971ea1ec"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/75a2caaca7cc49389fa5.wav",
+          "bytes": 2517094,
+          "sha256": "c60c3bcfc64ea00ebf8d97b16f2876c892393839a017a945c5e557359b6369a4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/765170fc16ea07cb627c.wav",
+          "bytes": 92644,
+          "sha256": "82ec219175f4cadb109f833e27c91f5b2f3b6080eddd1c0af1b371a78666ee44"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/76a7bc257d9e6da54789.wav",
+          "bytes": 930872,
+          "sha256": "9385dcf9b1a1b32db2d29b696d051fe8fe00aac9bfbd81270ff3570c57970d39"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7725a9a2121f0358508a.wav",
+          "bytes": 391880,
+          "sha256": "3bcd4edde6d9c9882ad16d3ba8d1999b6190581cb4af77df6b0d6606d7b4a60e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7780dea3005d7cee951a.wav",
+          "bytes": 353820,
+          "sha256": "02a5a5b7a5f88258059d2b4af2596eb974060968a5c8033b4d53465e8f43daa8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7868a4b09caaed8263fb.wav",
+          "bytes": 1162132,
+          "sha256": "aad670ae4e1c97487c000c7e8b47f90486d1b835e6244de4ddad18e06b70465b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7a259daf3971c4fba220.wav",
+          "bytes": 2596714,
+          "sha256": "537df6072b0922a0231a6b3fad117e84bcaaa3e60ca68c665776a83c9bd9062d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7a297abb62b0d5995288.wav",
+          "bytes": 847440,
+          "sha256": "44a23123a24d683e9423d5982157ffdc8b1bfb80bd9b4e4523bdff6d47adf461"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7a3afc56aebb7368981d.wav",
+          "bytes": 248472,
+          "sha256": "a800bb69d69bd557cf30962652b333d49c4496aeba621a3fc3762836d908edf9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7b2e2f4497bff0eb4354.wav",
+          "bytes": 295160,
+          "sha256": "4cf54ec007e7cb4fabbeaa66aa06c552e8e25fb07d863ab10c5b3a19d724ab36"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7df0a6fa2c5b43c9c5c9.wav",
+          "bytes": 314000,
+          "sha256": "9e6539decc3eff4ccb635161a7337da7a2230b92b96812d31058685266461547"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/7f35e7a1cd63a5d0b990.wav",
+          "bytes": 291860,
+          "sha256": "635445fb882ea6988a9a17fdfb4b1f461316a882475e48877e2dae9c3f57a2ab"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8072713c4f4e8596fbc1.wav",
+          "bytes": 1400820,
+          "sha256": "44939c24af3cc64bb5324830838d23ee2489ca90e4b679592e2535f86ec6418d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/81358f42904ceed6b83f.wav",
+          "bytes": 180720,
+          "sha256": "0d58953ef25096583d6553b4ad69ed118e3d238297cacd63445e06f2df0f7d00"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/84a45940128a984b6dcb.wav",
+          "bytes": 199272,
+          "sha256": "84b29a8641d0c430ef675c590ec73576a6a17d8417adcb0d44acee5eeab2af89"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/87a6da4ad05b8d60fd51.wav",
+          "bytes": 2363554,
+          "sha256": "8d1712f5659274a83aa90807132084559633e4817027c8a5b5f40826b3d9bc84"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/87b022487dbff92ed653.wav",
+          "bytes": 2911130,
+          "sha256": "8daa4ca0eba8a834814435047e36b47826e730a7796c325966323f53debc9e46"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/88328db6c0cc3d6d430e.wav",
+          "bytes": 107756,
+          "sha256": "c77eec8fac60d790a481a2c7793fc035f5ac8b50439da7c3766dd673a17a674f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/890c13e6c1d8aae481a9.wav",
+          "bytes": 119296,
+          "sha256": "2afe370c01385d1b5a611017a71bc697af4e4dbcc0f8d3433c34cc25be61baa7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8b166b5c2f2e6cbe22cd.wav",
+          "bytes": 243708,
+          "sha256": "13477c70ee092b81f2537a6624546b1eea1ffaba0cbe0a93797003ba6d862bc6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8b46b3c2f6cc5dd4d2ef.wav",
+          "bytes": 235924,
+          "sha256": "9fa515ac27ad4354826560feec06502ae993ffc5bb41ed922c34e792d5eca1c8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8c621e855c66e9c1f2b2.wav",
+          "bytes": 123916,
+          "sha256": "3847b0cdfd6ccb17b53d1c6d4cec84b5c93cd96fda1b946c274d0504328def83"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8cbc4d378ccfb95ac896.wav",
+          "bytes": 216652,
+          "sha256": "5322bc5235a2c1433a2fb00e0dea8f33620bfa37ebad3198398f119eaa8c0fbf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8d87cb238a4ac5b10fec.wav",
+          "bytes": 210728,
+          "sha256": "07aabca741ca00b78fd241bb833ef97c45576a629e70fe48ecbfb7e5d377713d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8e5348a157ad9b05c073.wav",
+          "bytes": 1762976,
+          "sha256": "0677787afa8d1fdc99e267a1518a49dacf3f1899dc27239c1fbe93568fda2222"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/8ffb23434bbbdc783ac0.wav",
+          "bytes": 99496,
+          "sha256": "7b189aa8a3a8f5fd1d08152d7377c7d2fdc8f490b97360b8194b4f3e606c3743"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/914183bc4802b51b20d7.wav",
+          "bytes": 110680,
+          "sha256": "fad7878627c2abf5e0586df61434e1492968d09f91c655ae697fcc0c17641b7e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/91a2f1c85c77be7e7104.wav",
+          "bytes": 1791140,
+          "sha256": "779e2cad84f6f5103272f17cb4637a94d8e9c533a5811233595960cad61b391f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/9281b2a1ce8dc9a54f73.wav",
+          "bytes": 173228,
+          "sha256": "76a1aff68c93f1d0607b348536967de3fb5baa2775bbc9527172ee5a99eaed73"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/93c591e9a59c4fb7893e.wav",
+          "bytes": 165968,
+          "sha256": "a7d040d9a36369aa9c1f3a9ced12c4f30deeca81eaa67230abfc940cc86b4094"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/94efd3acf79b5a5a4384.wav",
+          "bytes": 217828,
+          "sha256": "28788d5a97438d739403627aea0f8aa42fa6582d75c4e8f4f2431cfae1cd4738"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/9537b33ece29e4f02a4e.wav",
+          "bytes": 179448,
+          "sha256": "9ebd53b7a360fec26068e06fdefb569b8b9168da52bd073a106dee348237edc6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/95397345c543cf11ec79.wav",
+          "bytes": 93172,
+          "sha256": "d705180718a8bd1216d6a85d2e6375a4c160c1898b8650f3752493d455415b06"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/954259f17f2b308891b1.wav",
+          "bytes": 1025344,
+          "sha256": "26fcfdba581d7251cf96007650890bbb3f8c61d020278b45441113d47ce1c05e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/9679ca25efeff5cf65b7.wav",
+          "bytes": 2936890,
+          "sha256": "80bae3776b0ccd3d4774f47429e829c7764f5fe6061ff844a8affc6ac68b7899"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/969aa5e84f5cf37301ca.wav",
+          "bytes": 197632,
+          "sha256": "e4ca29d89bb0a60b8aa4c11520655577e3e7c344b05ef845c4523ecb306d1d08"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/96c63aeac1e4a372a9c1.wav",
+          "bytes": 260432,
+          "sha256": "67dce143bef0bd19134e4be1528848573cc951a51839d223227c9880ee4bb97a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/97abd2eee729a4072514.wav",
+          "bytes": 2274706,
+          "sha256": "02b077cecc5002156fb439c5e0edfb75dbed94a97502a0252e57a76930415889"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/9cc26af919eb0b375d32.wav",
+          "bytes": 108896,
+          "sha256": "d11cca3ad73f3d8d50842a5279cd5d22ca331ab28eb9bc4616fdaabbd62c8c0f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/9fe56041c661d77a4d13.wav",
+          "bytes": 221532,
+          "sha256": "72e3baa8e22c1797dbda56f4665c7808a44e6f2561bddfbb10a5171e19752015"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a08424fa38b1921248f4.wav",
+          "bytes": 196392,
+          "sha256": "aa943a9047f7669b1cb510efdfe5def9cd01aafa1bc986263cdba377be655f51"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a14a9acadbef6ec70f7a.wav",
+          "bytes": 163952,
+          "sha256": "f83bc69d68304da0f24d042ce01f5e8c9f824cc70fe19eea8b11e8fc6131df99"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a175d241a761dc1d606f.wav",
+          "bytes": 143016,
+          "sha256": "83e0736736771534a986994e66fe0712df677db0a4c049d341fbc6457e906672"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a2c2194736f094e8869b.wav",
+          "bytes": 2614110,
+          "sha256": "0f212759660b2fb0d645b2089adbf4222eebc829927c1e002caa434ecd804f0b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a390029d822b76a1d93a.wav",
+          "bytes": 185392,
+          "sha256": "f51c84b25118c1960ce7e23d011b3b0754af8d3d14628262cbd143969cc47f30"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a7a33e5c59fa9504bfec.wav",
+          "bytes": 303352,
+          "sha256": "82fd561c5ea6d9ba281022b1e8a068e74fc4dc441178f8436d50e4cb5527f7bf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a81e2363d71bb452a0bc.wav",
+          "bytes": 1876188,
+          "sha256": "30e686ffc58caa48bbfae309a06f1c27c75b192fb653729ffdf8586cbd9b8405"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a8c7f729ae288fb3f76a.wav",
+          "bytes": 170308,
+          "sha256": "802fb21bc0f6e3357e2a80b49714ece45fc06558ac634f1b4c9061a115c2d23d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a9244ff4be3f48e1f546.wav",
+          "bytes": 2127892,
+          "sha256": "3ef29a754b2cfcaa8c27b5a8a3c807247d606c8cf95650941cee295e8011cfeb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a94d2905bf1b4c366a8d.wav",
+          "bytes": 212172,
+          "sha256": "5317473e0c3acd60eac63cf641e3947dcd3ab8f99b8fa5d4c7b1e7806f33cbae"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/a97def8ac64eae5800c2.wav",
+          "bytes": 2047596,
+          "sha256": "4bdc53f3ef917cc9146e10cec5eb33744524e8b510c4a39c080dc5c774b3c956"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ab0eddf492a1b9483f0e.wav",
+          "bytes": 147328,
+          "sha256": "9ed4ccbf955d179b4b1791e09cc4e18caf79934d769880ac55530a927426a3d9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ab6177a7b35b886a1036.wav",
+          "bytes": 2373520,
+          "sha256": "8d9bcdf56ed0c2adebb38242d7b5bb0e2da6884fa9f42a6d4226fb21c1bc7f68"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/abdfa0f49e8529b1040a.wav",
+          "bytes": 100148,
+          "sha256": "fb4dd1633ee38dfdf5fa843191fe17721398a09abf7b5042f7dabdc8cf252eca"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ac180084e6a570cd76f1.wav",
+          "bytes": 89504,
+          "sha256": "cc59c5dd3b32cd0db8cbfb545e85e81adb7a6acfaa6adaf19779a8ad461c027c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ac8aac90bf1f0deb865a.wav",
+          "bytes": 3507148,
+          "sha256": "6ac439fe6933ffb0b0f1010a8767171449464bfb81b94ef53183b10d8b54aba1"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ac8fce7588e86b8dbc02.wav",
+          "bytes": 358016,
+          "sha256": "27829f7d7a636ef38df6129a83f3eff92f3a5058297a1a49d028464dc2f9d0bb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ae34c2c8fe1fd513ce4b.wav",
+          "bytes": 117132,
+          "sha256": "aba72683bcf7bf689dd801fe403d56c5dcdce9ea4cc2f6c404f68ebb333b37f8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b04cb70b1ae5f00105a9.wav",
+          "bytes": 81372,
+          "sha256": "4f9da33089de27197f01fba0a68bb61b38e240d3912f3536ef55237040a3fe06"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b2405fb795fa324babf8.wav",
+          "bytes": 150832,
+          "sha256": "6d75b28586d150dce0f9cd4ccf649dbc125afaf43762a2f5676f3d916289963e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b349392d0c9b028c1a1a.wav",
+          "bytes": 1593652,
+          "sha256": "4bcff7aa31fe94c9d4a23acde1a9c2cb437dd4ee9c9804c981bbfb184c76509a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b3c055207eca7d7d6749.wav",
+          "bytes": 1166532,
+          "sha256": "eecd696f213cda2f402ca84eb1af244d29c6006fd3f4bb7853854ab892eaeaa7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b5a6ae7d8b9487907548.wav",
+          "bytes": 236520,
+          "sha256": "6d6c9490e5ebc4f1eb0b548b3ff48659628b094d784d2fe9d570c0b4923c9bdc"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b638fcdc93312141c855.wav",
+          "bytes": 2358906,
+          "sha256": "48039f28964328d0b8235b8d61e39b06f8d22f836a6940fa036fe7004fc58e6c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b6803a717ae0e14dc357.wav",
+          "bytes": 161360,
+          "sha256": "0826f0c0c1b6cd850deefdcd3376a16c1ad2cb19a0ee81b71141529dcdbbf5b8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b6a14b97f75618786a9b.wav",
+          "bytes": 174980,
+          "sha256": "a5bc3174f4ed7e525bb06bbfb0630071af3640e9a2871843e8f2a3226a296e9a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b7a47f121a163e2b7afc.wav",
+          "bytes": 115828,
+          "sha256": "1461ca3338c041c893957498a11480d7b9caa6112e9c991bc4667a22ff8a61df"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b819c003d15dd167eb6a.wav",
+          "bytes": 91188,
+          "sha256": "091b60dc2b1847e8c3dd2662d8063d473c5731b57c704653b7edb2bb00aa22e8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/b91e84275c9f316a2b6f.wav",
+          "bytes": 1351140,
+          "sha256": "ba3760e74edf6c25f96a0deb526bf87eba2bf74be94ba76bf31d0d6592efe687"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ba4690ff6aee8629b46c.wav",
+          "bytes": 109304,
+          "sha256": "60a47b700781088f934a598e582bb2a8ddc4ab5201bbb88618e793d39cae6137"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ba48ecbbecde5ee92fd6.wav",
+          "bytes": 230512,
+          "sha256": "5f825bebf5638d1216e50bcad6a265628fc8472e10c52808319a6d0544f75ea5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/bc2c4446908e35679d56.wav",
+          "bytes": 239996,
+          "sha256": "c5e2925c08a55dd4329c74bc9f0b832dac4e405d04da7a19fd790bff71f02162"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/bdca46fbbdbb0a845bcc.wav",
+          "bytes": 156432,
+          "sha256": "25785a148e3c7b8277b5961a63df1226c65fc3908d768b494d7ae1c838ab5796"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/be10b482949d4b26f298.wav",
+          "bytes": 186184,
+          "sha256": "6bb09fa9b46dc42cb84b8feb2bfa5e56e32fcd52c268bd626a9bb8b6d27c3f53"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/bea832d9cc725ef69484.wav",
+          "bytes": 2514702,
+          "sha256": "f1f0f8062eda1af6147852bf61b39e6b8734d4b0236737810c9d660297a34f0c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/bebbd8b55e977db912bf.wav",
+          "bytes": 111700,
+          "sha256": "889fde8bca6a9fb88cad5acf405bf5972d62f1cccb1de126531e4dbfd5b0add6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/befd7b2bb839de4d2441.wav",
+          "bytes": 4557044,
+          "sha256": "c6b852da342f0afd5279b26b48d3d882d02bf52001f40c1b23542c61315ceeb6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/bff5860220dff7196353.wav",
+          "bytes": 2498790,
+          "sha256": "77a2133b5f97e1ec0edb759c0c552fc3efa7caf4ce1e0a4aa22625cf4c9da130"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c090ab3e51f6312b6a5c.wav",
+          "bytes": 2164026,
+          "sha256": "68c49e55565810ea822866e3d39e51c1a5ad53cfa1a67bc25836ca7feac3fe0c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c0a12edeebaebb8a1838.wav",
+          "bytes": 204612,
+          "sha256": "3c440d43b09b1a152fdf9308f4773ec8c55cea05b97ed06e50dbce1a9d2a2256"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c23e261dcd6cd4586ce6.wav",
+          "bytes": 2366050,
+          "sha256": "14e3ea3d5172722d4d2686bae5da3d603800a7a474fa295d98275a9410913822"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c35c8526d359c97d9be5.wav",
+          "bytes": 101480,
+          "sha256": "69176eaeebf433de17bf86b55e7c4824c758503668d5b4e5df4ac0e8b19646fa"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c3d156724b20aaa6c295.wav",
+          "bytes": 185504,
+          "sha256": "87b33f3680a13cb2d22cd00980a17860445f8a9c3d001f675f3e9b39277d2062"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c66ab054f388f1fc2a60.wav",
+          "bytes": 215868,
+          "sha256": "91e40a027a74a9b7b05a6c1a8215917f06fc21827a3de6634954131628c40e38"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c7a3791ccaa1d4f8c6c5.wav",
+          "bytes": 297672,
+          "sha256": "b55073fdcc7c410e735f0d20692b2e3ba1bd4a7e76bb4c1be8950e8716cea75d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c8a3cd2ea388fe5c968a.wav",
+          "bytes": 290660,
+          "sha256": "adfa3dc25b6c6cae3f6a4ae1f0413188588fab83767f7002079a9baffd9b004f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/c9c5b95c1a64ee3a5447.wav",
+          "bytes": 1599888,
+          "sha256": "c314aa26ec148ffa30afe988d7f4f178941a38ca401f487ea2633ce635e78d3f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ca4b3f5d9767cc65bac5.wav",
+          "bytes": 2334170,
+          "sha256": "4169605b51a72454f11bc2c34efc66c1d9993fd2b7d5f097a025ef9d3a2dbdfa"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/cc25ffe86b81d831239c.wav",
+          "bytes": 101440,
+          "sha256": "e166dc75df4447d8f07aa5915175ab38c9195929377b5e94a34245febf0383f8"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/cd393a6266dc6a246377.wav",
+          "bytes": 274064,
+          "sha256": "c71af28710d365bbfb7e6a02df01c8cc6fd966e85bc3e9122c8cd5e9d3314ae9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/cd88e90320e51218071e.wav",
+          "bytes": 98020,
+          "sha256": "e3e64224a05dc9bba490c84635cf5cd0f319c762ab2590e25095c25ae45a3e9e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/cd9f553795b0ee57ca13.wav",
+          "bytes": 94568,
+          "sha256": "9198f696e1b7138c6e0185f03f8db51b95b737d24fc6a5710d88a6b0c0e9f133"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ce6546e08235cf7e5c6d.wav",
+          "bytes": 735596,
+          "sha256": "c8192572a34ba0c410cb77a33fe200a5850b334e1763b2ebc91ab5292978a0d4"
+        }
+      ]
+    },
+    {
+      "id": "audit-004",
+      "version": "2026.11.07-2",
+      "profile": "audit",
+      "file": "audit-004-9c4c28ec2e38f76dc7e6107e9853ed8f06261f4e59e18963dcff557348da83ad.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-004-9c4c28ec2e38f76dc7e6107e9853ed8f06261f4e59e18963dcff557348da83ad.sfa.gz"
+      ],
+      "bytes": 152222270,
+      "sha256": "9c4c28ec2e38f76dc7e6107e9853ed8f06261f4e59e18963dcff557348da83ad",
+      "manifestSha256": "e2bfc6a52ec1e12d4c6be21b19e193cf9c02aa490b2b509ae66334d08955eaab",
+      "expandedBytes": 267487320,
+      "files": [
+        {
+          "path": "samples/orchestra-complete-20261107/originals/cee0f7637f662158038d.wav",
+          "bytes": 1747440,
+          "sha256": "7049e55a73851574d5e11a518aeaa3c646bdd0f2323780a10abc379410dad2cf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ceee207f256f5d27db3e.wav",
+          "bytes": 175100,
+          "sha256": "a8656a33b541010729190e0c65503cafb52506c97ec4f25768e4525cb4e5028b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/cf0812d09d6dc45fbdd1.wav",
+          "bytes": 103516,
+          "sha256": "db1ed41aed911f7148a08c8c74b2bcac056c68f0bb4a32d589a928585bc9d6b0"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/cfe3f65d53ddf781ca76.wav",
+          "bytes": 180332,
+          "sha256": "ec2b3cd7255c33c9a5e396ef2c7817912559b712ec7d92c9f11fadf71807433d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d0375bbd4f666307b71c.wav",
+          "bytes": 114456,
+          "sha256": "7fc6d52f8064332fcb94204d89a04906c2f29be5ae771d9177529cf677b4347d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d07dff8cdf103f0b0f88.wav",
+          "bytes": 353884,
+          "sha256": "bc3ba076da4ae7a1a7e528daa7906faa2507c86754d0478965d59e8cb0ea1d95"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d156a006aac18ad00455.wav",
+          "bytes": 2087348,
+          "sha256": "f913c749eb6b5a1c621e13548d5c30c8f67a6007a2992a6f85deb977c2d41b1f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d18dd97524684f6d8eb5.wav",
+          "bytes": 198704,
+          "sha256": "98d9751f85c1a5d9107d47cb608068ec30f42992e6a5177acc0765f65811a93b"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d1f0c98d9ae2e0381ed9.wav",
+          "bytes": 2034208,
+          "sha256": "e7b54b1ac626a6c54db3fa320a38acd3f099c33c936fca0d82259f9f9641e4f3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d25b698f59de24bf1b03.wav",
+          "bytes": 2429760,
+          "sha256": "12df341a13615a9f1676a3b04cee91d1853649907243adbdd52675d833594394"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d359a149197f6e27aa26.wav",
+          "bytes": 94108,
+          "sha256": "8df1cd6255c8d23e821236e3de39865e4f09016e34fb9725d20ed494741e6044"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d47e4f8aee1d4fada13f.wav",
+          "bytes": 2416566,
+          "sha256": "418512905f3294a23cf999f0587bf8e04d60192fe317ea8c80c150a85670eda2"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d5ca8a21007c11419453.wav",
+          "bytes": 881860,
+          "sha256": "dd2e358d7994ae2b3fce9ccdc902f53f22393294d6b0408821a2a916f3c42d3a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d660f6c622401e0898c3.wav",
+          "bytes": 2052254,
+          "sha256": "37f6cc2f12b1b443a77d3ee370178da4a002a2ac3b6529663cc7ee002728ddcf"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d74a0e9d921f9a92fcdd.wav",
+          "bytes": 342228,
+          "sha256": "799ec9c49c5eb18dd619ec181e09f5d43aee97f73f5a0394b5fa857dd9a93396"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/d9f7dacd8b33aed9ee93.wav",
+          "bytes": 209452,
+          "sha256": "bde86277c2a400799bd7bd15500b10a8f9249d9fdf7929a9499977fe39d0e625"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/da7fe1aa40f28500658f.wav",
+          "bytes": 212520,
+          "sha256": "5b6a703c73566b5f3f18656902369e4434bd223dc01cb6abd2ba373361ea1db7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/dab48d56d6273dbbba72.wav",
+          "bytes": 195532,
+          "sha256": "67c26974b8796007d4852215ce8193f32116b3a144220ad12995155324fcb2ce"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/dbd96e130dae67130809.wav",
+          "bytes": 256564,
+          "sha256": "8477fa7bfa3ed4c6f0cf656a10b52813b98fca6d77151c2cee9150a446b0fae5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/dcab5bf63fe945f9c8e1.wav",
+          "bytes": 1381704,
+          "sha256": "346775f54394b9cf5e9513a4ab8292274f20370f2ac4cd47cea6319c1fa494ff"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/dcce85d30040c6aa7a7d.wav",
+          "bytes": 1313124,
+          "sha256": "924bbeffefd019a942bb38ff33100ef9bf0ae68a30ffb548e4ffd9c55a23fbf4"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/dd35bbb393f63e85247f.wav",
+          "bytes": 806612,
+          "sha256": "359344f125ee42ea30b1143ef7ad3ea0d8a19f871d400a07bf784bd691b1a72a"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ddb9df047e93028af4fe.wav",
+          "bytes": 2176486,
+          "sha256": "f8223aed62911ef3f6937111bf3cdcc36fc25a636d4f99480b97029c4d28f393"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/de796e63b8301858680f.wav",
+          "bytes": 101680,
+          "sha256": "3764f6639bdf0f54dc7abe1216764ecd3a3605595f01d0c56084c439aaa45dae"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/df8d8a43262e47832b20.wav",
+          "bytes": 206584,
+          "sha256": "46796f4235be0817e2106b9e20ec626092db29808937e0c957eb325da8893905"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/dfbd1be1995a481f7cac.wav",
+          "bytes": 2788822,
+          "sha256": "c52d8ef3e2882984c09da1b7c7ef40b82e997bc78cfdd380fe167bbcb94b03de"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e1433ad9bedf29c241ba.wav",
+          "bytes": 226544,
+          "sha256": "acfee187b8d0e781aaae2c2f68250c42e1d8f410a595673502fb96f1469a789e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e21538e1d16cf4c7a8de.wav",
+          "bytes": 99084,
+          "sha256": "bbfac051219848c7bfdc1e2356e6499162ff939343a6680f7b9130828402eb54"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e233479a543842606c8a.wav",
+          "bytes": 2612122,
+          "sha256": "0d05607b46b78690893006d5aa7923ac304c7fb497df1e96536dc88ac5ac487f"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e24a0560d8a889c2c1c2.wav",
+          "bytes": 181484,
+          "sha256": "1f21dc936b765b7e9e0ceb65949f3b22205a61a43af21cb7a0307aabcb654cbb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e338dca430e3ba998fb2.wav",
+          "bytes": 101936,
+          "sha256": "e851b6b1410dda92348aebc043053de1e1ba12b0ede62fdfac467cfd90dafe3d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e34d03976f0d70f836a1.wav",
+          "bytes": 347676,
+          "sha256": "9dc4bb103b1fe85a9afe03c0a6a691b2253c9896ac188c289e5c933015d09bbb"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e47bb7cd013f544d75da.wav",
+          "bytes": 244532,
+          "sha256": "6c506b5fccacbbbadb70993ff00d77c68a185af79febb35dc7101eb616046650"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e84e1a982577ae31c8d2.wav",
+          "bytes": 118440,
+          "sha256": "8facca86fa70f3d589d5d984a8a66fee1772d792c5cca6aa9522d8eb7128c7c9"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e8edf02e4a36d33338de.wav",
+          "bytes": 108592,
+          "sha256": "28e0eecc4aae957185f5381ce183a1a927c39824d0a76ff5829666f666a0f414"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e930308ab0957ffc0e44.wav",
+          "bytes": 1909388,
+          "sha256": "82be872b7915c833e06910846e3398b55591f69bfe6474c39dd4051742db2700"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e9861efa8dba6c481565.wav",
+          "bytes": 2365174,
+          "sha256": "5c278e263fd59650190fc58294945cd291906eb1abd8293f728a96a878d1d478"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/e9f1c6d463edcc1f5951.wav",
+          "bytes": 2080020,
+          "sha256": "c197b4c5e8c28a4160ff8665eb880abbe99e42ed2830a59707407b76ce225d60"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/eb9376f16b205f26c863.wav",
+          "bytes": 1239208,
+          "sha256": "289630ed8e777ff4f2542b010654e2aad372b8f4addb4635ef21ee1536eec615"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ebef612ade6c14f13cdb.wav",
+          "bytes": 220868,
+          "sha256": "4859b51dc4a991898f637454a63f81a80f3b45c141cd5feba9dd3a0f06e6330d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ec18bd9b680b48cf45f9.wav",
+          "bytes": 2142808,
+          "sha256": "9988142d8fd2856af4217e3983316a42ef1d91b6381afd9fa138072d91122c2e"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/ec471b09a71c7dc941dd.wav",
+          "bytes": 1527412,
+          "sha256": "008d2f0894c90e912f8315639ff8ed2687454195be14054e5fadee8e0db3b559"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/eef5f4a6bfc25193511d.wav",
+          "bytes": 208332,
+          "sha256": "27aa2fea71633a85858a48e87133bc941518c50301427f2807e54c50cc30a3a0"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/f1a80390d500128916b3.wav",
+          "bytes": 94872,
+          "sha256": "27adbdf8c00d990bf674661564aaa69b02fa2451d69b0a9c6c38edb123bed571"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/f64edb117faeb296d3a5.wav",
+          "bytes": 2594066,
+          "sha256": "ad1ba8442a6b40919093c9c831a8171c7030f7e651fbe075ab87764665deef88"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/f6a5b93e83968defaceb.wav",
+          "bytes": 199328,
+          "sha256": "804a09eb742a8eeec6a66173ca107de11686b9b6f2dd4669569c63f90a1bf8e5"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/f884ada0c26b754a9024.wav",
+          "bytes": 116068,
+          "sha256": "901bdf950b17714db939300c21379847436e7cbdec8f61761caa491b9f8e3de3"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/f913aabd5673a12d21fb.wav",
+          "bytes": 323208,
+          "sha256": "678152687030323cd3e205f74cc39f834c69e88a1c7cf9efe8a074b20bd9b7ba"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/faa6656deb99b4906cc5.wav",
+          "bytes": 117176,
+          "sha256": "18b12ceade7643c51ee2efec569216ede2af9f1dd4b3faf54257e7f95476a693"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fb696d6509eed7c7090d.wav",
+          "bytes": 263624,
+          "sha256": "b9e844375108f2b5ce7ffeed88abf15f40b20b1d06b06e6f4a851022d3b5e5d7"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fba60319c67b4ec1575c.wav",
+          "bytes": 117624,
+          "sha256": "1086ee354b1bcd04e09994097b0c63f8ef3a6fffaae497f143843f2bd523163c"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fbcce464e19b071e0394.wav",
+          "bytes": 1899776,
+          "sha256": "2fbbd439a89cde570a6848c41b220d333a95995d0b935fd3973a197beb0f0674"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fbeb031d72bc25abdcc1.wav",
+          "bytes": 105860,
+          "sha256": "4e4ea32b83cfabf7277fa6b5c9992c2b4db981a7fb971c3de8611f98bb3c6b64"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fd12fe4453cb511c0ce7.wav",
+          "bytes": 368676,
+          "sha256": "72b722d23d17719c85602d152bdc1b80894f3564f6b53262c953d4ec3a7d5985"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fd1c102bdc29881e2fcc.wav",
+          "bytes": 2417222,
+          "sha256": "eb40e796d0e40ff4a729fd93dc9436ac08b30de308a8191e944351fee49aef9d"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fd2f3f53f4dff69010c2.wav",
+          "bytes": 1835164,
+          "sha256": "36348e1fd1a1e53485c7f48983cfd758ced036f6af1a832671bf5ef1f8b00448"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/fd734f6db3955c793fe7.wav",
+          "bytes": 190168,
+          "sha256": "b45eef0c35bfd1a213f23d5f992b8569e5dc4e12814c05e2bb0e5f61ec79b8f6"
+        },
+        {
+          "path": "samples/orchestra-complete-20261107/originals/feddda191aba538ff1e9.wav",
+          "bytes": 292356,
+          "sha256": "4d7f9520bbde4f43324554b53bf147d2b5ea1a8c1234a7375793420f8a29f1d6"
         },
         {
           "path": "samples/orchestra-expanded-20261105/demos/expanded-cello.wav",
@@ -7568,22 +10328,7 @@
           "path": "samples/orchestra-expanded-20261105/originals/24970b89589978457bbf.wav",
           "bytes": 577034,
           "sha256": "6e5f785cbe657862aa539a27ab98b846ae2327cf04b89dfd25a98a8b0f9d4138"
-        }
-      ]
-    },
-    {
-      "id": "audit-004",
-      "version": "2026.11.07-1",
-      "profile": "audit",
-      "file": "audit-004-51ada7c11aa8606c2140f2105a4fa9f3bf573b32029e1488e468f7252d812c72.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-004-51ada7c11aa8606c2140f2105a4fa9f3bf573b32029e1488e468f7252d812c72.sfa.gz"
-      ],
-      "bytes": 190733127,
-      "sha256": "51ada7c11aa8606c2140f2105a4fa9f3bf573b32029e1488e468f7252d812c72",
-      "manifestSha256": "129b1c3686af392db51f42999580135c8217fcce56db3c36600296194fdc86cf",
-      "expandedBytes": 264936788,
-      "files": [
+        },
         {
           "path": "samples/orchestra-expanded-20261105/originals/253127499c074abc3595.wav",
           "bytes": 3604186,
@@ -7698,7 +10443,22 @@
           "path": "samples/orchestra-expanded-20261105/originals/2b89df36f3dbf16af0fe.wav",
           "bytes": 515834,
           "sha256": "56f59a67ac8ec56ce37b0de04ecb8bc1b86570660e55553a6e70a79cc81dee9e"
-        },
+        }
+      ]
+    },
+    {
+      "id": "audit-005",
+      "version": "2026.11.07-2",
+      "profile": "audit",
+      "file": "audit-005-17af8c7a7cfe3fb81915dd935c8f4fef504baf70bd9868d1b9da8a37bec40fa5.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-005-17af8c7a7cfe3fb81915dd935c8f4fef504baf70bd9868d1b9da8a37bec40fa5.sfa.gz"
+      ],
+      "bytes": 189209060,
+      "sha256": "17af8c7a7cfe3fb81915dd935c8f4fef504baf70bd9868d1b9da8a37bec40fa5",
+      "manifestSha256": "cfd79238839effb7520808488b1264054b0a20267b5568ed68e4fc78058b6354",
+      "expandedBytes": 266295748,
+      "files": [
         {
           "path": "samples/orchestra-expanded-20261105/originals/2bcb16309c65fa59c675.wav",
           "bytes": 1122252,
@@ -8733,22 +11493,7 @@
           "path": "samples/orchestra-expanded-20261105/originals/7802b07c64c73471c8dc.wav",
           "bytes": 712028,
           "sha256": "a8908be5393fefa6c898721ebf5bd47eadec470a31e1d7b06d90360c9da2a1af"
-        }
-      ]
-    },
-    {
-      "id": "audit-005",
-      "version": "2026.11.07-1",
-      "profile": "audit",
-      "file": "audit-005-2b533215b2494adc1ba68e87e961d9c37dd5d2a530365e65b4fed4ec7a563e1b.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-005-2b533215b2494adc1ba68e87e961d9c37dd5d2a530365e65b4fed4ec7a563e1b.sfa.gz"
-      ],
-      "bytes": 182250567,
-      "sha256": "2b533215b2494adc1ba68e87e961d9c37dd5d2a530365e65b4fed4ec7a563e1b",
-      "manifestSha256": "c10fd55636692ee8f124e1f964b8b7f0c3ccd497282826cc4518136aa77cd6b6",
-      "expandedBytes": 267951616,
-      "files": [
+        },
         {
           "path": "samples/orchestra-expanded-20261105/originals/783d05424a761af1625a.wav",
           "bytes": 3785062,
@@ -8908,7 +11653,22 @@
           "path": "samples/orchestra-expanded-20261105/originals/8212b30f638562582f7a.wav",
           "bytes": 435542,
           "sha256": "a6bee065f0a171d3fabc42b218e941f66916a6de53a55809da724eeefeae2653"
-        },
+        }
+      ]
+    },
+    {
+      "id": "audit-006",
+      "version": "2026.11.07-2",
+      "profile": "audit",
+      "file": "audit-006-42cd3dc19498465dcf44ca19988fde5b664a4cce3985d5bb20612da24d8fa352.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-006-42cd3dc19498465dcf44ca19988fde5b664a4cce3985d5bb20612da24d8fa352.sfa.gz"
+      ],
+      "bytes": 185279152,
+      "sha256": "42cd3dc19498465dcf44ca19988fde5b664a4cce3985d5bb20612da24d8fa352",
+      "manifestSha256": "39c6a5a98c9dcf1538b83cb6e3f7242fd10bea2cd24b78477885e92d4396f341",
+      "expandedBytes": 268051444,
+      "files": [
         {
           "path": "samples/orchestra-expanded-20261105/originals/82510b1f557b965a306a.wav",
           "bytes": 2801210,
@@ -10153,22 +12913,7 @@
           "path": "samples/orchestra-expanded-20261105/originals/ddf45577c6e5089f384a.wav",
           "bytes": 315758,
           "sha256": "da100ff90d5c4568b9d1787627ecf2114fc08f140f2d8481e547572ff5404a42"
-        }
-      ]
-    },
-    {
-      "id": "audit-006",
-      "version": "2026.11.07-1",
-      "profile": "audit",
-      "file": "audit-006-f964c1db11708a924f7a9e9cc74cd4faa2771307573a530c2d57103067da7279.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-006-f964c1db11708a924f7a9e9cc74cd4faa2771307573a530c2d57103067da7279.sfa.gz"
-      ],
-      "bytes": 151670001,
-      "sha256": "f964c1db11708a924f7a9e9cc74cd4faa2771307573a530c2d57103067da7279",
-      "manifestSha256": "718eba9e5bba4d811feb6427da272abde9530f0c36307a5382bd20f9fde6b8c7",
-      "expandedBytes": 268344394,
-      "files": [
+        },
         {
           "path": "samples/orchestra-expanded-20261105/originals/ded7822bff5125004c3d.wav",
           "bytes": 642656,
@@ -10343,7 +13088,22 @@
           "path": "samples/orchestra-expanded-20261105/originals/ec77712e04f1583a63f0.wav",
           "bytes": 3117554,
           "sha256": "b3d8e2dd0f58884315992cb9273db41dcae5a1b402d2d046c1d41f052930decc"
-        },
+        }
+      ]
+    },
+    {
+      "id": "audit-007",
+      "version": "2026.11.07-2",
+      "profile": "audit",
+      "file": "audit-007-0a250a2465b7d9add7dbce6f9d3aed4ee75443aedb6920f9d5a96efe9db12242.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-007-0a250a2465b7d9add7dbce6f9d3aed4ee75443aedb6920f9d5a96efe9db12242.sfa.gz"
+      ],
+      "bytes": 138602081,
+      "sha256": "0a250a2465b7d9add7dbce6f9d3aed4ee75443aedb6920f9d5a96efe9db12242",
+      "manifestSha256": "1d2e24f298353a946d02dfd0325a5714a1ab768406513446ae263f651f498099",
+      "expandedBytes": 266360548,
+      "files": [
         {
           "path": "samples/orchestra-expanded-20261105/originals/ed4bbae527e33d820107.wav",
           "bytes": 459140,
@@ -10978,22 +13738,7 @@
           "path": "samples/orchestra-expanded-20261105/wav/d96febf5dac146669539.wav",
           "bytes": 1342812,
           "sha256": "0ef1698fd9f7b236d724f16da0018f2a77d675bc7900f3533ca505e22a5f87d0"
-        }
-      ]
-    },
-    {
-      "id": "audit-007",
-      "version": "2026.11.07-1",
-      "profile": "audit",
-      "file": "audit-007-4783dba6f0ef49b355e0ff840b927e32e4999ea938b143e11d47c7a5f13f7ce0.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-007-4783dba6f0ef49b355e0ff840b927e32e4999ea938b143e11d47c7a5f13f7ce0.sfa.gz"
-      ],
-      "bytes": 63118838,
-      "sha256": "4783dba6f0ef49b355e0ff840b927e32e4999ea938b143e11d47c7a5f13f7ce0",
-      "manifestSha256": "9dfe644928701b61b1f46daad7b6a6d931300441f2be01d4cef2b1ba60667a8f",
-      "expandedBytes": 263732728,
-      "files": [
+        },
         {
           "path": "samples/orchestra-expanded-20261105/wav/e7540b3ba2abe460a0bc.wav",
           "bytes": 397224,
@@ -11068,7 +13813,22 @@
           "path": "samples/vcsl-kawai-20261107/originals/06c5d8dabecb7a02fac3cda02d3b124ae8318fb2.wav",
           "bytes": 3986272,
           "sha256": "d7e5c1ecab8754fd05a683dd2d01e27e254ee42b4c10678c33842d1396a4053c"
-        },
+        }
+      ]
+    },
+    {
+      "id": "audit-008",
+      "version": "2026.11.07-2",
+      "profile": "audit",
+      "file": "audit-008-757e946459342a4e3a2efb84f828a28fdf9640a335ae94aeeb78ff5970d73939.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-008-757e946459342a4e3a2efb84f828a28fdf9640a335ae94aeeb78ff5970d73939.sfa.gz"
+      ],
+      "bytes": 60318643,
+      "sha256": "757e946459342a4e3a2efb84f828a28fdf9640a335ae94aeeb78ff5970d73939",
+      "manifestSha256": "d02acae9bd6bf5a370a09febe817ce619c66c0685e004e824ed3ab0214f6a3b1",
+      "expandedBytes": 264022488,
+      "files": [
         {
           "path": "samples/vcsl-kawai-20261107/originals/0727f2fc450bdf059038fbd39ee4e8e194f574ad.wav",
           "bytes": 2139416,
@@ -11698,22 +14458,7 @@
           "path": "samples/vcsl-kawai-20261107/originals/9532f7b053d4997bc670526ba9c7dd9e2b106a91.wav",
           "bytes": 4119036,
           "sha256": "bd82fc521e035f1f50410968a6f753bf91fe2c629ea061ec9db4a0ce45430de5"
-        }
-      ]
-    },
-    {
-      "id": "audit-008",
-      "version": "2026.11.07-1",
-      "profile": "audit",
-      "file": "audit-008-cf02136d3c499643e5ebcb207bacec0b65c7988b77ee5c51b05f30a9c6b66523.sfa.gz",
-      "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/audit-008-cf02136d3c499643e5ebcb207bacec0b65c7988b77ee5c51b05f30a9c6b66523.sfa.gz"
-      ],
-      "bytes": 54660700,
-      "sha256": "cf02136d3c499643e5ebcb207bacec0b65c7988b77ee5c51b05f30a9c6b66523",
-      "manifestSha256": "e1d995c8f8766a860a34b5aeafe70dab6beff5991c425f3852b8f5fd0e4e36d1",
-      "expandedBytes": 208826944,
-      "files": [
+        },
         {
           "path": "samples/vcsl-kawai-20261107/originals/9594f33a39719951709a19cea38f71a910dffb9c.wav",
           "bytes": 7544852,
@@ -11758,7 +14503,22 @@
           "path": "samples/vcsl-kawai-20261107/originals/a017fd8fa57b387fdc7381d9f5e4547f2c8651eb.wav",
           "bytes": 1301300,
           "sha256": "e6aca36c8028ec1580f6e848c640fdbaf45b3421898238c8eeb4cdbf80d8cb3d"
-        },
+        }
+      ]
+    },
+    {
+      "id": "audit-009",
+      "version": "2026.11.07-2",
+      "profile": "audit",
+      "file": "audit-009-a8123ed30074a9d06d10aab6c26f26334fa624ed0c9864958637096fae884db4.sfa.gz",
+      "urls": [
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/audit-009-a8123ed30074a9d06d10aab6c26f26334fa624ed0c9864958637096fae884db4.sfa.gz"
+      ],
+      "bytes": 47512893,
+      "sha256": "a8123ed30074a9d06d10aab6c26f26334fa624ed0c9864958637096fae884db4",
+      "manifestSha256": "5573c5ba9ceb044fa999ce6dc6eee2cce0e844cff0eb54c559cb6c497a1b7505",
+      "expandedBytes": 178540712,
+      "files": [
         {
           "path": "samples/vcsl-kawai-20261107/originals/a106688ce19f3d8dca25257c75f119e5ed7ce265.wav",
           "bytes": 6298676,
@@ -12168,11 +14928,11 @@
     },
     {
       "id": "archive-001",
-      "version": "2026.11.07-1",
+      "version": "2026.11.07-2",
       "profile": "archive",
       "file": "archive-001-8c575b31bb1ae98caf7988a20df707dc7fdb84becf645fcc04a5456ed681e0ba.sfa.gz",
       "urls": [
-        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-1/archive-001-8c575b31bb1ae98caf7988a20df707dc7fdb84becf645fcc04a5456ed681e0ba.sfa.gz"
+        "https://github.com/BreezyMomo/MomoSoundForge-assets/releases/download/2026.11.07-2/archive-001-8c575b31bb1ae98caf7988a20df707dc7fdb84becf645fcc04a5456ed681e0ba.sfa.gz"
       ],
       "bytes": 15755522,
       "sha256": "8c575b31bb1ae98caf7988a20df707dc7fdb84becf645fcc04a5456ed681e0ba",

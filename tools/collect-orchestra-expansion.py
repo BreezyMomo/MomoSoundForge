@@ -17,6 +17,11 @@ SPECS = {
  'french-horn': [('FHornSus','sustain'),('FHornStac','staccato'),('FHornMute','muted-sustain')],
  'trumpet': [('TrumpetSus','sustain'),('TrumpetStac','staccato'),('TrumpetSusVib','sustain-vibrato'),('TrumpetHarmonMuteSus','harmon-muted-sustain'),('TrumpetStraightMuteSus','straight-muted-sustain')],
 }
+COMPLETE_TRIO = {
+ 'solo-violin': [('SViolinVib','sustain'),('SViolinSpic','spiccato')],
+ 'clarinet': [('ClarinetSus','sustain'),('ClarinetStac','staccato')],
+ 'trombone': [('TromboneSus','sustain'),('TromboneStac','staccato')],
+}
 def sha(b): return hashlib.sha256(b).hexdigest()
 def blob(b): return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def fetch(url):
@@ -66,9 +71,11 @@ def coverage(samples):
         result[inst]=arts
     return result
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--out',default='samples/orchestra-expanded-20261105');parser.add_argument('--audit-only',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--out');parser.add_argument('--selection',choices=['expanded','complete-trio'],default='expanded');parser.add_argument('--asset-map');parser.add_argument('--audit-only',action='store_true');args=parser.parse_args()
+    specs=COMPLETE_TRIO if args.selection=='complete-trio' else SPECS
     root=Path.cwd();oldroot=root/'samples/orchestra-basics-20261104';old=json.loads((oldroot/'manifest.json').read_text('utf8'))
-    out=Path(args.out).resolve();assert out.parent==root/'samples' and out!=oldroot
+    out=Path(args.out or ('samples/orchestra-complete-20261107' if args.selection=='complete-trio' else 'samples/orchestra-expanded-20261105')).resolve();assert out.parent==root/'samples' and out!=oldroot
+    asset_map=json.loads(Path(args.asset_map).read_text('utf8')) if args.asset_map else {}
     out.mkdir(exist_ok=True)
     for folder in ['mappings','originals','wav','licenses']:(out/folder).mkdir(exist_ok=True)
     trees={}
@@ -78,9 +85,9 @@ def main():
         tree=json.loads(data);assert not tree.get('truncated') and tree['sha']==rev
         trees[label]={x['path']:x for x in tree['tree'] if x['type']=='blob'}
     records=[]
-    for ident,specs in SPECS.items():
+    for ident,instrument_specs in specs.items():
         template=next(s for s in old['samples'] if s['instrumentId']==ident)
-        for filename,art in specs:
+        for filename,art in instrument_specs:
             filename+='.sfz'; dest=out/'mappings'/filename
             raw=dest.read_bytes() if dest.exists() else fetch(raw_url(MAPPING,filename))
             assert blob(raw)==trees['mapping'][filename]['sha'];dest.write_bytes(raw)
@@ -99,14 +106,14 @@ def main():
                     'sourceGitBlobSha1':trees['source'][source_path]['sha'],'sourceRegion':own,'sourceEffectiveOpcodes':ops,
                     'mappingFile':filename,'mappingCommit':MAPPING,'mappingSha256':sha(raw),'mappingUrl':REPOSITORY+'/blob/'+MAPPING+'/'+filename,
                     'author':template['author'],'license':'CC0-1.0','licenseUrl':old['licenseUrl'],
-                    'roundRobin':{'mode':'random-window' if 'lorand' in ops else None,'index':None,'randomLow':float(ops['lorand']) if 'lorand' in ops else None,'randomHigh':float(ops['hirand']) if 'hirand' in ops else None},
+                    'roundRobin':{'mode':'sequence' if 'seq_position' in ops else 'random-window' if 'lorand' in ops else None,'index':int(ops['seq_position'])-1 if 'seq_position' in ops else None,'randomLow':float(ops['lorand']) if 'lorand' in ops else None,'randomHigh':float(ops['hirand']) if 'hirand' in ops else None},
                     'loop':{'mode':None,'startFrame':None,'endFrame':None,'evidence':'Unverified; no loop enabled'},
                     'release':{'envelopeSeconds':float(ops.get('ampeg_release',.15)),'recordedReleaseSampleId':None},
                     'measuredTuningHz':None,'pitchEvidence':'Author SFZ pitch_keycenter; no measured tuning certification','subjectiveAudition':'pending'})
     paths=sorted({s['sourcePath'] for s in records});total=sum(trees['source'][p]['size'] for p in paths)
     assert total<1024**3,'Pinned selection exceeds 1 GiB source budget'
     print(f'{len(records)} mapped regions, {len(paths)} source recordings, {total/1048576:.1f} MiB originals',flush=True)
-    before=[s for s in old['samples'] if s['instrumentId'] in SPECS]
+    before=[s for s in old['samples'] if s['instrumentId'] in specs]
     (out/'author-coverage.json').write_text(json.dumps({'before':coverage(before),'authorReference':coverage(records),'sourceRecordings':len(paths),'newSourceRecordings':len(set(paths)-{s['sourcePath'] for s in old['samples']})},ensure_ascii=False,indent=2)+'\n','utf8')
     if args.audit_only:return
     import numpy as np, scipy, soundfile as sf
@@ -115,7 +122,8 @@ def main():
     def acquire(path):
         asset=hashlib.sha256(path.encode()).hexdigest()[:20];original=out/'originals'/(asset+'.wav');working=out/'wav'/(asset+'.wav')
         if original.exists():data=original.read_bytes()
-        elif path in old_by_path:data=(oldroot/old_by_path[path]['originalFile']).read_bytes()
+        elif path in old_by_path and (oldroot/old_by_path[path]['originalFile']).exists():data=(oldroot/old_by_path[path]['originalFile']).read_bytes()
+        elif path in old_by_path and 'samples/orchestra-basics-20261104/'+old_by_path[path]['originalFile'] in asset_map:data=Path(asset_map['samples/orchestra-basics-20261104/'+old_by_path[path]['originalFile']]).read_bytes()
         else:data=fetch(raw_url(SOURCE,path))
         assert len(data)==trees['source'][path]['size'] and blob(data)==trees['source'][path]['sha'],path
         if not original.exists():original.write_bytes(data)
@@ -143,7 +151,12 @@ def main():
         for count,(path,metadata) in enumerate(pool.map(acquire,paths),1):
             assets[path]=metadata
             if count%25==0 or count==len(paths):print(f'Verified and converted {count}/{len(paths)}',flush=True)
-    offsets={ident:max(0,max(float(s['sourceEffectiveOpcodes'].get('volume',0))+6 for s in records if s['instrumentId']==ident)-24) for ident in SPECS}
+    offsets={ident:max(0,max(float(s['sourceEffectiveOpcodes'].get('volume',0))+6 for s in records if s['instrumentId']==ident)-24) for ident in specs}
+    if args.selection=='complete-trio':
+        # Preserve all relative author levels with one headroom value per instrument.
+        for ident in specs:
+            peak=max(assets[s['sourcePath']]['peak']*10**((float(s['sourceEffectiveOpcodes'].get('volume',0))+6)/20) for s in records if s['instrumentId']==ident)
+            offsets[ident]=round(max(offsets[ident],20*math.log10(peak/.7)),12)
     for s in records:
         s.update(assets[s['sourcePath']]);gain=float(s['sourceEffectiveOpcodes'].get('volume',0))
         s['conversion']={'suggestedAuthorRegionVolumeDb':gain,'recommendedRegionGainDb':gain+6-offsets[s['instrumentId']],'instrumentUniformAttenuationDb':offsets[s['instrumentId']],
@@ -154,10 +167,10 @@ def main():
     quarantine=[s for s in records if not s['qualityReview']['usableForAutomaticSelection']]
     (out/'coverage.json').write_text(json.dumps({'before':coverage(before),'after':coverage(usable),'authorReference':coverage(records),'sourceRecordings':len(paths),'newSourceRecordings':len(set(paths)-{s['sourcePath'] for s in old['samples']}),'quarantinedRegions':len(quarantine)},ensure_ascii=False,indent=2)+'\n','utf8')
     (out/'quarantine.json').write_text(json.dumps(quarantine,ensure_ascii=False,indent=2)+'\n','utf8')
-    manifest={'schema':'momo.instrument-collection/v1','title':'Orchestra Expanded 2026-11-05','instrumentCount':len(SPECS),'sampleCount':len(usable),'uniqueRecordingCount':len(paths),'usableRecordingCount':len({s['sourcePath'] for s in usable}),'quarantinedRegionCount':len(quarantine),
+    manifest={'schema':'momo.instrument-collection/v1','title':'VSCO Complete Violin, Clarinet and Trombone' if args.selection=='complete-trio' else 'Orchestra Expanded 2026-11-05','instrumentCount':len(specs),'sampleCount':len(usable),'uniqueRecordingCount':len(paths),'usableRecordingCount':len({s['sourcePath'] for s in usable}),'quarantinedRegionCount':len(quarantine),
         'source':old['source'],'repository':REPOSITORY,'sourceCommit':SOURCE,'mappingCommit':MAPPING,'license':'CC0-1.0','licenseUrl':old['licenseUrl'],
-        'coverage':'Selected 20 author mappings for six instruments, excluding full-scale source recordings from automatic use. Original mappings are preserved. See coverage.json for remaining holes.',
-        'limitations':['No measured tuning or subjective sound-quality certification.','No unverified sustain loops, legato or release recordings enabled.','Sample duration is full; portable projects select budgeted excerpts explicitly.','Author random windows are metadata; native engine uses deterministic cycling.'],
+        'coverage':f'Selected {sum(len(s) for s in specs.values())} author mappings for {len(specs)} instruments, excluding full-scale source recordings from automatic use. Original mappings are preserved. See coverage.json for remaining holes.',
+        'limitations':['No measured tuning or subjective sound-quality certification.','No unverified sustain loops, legato or release recordings enabled.','Full recordings are shared by reference; portable exports include every instrument dependency.' if args.selection=='complete-trio' else 'Sample duration is full; portable projects select budgeted excerpts explicitly.','Author random windows are metadata; native engine uses deterministic cycling.'],
         'conversionTools':{'numpy':np.__version__,'scipy':scipy.__version__,'soundfile':sf.__version__},'samples':usable}
     (out/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n','utf8')
     print('Collection complete: '+str(out),flush=True)

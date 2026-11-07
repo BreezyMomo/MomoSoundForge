@@ -1,5 +1,6 @@
 import { assetResolver, fileDigest, walkFiles } from './sound-asset-store.mjs';
 import { pianoJob, pianoProject } from './builtin-vcsl-piano.mjs';
+import { completeOrchestraJobs, completeOrchestraProject } from './builtin-complete-orchestra.mjs';
 import { createServer } from "vite";
 import { gunzipSync } from "node:zlib";
 import { deterministicGzip as gzipSync } from './deterministic-gzip.mjs';
@@ -33,6 +34,8 @@ const game = await readJson(`${gameRoot}/manifest.json`);
 const nature = await readJson(`${natureRoot}/manifest.json`);
 const pianoRoot = "samples/vcsl-kawai-20261107";
 const piano = await readJson(`${pianoRoot}/manifest.json`);
+const completeRoot = 'samples/orchestra-complete-20261107';
+const complete = await readJson(`${completeRoot}/manifest.json`);
 const quality = await readJson("tools/builtin-quality.json");
 const excludedStandalone = new Set(quality.excludedStandaloneSamples.map(entry => entry.id));
 const fxExamples = await readJson(`${fxRoot}/examples/recipes.json`);
@@ -63,6 +66,7 @@ for (const sample of fx.samples) jobs.push({
 });
 const variants = new Map();
 const expandedInstruments = new Set(expanded.samples.map(s => s.instrumentId));
+for(const s of complete.samples)expandedInstruments.add(s.instrumentId);
 for (const sample of orchestra.samples) {
   if (excludedStandalone.has(sample.id)) continue;
   if (expandedInstruments.has(sample.instrumentId)) continue;
@@ -78,6 +82,7 @@ for (const sample of orchestra.samples) {
 }
 jobs.push(...instrumentJobs({...expanded, samples: expanded.samples.filter(s => s.instrumentId !== "upright-piano")}, expandedRoot));
 jobs.push(pianoJob(piano, pianoRoot));
+jobs.push(...completeOrchestraJobs(complete,completeRoot));
 const legacyLevels = legacyInstrumentLevels(jobs.filter(job => job.kind === "instrument" && !job.tone && !job.completeInstrument).map(job => job.sample));
 const effectCategories = ["impacts", "interface", "magic", "motion", "motion", "liquid", "liquid", "foley"];
 for (const [index, entry] of fxExamples.entries()) jobs.push({
@@ -155,7 +160,9 @@ try {
   for (const job of jobs) {
     let source;
     const assetGains = [];
-    if (job.completeInstrument) {
+    if (job.orchestraComplete) {
+      source = await completeOrchestraProject(job, root, { makeLayer });
+    } else if (job.completeInstrument) {
       source = await pianoProject(job, root, { makeLayer });
       fullPiano = source;
     } else if (job.natureSfx) {

@@ -4,6 +4,11 @@ test-results/
 .taste-skill/
 *.log
 .cache/
+__pycache__/
+
+# Complete orchestral collection: metadata and author mappings stay tracked.
+/samples/orchestra-complete-20261107/wav/
+/samples/orchestra-complete-20261107/originals/
 
 # Duplicate export archive; its source collection is preserved in the pinned asset release.
 /exports/orchestra-basics-20261104.zip

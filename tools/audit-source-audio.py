@@ -123,7 +123,7 @@ def main():
                         entry['issues'].append('mapping-hash-mismatch')
                     else:
                         entry['checks'].append('author-mapping-file-hash')
-                if base.name.startswith(('orchestra-expanded', 'vcsl-kawai')) and entry['working'] not in {c['working'] for c in conversions}:
+                if base.name.startswith(('orchestra-expanded', 'orchestra-complete', 'vcsl-kawai')) and entry['working'] not in {c['working'] for c in conversions}:
                     # Independently replay the documented fixed conversion, without writing a WAV.
                     audio, rate = sf.read(physical(root/entry['original']), dtype='float64', always_2d=True)
                     if audio.shape[1] == 1:

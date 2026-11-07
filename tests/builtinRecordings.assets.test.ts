@@ -22,7 +22,7 @@ it('ships exactly one complete, verified working WAV per instrument recording', 
   expect(new Set(BUILTIN_RECORDINGS.map(r => r.id))).toEqual(expected);
   expect(BUILTIN_RECORDINGS.length).toBe(expected.size);
   const sourceHashes = new Map<string, { frames: number; hash: string }>();
-  for (const collection of ['orchestra-basics-20261104', 'orchestra-expanded-20261105', 'vcsl-kawai-20261107']) {
+  for (const collection of ['orchestra-basics-20261104', 'orchestra-expanded-20261105', 'vcsl-kawai-20261107', 'orchestra-complete-20261107']) {
     const m = JSON.parse(readFileSync(`samples/${collection}/manifest.json`, 'utf8'));
     for (const s of m.samples) sourceHashes.set(s.wavSha256, { frames: Math.round(s.durationSeconds * 48000), hash: s.wavSha256 });
   }

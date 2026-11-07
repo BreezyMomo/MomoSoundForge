@@ -7,10 +7,11 @@ import { instrumentJobs } from './builtin-instruments.mjs';
 import { gameSfxJobs } from './builtin-game-sfx.mjs';
 import { natureSfxJobs } from './builtin-nature-sfx.mjs';
 import { pianoJob } from './builtin-vcsl-piano.mjs';
+import { completeOrchestraJobs } from './builtin-complete-orchestra.mjs';
 import { assetResolver, loadLock } from './sound-asset-store.mjs';
 
 export async function collections(root = process.cwd()) {
-  const names = ['cc0-starter-20261104', 'orchestra-basics-20261104', 'orchestra-expanded-20261105', 'game-sfx-starter-20261105', 'nature-ambience-20261105', 'vcsl-kawai-20261107'];
+  const names = ['cc0-starter-20261104', 'orchestra-basics-20261104', 'orchestra-expanded-20261105', 'game-sfx-starter-20261105', 'nature-ambience-20261105', 'vcsl-kawai-20261107', 'orchestra-complete-20261107'];
   return Promise.all(names.map(async name => {
     const base = `samples/${name}`, manifest = JSON.parse(await readFile(path.join(root, base, 'manifest.json'), 'utf8'));
     let quarantine = [];
@@ -21,10 +22,11 @@ export async function collections(root = process.cwd()) {
 }
 
 export async function buildInputPaths(root = process.cwd()) {
-  const [fx, basics, expanded, game, nature, piano] = await collections(root);
+  const [fx, basics, expanded, game, nature, piano, complete] = await collections(root);
   const quality = JSON.parse(await readFile(path.join(root, 'tools/builtin-quality.json'), 'utf8'));
   const excluded = new Set(quality.excludedStandaloneSamples.map(s => s.id));
   const replaced = new Set(expanded.manifest.samples.map(s => s.instrumentId));
+  for(const s of complete.manifest.samples)replaced.add(s.instrumentId);
   const recipes = JSON.parse(await readFile(path.join(root, fx.base, 'examples/recipes.json'), 'utf8'));
   return new Set([
     ...fx.manifest.samples.map(s => `${fx.base}/${s.projectFile}`),
@@ -32,6 +34,7 @@ export async function buildInputPaths(root = process.cwd()) {
     ...basics.manifest.samples.filter(s => !excluded.has(s.id) && !replaced.has(s.instrumentId)).map(s => `${basics.base}/${s.wavFile}`),
     ...instrumentJobs({ ...expanded.manifest, samples: expanded.manifest.samples.filter(s => s.instrumentId !== 'upright-piano') }, expanded.base).flatMap(j => j.sourceFiles),
     ...pianoJob(piano.manifest, piano.base).sourceFiles,
+    ...completeOrchestraJobs(complete.manifest, complete.base).flatMap(j=>j.sourceFiles),
     ...gameSfxJobs(game.manifest, game.base).flatMap(j => j.sourceFiles ?? [j.source]),
     ...natureSfxJobs(nature.manifest, nature.base).flatMap(j => j.sourceFiles ?? [j.source]),
     `${basics.base}/examples/forest-departure-8s.soundforge`,

@@ -1,0 +1,882 @@
+{
+  "before": {
+    "clarinet": {
+      "staccato": {
+        "regionCount": 1,
+        "rootMidi": [
+          62
+        ],
+        "velocityBands": [
+          [
+            42,
+            83
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [],
+          "75": [
+            [
+              60,
+              63
+            ]
+          ],
+          "110": []
+        },
+        "coveredKeyVelocityCells": 168,
+        "maxRootDistanceSemitones": 2
+      },
+      "sustain": {
+        "regionCount": 2,
+        "rootMidi": [
+          58,
+          70
+        ],
+        "velocityBands": [
+          [
+            42,
+            83
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [],
+          "75": [
+            [
+              56,
+              59
+            ],
+            [
+              68,
+              71
+            ]
+          ],
+          "110": []
+        },
+        "coveredKeyVelocityCells": 336,
+        "maxRootDistanceSemitones": 2
+      }
+    },
+    "solo-violin": {
+      "spiccato": {
+        "regionCount": 1,
+        "rootMidi": [
+          67
+        ],
+        "velocityBands": [
+          [
+            63,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [],
+          "75": [
+            [
+              66,
+              67
+            ]
+          ],
+          "110": [
+            [
+              66,
+              67
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 130,
+        "maxRootDistanceSemitones": 1
+      },
+      "sustain": {
+        "regionCount": 2,
+        "rootMidi": [
+          60,
+          72
+        ],
+        "velocityBands": [
+          [
+            63,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [],
+          "75": [
+            [
+              59,
+              61
+            ],
+            [
+              71,
+              73
+            ]
+          ],
+          "110": [
+            [
+              59,
+              61
+            ],
+            [
+              71,
+              73
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 390,
+        "maxRootDistanceSemitones": 1
+      }
+    },
+    "trombone": {
+      "staccato": {
+        "regionCount": 1,
+        "rootMidi": [
+          46
+        ],
+        "velocityBands": [
+          [
+            63,
+            94
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [],
+          "75": [
+            [
+              44,
+              49
+            ]
+          ],
+          "110": []
+        },
+        "coveredKeyVelocityCells": 192,
+        "maxRootDistanceSemitones": 3
+      },
+      "sustain": {
+        "regionCount": 2,
+        "rootMidi": [
+          41,
+          53
+        ],
+        "velocityBands": [
+          [
+            42,
+            83
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [],
+          "75": [
+            [
+              40,
+              43
+            ],
+            [
+              52,
+              56
+            ]
+          ],
+          "110": []
+        },
+        "coveredKeyVelocityCells": 378,
+        "maxRootDistanceSemitones": 3
+      }
+    }
+  },
+  "after": {
+    "clarinet": {
+      "staccato": {
+        "regionCount": 64,
+        "rootMidi": [
+          50,
+          53,
+          58,
+          62,
+          65,
+          70,
+          74,
+          77,
+          82,
+          86,
+          89
+        ],
+        "velocityBands": [
+          [
+            0,
+            41
+          ],
+          [
+            0,
+            62
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            63,
+            127
+          ],
+          [
+            84,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              50,
+              89
+            ]
+          ],
+          "75": [
+            [
+              50,
+              89
+            ]
+          ],
+          "110": [
+            [
+              50,
+              89
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5080,
+        "maxRootDistanceSemitones": 2
+      },
+      "sustain": {
+        "regionCount": 33,
+        "rootMidi": [
+          50,
+          53,
+          58,
+          62,
+          65,
+          70,
+          74,
+          77,
+          82,
+          86,
+          89
+        ],
+        "velocityBands": [
+          [
+            0,
+            41
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            84,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              50,
+              90
+            ]
+          ],
+          "75": [
+            [
+              50,
+              90
+            ]
+          ],
+          "110": [
+            [
+              50,
+              90
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5207,
+        "maxRootDistanceSemitones": 2
+      }
+    },
+    "solo-violin": {
+      "spiccato": {
+        "regionCount": 60,
+        "rootMidi": [
+          55,
+          57,
+          60,
+          64,
+          67,
+          69,
+          72,
+          76,
+          79,
+          81,
+          84,
+          88,
+          91,
+          93,
+          96
+        ],
+        "velocityBands": [
+          [
+            0,
+            62
+          ],
+          [
+            63,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              55,
+              96
+            ]
+          ],
+          "75": [
+            [
+              55,
+              96
+            ]
+          ],
+          "110": [
+            [
+              55,
+              96
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5334,
+        "maxRootDistanceSemitones": 2
+      },
+      "sustain": {
+        "regionCount": 30,
+        "rootMidi": [
+          55,
+          57,
+          60,
+          64,
+          67,
+          69,
+          72,
+          76,
+          79,
+          81,
+          84,
+          88,
+          91,
+          93,
+          96
+        ],
+        "velocityBands": [
+          [
+            0,
+            62
+          ],
+          [
+            63,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              55,
+              96
+            ]
+          ],
+          "75": [
+            [
+              55,
+              96
+            ]
+          ],
+          "110": [
+            [
+              55,
+              96
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5334,
+        "maxRootDistanceSemitones": 2
+      }
+    },
+    "trombone": {
+      "staccato": {
+        "regionCount": 55,
+        "rootMidi": [
+          34,
+          41,
+          46,
+          53,
+          58,
+          62,
+          65
+        ],
+        "velocityBands": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            41
+          ],
+          [
+            31,
+            62
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            63,
+            94
+          ],
+          [
+            84,
+            127
+          ],
+          [
+            95,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              34,
+              70
+            ]
+          ],
+          "75": [
+            [
+              34,
+              70
+            ]
+          ],
+          "110": [
+            [
+              34,
+              70
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 4699,
+        "maxRootDistanceSemitones": 5
+      },
+      "sustain": {
+        "regionCount": 31,
+        "rootMidi": [
+          34,
+          37,
+          39,
+          41,
+          46,
+          50,
+          53,
+          60,
+          61,
+          63,
+          65
+        ],
+        "velocityBands": [
+          [
+            0,
+            41
+          ],
+          [
+            0,
+            62
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            63,
+            127
+          ],
+          [
+            84,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              34,
+              65
+            ]
+          ],
+          "75": [
+            [
+              34,
+              65
+            ]
+          ],
+          "110": [
+            [
+              34,
+              65
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 4064,
+        "maxRootDistanceSemitones": 3
+      }
+    }
+  },
+  "authorReference": {
+    "clarinet": {
+      "staccato": {
+        "regionCount": 64,
+        "rootMidi": [
+          50,
+          53,
+          58,
+          62,
+          65,
+          70,
+          74,
+          77,
+          82,
+          86,
+          89
+        ],
+        "velocityBands": [
+          [
+            0,
+            41
+          ],
+          [
+            0,
+            62
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            63,
+            127
+          ],
+          [
+            84,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              50,
+              89
+            ]
+          ],
+          "75": [
+            [
+              50,
+              89
+            ]
+          ],
+          "110": [
+            [
+              50,
+              89
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5080,
+        "maxRootDistanceSemitones": 2
+      },
+      "sustain": {
+        "regionCount": 33,
+        "rootMidi": [
+          50,
+          53,
+          58,
+          62,
+          65,
+          70,
+          74,
+          77,
+          82,
+          86,
+          89
+        ],
+        "velocityBands": [
+          [
+            0,
+            41
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            84,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              50,
+              90
+            ]
+          ],
+          "75": [
+            [
+              50,
+              90
+            ]
+          ],
+          "110": [
+            [
+              50,
+              90
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5207,
+        "maxRootDistanceSemitones": 2
+      }
+    },
+    "solo-violin": {
+      "spiccato": {
+        "regionCount": 60,
+        "rootMidi": [
+          55,
+          57,
+          60,
+          64,
+          67,
+          69,
+          72,
+          76,
+          79,
+          81,
+          84,
+          88,
+          91,
+          93,
+          96
+        ],
+        "velocityBands": [
+          [
+            0,
+            62
+          ],
+          [
+            63,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              55,
+              96
+            ]
+          ],
+          "75": [
+            [
+              55,
+              96
+            ]
+          ],
+          "110": [
+            [
+              55,
+              96
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5334,
+        "maxRootDistanceSemitones": 2
+      },
+      "sustain": {
+        "regionCount": 30,
+        "rootMidi": [
+          55,
+          57,
+          60,
+          64,
+          67,
+          69,
+          72,
+          76,
+          79,
+          81,
+          84,
+          88,
+          91,
+          93,
+          96
+        ],
+        "velocityBands": [
+          [
+            0,
+            62
+          ],
+          [
+            63,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              55,
+              96
+            ]
+          ],
+          "75": [
+            [
+              55,
+              96
+            ]
+          ],
+          "110": [
+            [
+              55,
+              96
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 5334,
+        "maxRootDistanceSemitones": 2
+      }
+    },
+    "trombone": {
+      "staccato": {
+        "regionCount": 55,
+        "rootMidi": [
+          34,
+          41,
+          46,
+          53,
+          58,
+          62,
+          65
+        ],
+        "velocityBands": [
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            41
+          ],
+          [
+            31,
+            62
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            63,
+            94
+          ],
+          [
+            84,
+            127
+          ],
+          [
+            95,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              34,
+              70
+            ]
+          ],
+          "75": [
+            [
+              34,
+              70
+            ]
+          ],
+          "110": [
+            [
+              34,
+              70
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 4699,
+        "maxRootDistanceSemitones": 5
+      },
+      "sustain": {
+        "regionCount": 31,
+        "rootMidi": [
+          34,
+          37,
+          39,
+          41,
+          46,
+          50,
+          53,
+          60,
+          61,
+          63,
+          65
+        ],
+        "velocityBands": [
+          [
+            0,
+            41
+          ],
+          [
+            0,
+            62
+          ],
+          [
+            42,
+            83
+          ],
+          [
+            63,
+            127
+          ],
+          [
+            84,
+            127
+          ]
+        ],
+        "keyRangesAtVelocity": {
+          "35": [
+            [
+              34,
+              65
+            ]
+          ],
+          "75": [
+            [
+              34,
+              65
+            ]
+          ],
+          "110": [
+            [
+              34,
+              65
+            ]
+          ]
+        },
+        "coveredKeyVelocityCells": 4064,
+        "maxRootDistanceSemitones": 3
+      }
+    }
+  },
+  "sourceRecordings": 273,
+  "newSourceRecordings": 264,
+  "quarantinedRegions": 0
+}
