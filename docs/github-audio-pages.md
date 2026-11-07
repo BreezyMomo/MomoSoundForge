@@ -6,10 +6,10 @@
 
 ## 两个仓库的职责
 
-- `BreezyMomo/MomoSoundForge`：代码及目录；Pages 发布编辑器，当前外置构建约 36.5 MiB。
-- `BreezyMomo/MomoSoundForge-assets`：Git 只放说明和工作流；Releases 保留已有原件／构建输入包；另用 Pages 发布当前版本的播放文件，当前约 614.6 MiB（含清单）。
+- `BreezyMomo/MomoSoundForge`：代码及目录；Pages 发布编辑器，当前外置构建约 37.2 MiB。
+- `BreezyMomo/MomoSoundForge-assets`：Git 只放说明和工作流；Releases 保留已有原件／构建输入包；另用 Pages 发布当前版本的播放文件，当前约 846.3 MiB（含清单；见文末最新记录）。
 
-音库地址为 `https://breezymomo.github.io/MomoSoundForge-assets/`，入口是 [manifest.json](https://breezymomo.github.io/MomoSoundForge-assets/manifest.json)，无需在根目录展示网页。两个项目站位于同一 origin 下；本地预览跨域读取也已验证。主仓库 Actions variable `SOUND_LIBRARY_URL` 已设为此地址。
+音库地址为 `https://breezymomo.github.io/MomoSoundForge-assets/`，订阅入口是 [index.json](https://breezymomo.github.io/MomoSoundForge-assets/index.json)，部署完整性检查使用独立的 [manifest.json](https://breezymomo.github.io/MomoSoundForge-assets/manifest.json)，两者不能混用；无需在根目录展示网页。两个项目站位于同一 origin 下；本地预览跨域读取也已验证。主仓库 Actions variable `SOUND_LIBRARY_URL` 已设为此地址。
 
 大文件通过 Actions 构建产物上传 Pages，不推回任一仓库的 Git，不创建装满音频的 `gh-pages` 分支，不把 Releases 下载链接当成浏览器音库。
 
@@ -80,3 +80,12 @@ GitHub Pages 每个发布站点最多 1 GB、每月 100 GB 软流量限制；公
 - 正式网址返回外置分发描述，音库前缀为上文 GitHub Pages 地址；页面 JS／CSS 与验收的生产构建一致。正式浏览器重开自建录音乐器工程、试听、再次保存和导出 WAV 成功；再次保存的工程离线渲染与网页 WAV 逐字节一致。截图 `test-results/github-official-site.png`，报告 `test-results/github-official-export.json`、`test-results/github-official-resave.json`。
 
 本机验证日志、报告及截图在 `test-results/github-*`、`test-results/deployment-*`；不提交这些下载包或生成音频。以上是可用性、完整性和声音一致性验收，不代表其他乐器已完成主观音质审查或整套替换。
+
+
+## 2026-11-07 完整管弦乐器补充发布
+
+最新资源输入为 [Release 2026.11.07-2](https://github.com/BreezyMomo/MomoSoundForge-assets/releases/tag/2026.11.07-2)，应用功能提交 `0213cdc`。完整小提琴、单簧管、次中音长号共 273 份录音已接入；其余乐器尚未全部升级。音库清单内 3,099 个文件，含清单共 887,395,701 字节（846.3 MiB），独立主站 37.2 MiB。
+
+[音库工作流](https://github.com/BreezyMomo/MomoSoundForge-assets/actions/runs/42372363693) 与 [主站工作流](https://github.com/BreezyMomo/MomoSoundForge/actions/runs/42373703838) 均成功。空缓存从固定公开 Release 恢复全部 archive 后重建目录一致；Windows／Linux 构建一致，公开文件大小、SHA-256 与 CORS 全量检查通过。普通测试 396 项、资源测试 22 项、本地来源测试 3 项通过；正式浏览器验证完整小提琴下载、试听、保存及离线新增未演奏音符。
+
+接手入口：[完整管弦乐器交接](handoff-orchestra-complete.md)。该文档包含固定来源、授权、采集命令、映射、验证证据、剩余乐器和下一轮搜索入口；多音库协议继续见 [多音库交接](handoff-multi-libraries.md)。历史发布记录中的旧体积和旧 Release 仅代表当时状态，当前开发使用本提交的锁文件。
