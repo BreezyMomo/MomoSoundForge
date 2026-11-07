@@ -68,6 +68,7 @@ MCP 还支持候选变体生成、试听与应用，声音修饰与原声对比�
 - [乐器与音符](docs/instruments.md)：采样音域、力度层、演奏法、音符 JSON 和便携乐器包。
 - [长笛示例](examples/instruments/flute/)：可编辑工程、乐器包和音符数据。
 - [开发与部署](docs/development.md)：本地运行、资源构建、验证与 GitHub Pages。
+- [内置资源维护](docs/builtin-resource-maintenance.md)：两个仓库的职责、新增音频、资源包发布顺序及 AI 交接要求。
 - [声音资源与本地库](docs/sound-resources.md)：统一资源管理、文件夹库、自定义合成算法、音符绑定、迁移及 AI 资源格式。
 - [产品目标](docs/product-vision.md)：面向非专业游戏开发者的设计方向。
 

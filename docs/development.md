@@ -33,6 +33,9 @@ Run the library audit for a loudness report; numerical checks do not replace lis
 
 ## 音源构建 / Library generation
 
+新增、替换或发布内置音源前，先读 [内置资源维护流程](builtin-resource-maintenance.md)：主仓库维护代码和清单，独立资源仓库的 Releases 保存大型资源；不要把新增音频提交回 Git。
+Before adding, replacing or publishing built-in sounds, read the [resource maintenance workflow](builtin-resource-maintenance.md). Code and manifests belong in the app repository; large assets belong in the asset repository's Releases, not Git history.
+
 `predev` 与 `prebuild` 从已校验的本地资源缓存生成 `public/sound-library/`，更新 `src/data/builtin-catalog.json`。构建不联网；需先显式执行 `assets:sync`。资源锁定版本、大小与 SHA-256，缓存命中也检查生成文件内容。Vite 将完整资源复制到 `dist/sound-library/`。
 The predev/prebuild hooks consume verified local asset packs, without network access. Sync assets explicitly first. Cache hits verify generated content hashes. Vite copies the complete library into the deployment.
 
