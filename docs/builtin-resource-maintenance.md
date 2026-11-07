@@ -16,7 +16,7 @@
 - 制作候选：音频可以暂放在 `samples/<素材集合>/` 对应逻辑路径，来源、授权和映射也在该集合下维护。这里是制作输入，不代表文件应该进入 Git。
 - 正式开发输入：`assets:sync` 按锁文件恢复到项目自己的 `.cache/sound-assets/`；可用 `SOUNDFORGE_ASSET_CACHE` 指定其他缓存。缓存内部按内容哈希和序号组织，不手动改缓存文件。
 - 打包结果：`assets:pack --output` 指定的独立目录，不是自动上传区；不要放进待提交的源码目录。
-- 运行资源：构建生成 `public/sound-library/`，默认复制到 `dist/sound-library/`；均不提交 Git。已支持配置独立静态音库地址并省去网站里的音频二进制，见 [运行音频分发](runtime-audio-distribution.md)；已选择 GitHub Pages，尚未切换线上。两种模式都**不是直接从资源仓库 Releases 播放输入包**。
+- 运行资源：构建生成 `public/sound-library/`，默认复制到 `dist/sound-library/`；均不提交 Git。线上已配置独立 GitHub Pages 音库，主站省去音频二进制，当前发布状态见 [GitHub 音库 Pages](github-audio-pages.md)。两种模式都**不是直接从资源仓库 Releases 播放输入包**。
 - 用户个人资源：用户在应用中保存入库时，写入其选择的本地文件夹中的 v2 `index.json`、`resources/*.sfresource` 条目清单、`objects/*.json` 不可变定义及 `audio/*.pcm.gz` 共享音频。不会自动上传 GitHub，也不会自动成为内置资源。
 
 `src/data/builtin-catalog.json`、固定框架包和已有的小型测试／教学示例是当前有意保留的跟踪项，不能按扩展名批量删除。新增大型内嵌音频示例应走资源外置流程，不能套用这个例外。
@@ -59,7 +59,7 @@ node tools/check-static-site.mjs
 
 **新增路径不一定被现有 `.gitignore` 覆盖。** 不使用未经检查的 `git add .`；用 `git status --short`、`git diff --cached --stat` 和 `git diff --cached --name-only` 检查实际暂存文件，尤其是音频、自包含工程、资源包、导出 ZIP 和生成目录。纯二进制目录可按目录忽略，混合目录只忽略应外置的文件，不能把授权和映射一起藏掉。
 
-资源离开 Git 不会减少网站体积。2026-11-07 原完整同源网站约 951.4 MiB；去掉音区重复 PCM 后约 731.6 MiB。用户已选定 [GitHub 音库 Pages](github-audio-pages.md) 免费分发方案，音库约 696.8 MiB、独立主站约 35 MiB，尚未上线。后续扩库必须运行体积检查，不能提高阈值来假装解决分发问题。远程个人库和统一的一键发布命令尚未实现。
+资源离开 Git 不会减少网站体积。2026-11-07 原完整同源网站约 951.4 MiB；当前共享资源架构的 [GitHub 音库 Pages](github-audio-pages.md) 约 614.6 MiB（含清单）、独立主站约 36.5 MiB。后续扩库必须运行体积检查，不能提高阈值来假装解决分发问题。远程个人库和统一的一键发布命令尚未实现。
 
 ## 交接时必须留下的事实
 
