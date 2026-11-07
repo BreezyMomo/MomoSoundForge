@@ -56,7 +56,7 @@ npm run library:publish-build -- --output <全新输出目录> --id <稳定音�
 
 ## 本轮验收
 
-本地验收已通过：`npm test` 最终为 48 个文件、396 项（含 6 项临时网络故障重试测试）；`npm run test:assets` 为 6 个文件、16 项；TypeScript、`npm run build`、构建后再次运行资源测试均通过。线上音库及应用部署的结果在完成后补记。
+本地验收已通过：`npm test` 最终为 48 个文件、396 项（含 6 项临时网络故障重试测试）；`npm run test:assets` 为 6 个文件、16 项；TypeScript、`npm run build`、构建后再次运行资源测试均通过。线上音库及应用均已成功部署，记录见下节。
 
 - 官方目录生成 1,142 个条目和 1,159 个共享音频对象；保留现有基础合成器与程序预设。
 - 真实浏览器同时订阅官方库和本地独立测试库，按来源筛选并使用测试乐器；移除测试库、停止其服务器后仍可新增 C5、试听、保存和刷新恢复草稿。保存的工程包含完整的两份录音，离线渲染与既有参照 WAV 哈希一致。
@@ -67,8 +67,11 @@ npm run library:publish-build -- --output <全新输出目录> --id <稳定音�
 
 ## 本轮发布记录（2026-11-07）
 
-- 实现提交 `a71a33539686f7db8ee258666f410862a2758f43`，已推送开发分支并快进到 `main`。资源仓库说明提交 `92e45ba`。
+- 实现提交 `a71a33539686f7db8ee258666f410862a2758f43`，网络重试修复 `ecd64c737e79d15fd3232aacde981b411eade2d0`，已推送开发分支并快进到 `main`。资源仓库说明提交 `92e45ba`、`828a389`。
 - [音库 CI 与部署](https://github.com/BreezyMomo/MomoSoundForge-assets/actions/runs/42367324846) 成功：固定输入恢复、390 项普通测试、16 项素材测试、生成目录一致性、发布体积及文件哈希全部通过。
 - 正式目录：[index.json](https://breezymomo.github.io/MomoSoundForge-assets/index.json)，`libraryId=momo-official-sounds`，SHA-256 `4c4049b899d4e9160a363d385c3fd3b2598875691536a0ff98d07ab5f5847d57`。Windows 本机候选与 Linux 产物一致；本机实际读取全部公开文件，`check-static-site --origin https://breezymomo.github.io` 的大小、SHA-256、CORS 检查通过。
 - 独立 origin 的生产构建从正式音库加载草地脚步、保存工程和导出 WAV 成功；工程的离线渲染与网页 WAV 逐字节一致，SHA-256 `383e093fb03b3a68390929de7c7adf3e28ecde2bee575d4a8c092b5ed07fb8ff`。
 - [首次编辑器 CI](https://github.com/BreezyMomo/MomoSoundForge/actions/runs/42368009924) 的构建和测试通过，发布前读取已存在的音库文件时遇到 GitHub HTTP 503，因此停止部署。校验工具随后增加最多 3 次、1／2 秒退避的临时网络及 429／500／502／503／504 重试；404、哈希不符、超大文件和 CORS 错误仍立即失败，没有跳过远端校验。未改变资源内容，无需重新发布音库。
+- [最终编辑器 CI 与部署](https://github.com/BreezyMomo/MomoSoundForge/actions/runs/42368897983) 成功，部署代码为 `ecd64c7`：396 项普通测试、16 项素材测试、生产构建、公开音库全部文件与 CORS 检查均通过。正式入口：[MomoSoundForge](https://breezymomo.github.io/MomoSoundForge/)。
+- 正式页面实测“管理资源 → 外部音库”显示官方目录与 1,142 项资源，搜索草地脚步并试听正常；页面未出现运行错误。截图为本机 `test-results/multi-library-official-settings.png`。上方“共 995 项”是默认“音源”类型筛选后的数量，不是目录缺项。
+- 本轮工作已完成。接手时从 `main` 开始，下一阶段仍是按前述来源和核验流程整理其他乐器；不用重做音库外置、Git 历史清理或本轮多音库改造。
