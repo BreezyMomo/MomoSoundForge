@@ -56,3 +56,20 @@ it.each(['ok', 'cors', 'checksum', 'oversize', 'missing'])('remote validation ha
   if (kind === 'ok') await expect(check).resolves.toBeUndefined();
   else await expect(check).rejects.toThrow();
 });
+
+it.each(['503', 'network'])('retries a transient %s while still checking the final bytes', async kind => {
+  const data=Buffer.from('audio'),manifest={files:[{file:'audio.bin',bytes:data.length,sha256:hash(data)}]};
+  let calls=0;const delays=[];
+  const fetcher=async()=>{if(++calls===1){if(kind==='network')throw new TypeError('fetch failed');return new Response('',{status:503});}
+    return new Response(data,{headers:{'Access-Control-Allow-Origin':'*'}});};
+  await verifyRemoteFiles('https://audio.example/',manifest,'https://editor.example',fetcher,async ms=>{delays.push(ms);});
+  expect(calls).toBe(2);expect(delays).toEqual([1000]);
+});
+
+it.each(['503','404','checksum','cors'])('bounds retries without masking %s deployment failures',async kind=>{
+  const data=Buffer.from('audio'),manifest={files:[{file:'audio.bin',bytes:data.length,sha256:hash(data)}]};
+  let calls=0;const delays=[];
+  const fetcher=async()=>{calls++;return new Response(kind==='checksum'?'other':data,{status:kind==='503'?503:kind==='404'?404:200,headers:kind==='cors'?{}:{'Access-Control-Allow-Origin':'*'}});};
+  await expect(verifyRemoteFiles('https://audio.example/',manifest,'https://editor.example',fetcher,async ms=>{delays.push(ms);})).rejects.toThrow();
+  expect(calls).toBe(kind==='503'?3:1);expect(delays).toEqual(kind==='503'?[1000,2000]:[]);
+});

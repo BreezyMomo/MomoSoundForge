@@ -124,17 +124,28 @@ export async function finishDistribution(root, outDir, externalUrl) {
   await writeFile(path.join(target, 'distribution.json'), JSON.stringify(descriptor, null, 2) + '\n');
 }
 
-export async function verifyRemoteFiles(baseUrl, manifest, origin, fetcher = fetch) {
+export async function verifyRemoteFiles(baseUrl, manifest, origin, fetcher = fetch, wait = ms => new Promise(resolve => setTimeout(resolve, ms))) {
   const base = normalizeLibraryUrl(baseUrl);
   if (!base) throw Error('An external library URL is required');
   if (!origin || new URL(origin).origin !== origin) throw Error('Pass --origin with the website origin to verify CORS');
+  async function request(url) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      let response;
+      try {
+        response = await fetcher(url, { headers: { Origin: origin }, signal: AbortSignal.timeout(60000), redirect: 'error', credentials: 'omit' });
+      } catch (error) {
+        if (attempt === 2 || !(error instanceof TypeError || error?.name === 'TimeoutError')) throw error;
+      }
+      if (response && (attempt === 2 || ![429, 500, 502, 503, 504].includes(response.status))) return response;
+      await response?.body?.cancel().catch(() => {});
+      await wait(1000 * (attempt + 1));
+    }
+  }
   let cursor = 0;
   async function worker() {
     while (cursor < manifest.files.length) {
       const entry = manifest.files[cursor++];
-      const response = await fetcher(`${base}${entry.file}`, {
-        headers: { Origin: origin }, signal: AbortSignal.timeout(60000), redirect: 'error', credentials: 'omit',
-      });
+      const response = await request(`${base}${entry.file}`);
       if (!response.ok || !response.body) throw Error(`Resource HTTP ${response.status}: ${entry.file}`);
       const allowOrigin = response.headers.get('Access-Control-Allow-Origin');
       if (allowOrigin !== '*' && allowOrigin !== origin) {
