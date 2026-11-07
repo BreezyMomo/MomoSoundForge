@@ -313,7 +313,15 @@ function renderNested(
     if (context.frames > MAX_RENDER_SAMPLES) throw Error('error.renderBudget');
     const completeL = new Float32Array(sourceLength + extra), completeR = new Float32Array(sourceLength + extra);
     if (child) {
-      for (let i = 0; i < sourceLength; i++) { completeL[i] = child.left[i] * layer.player.level; completeR[i] = child.right[i] * layer.player.level; }
+      // Fade the mixed child output, retaining its own envelopes and effect tails.
+      for (let i = 0; i < sourceLength; i++) {
+        const time = i / sampleRate;
+        const attack = layer.player.attack > 0 ? clamp(time / layer.player.attack, 0, 1) : 1;
+        const release = Math.min(layer.player.release, layer.duration);
+        const fade = attack * (release > 0 ? clamp((layer.duration - time) / release, 0, 1) : 1);
+        completeL[i] = child.left[i] * layer.player.level * fade;
+        completeR[i] = child.right[i] * layer.player.level * fade;
+      }
     } else { completeL.set(sourceLeft); completeR.set(sourceRight); }
     if (layer.player.effects) processEffects(completeL, completeR, sampleRate, layer.player.effects);
     if (extra && Math.max(Math.abs(completeL.at(-1)!), Math.abs(completeR.at(-1)!)) >= 0.001) {

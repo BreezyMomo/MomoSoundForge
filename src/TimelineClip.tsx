@@ -9,9 +9,9 @@ import {
 } from "react";
 import type { PlayerInput } from "./model";
 import {
-  adjustClipTiming,
   adjustCrop,
-  stretchClip,
+  editClip,
+  cropReference,
   snapTime,
   type CropEdit,
   timingChanged,
@@ -42,7 +42,6 @@ export function TimelineClip({
   moveOnly = false,
   projectDuration,
   position,
-  cropMode,
   snapTargets = [],
   displayLayer,
   constrain,
@@ -65,7 +64,6 @@ export function TimelineClip({
   moveOnly?: boolean;
   projectDuration: number;
   position: number;
-  cropMode: boolean;
   snapTargets?: number[];
   displayLayer?: PlayerInput;
   constrain?: (next: PlayerInput) => PlayerInput;
@@ -133,10 +131,7 @@ export function TimelineClip({
       });
     return patchLayer(
       original,
-      stretchClip(
-        original,
-        adjustClipTiming(original, mode, delta, duration, step),
-      ),
+      editClip(original, mode, delta, duration, step),
     );
   };
   const finish = (commit: boolean) => {
@@ -323,7 +318,15 @@ export function TimelineClip({
     0,
     Math.min(tail, projectDuration - timing.start - timing.duration),
   );
+  const reference = cropReference(timing);
+  const showReference = !timing.loop && !moveOnly && !!draft && (gesture.current?.mode === 'start' || gesture.current?.mode === 'end');
+  const croppedBefore = !timing.loop && reference.before > 0.000001;
+  const croppedAfter = !timing.loop && reference.after > 0.000001;
+  const waveformStart = Math.round((layer.reverse ? layer.sourceEnd-timing.sourceEnd : timing.sourceStart-layer.sourceStart) / layer.speed * sampleRate);
   const bodyFrames = Math.round(layer.duration * sampleRate);
+  const fadeIn = Math.min(1, timing.player.attack / (timing.player.duration || timing.duration));
+  const fadeOut = Math.min(1, timing.player.release / (timing.player.duration || timing.duration));
+  const fadeLabel = (mode: 'attack' | 'release') => t(mode === 'attack' ? 'editor.fadeInTime' : 'editor.fadeOutTime', timing.player[mode].toFixed(3));
   const seconds = (value: number) => value.toFixed(draft ? 3 : 2);
   return (
     <div
@@ -334,6 +337,14 @@ export function TimelineClip({
         else onClearSelection?.();
       }}
     >
+      {showReference && [{start:reference.start,end:timing.start,side:'before',seconds:reference.before},
+        {start:timing.start+timing.duration,end:reference.end,side:'after',seconds:reference.after}].map(part=>{
+          const start=Math.max(0,part.start),end=Math.min(projectDuration,part.end);
+          return end>start&&<div key={part.side} className="clip-crop-reference" title={t('editor.excluded',part.seconds.toFixed(2))}
+            style={{left:`${start/projectDuration*100}%`,width:`${(end-start)/projectDuration*100}%`}}>
+            <span>{t('editor.excluded',part.seconds.toFixed(2))}</span>
+          </div>;
+        })}
       {visibleTail > 0 && (
         <div
           className="clip-effect-tail"
@@ -354,7 +365,7 @@ export function TimelineClip({
         </div>
       )}
       <div
-        className={`layer-clip ${draft ? "is-dragging" : ""}`}
+        className={`layer-clip ${draft ? "is-dragging" : ""} ${croppedBefore ? "is-cropped-before" : ""} ${croppedAfter ? "is-cropped-after" : ""}`}
         style={{
           left: `clamp(0px,${Math.min(100, (timing.start / projectDuration) * 100)}%,calc(100% - 28px))`,
           width: `${Math.max(0, (Math.min(timing.duration, projectDuration - timing.start) / projectDuration) * 100)}%`,
@@ -373,6 +384,7 @@ export function TimelineClip({
         >
           <span className="clip-label">
             {seconds(timing.start)} s · {seconds(timing.duration)} s
+            {(croppedBefore||croppedAfter)&&<span title={t('editor.readRange',seconds(timing.sourceStart),seconds(timing.sourceEnd))}> · {t('editor.trimmed')}</span>}
             {layer.player.type === "instrument" &&
               layer.player.score &&
               ` · ${t("roll.count", layer.player.score.notes.length)}`}
@@ -382,9 +394,8 @@ export function TimelineClip({
           <Waveform
             data={waveform.current}
             label={layer.name}
-            endFrame={Math.round(
-              (bodyFrames * visibleBody) / Math.max(0.000001, timing.duration),
-            )}
+            startFrame={waveformStart}
+            endFrame={waveformStart + Math.round(visibleBody * sampleRate)}
           />
         </button>
         {sourceLayer.player.type === "instrument" &&
@@ -416,52 +427,36 @@ export function TimelineClip({
               title={t("editor.resizeEnd", layer.name)}
               {...events("end")}
             />
-            {layer.player.type !== "composition" && <><button
+            <>
+            <svg className="clip-fade-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              {fadeIn > 0 && <g><path className="clip-fade-shade" d={`M0 100 L${fadeIn * 100} 0 L0 0 Z`} /><path d={`M0 100 L${fadeIn * 100} 0`} /></g>}
+              {fadeOut > 0 && <g><path className="clip-fade-shade" d={`M${(1 - fadeOut) * 100} 0 L100 100 L100 0 Z`} /><path d={`M${(1 - fadeOut) * 100} 0 L100 100`} /></g>}
+            </svg>
+            <button
               className="clip-fade-handle"
               style={{
-                left: `${Math.min(1, timing.player.attack / (timing.player.duration ?? timing.duration)) * 100}%`,
+                left: `clamp(12px, ${fadeIn * 100}%, calc(100% - 12px))`,
               }}
               aria-label={t("pro.fadeIn", layer.name)}
-              title={t("pro.fadeIn", layer.name)}
+              title={fadeLabel("attack")}
+              data-hint={fadeLabel("attack")}
+              data-active={gesture.current?.mode === "attack" || undefined}
               {...events("attack")}
             />
             <button
               className="clip-fade-handle clip-fade-end"
               style={{
-                left: `${(1 - Math.min(1, timing.player.release / (timing.player.duration ?? timing.duration))) * 100}%`,
+                left: `clamp(12px, ${(1 - fadeOut) * 100}%, calc(100% - 12px))`,
               }}
               aria-label={t("pro.fadeOut", layer.name)}
-              title={t("pro.fadeOut", layer.name)}
+              title={fadeLabel("release")}
+              data-hint={fadeLabel("release")}
+              data-active={gesture.current?.mode === "release" || undefined}
               {...events("release")}
-            /></>}
+            /></>
           </>
         )}
-        <div
-          className="clip-crop-mask clip-crop-before"
-          style={{ width: `${0}%` }}
-        />
-        <div
-          className="clip-crop-mask clip-crop-after"
-          style={{ width: `${0}%` }}
-        />
-        {cropMode && !moveOnly && (
-          <>
-            <button
-              className="clip-crop-handle"
-              style={{ left: "0%" }}
-              aria-label={t("editor.cropStart", layer.name)}
-              title={t("editor.cropStart", layer.name)}
-              {...events("cropStart")}
-            />
-            <button
-              className="clip-crop-handle clip-crop-end"
-              style={{ left: `${100}%` }}
-              aria-label={t("editor.cropEnd", layer.name)}
-              title={t("editor.cropEnd", layer.name)}
-              {...events("cropEnd")}
-            />
-          </>
-        )}
+
       </div>
       <div
         className="layer-playhead"

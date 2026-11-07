@@ -1,3 +1,4 @@
+import { IDBFactory } from 'fake-indexeddb';
 import { expect, it, vi } from 'vitest';
 import { gzipSync } from 'node:zlib';
 import { sealResource } from '../src/resourceGraph';
@@ -78,4 +79,35 @@ it('can use a healthy mirror when an earlier provider for the same audio is unav
   const f=await fixture(true),a=f.index.audio[0];registerAudioProvider(a.audioId,async()=>{throw Error('Old source offline');});
   const r=await createRemoteLoader(f.index,'https://new.example/index.json',f.fetcher)(f.index.entries[0]);
   expect(await readAudio(Object.values(resourceProject(r).assets)[0])).toBeInstanceOf(Uint8Array);
+});
+
+it('reports complete audio preparation and reuses cached audio on retry',async()=>{
+  vi.stubGlobal('indexedDB',new IDBFactory());
+  try {
+  const f=await fixture(true),progress:import('../src/remoteLibrary').RemoteLoadProgress[]=[];
+  const loader=createRemoteLoader(f.index,'https://progress.example/index.json',f.fetcher);
+  await loader(f.index.entries[0],true,{onProgress:p=>progress.push(p)});
+  expect(progress[0]).toMatchObject({phase:'definition',completed:0});
+  expect(progress.at(-1)).toMatchObject({phase:'audio',completed:1,total:1});
+  expect(progress.at(-1)!.downloadedBytes).toBeGreaterThan(0);
+  expect(progress.every((p,i)=>i===0||p.downloadedBytes>=progress[i-1].downloadedBytes)).toBe(true);
+  f.fetcher.mockClear();progress.length=0;
+  await loader(f.index.entries[0],true,{onProgress:p=>progress.push(p)});
+  expect(f.fetcher).toHaveBeenCalledTimes(1);
+  expect(progress.at(-1)).toMatchObject({completed:1,total:1,downloadedBytes:f.index.entries[0].bytes});
+  } finally {vi.unstubAllGlobals();}
+});
+it('cancels a pending stream and never returns a partially loaded resource',async()=>{
+  const f=await fixture(),controller=new AbortController();let cancelled=false;
+  const fetcher=vi.fn(async()=>new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array([1]));},cancel(){cancelled=true;}})));
+  const pending=createRemoteLoader(f.index,'https://cancel.example/index.json',fetcher)(f.index.entries[0],true,{signal:controller.signal,onProgress:p=>{if(p.downloadedBytes)controller.abort();}});
+  await expect(pending).rejects.toMatchObject({name:'AbortError'});
+  expect(cancelled).toBe(true);
+  await expect(createRemoteLoader(f.index,'https://cancel.example/index.json',fetcher)(f.index.entries[0],true,{signal:controller.signal})).rejects.toMatchObject({name:'AbortError'});
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});
+it('cancels before audio dependencies without returning a resource',async()=>{
+  const f=await fixture(true),controller=new AbortController();
+  await expect(createRemoteLoader(f.index,'https://cancel-audio.example/index.json',f.fetcher)(f.index.entries[0],true,{signal:controller.signal,onProgress:p=>{if(p.phase==='audio')controller.abort();}})).rejects.toMatchObject({name:'AbortError'});
+  expect(f.fetcher).toHaveBeenCalledTimes(1);
 });

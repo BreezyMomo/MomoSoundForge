@@ -1,5 +1,10 @@
 export const REMOTE_MESSAGES:Record<string,[string,string]>={
- 'remote.title':['外部音库','External sound libraries'],
+ 'remote.preparing':['正在准备：{0}','Preparing: {0}'],
+ 'remote.readDefinition':['正在读取乐器与音源信息…','Reading sound definitions…'],
+ 'remote.audioProgress':['已准备 {0} / {1} 份录音','Prepared {0} / {1} recordings'],
+ 'remote.downloadBytes':['本次已下载 {0} MB；已有缓存会自动复用。','Downloaded {0} MB this time; cached audio is reused.'],
+ 'remote.cancelled':['已取消加载，可重新选择资源继续。','Loading cancelled. Select the resource again to retry.'],
+ 'remote.title':['订阅音库','Library subscriptions'],
  'remote.help':['添加音库目录地址即可一起搜索。使用时读取音频；下载到本地库后可离线使用。停用或移除订阅不会删除已保存的声音。','Add a catalog URL to search its sounds. Audio loads when used; download to your local library for offline access. Disabling or removing a subscription keeps saved sounds.'],
  'remote.name':['音库名称','Library name'], 'remote.address':['目录地址','Catalog URL'],
  'remote.add':['添加音库','Add library'], 'remote.save':['保存设置','Save settings'], 'remote.checking':['正在检查目录…','Checking catalog…'],
@@ -16,6 +21,6 @@ export const REMOTE_MESSAGES:Record<string,[string,string]>={
  'remote.missing':['音库缺少此资源的完整音频依赖。','This library is missing audio dependencies required by the resource.'],
  'remote.budget':['音库或资源超过允许的大小／数量。','Library or resource exceeds size or count limits.'],
  'remote.download':['下载到本地库','Download to local library'], 'remote.downloaded':['本地已有相同内容','Same content available locally'],
- 'remote.loading':['正在加载外部音库…','Loading external sound libraries…'], 'remote.problem':['部分音库不可用，请在“管理资源 → 外部音库”查看。','Some libraries are unavailable. Check Manage resources → External sound libraries.'],
+ 'remote.loading':['正在加载音库…','Loading sound libraries…'], 'remote.problem':['部分音库不可用，请在“管理资源 → 订阅音库”查看。','Some libraries are unavailable. Check Manage resources → Library subscriptions.'],
  'resources.remote':['外部音库','External library'],
 };

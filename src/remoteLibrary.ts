@@ -9,6 +9,8 @@ export type RemoteFile = { file: string; sha256: string; bytes: number; decodedB
 export type RemoteAudio = RemoteFile & SharedSampleReference & { format: 'pcm' | 'wav16'; assetGains?: number[] };
 export type RemoteEntry = RemoteFile & { id: string; contentId: string; name: string; names?: Record<string,string>; kind: ResourceKind; category: string; description: string; preview: number[] };
 export type RemoteIndex = { schema: typeof REMOTE_SCHEMA; libraryId: string; name: string; entries: RemoteEntry[]; audio: RemoteAudio[] };
+export type RemoteLoadProgress = { phase: 'definition'|'audio'; completed: number; total: number; downloadedBytes: number };
+export type RemoteLoadOptions = { signal?: AbortSignal; onProgress?: (progress: RemoteLoadProgress)=>void };
 const validId = /^[a-zA-Z0-9-]{1,120}$/;
 const fail = (key='invalid'): never => { throw Error('remote.'+key); };
 const str = (v:unknown,n:number) => typeof v==='string' && v.length<=n;
@@ -47,15 +49,18 @@ export function parseRemoteIndex(raw:unknown,url:string):RemoteIndex {
   });
   return {schema:REMOTE_SCHEMA,libraryId:r.libraryId,name:r.name,entries,audio};
 }
-async function bounded(stream:ReadableStream<Uint8Array>,limit:number) {
+async function bounded(stream:ReadableStream<Uint8Array>,limit:number,onBytes?:(bytes:number)=>void,signal?:AbortSignal) {
+  signal?.throwIfAborted();
   const reader=stream.getReader(),parts:Uint8Array[]=[];let size=0;
-  try { for(;;){const {done,value}=await reader.read();if(done)break;if((size+=value.length)>limit)fail('budget');parts.push(value);} }
-  finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+  const abort=()=>{void reader.cancel().catch(()=>{});};signal?.addEventListener('abort',abort,{once:true});
+  try { for(;;){const {done,value}=await reader.read();signal?.throwIfAborted();if(done)break;onBytes?.(value.length);if((size+=value.length)>limit)fail('budget');parts.push(value);} }
+  finally{signal?.removeEventListener('abort',abort);await reader.cancel().catch(()=>{});reader.releaseLock();}
   const result=new Uint8Array(size);let offset=0;for(const p of parts){result.set(p,offset);offset+=p.length;}return result;
 }
-export async function fetchRemoteBytes(url:string,limit:number,fetcher:typeof fetch=fetch) {
-  const r=await fetcher(url,{credentials:'omit',redirect:'error',signal:AbortSignal.timeout(60000)});
-  if(!r.ok||!r.body)fail('network');return bounded(r.body!,limit);
+export async function fetchRemoteBytes(url:string,limit:number,fetcher:typeof fetch=fetch,options:RemoteLoadOptions={},onBytes?:(bytes:number)=>void) {
+  options.signal?.throwIfAborted();
+  const r=await fetcher(url,{credentials:'omit',redirect:'error',signal:options.signal?AbortSignal.any([options.signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000)});
+  if(!r.ok||!r.body)fail('network');return bounded(r.body!,limit,onBytes,options.signal);
 }
 export async function fetchRemoteIndex(url:string,fetcher:typeof fetch=fetch) {
   const address=remoteIndexUrl(url),bytes=await fetchRemoteBytes(address,REMOTE_LIMITS.index,fetcher);
@@ -63,21 +68,34 @@ export async function fetchRemoteIndex(url:string,fetcher:typeof fetch=fetch) {
 }
 export function createRemoteLoader(index:RemoteIndex,url:string,fetcher:typeof fetch=fetch) {
   const audio=new Map(index.audio.map(a=>[a.audioId,a]));
-  const decoded=async(f:RemoteFile)=>{
-    const bytes=await fetchRemoteBytes(new URL(f.file,url).href,f.bytes,fetcher);
+  const decoded=async(f:RemoteFile,options:RemoteLoadOptions={},onBytes?:(bytes:number)=>void)=>{
+    const bytes=await fetchRemoteBytes(new URL(f.file,url).href,f.bytes,fetcher,options,onBytes);
     if(bytes.length!==f.bytes||await digest(bytes)!==f.sha256)fail('verify');
-    const result=await bounded(new Response(bytes).body!.pipeThrough(new DecompressionStream('gzip')),f.decodedBytes);
+    const result=await bounded(new Response(bytes).body!.pipeThrough(new DecompressionStream('gzip')),f.decodedBytes,undefined,options.signal);
     if(result.length!==f.decodedBytes)fail('verify');return result;
   };
-  return async(entry:RemoteEntry,complete=true):Promise<SoundResource>=>{
-    const graph=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await decoded(entry)));
+  return async(entry:RemoteEntry,complete=true,options:RemoteLoadOptions={}):Promise<SoundResource>=>{
+    const progress:RemoteLoadProgress={phase:'definition',completed:0,total:0,downloadedBytes:0};
+    const report=()=>{options.signal?.throwIfAborted();options.onProgress?.({...progress});};
+    const received=(bytes:number)=>{progress.downloadedBytes+=bytes;report();};
+    report();
+    const graph=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(await decoded(entry,options,received)));
     if(graph.root!==entry.contentId||graph.entry?.id!==entry.id||graph.entry?.kind!==entry.kind)fail('verify');
     const opened=await openResourceGraph(graph),providers=new Map<string,()=>Promise<Uint8Array>>();
     // Validate the whole dependency closure before registering any source.
     for(const [id,ref]of opened.audio){const a=audio.get(id);if(!a||a.frames!==ref.frames||a.sampleRate!==ref.sampleRate||a.channelCount!==ref.channelCount)fail('missing');
-      providers.set(id,async()=>{const raw=await decoded(a!),pcm=a!.format==='pcm'?raw:builtinPCM(raw,a as unknown as BuiltinSampleReference);
+      providers.set(id,async()=>{const raw=await decoded(a!,complete?options:{},complete?received:undefined),pcm=a!.format==='pcm'?raw:builtinPCM(raw,a as unknown as BuiltinSampleReference);
         if((await audioReference(pcm)).audioId!==id)fail('verify');return pcm;});}
-    if(complete)for(const [id,provider]of providers){const ref=opened.audio.get(id)!;await cacheAudio(id,await resolveAudio(ref,provider));}
+    if(complete){
+      progress.phase='audio';progress.total=providers.size;report();
+      for(const [id,provider]of providers){
+        options.signal?.throwIfAborted();
+        const ref=opened.audio.get(id)!,bytes=await resolveAudio(ref,provider,{signal:options.signal,preferFallback:true});
+        options.signal?.throwIfAborted();await cacheAudio(id,bytes);
+        progress.completed++;report();
+      }
+    }
+    options.signal?.throwIfAborted();
     // Captured URLs remain valid for this open resource even if its subscription is removed.
     if(!complete)for(const [id,provider]of providers)registerAudioProvider(id,provider);
     return {...opened.resource,name:entry.name,category:entry.category,description:entry.description,preview:entry.preview};

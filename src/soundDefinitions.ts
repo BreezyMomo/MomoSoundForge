@@ -9,6 +9,18 @@ export type InstrumentDefinition = {
 export type SoundDefinition = SynthDefinition | InstrumentDefinition;
 export const definitionId = (d: SoundDefinition) => d.schema === "momo.synth/v1" ? d.id : d.instrument.id;
 export const definitionName = (d: SoundDefinition) => d.schema === "momo.synth/v1" ? d.name : d.instrument.name;
+/** A synth can voice a note track without creating a separate library resource. */
+export function noteTrackDefinition(raw: SoundDefinition): InstrumentDefinition {
+  const d = parseDefinition(raw);
+  if (d.schema === 'momo.instrument/v1') return d;
+  return { schema: 'momo.instrument/v1', assets: {}, instrument: {
+    id: uid(), name: d.name, keyRange: { low: 0, high: 127 }, regions: [{
+      id: uid(), assetId: '', synth: d, synthValues: synthValues(d), rootMidi: 60,
+      keyLow: 0, keyHigh: 127, velocityLow: 1, velocityHigh: 127,
+      articulation: 'normal', roundRobin: 0, tuneCents: 0, gainDb: 0, releaseSeconds: 0.12,
+    }],
+  } };
+}
 export function parseDefinition(raw: unknown): SoundDefinition {
   const d = raw as SoundDefinition;
   if (d?.schema === "momo.synth/v1") return parseSynth(d);

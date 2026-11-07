@@ -1,19 +1,22 @@
 import { useState, type ReactNode } from "react";
 import { Button, Popover, PopoverContent, PopoverTitle, PopoverTrigger, WorkbenchChoice } from "@momo/workbench/react";
-import { ChevronDown, Scissors, RotateCcw, Trash2, X } from "lucide-react";
+import { Hand, Minus, Plus, ChevronDown, RotateCcw, Trash2, X } from "lucide-react";
 import { Range } from "./Inspector";
 import { t } from "./i18n";
 
 export type TimelineTools = {
+  handMode: boolean;
+  onHandMode: (value: boolean) => void;
+  onZoomView: (value: number) => void;
   groups: { path: string[]; name: string }[];
   canCollapseNotes: boolean;
   onCollapseNotes: () => void;
 };
 
-export function LayerToolbar({ groups, canCollapseNotes, onCollapseNotes, path, ids, cropMode,
-  onCrop, canResetCrop, onResetCrop, snap, onSnap, zoom, onZoom, duration,
+export function LayerToolbar({ handMode, onHandMode, groups, canCollapseNotes, onCollapseNotes, path, ids,
+  canResetCrop, onResetCrop, snap, onSnap, zoom, onZoom, duration,
   canDuplicate, onDuplicate, onDelete, canGroup, onGroup, onMove, children, waveformHelp, tailLimited }: TimelineTools & {
-  path: string[]; ids: string[]; cropMode: boolean; onCrop: () => void;
+  path: string[]; ids: string[];
   canResetCrop: boolean; onResetCrop: () => void;
   snap: boolean; onSnap: (value: boolean) => void; zoom: number; onZoom: (value: number) => void; duration: number;
   canDuplicate: boolean; onDuplicate: () => void; canGroup: boolean; onGroup: () => void;
@@ -41,10 +44,13 @@ export function LayerToolbar({ groups, canCollapseNotes, onCollapseNotes, path, 
   );
   return <>
     <div className="layer-toolbar">
-      <Button variant={cropMode ? "secondary" : "outline"} aria-pressed={cropMode} onClick={onCrop}>
-        <Scissors size={14} />{t(cropMode ? "editor.cropEnabled" : "editor.cropMode")}
-      </Button>
-      {canResetCrop && <Button variant="outline" onClick={onResetCrop}><RotateCcw size={14} />{t("editor.resetCrop")}</Button>}
+      <div className="timeline-navigation-tools" role="group" aria-label={t("timeline.navigation")}>
+        <Button variant={handMode ? "secondary" : "outline"} aria-pressed={handMode} title={t("timeline.navigationHelp")} onClick={() => onHandMode(!handMode)}><Hand size={14} />{t("timeline.hand")}</Button>
+        <Button variant="outline" size="icon-sm" aria-label={t("timeline.zoomOut")} disabled={zoom <= 1} onClick={() => onZoom(zoom / 1.25)}><Minus size={14} /></Button>
+        <span className="timeline-zoom-value">{zoom.toFixed(2)}×</span>
+        <Button variant="outline" size="icon-sm" aria-label={t("timeline.zoomIn")} disabled={zoom >= Math.max(8, Math.ceil(duration / 2))} onClick={() => onZoom(zoom * 1.25)}><Plus size={14} /></Button>
+        <Button variant="outline" onClick={() => onZoom(1)}>{t("timeline.showAll")}</Button>
+      </div>
       <label className="layer-snap"><input type="checkbox" checked={snap} onChange={e => onSnap(e.target.checked)}
         aria-label={t("pro.snap")} />{t("tree.snapShort")}</label>
       <Button variant="outline" disabled={!canDuplicate} onClick={onDuplicate}>{t("pro.copySelection")}</Button>
@@ -52,6 +58,7 @@ export function LayerToolbar({ groups, canCollapseNotes, onCollapseNotes, path, 
         <Trash2 size={14} />{t("tree.deleteSelection")}
       </Button>
       {popover("selection", t("tree.selectionMenu", ids.length), <div className="layer-selection-settings">
+        {canResetCrop && <Button variant="outline" onClick={() => { onResetCrop(); close(); }}><RotateCcw size={14} />{t("editor.resetCrop")}</Button>}
         <Button variant="outline" disabled={!canGroup} onClick={() => { onGroup(); close(); }}>{t("tree.groupSelected")}</Button>
         <div className="layer-move-settings">
           <WorkbenchChoice label={t("tree.destination")} value={target} onValueChange={setDestination}
@@ -67,11 +74,10 @@ export function LayerToolbar({ groups, canCollapseNotes, onCollapseNotes, path, 
         <Button variant="outline" disabled={!canCollapseNotes} onClick={onCollapseNotes}>{t("roll.collapseAll")}</Button>
       </>)}
       {popover("help", t("tree.operationHelp"), <div className="layer-help-player">
-        <p>{t("pro.selectHelp")}</p><p>{t("tree.deleteHelp")}</p><p>{t("editor.stretchHelp")}</p><p>{t("editor.cropHelp")}</p>
+        <p>{t("timeline.navigationHelp")}</p><p>{t("pro.selectHelp")}</p><p>{t("tree.deleteHelp")}</p><p>{t("editor.stretchHelp")}</p><p>{t("editor.cropHelp")}</p>
         <p>{t("tree.dragHelp")}</p><p>{t("roll.overviewHint")}</p><p>{waveformHelp}</p>
         <p>{t("tree.tailHelp")}{tailLimited && ` ${t("tree.tailLimited")}`}</p>
       </div>)}
     </div>
-    {cropMode && <p className="layer-mode-hint">{t("editor.cropHelp")}</p>}
   </>;
 }

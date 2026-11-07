@@ -6,6 +6,7 @@ import {
   type LayerValue,
 } from "./model";
 import {
+  Button, Popover, PopoverTrigger, PopoverContent, PopoverTitle,
   WorkbenchNumberInput,
   WorkbenchSlider,
   Field,
@@ -17,7 +18,7 @@ import {
 } from "@momo/workbench/react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useId } from "react";
-import { Copy, Trash2, SlidersHorizontal } from "lucide-react";
+import { Copy, Trash2, SlidersHorizontal, Ellipsis, X } from "lucide-react";
 import type { PlayerInput, Project } from "./model";
 import { t } from "./i18n";
 import { AutomationEditor } from "./AuthoringTools";
@@ -165,6 +166,7 @@ export function Inspector({
   onEnter: () => void;
   onExpose: (key: Parameter) => void;
 }) {
+  const [moreOpen, setMoreOpen] = useState(false);
   const [tab, setTab] = useInspectorTab();
   if (!layer) return (
     <div className="empty-state"><SlidersHorizontal size={26} /><p>{t("prop.empty")}</p></div>
@@ -201,6 +203,13 @@ export function Inspector({
               onCommit={v => onChange("name", v)} />
           </div>
           <div className="button-group">
+            <Popover open={moreOpen} onOpenChange={setMoreOpen}>
+              <PopoverTrigger render={<Button variant="ghost" size="icon-sm" aria-label={t("inspector.moreActions")} title={t("inspector.moreActions")} />}><Ellipsis size={15} /></PopoverTrigger>
+              <PopoverContent align="end" className="layer-tool-popover">
+                <div className="layer-tool-heading"><PopoverTitle>{t("inspector.moreActions")}</PopoverTitle><Button variant="ghost" size="icon-sm" aria-label={t("action.close")} onClick={() => setMoreOpen(false)}><X size={14} /></Button></div>
+                <Button variant="outline" disabled={!onReplaceContent} onClick={() => { setMoreOpen(false); onReplaceContent?.(); }}>{t("inspector.replaceLayer")}</Button>
+              </PopoverContent>
+            </Popover>
             <button className="icon-button" title={t("action.duplicate")} aria-label={t("action.duplicate")}
               disabled={project.inputs.length >= 16} onClick={onDuplicate}><Copy size={15} /></button>
             <button className="icon-button" title={t("action.delete")} aria-label={t("action.delete")}
@@ -237,7 +246,6 @@ export function Inspector({
             </>}
             <div className="inspector-source-actions">
               {type === "composition" && <button className="secondary" onClick={onEnter}>{t("content.edit")}</button>}
-              <button className="secondary" disabled={!onReplaceContent} onClick={onReplaceContent}>{t("replace.title")}</button>
             </div>
           </InspectorSection>
           {type === "synth" && <InspectorSection key={`synthesis:${sourceKind}`} id={`synthesis:${sourceKind}`}
@@ -276,17 +284,17 @@ export function Inspector({
                 </div>;
               })}
             </InspectorSection>}
-          {type !== "composition" && <>
+          <>
             <InspectorSection id="envelope" title={t("inspector.envelope")} defaultOpen={false}>
               {range("attack", "prop.attack", 0, Math.min(3, layer.player.duration), 0.001, "s")}
               {range("release", "prop.release", 0, Math.min(5, layer.player.duration), 0.001, "s")}
-              {range("decay", "prop.decay", 0, 10, 0.1)}
+              {type !== "composition" && range("decay", "prop.decay", 0, 10, 0.1)}
             </InspectorSection>
-            <InspectorSection id="timbre" title={t("prop.timbre")} defaultOpen={false}>
+            {type !== "composition" && <InspectorSection id="timbre" title={t("prop.timbre")} defaultOpen={false}>
               {range("cutoff", "prop.cutoff", 30, 22000, 10, "Hz")}
               {range("drive", "prop.drive", 0, 10, 0.1)}
-            </InspectorSection>
-          </>}
+            </InspectorSection>}
+          </>
         </TabsContent>
         <TabsContent value="playback" keepMounted className="inspector-tab-content">
           <p className="inspector-tab-hint">{t("inspector.playbackHint")}</p>

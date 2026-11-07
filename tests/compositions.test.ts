@@ -33,6 +33,28 @@ const difference = (a: Float32Array, b: Float32Array) => {
   return delta;
 };
 describe("editable audio compositions", () => {
+  it("fades the mixed group in both channels without changing child envelopes", () => {
+    const child = sound();
+    const wrapped = wrapProject(child);
+    const baseline = renderProject(wrapped);
+    const group = wrapped.inputs[0];
+    const savedChild = JSON.stringify(group.player.mix);
+    group.player.attack = child.duration * 0.4;
+    group.player.release = child.duration * 0.4;
+    const actual = renderProject(parseProject(JSON.parse(JSON.stringify(projectForSave(wrapped)))));
+    let audible = 0;
+    for (let i = 0; i < baseline.left.length; i++) {
+      const time = i / 48000;
+      const fade = Math.min(1, time / group.player.attack) *
+        Math.max(0, Math.min(1, (child.duration - time) / group.player.release));
+      expect(actual.left[i]).toBeCloseTo(baseline.left[i] * fade, 6);
+      expect(actual.right[i]).toBeCloseTo(baseline.right[i] * fade, 6);
+      if (Math.abs(baseline.left[i]) > 0.001 && fade < 0.9) audible++;
+    }
+    expect(audible).toBeGreaterThan(100);
+    expect(JSON.stringify(group.player.mix)).toBe(savedChild);
+  });
+
   it("wraps a tuned sound without losing parameters, timing, master effects or stereo", () => {
     const original = fromPreset("ice", "ice", (key) => key);
     original.inputs[1].pan = 0.7;

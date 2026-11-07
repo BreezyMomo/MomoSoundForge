@@ -1,3 +1,5 @@
+import { AddSoundMenu, type AddSoundAction } from './AddSoundMenu';
+import { createTrack } from './createTrack';
 import { packProject, readProjectFile } from './resourcePackage';
 import { ProjectResourceOrigins, type ResourceOrigin } from './resourceOrigin';
 import { prepareProjectSamples } from './prepareSamples';
@@ -203,7 +205,6 @@ export default function App() {
     base: Project; path: string[]; id?: string; initial?: SoundDefinition;
     type?: "synth" | "instrument";
   }>();
-  const [cropMode, setCropMode] = useState(false);
   const [selection, setSelection] = useState<string[]>([]),
     [zoom, setZoom] = useState(1),
     [snap, setSnap] = useState(true),
@@ -1013,6 +1014,26 @@ export default function App() {
       throw Error("error.scopeChanged");
     insertSound(child);
   }
+  function addSound(action: AddSoundAction, path: string[]) {
+    stop();
+    if (action === 'notes' || action === 'group') {
+      try {
+        const next = createTrack(rootCurrent.current, path, action, t(action === 'notes' ? 'add.notesName' : 'add.groupName'));
+        editRoot(() => next.root);
+        setEditPath(path); setSelected(next.id); setSelection([next.id]);
+        manager.current?.show('inspector');
+      } catch (error) { flash(error instanceof Error ? error.message : 'error.project'); }
+      return;
+    }
+    flushSync(() => { setEditPath(path); setSelected(''); setSelection([]); });
+    if (action === 'library') setDefinitionEditor({ base: rootCurrent.current, path: [...path] });
+    else if (action === 'audio') sampleInput.current?.click();
+    else compositionInput.current?.click();
+  }
+  function chooseNoteVoice(address: NodeAddress) {
+    treeSelect(address);
+    setDefinitionEditor({ base: rootCurrent.current, path: [...address.path], id: address.id, type: 'instrument' });
+  }
   function insertSound(child: Project) {
     if (current.current.inputs.length >= 16) throw Error("error.layers");
     if (
@@ -1503,7 +1524,7 @@ export default function App() {
     ? contentRange(history.project, result).tailEnd
     : history.project.duration;
   const extendedDuration = Math.max(
-    history.project.duration,
+    0.1,
     Math.ceil(fullContentEnd * 1000) / 1000,
   );
   const truncated =
@@ -1750,43 +1771,19 @@ export default function App() {
                 )}
           </span>
         </div>
-        <div className="button-group">
-          <button
-            className="text-button"
-            onClick={() => compositionInput.current?.click()}
-            disabled={ioBusy || project.inputs.length >= 16}
-          >
-            <FilePlus2 size={15} />
-            {t("composition.import")}
-          </button>
-          <button
-            className="text-button"
-            disabled={project.inputs.length >= 16}
-            onClick={() => { stop(); setDefinitionEditor({ base: rootCurrent.current, path: [...pathRef.current] }); }}
-          >
-            <Plus size={15} />
-            {t("resources.use")}
-          </button>
-          <button
-            className="text-button"
-            disabled={ioBusy || project.inputs.length >= 16}
-            onClick={() => sampleInput.current?.click()}
-          >
-            <Upload size={15} />
-            {t("file.import")}
-          </button>
-        </div>
+        <AddSoundMenu disabled={ioBusy || !ready || nodeParent(history.project, timelineScope.path).inputs.length >= 16}
+          onAdd={action => addSound(action, timelineScope.path)} />
       </div>
       <TreeTimeline
+        renderAdd={path => <AddSoundMenu label={t("add.intoGroup")} disabled={ioBusy || !ready || nodeParent(history.project, path).inputs.length >= 16} onAdd={action => addSound(action, path)} />}
+        onChooseNoteVoice={chooseNoteVoice}
         renderToolbar={(tools) => (
           <LayerToolbar
             {...tools}
             path={context.path}
             ids={selectedIds}
-            cropMode={cropMode}
-            onCrop={() => setCropMode((value) => !value)}
             canResetCrop={
-              !!selectedLayer &&
+              selectedIds.length === 1 && !!selectedLayer &&
               ((selectedLayer.sourceStart ?? 0) > 0 ||
                 selectedLayer.sourceEnd < playerDuration(selectedLayer.player))
             }
@@ -1803,7 +1800,7 @@ export default function App() {
             snap={snap}
             onSnap={setSnap}
             zoom={zoom}
-            onZoom={setZoom}
+            onZoom={tools.onZoomView}
             duration={layerTimelineDuration}
             canDuplicate={!!selectedLayer}
             onDuplicate={duplicate}
@@ -1917,7 +1914,7 @@ export default function App() {
         cue={layerTimelineCue}
         duration={layerTimelineDuration}
         zoom={zoom}
-        cropMode={cropMode}
+        onZoom={setZoom}
         playing={playing}
         previewTime={progress * playbackDuration.current}
         onSelect={treeSelect}
@@ -2274,8 +2271,8 @@ export default function App() {
                       stop();
                       const initial = selectedLayer.player.type === "synth" ? synthFromPlayer(project, selectedLayer.id)
                         : selectedLayer.player.score?.instruments[0] ? parseDefinition({ schema: "momo.instrument/v1", instrument: selectedLayer.player.score.instruments[0], assets: project.assets }) : undefined;
-                      setDefinitionEditor({ base: rootCurrent.current, path: [...pathRef.current], id: selectedLayer.id, initial, type: selectedLayer.player.type as "synth" | "instrument" });
-                    }} className="secondary">{t(`inspector.choose.${selectedLayer.player.type}`)}</button>
+                      setDefinitionEditor({ base: rootCurrent.current, path: [...pathRef.current], id: selectedLayer.id, initial, type: selectedLayer.player.type as "instrument" | "synth" });
+                    }} className="secondary">{t(selectedLayer.player.type === "instrument" ? (selectedLayer.player.score?.instruments.length ? "add.changeInstrument" : "add.chooseVoice") : "inspector.choose.synth")}</button>
                   </div>
                 ) : undefined}
                 onReplaceContent={
@@ -2442,7 +2439,7 @@ export default function App() {
         />
       )}
       {definitionEditor && <ResourceManager
-        {...resourceProps} bindingType={definitionEditor.type}
+        {...resourceProps} selectionOnly bindingType={definitionEditor.type}
         initialDefinition={definitionEditor.initial}
         stale={history.project !== definitionEditor.base}
         onClose={() => setDefinitionEditor(undefined)}

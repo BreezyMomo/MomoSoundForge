@@ -62,3 +62,8 @@
  .remote-add>.button-group {grid-column:1/-1;}
  @media(max-width:600px){.remote-add{grid-template-columns:minmax(0,1fr);}}
 }
+
+.resource-load-progress { position: sticky; top: 0; z-index: 2; display: grid; gap: 8px; padding: 12px; border: 1px solid var(--ui-line); border-radius: 8px; background: var(--ui-panel); }
+.resource-load-progress progress { width: 100%; accent-color: var(--ui-accent); }
+.resource-load-progress p { margin: 0; }
+.resource-load-progress small { overflow-wrap: anywhere; }

@@ -39,10 +39,15 @@ export function WaveformTools({ project, cue, ready, busy, truncated, extendedDu
           <TimeInput label={t("editor.duration")} value={project.duration} min={0.1}
             onChange={duration => onChange({ ...project, duration })} />
         </label>
-        <Button variant="outline" disabled={!ready || !truncated}
-          onClick={() => onChange({ ...project, duration: Math.max(project.duration, extendedDuration) })}>
-          {truncated ? t("editor.extendToSeconds", extendedDuration.toFixed(3)) : t("editor.extendToContent")}
+        <Button variant="outline" disabled={!ready || busy}
+          onClick={() => onChange({ ...project, duration: extendedDuration })}>
+          {t("editor.extendToContent")}
         </Button>
+        <Button variant="outline" disabled={cue < 0.1} title={cue < 0.1 ? t("editor.cueTooEarly") : undefined}
+          onClick={() => onChange({ ...project, duration: Math.max(0.1, Math.round(cue * 1000) / 1000) })}>
+          {t("editor.durationToCue", cue.toFixed(3))}
+        </Button>
+        {cue < 0.1 && <p className="field-help">{t("editor.cueTooEarly")}</p>}
         <p className="field-help" role="status">{!ready ? t("tree.waveUpdating") : truncated
           ? t("editor.outsideRange", project.duration.toFixed(3), missing) : t("editor.rangeComplete")}</p>
         <p className="field-help">{t("editor.extendHelp")}{tailLimited && ` ${t("tree.tailLimited")}`}</p>

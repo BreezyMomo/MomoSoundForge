@@ -60,13 +60,17 @@ export async function cacheAudio(id:string,bytes:Uint8Array,compressed?:Uint8Arr
   if(typeof indexedDB!=='undefined')await pool('readwrite',id,packed);
   else registerAudioProvider(id,()=>decompressAudio(packed));
 }
-export async function resolveAudio(ref:SharedSampleReference,fallback?:Provider):Promise<Uint8Array>{
+export async function resolveAudio(ref:SharedSampleReference,fallback?:Provider,options:{signal?:AbortSignal;preferFallback?:boolean}={}):Promise<Uint8Array>{
+  options.signal?.throwIfAborted();
   const cached=await pool('readonly',ref.audioId);
-  const provider=providers.get(ref.audioId);
+  options.signal?.throwIfAborted();
+  // Interactive downloads use their own abortable transport, not a previously registered preview.
+  const provider=options.preferFallback&&fallback?fallback:providers.get(ref.audioId);
   let bytes:Uint8Array|undefined;
   if(cached)bytes=await decompressAudio(cached);
   else try{bytes=await (provider??fallback)?.();}
-  catch(error){if(!provider||!fallback||provider===fallback)throw error;bytes=await fallback();}
+  catch(error){options.signal?.throwIfAborted();if(!provider||!fallback||provider===fallback)throw error;bytes=await fallback();}
+  options.signal?.throwIfAborted();
   if(!bytes)throw Error('error.sampleUnavailable');
   const actual=await audioReference(bytes);
   if(actual.audioId!==ref.audioId||actual.frames!==ref.frames||actual.channelCount!==ref.channelCount||actual.sampleRate!==ref.sampleRate)throw Error('resources.verify');

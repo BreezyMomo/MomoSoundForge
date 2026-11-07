@@ -7,7 +7,7 @@ import {
   type Project,
 } from "../src/model";
 import { renderProject } from "../src/engine";
-import { adjustCrop, stretchClip } from "../src/timeline";
+import { adjustCrop, stretchClip, editClip, cropReference, boundedSelection } from "../src/timeline";
 
 const project = (type: "synth" | "sample" | "composition"): Project => {
   const child: Project = {
@@ -142,5 +142,42 @@ describe("non-destructive crop and whole-clip stretch", () => {
       Object.assign(p.inputs[0], patch);
       expect(() => parseProject(p)).toThrow();
     }
+  });
+});
+
+
+describe('default edge trimming and retained-clip placement',()=>{
+  it('takes source seconds 1–2 and moves them to zero with identical rendered samples',()=>{
+    const p=project('synth');p.duration=5;
+    const original=makeLayer({id:'clip',duration:3,wave:'noise',gain:0.4});
+    p.inputs=[original];
+    const full=renderProject(p,8000).inputs.clip;
+    let clip={...original,...editClip(original,'end',-1,5)};
+    clip={...clip,...editClip(clip,'start',1,5)};
+    expect(clip).toMatchObject({start:1,duration:1,sourceStart:1,sourceEnd:2,speed:1});
+    const moved={...clip,...editClip(clip,'move',-20,5)};
+    p.inputs=boundedSelection([clip],['clip'],clip,moved,5);
+    expect(p.inputs[0]).toMatchObject({start:0,duration:1,sourceStart:1,sourceEnd:2,speed:1});
+    expect(cropReference(moved)).toMatchObject({start:-1,before:1,after:1});
+    expect(renderProject(p,8000).inputs.clip).toEqual(full.slice(8000,16000));
+    expect(parseProject(projectForSave(p))).toEqual(p);
+    const restored={...moved,...editClip(moved,'end',20,5)};
+    expect(restored).toMatchObject({sourceStart:1,sourceEnd:3,duration:2,speed:1});
+  });
+  it('trims reversed, sped-up clips without changing playback speed or source identity',()=>{
+    const original={...makeLayer({id:'clip',duration:3,wave:'noise'}),reverse:true,speed:2,duration:1.5};
+    const p={...project('synth'),duration:4,inputs:[original]};
+    const full=renderProject(p,8000).inputs.clip;
+    let clip={...original,...editClip(original,'start',0.25,4)};
+    clip={...clip,...editClip(clip,'end',-0.25,4)};
+    clip={...clip,...editClip(clip,'move',-10,4)};
+    expect(clip).toMatchObject({start:0,duration:1,sourceStart:0.5,sourceEnd:2.5,speed:2});
+    expect(cropReference(clip)).toMatchObject({before:0.25,after:0.25,start:-0.25});
+    expect(renderProject({...p,inputs:[clip]},8000).inputs.clip).toEqual(full.slice(2000,10000));
+    expect(clip.player).toBe(original.player);
+  });
+  it('extends loop occupation without changing its source window or speed',()=>{
+    const clip={...makeLayer({duration:1}),loop:true};
+    expect(editClip(clip,'end',2,5)).toEqual({duration:3});
   });
 });

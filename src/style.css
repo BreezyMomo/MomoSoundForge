@@ -1910,8 +1910,26 @@ span {
 .exposable-field { margin-bottom:12px; }
 .expose-button { border:1px solid var(--ui-line-strong); border-radius:4px; padding:3px 8px; margin-top:4px; background:var(--ui-surface); color:var(--ui-text); font-size:11px; cursor:pointer; }
 .exposable-field small { display:block; color:var(--ui-muted); margin-top:5px; }
-.clip-fade-handle { position:absolute; top:0; z-index:6; width:12px; height:12px; min-height:12px; padding:0; transform:translateX(-50%); border:1px solid #b3d3dc; background:#395661; border-radius:0 0 3px 3px; cursor:ew-resize; touch-action:none; }
-.clip-fade-handle:focus-visible { outline:2px solid white; }
+.layer-clip { container-type: inline-size; container-name: fade-clip; }
+.clip-fade-lines { position:absolute; inset:5px 0 2px; width:100%; height:calc(100% - 7px); pointer-events:none; z-index:3; overflow:hidden; }
+.clip-fade-lines path { fill:none; stroke:var(--ui-text); stroke-width:1; vector-effect:non-scaling-stroke; opacity:.45; }
+.clip-fade-lines .clip-fade-shade { stroke:none; fill:var(--ui-text); opacity:.035; }
+.layer-clip:has(.clip-fade-handle:hover) .clip-fade-lines path,
+.layer-clip:has(.clip-fade-handle:focus-visible) .clip-fade-lines path,
+.layer-clip:has(.clip-fade-handle[data-active]) .clip-fade-lines path { opacity:.85; }
+.layer-clip:has(.clip-fade-handle:hover) .clip-fade-lines .clip-fade-shade,
+.layer-clip:has(.clip-fade-handle[data-active]) .clip-fade-lines .clip-fade-shade { opacity:.07; }
+.clip-fade-handle { position:absolute; top:0; z-index:6; width:24px; height:18px; min-height:18px; padding:0; transform:translateX(-50%); border:0; background:transparent; border-radius:3px; cursor:ew-resize; touch-action:none; }
+.clip-fade-handle::before { content:''; position:absolute; top:2px; left:9px; width:6px; height:6px; border:1px solid var(--ui-text); background:var(--ui-panel); border-radius:2px; }
+.clip-fade-handle:hover, .clip-fade-handle:active { background:transparent; }
+.clip-fade-handle:focus-visible { outline:2px solid var(--ui-text); }
+.clip-fade-handle::after { content:attr(data-hint); display:none; position:absolute; top:19px; left:0; padding:3px 6px; border:1px solid var(--ui-line); border-radius:4px; background:var(--ui-panel); color:var(--ui-text); white-space:nowrap; font-size:11px; pointer-events:none; }
+.clip-fade-end::after { left:auto; right:0; }
+.clip-fade-handle:hover::after, .clip-fade-handle:focus-visible::after, .clip-fade-handle[data-active]::after { display:block; }
+@container fade-clip (max-width: 139px) {
+  .clip-fade-handle { display:none; }
+  .clip-fade-lines { opacity:.4; }
+}
 .pro-section .button-group { flex-wrap:wrap; }
 .timeline-tools input[type=number] { width:65px; background:var(--ui-inset); color:inherit; border:1px solid var(--ui-line-strong); border-radius:4px; padding:5px; }
 .selection-tools > summary { border:1px solid var(--ui-line-strong); border-radius:4px; padding:7px 10px; cursor:pointer; }
@@ -1933,3 +1951,7 @@ span {
 @media(max-width:520px) { .export-dialog { padding:16px; } .export-dialog .pro-grid { grid-template-columns:1fr; } }
 .export-fields { border:0; padding:0; margin:0; min-width:0; }
 .time-ruler.adaptive { position:relative; height:16px; display:block; } .time-ruler.adaptive span { position:absolute; top:0; white-space:nowrap; }
+
+.clip-crop-reference { position:absolute; top:4px; bottom:4px; background:repeating-linear-gradient(135deg, #8882 0 5px, #8883 5px 10px); border:1px dashed var(--ui-muted); color:var(--ui-muted); pointer-events:none; overflow:hidden; font-size:10px; padding:4px; box-sizing:border-box; }
+.layer-clip.is-cropped-before { border-left:2px dashed var(--ui-accent); }
+.layer-clip.is-cropped-after { border-right:2px dashed var(--ui-accent); }

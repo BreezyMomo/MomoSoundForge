@@ -1,3 +1,4 @@
+import type { RemoteLoadOptions, RemoteLoadProgress } from './remoteLibrary';
 import { packResource, readResourceFile } from './resourcePackage';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
@@ -27,6 +28,7 @@ type Props = {
   onInsert:(p:Project)=>void;onOpen:(p:Project,origin?:ResourceOrigin)=>void;
   origin?:ResourceOrigin;onProjectSaved?:(p:Project,origin:ResourceOrigin)=>void;onPreview:(p:Project,key:string)=>void;onStop:()=>void;
   onRender:(p:Project)=>Promise<RenderResult>;onImportAudio:(file:File)=>Promise<Project>;
+  selectionOnly?: boolean;
   bindingType?: 'synth'|'instrument'; onBind?:(d:SoundDefinition)=>void; stale?:boolean;
   initialDefinition?:SoundDefinition;
   sourceSelection?: { note:string; onSelect:(resource:SoundResource)=>Promise<void>|void };
@@ -36,7 +38,7 @@ const fresh=(kind:'synth'|'instrument'):SoundResource => kind==='synth'?resource
   payload:{schema:'momo.instrument/v1',instrument:{id:uid(),name:t('definition.untitledInstrument'),keyRange:{low:60,high:72},regions:[]},assets:{}}
 };
 type LibraryKind=ResourceKind|'source';
-type Card = {key:string;relatedKeys?:string[];name:string;kind:ResourceKind;source:'builtin'|'local'|'remote';sourceLabel?:string;contentId?:string;category:string;description:string;preview:number[];load:(complete?:boolean)=>Promise<SoundResource>;entry?:ResourceEntry;recording?:RecordingSummary};
+type Card = {key:string;relatedKeys?:string[];name:string;kind:ResourceKind;source:'builtin'|'local'|'remote';sourceLabel?:string;contentId?:string;category:string;description:string;preview:number[];load:(complete?:boolean,options?:RemoteLoadOptions)=>Promise<SoundResource>;entry?:ResourceEntry;recording?:RecordingSummary};
 const filterKeys=(card:Card)=>[card.key,...card.relatedKeys??[]];
 export function SoundLibrary(props:Props) {
   const [manage,setManage]=useState(false);
@@ -45,14 +47,16 @@ export function SoundLibrary(props:Props) {
 }
 export function ResourceManager({onClose,...props}:Props&{onClose:()=>void}) {
   return <Dialog open onOpenChange={open=>{if(!open)onClose();}}><DialogContent className="resource-dialog resource-manager" showCloseButton={false}>
-    <header className="resource-header"><DialogTitle>{props.sourceSelection?t('instrument.chooseFor',props.sourceSelection.note):t('resources.title')}</DialogTitle><Button variant="ghost" onClick={onClose}>{t('resources.close')}</Button></header>
-    <ResourceBrowser {...props} sourceSelection={props.sourceSelection?{...props.sourceSelection,onSelect:async r=>{await props.sourceSelection!.onSelect(r);onClose();}}:undefined} saveHost={null} expanded onOpen={(p,origin)=>{props.onOpen(p,origin);onClose();}} onInsert={p=>{props.onInsert(p);onClose();}} onBind={props.onBind?d=>{props.onBind!(d);onClose();}:undefined}/>
+    <header className="resource-header"><DialogTitle>{props.sourceSelection?t('instrument.chooseFor',props.sourceSelection.note):t(props.bindingType==='instrument'?'add.chooseVoice':props.bindingType==='synth'?'inspector.choose.synth':props.selectionOnly?'add.library':'resources.title')}</DialogTitle><Button variant="ghost" onClick={onClose}>{t('resources.close')}</Button></header>
+    <ResourceBrowser {...props} sourceSelection={props.sourceSelection?{...props.sourceSelection,onSelect:async r=>{await props.sourceSelection!.onSelect(r);onClose();}}:undefined} saveHost={null} expanded={!props.selectionOnly} onOpen={(p,origin)=>{props.onOpen(p,origin);onClose();}} onInsert={p=>{props.onInsert(p);onClose();}} onBind={props.onBind?d=>{props.onBind!(d);onClose();}:undefined}/>
   </DialogContent></Dialog>;
 }
 function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const {project,ready,playback,onInsert,onOpen,onPreview,onStop,onImportAudio,onRender,bindingType,onBind,stale,sourceSelection}=props;
   const [entries,setEntries]=useState<ResourceEntry[]>([]),[query,setQuery]=useState(''),[kind,setKind]=useState<LibraryKind|''>(bindingType??'source'),[source,setSource]=useState('');
   const [error,setError]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
+  const [loadProgress,setLoadProgress]=useState<(RemoteLoadProgress&{name:string})|null>(null);
+  const loadController=useRef<AbortController|null>(null);
   const [editor,setEditor]=useState<{resource:SoundResource;owned:boolean;base:Project;current?:boolean}|null>(null),[deleting,setDeleting]=useState<(ResourceEntry&{destination:number})|null>(null);
   const [noteSource,setNoteSource]=useState<{midi:number;label?:string;onSelect:(r:SoundResource)=>Promise<void>}|null>(null);
   const [preferences,setPreferences]=useResourcePreferences();
@@ -62,8 +66,8 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   latest.current=project;
   const refresh=async()=>{try{await libraryReady;const list=await folderLibrary.list();if(alive.current){setEntries(list);setError('');}}catch(e){if(alive.current)setError(resourceError(e));}};
   useEffect(()=>{alive.current=true;void refresh();
-    const off=onLibraryChange(()=>void refresh());return()=>{alive.current=false;off();};},[]);
-  const run=async(fn:()=>Promise<void>|void)=>{if(busy)return;setBusy(true);setError('');setStatus('');try{await fn();}catch(e){if((e as DOMException).name!=='AbortError'&&alive.current)setError(resourceError(e));}finally{if(alive.current)setBusy(false);}};
+    const off=onLibraryChange(()=>void refresh());return()=>{alive.current=false;loadController.current?.abort();off();};},[]);
+  const run=async(fn:()=>Promise<void>|void)=>{if(busy)return;setBusy(true);setError('');setStatus('');try{await fn();}catch(e){if((e as DOMException).name!=='AbortError'&&alive.current)setError(resourceError(e));}finally{if(alive.current){setBusy(false);setLoadProgress(null);}}};
   const remember=(key:string)=>setPreferences(p=>({...p,recent:rememberSound(p.recent,key)}));
   const openEditor=(resource:SoundResource,owned=false,base=latest.current,current=false)=>setEditor({resource,owned,base,current});
   const useResource=async(r:SoundResource,base:Project=latest.current)=>{
@@ -79,6 +83,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     load:async()=>resourceFromProject(fromPreset(p.id,t('preset.'+p.id),k=>t('layer.'+k)),[],'builtin-preset-'+p.id)}))];
   const subscriptions=useSyncExternalStore(remoteLibraries.subscribe,remoteLibraries.snapshot);
   useEffect(()=>{remoteLibraries.start();},[]);
+  useEffect(()=>{if(source==='local'&&!folderLibrary.connected)setSource('');},[source,entries]);
   useEffect(()=>{if(source.startsWith('remote:')&&!subscriptions.some(s=>'remote:'+s.id===source))setSource('');},[source,subscriptions]);
   const remoteCards=new Map<string,Card>();
   for(const subscription of subscriptions){
@@ -89,10 +94,16 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
       if(existing){existing.sourceLabel+=' · '+subscription.name;continue;}
       const name=entry.names?.[language.interfaceLanguage().startsWith('zh')?'zh':'en']??entry.name;
       remoteCards.set(entry.contentId,{key:'remote-'+entry.contentId,contentId:entry.contentId,name,kind:entry.kind,source:'remote',sourceLabel:subscription.name,category:entry.category,description:entry.description,preview:entry.preview,
-        load:async(complete=true)=>({...await loader(entry,complete),name,id:entry.contentId})});
+        load:async(complete=true,options)=>({...await loader(entry,complete,options),name,id:entry.contentId})});
     }
   }
-  const locals=entries.map<Card>(entry=>({key:'local-'+entry.id,name:entry.name,kind:entry.kind,source:'local',category:entry.category,description:entry.description,preview:entry.preview,entry,load:()=>folderLibrary.load(entry.id)}));
+  const loadCard=async(c:Card,complete=true)=>{
+    if(c.source!=='remote')return c.load(complete);
+    const controller=new AbortController();loadController.current=controller;
+    try{return await c.load(complete,{signal:controller.signal,onProgress:p=>{if(alive.current)setLoadProgress({...p,name:c.name});}});}
+    finally{if(loadController.current===controller)loadController.current=null;if(alive.current)setLoadProgress(null);}
+  };
+  const locals=entries.map<Card>(entry=>({key:'local-'+entry.id,name:entry.name,kind:entry.kind,source:'local',sourceLabel:folderLibrary.name,category:entry.category,description:entry.description,preview:entry.preview,entry,load:()=>folderLibrary.load(entry.id)}));
   const cards=[...builtins,...remoteCards.values(),...locals];
   const [category,setCategory]=useState('');
   useEffect(()=>setDisplayLimit(48),[query,kind,source,category,preferences.filter]);
@@ -109,8 +120,8 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     <div className="resource-browser-top"><label className="resource-field"><input aria-label={t('resources.search')} placeholder={t('resources.search')} value={query} onChange={e=>setQuery(e.target.value)}/></label>
       {props.onManage&&<Button variant="outline" aria-haspopup="dialog" disabled={!ready||busy} onClick={()=>{onStop();props.onManage!();}}>{t('resources.manage')}</Button>}</div>
     <div className="resource-filters">
-      <select aria-label={t('resources.all')} disabled={!!bindingType} value={kind} onChange={e=>setKind(e.target.value as LibraryKind|'')}><option value="">{t('resources.all')}</option><option value="source">{t('resources.soundSources')}</option>{(['recording','synth','instrument','sound']as const).filter(k=>!sourceSelection||k==='recording'||k==='synth').map(k=><option key={k} value={k}>{t('resources.'+k)}</option>)}</select>
-      <select aria-label={t('resources.sources')} value={source} onChange={e=>setSource(e.target.value)}><option value="">{t('resources.sources')}</option><option value="builtin">{t('resources.builtin')}</option><option value="local">{t('resources.local')}</option><option value="remote">{t('resources.remote')}</option>{subscriptions.map(s=><option key={s.id} value={"remote:"+s.id}>{s.name}</option>)}</select>
+      {!bindingType&&<select aria-label={t('resources.all')} disabled={!!bindingType} value={kind} onChange={e=>setKind(e.target.value as LibraryKind|'')}><option value="">{t('resources.all')}</option>{!bindingType&&<option value="source">{t('resources.soundSources')}</option>}{(['recording','synth','instrument','sound']as const).filter(k=>(!sourceSelection||k==='recording'||k==='synth')&&(!bindingType||k===bindingType)).map(k=><option key={k} value={k}>{t('resources.'+k)}</option>)}</select>}
+      <select aria-label={t('resources.sources')} value={source} onChange={e=>setSource(e.target.value)}><option value="">{t('resources.sources')}</option><option value="builtin">{t('resources.builtin')}</option>{folderLibrary.connected&&<option value="local">{folderLibrary.name}</option>}{subscriptions.map(s=><option key={s.id} value={"remote:"+s.id}>{s.name}</option>)}</select>
       <select aria-label={t('resources.category')} value={category} onChange={e=>setCategory(e.target.value)}><option value="">{t('library.all')}</option>{[...new Set(cards.map(c=>c.category))].sort().map(c=><option key={c} value={c}>{SOUND_CATEGORIES.includes(c as never)?t('library.'+c):c}</option>)}</select>
     </div>
     <div className="button-group resource-quick-filters">{(['all','favorites','recent']as const).map(filter=><Button variant="outline" key={filter} aria-pressed={preferences.filter===filter} onClick={()=>setPreferences(p=>({...p,filter}))}>{t('library.'+filter)}</Button>)}</div>
@@ -120,7 +131,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     {subscriptions.some(s=>s.enabled&&s.loading)&&<p role="status" className="field-help">{t('remote.loading')}</p>}
     {subscriptions.some(s=>s.enabled&&s.error)&&<p role="alert" className="field-help">{t('remote.problem')}</p>}
     {props.expanded&&<RemoteLibrarySettings/>}
-    {bindingType&&<p className="field-help">{t('resources.bindingHint')}</p>}
+    {bindingType&&<p className="field-help">{t(bindingType==='instrument'?'add.voiceHint':'resources.bindingHint')}</p>}
     {stale&&<p className="field-help" role="alert">{t('error.scopeChanged')}</p>}
     {props.initialDefinition&&<Button variant="outline" disabled={busy} onClick={()=>openEditor(resourceFromDefinition(props.initialDefinition!))}>{t('resources.fromCurrent')}</Button>}
     {sourceSelection&&<p className="field-help">{t('instrument.libraryHelp',sourceSelection.note)}</p>}
@@ -135,19 +146,26 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
         <Button variant="outline" disabled={busy} onClick={()=>file.current?.click()}>{t('resources.import')}</Button>
       </div><p className="field-help">{t('resources.importHint')}</p>
     </details>}
-    {(error||status||busy)&&<p role={error?'alert':'status'} className="resource-status">{error||(busy?t('resources.working'):status)}</p>}
+    {loadProgress&&<section className="resource-load-progress" aria-label={t('remote.preparing',loadProgress.name)}>
+      <strong>{t('remote.preparing',loadProgress.name)}</strong>
+      <p role="status">{loadProgress.phase==='definition'?t('remote.readDefinition'):t('remote.audioProgress',loadProgress.completed,loadProgress.total)}</p>
+      <progress aria-label={loadProgress.phase==='definition'?t('remote.readDefinition'):t('remote.audioProgress',loadProgress.completed,loadProgress.total)} max={loadProgress.total||1} value={loadProgress.phase==='audio'?loadProgress.completed:undefined}/>
+      <small>{t('remote.downloadBytes',(loadProgress.downloadedBytes/1048576).toFixed(1))}</small>
+      <Button variant="outline" onClick={()=>{loadController.current?.abort();setLoadProgress(null);setStatus(t('remote.cancelled'));}}>{t('resources.cancel')}</Button>
+    </section>}
+    {!loadProgress&&(error||status||busy)&&<p role={error?'alert':'status'} className="resource-status">{error||(busy?t('resources.working'):status)}</p>}
     <div className={'resource-cards resource-view-'+preferences.view}>{visible.slice(0,displayLimit).map(c=><article key={c.key} className="resource-card" aria-label={c.name} data-recording-id={c.recording?.id??(c.kind==='recording'?c.key:undefined)}>
       <header><strong>{c.name}</strong><button aria-label={t(preferences.favorites.includes(c.key)?'library.unfavorite':'library.favorite',c.name)} aria-pressed={preferences.favorites.includes(c.key)} onClick={()=>setPreferences(p=>({...p,favorites:p.favorites.includes(c.key)?p.favorites.filter(k=>k!==(c.key)):[...p.favorites,c.key]}))}>{preferences.favorites.includes(c.key)?'★':'☆'}</button></header>
       <div className="resource-badges"><span>{t('resources.'+c.kind)}</span><span>{c.sourceLabel??t('resources.'+c.source)}</span>{c.entry&&<span>{t('resources.version',c.entry.version)}</span>}</div>
       {c.preview.length>0&&<Waveform data={Float32Array.from(c.preview)} label={c.name}/>}
       <p className="field-help">{c.description}</p><div className="button-group">
-        <Button variant="outline" disabled={busy||!ready} aria-pressed={playback===c.key} onClick={()=>void run(async()=>{if(playback===c.key){onStop();return;}remember(c.key);const r=await c.load(false);onPreview(resourceProject(r,true),c.key);})}>{t(playback===c.key?'resources.stop':'resources.listen')}</Button>
-        <Button disabled={busy||!ready||!!stale} onClick={()=>void run(async()=>{const base=latest.current,r=await c.load();remember(c.key);await useResource(r,base);})}>{sourceSelection?t('instrument.bind',sourceSelection.note):c.kind==='recording'?t('resources.useRecording'):t(bindingType?'resources.bind':c.kind==='synth'?'resources.useSynth':c.kind==='instrument'?'resources.useInstrument':'resources.use')}</Button>
-      </div>{!sourceSelection&&<details><summary>{t('resources.actions')}</summary><div className="button-group">
-        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const destination=folderLibrary.destination,r=await c.load();if(c.entry&&destination!==folderLibrary.destination)throw Error('resources.conflict');openEditor(r,!!c.entry);})}>{t('resources.edit')}</Button>
-        {c.kind==='sound'&&!bindingType&&<Button variant="outline" disabled={busy||!ready} onClick={()=>void run(async()=>{const base=latest.current,destination=folderLibrary.destination,r=await c.load();if(base!==latest.current||destination!==folderLibrary.destination)throw Error('error.scopeChanged');onOpen(resourceProject(r),c.entry?resourceOrigin(r,destination):undefined);})}>{t('resources.open')}</Button>}
-        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const r=await c.load();download(new Uint8Array(await packResource(r)).buffer,safeFilename(r.name)+'.sfresource','application/zip');})}>{t('resources.export')}</Button>
-        {c.source==='remote'&&<Button variant="outline" disabled={busy||entries.some(e=>e.contentId===c.contentId)} onClick={()=>void run(async()=>{if(!folderLibrary.connected)await folderLibrary.choose();const destination=folderLibrary.destination,r=await c.load();if((await folderLibrary.list()).some(e=>e.contentId===c.contentId)){setStatus(t('remote.downloaded'));return;}await folderLibrary.save(r,undefined,destination);setStatus(t('remote.downloaded'));})}>{t(entries.some(e=>e.contentId===c.contentId)?'remote.downloaded':'remote.download')}</Button>}
+        <Button variant="outline" disabled={busy||!ready} aria-pressed={playback===c.key} onClick={()=>void run(async()=>{if(playback===c.key){onStop();return;}remember(c.key);const r=await loadCard(c,false);onPreview(resourceProject(r,true),c.key);})}>{t(playback===c.key?'resources.stop':'resources.listen')}</Button>
+        <Button disabled={busy||!ready||!!stale} onClick={()=>void run(async()=>{const base=latest.current,r=await loadCard(c);remember(c.key);await useResource(r,base);})}>{sourceSelection?t('instrument.bind',sourceSelection.note):t(bindingType?'resources.bind':'add.title')}</Button>
+      </div>{!sourceSelection&&!props.selectionOnly&&<details><summary>{t('resources.actions')}</summary><div className="button-group">
+        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const destination=folderLibrary.destination,r=await loadCard(c);if(c.entry&&destination!==folderLibrary.destination)throw Error('resources.conflict');openEditor(r,!!c.entry);})}>{t('resources.edit')}</Button>
+        {c.kind==='sound'&&!bindingType&&<Button variant="outline" disabled={busy||!ready} onClick={()=>void run(async()=>{const base=latest.current,destination=folderLibrary.destination,r=await loadCard(c);if(base!==latest.current||destination!==folderLibrary.destination)throw Error('error.scopeChanged');onOpen(resourceProject(r),c.entry?resourceOrigin(r,destination):undefined);})}>{t('resources.open')}</Button>}
+        <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const r=await loadCard(c);download(new Uint8Array(await packResource(r)).buffer,safeFilename(r.name)+'.sfresource','application/zip');})}>{t('resources.export')}</Button>
+        {c.source==='remote'&&<Button variant="outline" disabled={busy||entries.some(e=>e.contentId===c.contentId)} onClick={()=>void run(async()=>{if(!folderLibrary.connected)await folderLibrary.choose();const destination=folderLibrary.destination,r=await loadCard(c);if((await folderLibrary.list()).some(e=>e.contentId===c.contentId)){setStatus(t('remote.downloaded'));return;}await folderLibrary.save(r,undefined,destination);setStatus(t('remote.downloaded'));})}>{t(entries.some(e=>e.contentId===c.contentId)?'remote.downloaded':'remote.download')}</Button>}
         {c.entry&&<Button variant="outline" disabled={busy} onClick={()=>setDeleting({...c.entry!,destination:folderLibrary.destination})}>{t('resources.delete')}</Button>}
       </div></details>}
     </article>)}</div>

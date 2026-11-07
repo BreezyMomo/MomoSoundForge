@@ -1,3 +1,4 @@
+import { playerDuration } from './playerPlayback';
 import { patchLayer, type LayerPatch } from "./model";
 import { clamp, type PlayerInput } from "./model";
 export type CropEdit = "cropStart" | "cropEnd";
@@ -5,7 +6,7 @@ export function adjustCrop(layer: PlayerInput, mode: CropEdit, delta: number): P
   const change = delta * layer.speed;
   if (mode === 'cropStart') {
     if (layer.reverse) {
-      const sourceEnd = clamp(layer.sourceEnd - change, Math.max(layer.sourceStart + 0.01 * layer.speed, layer.sourceEnd - (layer.duration - 0.01) * layer.speed), layer.sourceEnd + layer.start * layer.speed);
+      const sourceEnd = clamp(layer.sourceEnd - change, Math.max(layer.sourceStart + 0.01 * layer.speed, layer.sourceEnd - (layer.duration - 0.01) * layer.speed), Math.min(Math.max(playerDuration(layer.player), layer.sourceEnd), layer.sourceEnd + layer.start * layer.speed));
       const shift = (layer.sourceEnd - sourceEnd) / layer.speed;
       return { sourceEnd, start: layer.start + shift, duration: Math.max(0.01, layer.duration - shift) };
     }
@@ -18,8 +19,21 @@ export function adjustCrop(layer: PlayerInput, mode: CropEdit, delta: number): P
     const sourceStart = clamp(layer.sourceStart - change, 0, layer.sourceEnd - 0.01 * layer.speed);
     return { sourceStart, duration: (layer.sourceEnd - sourceStart) / layer.speed };
   }
-  const sourceEnd = Math.max(layer.sourceStart + 0.01 * layer.speed, layer.sourceEnd + change);
+  const sourceEnd = clamp(layer.sourceEnd + change, layer.sourceStart + 0.01 * layer.speed, Math.max(playerDuration(layer.player), layer.sourceEnd));
   return { sourceEnd, duration: (sourceEnd - layer.sourceStart) / layer.speed };
+}
+/** Timeline edges trim the read window; only explicit speed controls stretch sound. */
+export function editClip(layer: PlayerInput, mode: ClipEdit, delta: number, projectDuration: number, step=0.01): Partial<PlayerInput> {
+  const timing=adjustClipTiming(layer,mode,delta,projectDuration,step);
+  if(mode==='move')return timing;
+  return adjustCrop(layer,mode==='start'?'cropStart':'cropEnd',mode==='start'?timing.start-layer.start:timing.duration-layer.duration);
+}
+/** Reference-only extent. It may start before timeline zero and never constrains movement. */
+export function cropReference(layer: PlayerInput) {
+  const full=Math.max(playerDuration(layer.player),layer.sourceEnd);
+  const before=(layer.reverse?full-layer.sourceEnd:layer.sourceStart)/layer.speed;
+  const after=(layer.reverse?layer.sourceStart:full-layer.sourceEnd)/layer.speed;
+  return {before,after,start:layer.start-before,end:layer.start+layer.duration+after};
 }
 export function stretchClip(layer: PlayerInput, timing: ClipTiming): Partial<PlayerInput> {
   return { ...timing, speed: layer.speed * layer.duration / timing.duration };

@@ -1,7 +1,8 @@
+import { useTimelineNavigation } from './useTimelineNavigation';
 import { hasTimeTransform } from "./playerPlayback";
 import { patchLayer, type LayerPatch } from "./model";
 import { createPortal } from "react-dom";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { TimelineTools } from "./LayerToolbar";
 import {
   ChevronDown,
@@ -35,7 +36,7 @@ export function TreeTimeline({
   cue,
   duration,
   zoom,
-  cropMode,
+  onZoom,
   playing,
   previewTime,
   onSelect,
@@ -53,6 +54,8 @@ export function TreeTimeline({
   onSeekStart,
   onSeek,
   onSeekEnd,
+  renderAdd,
+  onChooseNoteVoice,
   renderToolbar,
 }: {
   root: Project;
@@ -65,7 +68,7 @@ export function TreeTimeline({
   cue: number;
   duration: number;
   zoom: number;
-  cropMode: boolean;
+  onZoom: (value: number) => void;
   playing: string | null;
   previewTime: number;
   onSelect: (
@@ -95,10 +98,28 @@ export function TreeTimeline({
   onNoteAudition: (address: NodeAddress, note: NoteEvent) => void;
   onOpenNotes: (address: NodeAddress) => void;
   onBegin: () => void;
+  renderAdd: (path: string[]) => ReactNode;
+  onChooseNoteVoice: (address: NodeAddress) => void;
   renderToolbar: (tools: TimelineTools) => ReactNode;
 }) {
+  const navigation = useTimelineNavigation(zoom, Math.max(8, Math.ceil(duration / 2)), onZoom);
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const [openScore, setOpenScore] = useState<string | null>(null);
+  const treeRef = useRef<HTMLDivElement>(null);
+  const selectedKey = nodeKey(selected);
+  useEffect(() => {
+    setClosed(previous => {
+      const next = new Set(previous);
+      for (let i = 1; i <= selected.path.length; i++) next.delete(JSON.stringify(selected.path.slice(0, i)));
+      return next.size === previous.size ? previous : next;
+    });
+    const frame = requestAnimationFrame(() => {
+      const row = Array.from(treeRef.current?.querySelectorAll<HTMLElement>('[data-node-address]') ?? [])
+        .find(element => element.dataset.nodeAddress === selectedKey);
+      row?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selectedKey]);
   const reorder = useNodeReorder(
     root,
     (path, moving, target, before) => {
@@ -161,6 +182,7 @@ export function TreeTimeline({
   return (
     <div
       className="node-tree"
+      ref={treeRef}
       onKeyDown={(event) => {
         if (
           event.key === "Delete" &&
@@ -209,10 +231,13 @@ export function TreeTimeline({
         )}
       {renderToolbar({
         groups,
+        handMode: navigation.hand,
+        onHandMode: navigation.setHand,
+        onZoomView: navigation.zoomAt,
         canCollapseNotes: openScore !== null,
         onCollapseNotes: () => setOpenScore(null),
       })}
-      <div className="timeline-scroll">
+      <div className={`timeline-scroll timeline-navigation ${navigation.hand ? "is-hand-mode" : ""} ${navigation.panning ? "is-panning" : ""}`} ref={navigation.viewport} tabIndex={0} role="region" aria-label={t("timeline.navigation")} {...navigation.events}>
         <div
           className="layer-list"
           style={{ width: `${zoom * 100}%` }}
@@ -303,7 +328,7 @@ export function TreeTimeline({
                 aria-expanded={group ? !closed.has(key) && !hasTimeTransform(layer) : undefined}
               >
                 <div
-                  className="tree-identity"
+                  className={`tree-identity ${group ? "tree-group-identity" : ""}`}
                   style={{
                     paddingLeft: Math.min(60, (address.path.length - viewPath.length) * 14),
                   }}
@@ -396,6 +421,7 @@ export function TreeTimeline({
                       )}
                     </small>
                   </button>
+                  {group && <span className="tree-group-add">{renderAdd([...address.path, layer.id])}</span>}
                   {layer.player.type === "instrument" && (
                     <button
                       className="tree-note-toggle"
@@ -427,17 +453,12 @@ export function TreeTimeline({
                     <Play size={13} />
                   )}
                 </button>
-                <TimelineClip
+                {layer.player.type === "instrument" && !layer.player.score?.instruments.length ? <button className="empty-note-voice" onClick={() => onChooseNoteVoice(address)}>{t("add.chooseVoice")}</button> : <TimelineClip
                   layer={layer}
                   offset={offset}
                   projectDuration={duration}
                   position={cue}
-                  cropMode={cropMode && chosen}
-                  data={
-                    cropMode && chosen
-                      ? result?.inputs[key]
-                      : (result?.processedLayers?.[key] ?? result?.inputs[key])
-                  }
+                  data={result?.processedLayers?.[key] ?? result?.inputs[key]}
                   tail={tail}
                   sampleRate={result?.sampleRate}
                   tailData={result?.processedLayers?.[key]}
@@ -522,7 +543,7 @@ export function TreeTimeline({
                         : { start: next.start - offset }),
                     });
                   }}
-                />
+                />}
                 <div className="layer-controls">
                   <button
                     className={layer.muted ? "toggle on" : "toggle"}
