@@ -58,11 +58,15 @@ export async function cacheAudio(id:string,bytes:Uint8Array,compressed?:Uint8Arr
   if(existing){if(await digest(await decompressAudio(existing))!==await digest(bytes))throw Error('resources.conflict');return;}
   const packed=compressed??await compressAudio(bytes);
   if(typeof indexedDB!=='undefined')await pool('readwrite',id,packed);
-  else if(!providers.has(id))registerAudioProvider(id,()=>decompressAudio(packed));
+  else registerAudioProvider(id,()=>decompressAudio(packed));
 }
 export async function resolveAudio(ref:SharedSampleReference,fallback?:Provider):Promise<Uint8Array>{
   const cached=await pool('readonly',ref.audioId);
-  const bytes=cached?await decompressAudio(cached):await (providers.get(ref.audioId)??fallback)?.();
+  const provider=providers.get(ref.audioId);
+  let bytes:Uint8Array|undefined;
+  if(cached)bytes=await decompressAudio(cached);
+  else try{bytes=await (provider??fallback)?.();}
+  catch(error){if(!provider||!fallback||provider===fallback)throw error;bytes=await fallback();}
   if(!bytes)throw Error('error.sampleUnavailable');
   const actual=await audioReference(bytes);
   if(actual.audioId!==ref.audioId||actual.frames!==ref.frames||actual.channelCount!==ref.channelCount||actual.sampleRate!==ref.sampleRate)throw Error('resources.verify');

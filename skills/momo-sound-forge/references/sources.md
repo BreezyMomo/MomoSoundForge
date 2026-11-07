@@ -4,6 +4,8 @@
 
 ## 先查询现有库
 
+编辑器的资源查询包含已启用且成功加载的外部音库；不要把没启用或加载失败的库当成没有素材。独立 CLI 可运行 `remote-catalog --url INDEX_URL` 查询任意已知音库目录，`remote-fetch --url INDEX_URL --id ENTRY_ID --out RESOURCE.sfresource` 下载完整依赖包。音库 URL 不是资源身份，换地址不需要给同一音频创建新 ID。
+
 使用 sound_catalog 搜索用途、乐器、演奏法与音域。用户要求找新素材或现有库不合适时，再进行在线搜索。默认不扫描整个电脑、浏览器个人库或下载整套素材。
 
 ## 在线音效

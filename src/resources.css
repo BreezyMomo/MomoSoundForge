@@ -51,3 +51,14 @@
  .resource-dialog [aria-pressed="true"],.resource-browser [aria-pressed="true"] { background:var(--ui-hover);border-color:var(--ui-line); }
  @media(max-width:600px) { .resource-metadata,.resource-parameter { grid-template-columns:minmax(0,1fr); } .resource-dialog[data-slot="dialog-content"] { padding:12px; } }
 }
+
+@layer utilities {
+ .remote-settings {border-block:1px solid var(--ui-line);padding:12px 0;margin-bottom:12px;}
+ .remote-settings summary {cursor:pointer;font-weight:600;}
+ .remote-source {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--ui-line);}
+ .remote-source-info {display:flex;flex-direction:column;gap:5px;min-width:0;flex:1 1 280px;overflow-wrap:anywhere;}
+ .remote-source .button-group {align-items:center;}
+ .remote-add {display:grid;grid-template-columns:minmax(130px,1fr) minmax(200px,2fr);gap:12px;margin-top:14px;}
+ .remote-add>.button-group {grid-column:1/-1;}
+ @media(max-width:600px){.remote-add{grid-template-columns:minmax(0,1fr);}}
+}

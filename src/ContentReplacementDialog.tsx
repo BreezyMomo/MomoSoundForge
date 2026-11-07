@@ -1,13 +1,8 @@
 import { sampleFrames } from './sampleReference';
 import { fitPlayerRange, hasReadOverflow } from "./playerPlayback";
 import { updateProjectAtPath } from "./model";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Play, Square, Upload, X } from "lucide-react";
-import {
-  BUILTIN_SOUNDS,
-  builtinSoundName,
-  loadBuiltinSound,
-} from "./builtinLibrary";
 import { nodeParent, type NodeAddress } from "./nodeTree";
 import {
   contentCandidate,
@@ -18,7 +13,9 @@ import {
   type ContentCandidate,
 } from "./contentReplacement";
 import { type Project } from "./model";
-import { t } from "./i18n";
+import { t, language } from "./i18n";
+import { remoteLibraries } from "./remoteSubscriptions";
+import { resourceProject } from "./soundResources";
 import "./sample-replacement.css";
 
 export function ContentReplacementDialog({
@@ -54,22 +51,14 @@ export function ContentReplacementDialog({
     [error, setError] = useState("");
   const parent = nodeParent(base, address.path),
     layer = parent.inputs.find((l) => l.id === address.id)!;
+  const subscriptions=useSyncExternalStore(remoteLibraries.subscribe,remoteLibraries.snapshot);
+  useEffect(()=>{remoteLibraries.start();},[]);
   const entries = useMemo(
-    () =>
-      source !== "project"
-        ? BUILTIN_SOUNDS.filter(
-            (s) => s.kind === (source === "samples" ? "sample" : "example"),
-          ).map((s) => ({
-            id: s.id,
-            name: builtinSoundName(s),
-            duration: s.duration,
-            keywords: s.keywords,
-            load: async () =>
-              contentCandidate(
-                await loadBuiltinSound(s.id, builtinSoundName(s)),
-                s.kind === "example",
-              ),
-          }))
+    () => source !== "project"
+        ? subscriptions.filter(s=>s.enabled&&s.index).flatMap(s=>s.index!.entries.filter(e=>e.kind===(source==='samples'?'recording':'sound')).map(e=>({
+          id:s.id+':'+e.id,name:e.names?.[language.interfaceLanguage().startsWith('zh')?'zh':'en']??e.name,duration:null as number|null,keywords:s.name+' '+e.category+' '+e.description,
+          load:async()=>contentCandidate(resourceProject(await remoteLibraries.loader(s)(e)),e.kind==='sound'),
+        })))
         : Object.values(parent.assets).map((asset) => {
             const duration = sampleFrames(asset) / asset.sampleRate;
             return {
@@ -80,7 +69,7 @@ export function ContentReplacementDialog({
               load: async () => localContentCandidate(asset, duration),
             };
           }),
-    [source, parent],
+    [source, parent, subscriptions, language.interfaceLanguage()],
   );
   const visible = entries.filter((e) =>
     `${e.name} ${e.keywords}`
@@ -232,7 +221,7 @@ export function ContentReplacementDialog({
               >
                 <Play size={13} />
                 <span>{entry.name}</span>
-                <small>{entry.duration.toFixed(2)} s</small>
+                <small>{entry.duration===null?'':entry.duration.toFixed(2)+' s'}</small>
               </button>
             ))}
             {!visible.length && (

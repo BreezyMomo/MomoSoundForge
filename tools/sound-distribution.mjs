@@ -25,6 +25,16 @@ export async function libraryInventory(root = process.cwd()) {
     entries.set(item.file, item);
   }
   const source = path.join(root, 'public/sound-library');
+  const remoteBytes = await regularFile(path.join(source, 'index.json'));
+  const remote = JSON.parse(remoteBytes);
+  if(remote.schema !== 'momo.remote-sound-library/v1') throw Error('Rebuild the remote sound catalog');
+  entries.set('index.json', {file:'index.json', bytes:remoteBytes.length, sha256:hash(remoteBytes)});
+  for(const f of [...remote.entries,...remote.audio]) {
+    if(!/^(?:remote\/)?[a-f0-9]{64}\.(?:graph|audio|soundforge|recording)\.bin$/.test(f.file)||! /^[a-f0-9]{64}$/.test(f.sha256)||!Number.isSafeInteger(f.bytes)||f.bytes<1)throw Error('Invalid remote file');
+    const item={file:f.file,bytes:f.bytes,sha256:f.sha256};
+    if(entries.has(item.file)&&JSON.stringify(entries.get(item.file))!==JSON.stringify(item))throw Error('Conflicting remote file');
+    entries.set(item.file,item);
+  }
   const stamp = JSON.parse(await readFile(path.join(source, '.source-fingerprint'), 'utf8'));
   if (stamp.catalog !== hash(raw)) throw Error('Rebuild the library before staging: catalog differs from generated files');
   for (const [file, sha256] of Object.entries(stamp.licenses)) {
@@ -54,6 +64,7 @@ export async function stageDistribution(output, root = process.cwd()) {
   await mkdir(output);
   await mkdir(path.join(output, 'licenses'));
   for (const entry of manifest.files) {
+    await mkdir(path.dirname(path.join(output,entry.file)), {recursive:true});
     await copyFile(path.join(source, entry.file), path.join(output, entry.file));
   }
   await verifyLocalFiles(output, manifest);

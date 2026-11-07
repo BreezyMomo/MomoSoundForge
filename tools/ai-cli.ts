@@ -1,4 +1,5 @@
 import { openResourceGraph } from '../src/resourceGraph';
+import { fetchRemoteIndex, createRemoteLoader, remoteIndexUrl } from '../src/remoteLibrary';
 import { createSamplePreparer } from '../src/prepareSamples';
 import { createPublishedLibraryFetcher } from '../src/builtinDistribution.mjs';
 import { packProject, unpackProject, packResource, unpackResource } from '../src/resourcePackage';
@@ -68,7 +69,14 @@ export function decodePCM(bytes: Buffer, name: string, id: string) {
 }
 
 async function run() {
-  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; fetch-recording --id ID --site URL --out RESOURCE; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
+  if(command==='remote-catalog'||command==='remote-fetch'){
+    const url=remoteIndexUrl(need('--url')),index=await fetchRemoteIndex(url);
+    if(command==='remote-catalog')return console.log(JSON.stringify({libraryId:index.libraryId,name:index.name,entries:index.entries.map(({preview,...entry})=>entry)}));
+    const entry=index.entries.find(e=>e.id===need('--id'));if(!entry)throw Error('Unknown remote resource');
+    const resource=await createRemoteLoader(index,url)(entry);
+    return write(need('--out'),await packResource(resource));
+  }
+  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; remote-catalog --url INDEX_URL; remote-fetch --url INDEX_URL --id ID --out RESOURCE; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; fetch-recording --id ID --site URL --out RESOURCE; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
   if (command === 'schema') return console.log(JSON.stringify(AUTHORING_SCHEMA, null, 2));
   if (['resource-validate','resource-pack','resource-project','resource-render'].includes(command)) {
     const bytes=await readFile(need('--input'));if(bytes.length>PACKAGE_BYTES)throw Error('Resource exceeds budget');

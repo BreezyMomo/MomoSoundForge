@@ -1,4 +1,5 @@
 import { PLAYER_MESSAGES } from "./playerMessages";
+import { REMOTE_MESSAGES } from './remoteMessages';
 import { DEFINITION_MESSAGES } from "./definitionMessages";
 import { RESOURCE_MESSAGES } from './resourceMessages';
 import { INSPECTOR_MESSAGES } from './inspectorMessages';
@@ -13,6 +14,7 @@ import { BUILTIN_MESSAGES } from "./builtinMessages";
 import { AI_MESSAGES } from "./aiMessages";
 import { REPLACEMENT_MESSAGES } from "./replacementMessages";
 const words: Record<string, [string, string]> = {
+  ...REMOTE_MESSAGES,
   ...INSPECTOR_MESSAGES,
   ...INSTRUMENT_EDITOR_MESSAGES,
   ...RESOURCE_MESSAGES,

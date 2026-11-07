@@ -24,7 +24,7 @@ export type ContentCandidate = {
 
 export function contentReplacementError(error: unknown, fallback: string): string {
   return error instanceof Error &&
-    (error.message.startsWith("error.") || error.message === "library.builtinLoadError")
+    (error.message.startsWith("remote.") || error.message.startsWith("error.") || error.message === "library.builtinLoadError")
     ? error.message
     : fallback;
 }

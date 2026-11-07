@@ -15,7 +15,7 @@ import type { RecordingDefinition } from './recordingDefinition';
 import { pitchName } from './noteEditing';
 import './resources.css';
 
-export const resourceError = (e:unknown) => t(e instanceof Error && /^(instrument\.|resources\.|library\.|error\.|score\.|definition\.)/.test(e.message) ? e.message : 'resources.error');
+export const resourceError = (e:unknown) => t(e instanceof Error && /^(remote\.|instrument\.|resources\.|library\.|error\.|score\.|definition\.)/.test(e.message) ? e.message : 'resources.error');
 export function NumberSetting({label,value,min=-1e6,max=1e6,step=1,onChange}: {label:string;value:number;min?:number;max?:number;step?:number;onChange:(n:number)=>void}) {
   return <label className="resource-field"><span>{label}</span><WorkbenchNumberInput label={label} value={value} min={min} max={max} step={step} onValueCommit={onChange}/></label>;
 }

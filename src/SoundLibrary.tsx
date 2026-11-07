@@ -1,14 +1,15 @@
 import { packResource, readResourceFile } from './resourcePackage';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, Dialog, DialogContent, DialogTitle } from '@momo/workbench/react';
 import { BASIC_SYNTH } from './synthesizers';
-import { t } from './i18n';
+import { t, language } from './i18n';
+import { remoteLibraries } from './remoteSubscriptions';
+import { RemoteLibrarySettings } from './RemoteLibrarySettings';
 import { folderLibrary, libraryReady, onLibraryChange, type ResourceEntry } from './folderLibrary';
 import { importResource, resourceFromDefinition, resourceFromProject, resourceFromRecording, resourceProject, RESOURCE_BYTES, type SoundResource, type ResourceKind } from './soundResources';
 import { resourceOrigin, type ResourceOrigin } from './resourceOrigin';
 import { ResourceEditor, resourceError } from './ResourceEditor';
-import { BUILTIN_SOUNDS, builtinSoundName, builtinSoundDescription, builtinToneKey, builtinToneName, loadBuiltinSound } from './builtinLibrary';
 import { PRESETS, fromPreset } from './presets';
 import { makeProject, uid, encodeSamples, type Project, type RenderResult, type SampleAsset } from './model';
 import { parseDefinition, type SoundDefinition, type InstrumentDefinition } from './soundDefinitions';
@@ -18,7 +19,6 @@ import { SOUND_CATEGORIES, rememberSound } from './libraryPreferences';
 import { useResourcePreferences } from './useResourcePreferences';
 import { pitchName } from './noteEditing';
 import { type RecordingSummary } from './recordingSources';
-import { BUILTIN_RECORDINGS, loadBuiltinRecording } from './builtinRecordings';
 import './resources.css';
 
 type Props = {
@@ -36,18 +36,8 @@ const fresh=(kind:'synth'|'instrument'):SoundResource => kind==='synth'?resource
   payload:{schema:'momo.instrument/v1',instrument:{id:uid(),name:t('definition.untitledInstrument'),keyRange:{low:60,high:72},regions:[]},assets:{}}
 };
 type LibraryKind=ResourceKind|'source';
-type Card = {key:string;relatedKeys?:string[];name:string;kind:ResourceKind;source:'builtin'|'local';category:string;description:string;preview:number[];load:()=>Promise<SoundResource>;entry?:ResourceEntry;recording?:RecordingSummary};
+type Card = {key:string;relatedKeys?:string[];name:string;kind:ResourceKind;source:'builtin'|'local'|'remote';sourceLabel?:string;contentId?:string;category:string;description:string;preview:number[];load:(complete?:boolean)=>Promise<SoundResource>;entry?:ResourceEntry;recording?:RecordingSummary};
 const filterKeys=(card:Card)=>[card.key,...card.relatedKeys??[]];
-const recordingKey=(_parent:Card,recording:RecordingSummary)=>'recording-builtin-'+recording.id;
-const recordingName=(parent:string,recording:RecordingSummary)=>t('resources.recordingTitle',parent,recording.unpitched?t('resources.unpitched'):pitchName(recording.rootMidi),recording.velocityLow,recording.velocityHigh,recording.variant);
-function recordingCard(parent:Card,recording:RecordingSummary):Card {
-  const complete=BUILTIN_RECORDINGS.find(r=>r.id===recording.id)!;
-  recording=complete;
-  const name=recordingName(parent.name,recording);
-  return {key:recordingKey(parent,recording),relatedKeys:filterKeys(parent),name,kind:'recording',source:parent.source,category:parent.category,recording,
-    description:t('resources.recordingDetail',recording.unpitched?t('resources.unpitched'):pitchName(recording.rootMidi),recording.velocityLow,recording.velocityHigh,recording.variant)+' · '+t('resources.completeRecording',complete.duration.toFixed(2))+(recording.release?' · '+t('resources.releaseRecording'):''),
-    preview:[],load:()=>loadBuiltinRecording(recording.id,name)};
-}
 export function SoundLibrary(props:Props) {
   const [manage,setManage]=useState(false);
   useEffect(()=>{const open=()=>setManage(true);window.addEventListener('soundforge-open-resources',open);return()=>window.removeEventListener('soundforge-open-resources',open);},[]);
@@ -87,29 +77,26 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     load:async()=>resourceFromDefinition({...structuredClone(BASIC_SYNTH),name:t('resources.oscillator')},'builtin-synth-oscillator')
   },...PRESETS.map<Card>(p=>({key:'preset-'+p.id,name:t('preset.'+p.id),kind:'sound',source:'builtin',category:p.category,description:t('preset.'+p.id+'.desc'),preview:[],
     load:async()=>resourceFromProject(fromPreset(p.id,t('preset.'+p.id),k=>t('layer.'+k)),[],'builtin-preset-'+p.id)}))];
-  const seenRecordings=new Set<string>();
-  for(const s of BUILTIN_SOUNDS){
-    const parent:Card={key:'builtin-'+s.id,relatedKeys:['builtin-'+builtinToneKey(s)],name:builtinSoundName(s),kind:s.kind==='instrument'?'instrument':s.kind==='sample'?'recording':'sound',source:'builtin',category:s.category,
-      description:s.completeInstrument?builtinSoundDescription(s):s.kind==='instrument'?t('resources.instrumentDetail',s.recordings?.length??0)+(s.tone?' · '+t('resources.performanceExcerpt',s.maxSourceSeconds):''):builtinSoundDescription(s),preview:s.waveform,
-      load:async()=>{
-        const p=await loadBuiltinSound(s.id,builtinSoundName(s));
-        if(s.kind==='instrument')return {...resourceFromDefinition({schema:'momo.instrument/v1',instrument:p.inputs[0].player.score!.instruments[0],assets:p.assets},'builtin-'+s.id),category:s.category,version:s.revision??1};
-        if(s.kind==='sample'){
-          const audio=await onRender(p),id='builtin-'+s.id;
-          return {...resourceFromRecording({id,name:builtinSoundName(s),sampleRate:audio.sampleRate,channels:[encodeSamples(audio.left),encodeSamples(audio.right)]},null,id),category:s.category};
-        }
-        return resourceFromProject(p,s.waveform,'builtin-'+s.id);
-      }};
-    builtins.push(parent);
-    if(s.kind==='instrument')for(const recording of s.recordings??[])if(!seenRecordings.has(recording.id)){
-      seenRecordings.add(recording.id);builtins.push(recordingCard({...parent,name:builtinToneName(s)},recording));
+  const subscriptions=useSyncExternalStore(remoteLibraries.subscribe,remoteLibraries.snapshot);
+  useEffect(()=>{remoteLibraries.start();},[]);
+  useEffect(()=>{if(source.startsWith('remote:')&&!subscriptions.some(s=>'remote:'+s.id===source))setSource('');},[source,subscriptions]);
+  const remoteCards=new Map<string,Card>();
+  for(const subscription of subscriptions){
+    if(!subscription.enabled||!subscription.index||source.startsWith('remote:')&&source!==`remote:${subscription.id}`)continue;
+    const loader=remoteLibraries.loader(subscription);
+    for(const entry of subscription.index.entries){
+      const existing=remoteCards.get(entry.contentId);
+      if(existing){existing.sourceLabel+=' · '+subscription.name;continue;}
+      const name=entry.names?.[language.interfaceLanguage().startsWith('zh')?'zh':'en']??entry.name;
+      remoteCards.set(entry.contentId,{key:'remote-'+entry.contentId,contentId:entry.contentId,name,kind:entry.kind,source:'remote',sourceLabel:subscription.name,category:entry.category,description:entry.description,preview:entry.preview,
+        load:async(complete=true)=>({...await loader(entry,complete),name,id:entry.contentId})});
     }
   }
   const locals=entries.map<Card>(entry=>({key:'local-'+entry.id,name:entry.name,kind:entry.kind,source:'local',category:entry.category,description:entry.description,preview:entry.preview,entry,load:()=>folderLibrary.load(entry.id)}));
-  const cards=[...builtins,...locals];
+  const cards=[...builtins,...remoteCards.values(),...locals];
   const [category,setCategory]=useState('');
   useEffect(()=>setDisplayLimit(48),[query,kind,source,category,preferences.filter]);
-  const matches=(c:Card)=>(!sourceSelection||c.kind==='recording'||c.kind==='synth')&&(!bindingType||c.kind===bindingType)&&(!source||c.source===source)&&(!category||c.category===category)&&
+  const matches=(c:Card)=>(!sourceSelection||c.kind==='recording'||c.kind==='synth')&&(!bindingType||c.kind===bindingType)&&(!source||c.source===source||source.startsWith('remote:')&&c.source==='remote')&&(!category||c.category===category)&&
     `${c.name} ${c.description} ${c.category} ${SOUND_CATEGORIES.includes(c.category as never)?t('library.'+c.category):''}`.toLowerCase().includes(query.trim().toLowerCase())&&
     (preferences.filter==='all'||filterKeys(c).some(key=>(preferences.filter==='favorites'?preferences.favorites:preferences.recent).includes(key)));
   const matchingInstruments=!sourceSelection&&!bindingType&&query.trim()&&kind!==''&&kind!=='instrument'?cards.filter(c=>c.kind==='instrument'&&matches(c)).length:0;
@@ -123,13 +110,16 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
       {props.onManage&&<Button variant="outline" aria-haspopup="dialog" disabled={!ready||busy} onClick={()=>{onStop();props.onManage!();}}>{t('resources.manage')}</Button>}</div>
     <div className="resource-filters">
       <select aria-label={t('resources.all')} disabled={!!bindingType} value={kind} onChange={e=>setKind(e.target.value as LibraryKind|'')}><option value="">{t('resources.all')}</option><option value="source">{t('resources.soundSources')}</option>{(['recording','synth','instrument','sound']as const).filter(k=>!sourceSelection||k==='recording'||k==='synth').map(k=><option key={k} value={k}>{t('resources.'+k)}</option>)}</select>
-      <select aria-label={t('resources.sources')} value={source} onChange={e=>setSource(e.target.value)}><option value="">{t('resources.sources')}</option><option value="builtin">{t('resources.builtin')}</option><option value="local">{t('resources.local')}</option></select>
+      <select aria-label={t('resources.sources')} value={source} onChange={e=>setSource(e.target.value)}><option value="">{t('resources.sources')}</option><option value="builtin">{t('resources.builtin')}</option><option value="local">{t('resources.local')}</option><option value="remote">{t('resources.remote')}</option>{subscriptions.map(s=><option key={s.id} value={"remote:"+s.id}>{s.name}</option>)}</select>
       <select aria-label={t('resources.category')} value={category} onChange={e=>setCategory(e.target.value)}><option value="">{t('library.all')}</option>{[...new Set(cards.map(c=>c.category))].sort().map(c=><option key={c} value={c}>{SOUND_CATEGORIES.includes(c as never)?t('library.'+c):c}</option>)}</select>
     </div>
     <div className="button-group resource-quick-filters">{(['all','favorites','recent']as const).map(filter=><Button variant="outline" key={filter} aria-pressed={preferences.filter===filter} onClick={()=>setPreferences(p=>({...p,filter}))}>{t('library.'+filter)}</Button>)}</div>
     <details className="resource-display"><summary>{t('library.display')}</summary><div className="button-group">{(['grid','list']as const).map(view=><Button variant="outline" key={view} aria-pressed={preferences.view===view} onClick={()=>setPreferences(p=>({...p,view}))}>{t('library.'+view)}</Button>)}</div></details>
     <p className="resource-count" role="status">{t('resources.visibleCount',visible.length)} · {t('resources.recordingCount',visible.filter(c=>c.kind==='recording').length)}</p>
     {!!matchingInstruments&&<p className="field-help resource-search-hint">{t('resources.matchingInstruments',matchingInstruments)} <Button variant="outline" onClick={()=>setKind('instrument')}>{t('resources.viewInstruments')}</Button></p>}
+    {subscriptions.some(s=>s.enabled&&s.loading)&&<p role="status" className="field-help">{t('remote.loading')}</p>}
+    {subscriptions.some(s=>s.enabled&&s.error)&&<p role="alert" className="field-help">{t('remote.problem')}</p>}
+    {props.expanded&&<RemoteLibrarySettings/>}
     {bindingType&&<p className="field-help">{t('resources.bindingHint')}</p>}
     {stale&&<p className="field-help" role="alert">{t('error.scopeChanged')}</p>}
     {props.initialDefinition&&<Button variant="outline" disabled={busy} onClick={()=>openEditor(resourceFromDefinition(props.initialDefinition!))}>{t('resources.fromCurrent')}</Button>}
@@ -148,15 +138,16 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     {(error||status||busy)&&<p role={error?'alert':'status'} className="resource-status">{error||(busy?t('resources.working'):status)}</p>}
     <div className={'resource-cards resource-view-'+preferences.view}>{visible.slice(0,displayLimit).map(c=><article key={c.key} className="resource-card" aria-label={c.name} data-recording-id={c.recording?.id??(c.kind==='recording'?c.key:undefined)}>
       <header><strong>{c.name}</strong><button aria-label={t(preferences.favorites.includes(c.key)?'library.unfavorite':'library.favorite',c.name)} aria-pressed={preferences.favorites.includes(c.key)} onClick={()=>setPreferences(p=>({...p,favorites:p.favorites.includes(c.key)?p.favorites.filter(k=>k!==(c.key)):[...p.favorites,c.key]}))}>{preferences.favorites.includes(c.key)?'★':'☆'}</button></header>
-      <div className="resource-badges"><span>{t('resources.'+c.kind)}</span><span>{t('resources.'+c.source)}</span>{c.entry&&<span>{t('resources.version',c.entry.version)}</span>}</div>
+      <div className="resource-badges"><span>{t('resources.'+c.kind)}</span><span>{c.sourceLabel??t('resources.'+c.source)}</span>{c.entry&&<span>{t('resources.version',c.entry.version)}</span>}</div>
       {c.preview.length>0&&<Waveform data={Float32Array.from(c.preview)} label={c.name}/>}
       <p className="field-help">{c.description}</p><div className="button-group">
-        <Button variant="outline" disabled={busy||!ready} aria-pressed={playback===c.key} onClick={()=>void run(async()=>{if(playback===c.key){onStop();return;}remember(c.key);const r=await c.load();onPreview(resourceProject(r,true),c.key);})}>{t(playback===c.key?'resources.stop':'resources.listen')}</Button>
+        <Button variant="outline" disabled={busy||!ready} aria-pressed={playback===c.key} onClick={()=>void run(async()=>{if(playback===c.key){onStop();return;}remember(c.key);const r=await c.load(false);onPreview(resourceProject(r,true),c.key);})}>{t(playback===c.key?'resources.stop':'resources.listen')}</Button>
         <Button disabled={busy||!ready||!!stale} onClick={()=>void run(async()=>{const base=latest.current,r=await c.load();remember(c.key);await useResource(r,base);})}>{sourceSelection?t('instrument.bind',sourceSelection.note):c.kind==='recording'?t('resources.useRecording'):t(bindingType?'resources.bind':c.kind==='synth'?'resources.useSynth':c.kind==='instrument'?'resources.useInstrument':'resources.use')}</Button>
       </div>{!sourceSelection&&<details><summary>{t('resources.actions')}</summary><div className="button-group">
         <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const destination=folderLibrary.destination,r=await c.load();if(c.entry&&destination!==folderLibrary.destination)throw Error('resources.conflict');openEditor(r,!!c.entry);})}>{t('resources.edit')}</Button>
         {c.kind==='sound'&&!bindingType&&<Button variant="outline" disabled={busy||!ready} onClick={()=>void run(async()=>{const base=latest.current,destination=folderLibrary.destination,r=await c.load();if(base!==latest.current||destination!==folderLibrary.destination)throw Error('error.scopeChanged');onOpen(resourceProject(r),c.entry?resourceOrigin(r,destination):undefined);})}>{t('resources.open')}</Button>}
         <Button variant="outline" disabled={busy} onClick={()=>void run(async()=>{const r=await c.load();download(new Uint8Array(await packResource(r)).buffer,safeFilename(r.name)+'.sfresource','application/zip');})}>{t('resources.export')}</Button>
+        {c.source==='remote'&&<Button variant="outline" disabled={busy||entries.some(e=>e.contentId===c.contentId)} onClick={()=>void run(async()=>{if(!folderLibrary.connected)await folderLibrary.choose();const destination=folderLibrary.destination,r=await c.load();if((await folderLibrary.list()).some(e=>e.contentId===c.contentId)){setStatus(t('remote.downloaded'));return;}await folderLibrary.save(r,undefined,destination);setStatus(t('remote.downloaded'));})}>{t(entries.some(e=>e.contentId===c.contentId)?'remote.downloaded':'remote.download')}</Button>}
         {c.entry&&<Button variant="outline" disabled={busy} onClick={()=>setDeleting({...c.entry!,destination:folderLibrary.destination})}>{t('resources.delete')}</Button>}
       </div></details>}
     </article>)}</div>

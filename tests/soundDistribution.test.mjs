@@ -15,6 +15,7 @@ async function fixture() {
   await writeFile(path.join(root, 'public/sound-library', file), bytes);
   await writeFile(path.join(root, 'public/sound-library/licenses/test.txt'), 'CC0');
   await writeFile(path.join(root, 'public/ai/tool.zip'), 'AI tools');
+  await writeFile(path.join(root,'public/sound-library/index.json'),JSON.stringify({schema:'momo.remote-sound-library/v1',entries:[],audio:[]}));
   await writeFile(path.join(root, 'public/sound-library/.source-fingerprint'), JSON.stringify({ catalog: hash(raw), licenses: { 'test.txt': hash('CC0') } }));
   return { root, file, bytes };
 }
@@ -24,8 +25,8 @@ it('stages verified independent resources without overwriting a release; externa
   try {
     const output = path.join(root, 'release'), manifest = await stageDistribution(output, root);
     expect(await readFile(path.join(output, file))).toEqual(bytes);
-    expect(manifest.files).toHaveLength(2);
-    expect((await verifyStagedDistribution(output, root)).files).toBe(2);
+    expect(manifest.files).toHaveLength(3);
+    expect((await verifyStagedDistribution(output, root)).files).toBe(3);
     await writeFile(path.join(output, 'unexpected.bin'), 'stale');
     await expect(verifyStagedDistribution(output, root)).rejects.toThrow('Unexpected');
     await expect(stageDistribution(output, root)).rejects.toThrow();

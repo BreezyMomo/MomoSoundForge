@@ -1,3 +1,4 @@
+import { remoteLibraries } from './remoteSubscriptions';
 import { packProject } from './resourcePackage';
 import { prepareProjectSamples } from './prepareSamples';
 import { projectDocument } from './model';
@@ -85,11 +86,14 @@ export function useAIEditor(props: Props) {
       };
       if (op === 'capture') return capture();
       if (op === 'schema') return { ...AUTHORING_SCHEMA, currentExportSettings: latest.current.exportSettings };
+      const remoteEntries=remoteLibraries.snapshot().filter(s=>s.enabled&&s.index).flatMap(s=>s.index!.entries.map(e=>({id:'remote:'+s.id+':'+e.id,name:e.name,kind:e.kind,category:e.category,description:e.description,contentId:e.contentId,library:s.name})));
+      const remoteResource=async(id:string)=>{const [,subscriptionId,...rest]=id.split(':');const source=remoteLibraries.snapshot().find(s=>s.id===subscriptionId&&s.enabled);const entry=source?.index?.entries.find(e=>e.id===rest.join(':'));if(!source||!entry)throw Error('resources.missing');return remoteLibraries.loader(source)(entry);};
       if (op === 'resources') {
         await libraryReady;
         const local=args.scope==='local';
         if(args.resourceId) {
           const id=String(args.resourceId);
+          if(!local&&id.startsWith('remote:'))return {resource:await remoteResource(id)};
           if(local){if(!id.startsWith('local:'))throw Error('resources.invalid');return {resource:await folderLibrary.load(id.slice(6)),destination:folderLibrary.destination};}
           if(id==='generator:oscillator')return {resource:resourceFromDefinition(BASIC_SYNTH,'builtin-synth-oscillator')};
           if(id.startsWith('preset:'))return {resource:resourceFromProject(fromPreset(id.slice(7),id.slice(7),k=>k),[],'builtin-preset-'+id.slice(7))};
@@ -113,8 +117,7 @@ export function useAIEditor(props: Props) {
         const items=local?(await folderLibrary.list()).map(e=>({...e,id:'local:'+e.id})): [
           {id:'generator:oscillator',name:t('resources.oscillator'),kind:'synth',category:'uncategorized'},
           ...PRESETS.map(p=>({id:'preset:'+p.id,name:t('preset.'+p.id),kind:'sound',category:p.category})),
-          ...BUILTIN_SOUNDS.map(s=>({id:'builtin:'+s.id,name:builtinSoundName(s),kind:s.kind==='instrument'?'instrument':s.kind==='sample'?'recording':'sound',category:s.category})),
-          ...BUILTIN_RECORDINGS.map(r=>({id:'recording:'+r.id,name:t('resources.recordingTitle',t(r.nameKey)+' · '+t('builtin.articulation.'+r.articulation),r.unpitched?t('resources.unpitched'):pitchName(r.rootMidi),r.velocityLow,r.velocityHigh,r.variant),kind:'recording',category:r.category,duration:r.duration})),
+          ...remoteEntries,
         ];
         const q=String(args.query??'').toLowerCase(),filtered=items.filter(e=>(!args.kind||e.kind===args.kind)&&JSON.stringify(e).toLowerCase().includes(q));
         const offset=Math.max(0,Number(args.offset)||0);
@@ -155,7 +158,7 @@ export function useAIEditor(props: Props) {
         const personal = args.scope === 'personal';
         const entries = personal ? (await listSavedSounds()).filter(s => !s.deleted).map(s => ({ ...s, id: `saved:${s.id}` })) : [
           ...PRESETS.map(p => ({ id: `preset:${p.id}`, name: t(`preset.${p.id}`), category: p.category, duration: p.duration })),
-          ...BUILTIN_SOUNDS.map(s => ({ id: `builtin:${s.id}`, name: builtinSoundName(s), kind: s.kind, category: s.category, articulation: s.articulation, keyLow: s.keyLow, keyHigh: s.keyHigh, duration: s.duration, keywords: s.keywords })),
+          ...remoteEntries,
         ];
         const filtered = entries.filter(s => JSON.stringify(s).toLowerCase().includes(q));
         const offset = Math.max(0, Number(args.offset) || 0);
@@ -167,7 +170,8 @@ export function useAIEditor(props: Props) {
         if (!Array.isArray(operations) || operations.length > 64) throw Error('ai.invalidEdit');
         for (const action of operations) if (action.op === 'insert' && action.soundId) {
           const [source, ...rest] = action.soundId.split(':'); const id = rest.join(':');
-          if (source === 'builtin') {
+          if(source==='remote')action.project=resourceProject(await remoteResource(action.soundId));
+          else if (source === 'builtin') {
             const entry = BUILTIN_SOUNDS.find(s => s.id === id); if (!entry) throw Error('ai.missingNode');
             action.project = await loadBuiltinSound(id, builtinSoundName(entry));
           } else if (source === 'preset' && PRESETS.some(s => s.id === id)) action.project = fromPreset(id, t(`preset.${id}`), key => t(`layer.${key}`));
