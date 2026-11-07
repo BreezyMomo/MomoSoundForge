@@ -10,6 +10,7 @@ import { applyEdits, AUTHORING_SCHEMA, projectScoreIssues } from '../src/aiAutho
 import { fromPreset, PRESETS } from '../src/presets';
 import { validateSampleSource } from '../src/sampleSource';
 import catalog from '../src/data/builtin-catalog.json';
+import { createBuiltinRecordingLoader } from '../src/builtinRecordings';
 import { importResource, resourceProject, RESOURCE_BYTES } from '../src/soundResources';
 
 const [command, ...args] = process.argv.slice(2);
@@ -48,7 +49,7 @@ export function decodePCM(bytes: Buffer, name: string, id: string) {
 }
 
 async function run() {
-  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
+  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; fetch-recording --id ID --site URL --out RESOURCE; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
   if (command === 'schema') return console.log(JSON.stringify(AUTHORING_SCHEMA, null, 2));
   if (['resource-validate','resource-pack','resource-project','resource-render'].includes(command)) {
     const bytes=await readFile(need('--input'));if(bytes.length>RESOURCE_BYTES)throw Error('Resource exceeds budget');
@@ -60,7 +61,7 @@ async function run() {
     const audio=renderProject(p);await write(need('--out'),new Uint8Array(encodeWav(audio)));
     return console.log(JSON.stringify({peak:audio.peak,rms:audio.rms,listeningVerified:false}));
   }
-  if (command === 'catalog') return console.log(JSON.stringify({ presets: PRESETS.map(p => ({ id: p.id, duration: p.duration })), sounds: catalog.sounds.map(({ waveform, ...s }) => s) }));
+  if (command === 'catalog') return console.log(JSON.stringify({ presets: PRESETS.map(p => ({ id: p.id, duration: p.duration })), sounds: catalog.sounds.map(({ waveform, ...s }) => s), recordings: catalog.recordings }));
   if (command === 'new') {
     if (options['--preset'] && !PRESETS.some(p => p.id === options['--preset'])) throw Error('Unknown preset');
     return save(options['--preset'] ? fromPreset(options['--preset'], options['--name'] || 'Sound', k => k) : makeProject(options['--name'] || 'Sound'));
@@ -74,6 +75,15 @@ async function run() {
     const p = await input(), audio = renderProject(p), wav = new Uint8Array(encodeWav(audio));
     await write(need('--out'), wav);
     return console.log(JSON.stringify({ peak: audio.peak, rms: audio.rms, sourcePeak: audio.sourcePeak, gainReduction: audio.gainReduction, tailLimited: audio.tailLimited, duration: audio.left.length / audio.sampleRate, sha256: createHash('sha256').update(wav).digest('hex'), listeningVerified: false }));
+  }
+  if (command === 'fetch-recording') {
+    const site = new URL(need('--site'));
+    if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
+    site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = '';
+    const loader = createBuiltinRecordingLoader(undefined, url => fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' }), site.href);
+    const resource = await loader(need('--id').replace(/^recording:/, ''));
+    await write(need('--out'), JSON.stringify(resource, null, 2) + '\n');
+    return console.log(JSON.stringify({ id: resource.id, version: resource.version, kind: resource.kind, listeningVerified: false }));
   }
   if (command === 'fetch-sound') {
     const entry = catalog.sounds.find(s => s.id === need('--id').replace(/^builtin:/, '')); if (!entry) throw Error('Unknown factory sound');

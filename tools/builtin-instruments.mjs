@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { compileVelocityRegions, sourceRegionId } from './builtin-velocity-regions.mjs';
 
 export const recordingId = sample => createHash('sha256').update(sample.sourcePath).digest('hex');
 // Short editable tones retain every velocity/round-robin take. Partition at root
@@ -39,7 +40,7 @@ export function instrumentJobs(manifest, base) {
 }
 
 export async function instrumentProject(job, root, { makeLayer, encodeSamples }, preferredMidi = 60) {
-  const assets = {}, regions = [];
+  const assets = {}, authoredRegions = [];
   for (const s of job.samples) {
     const id = recordingId(s), wav = await readFile(path.join(root, job.base, s.wavFile));
     if (createHash('sha256').update(wav).digest('hex') !== s.wavSha256 || wav.toString('ascii', 36, 40) !== 'data' ||
@@ -50,17 +51,19 @@ export async function instrumentProject(job, root, { makeLayer, encodeSamples },
       const channels = [0, 1].map(c => encodeSamples(Float32Array.from({ length: frames }, (_, i) => wav.readInt16LE(44 + i * 4 + c * 2) / 32768)));
       assets[id] = { id, name: `${s.instrumentId} ${s.rootNote} · ${s.articulation}${s.durationSeconds > TONE_SECONDS ? ' · 4s excerpt' : ''}`, sampleRate: 48000, channels };
     }
-    regions.push({ id: s.id, assetId: id, rootMidi: s.rootMidi, keyLow: s.keyLow, keyHigh: s.keyHigh,
+    authoredRegions.push({ id: s.id, assetId: id, rootMidi: s.rootMidi, keyLow: s.keyLow, keyHigh: s.keyHigh,
       velocityLow: Math.max(1, s.velocityLow), velocityHigh: s.velocityHigh, articulation: s.articulation,
       roundRobin: s.roundRobin?.index ?? Math.round((s.roundRobin?.randomLow ?? 0) * 100),
       tuneCents: Number(s.sourceEffectiveOpcodes?.tune ?? 0), gainDb: s.conversion.recommendedRegionGainDb,
       releaseSeconds: Math.max(.005, Math.min(3, s.release.envelopeSeconds, Math.min(s.durationSeconds, TONE_SECONDS) - .03)) });
   }
+  const regions = compileVelocityRegions(authoredRegions);
+  if (regions.length > 128) throw Error(`Compiled regions exceed the instrument budget: ${job.id}`);
   const candidates = [...regions].sort((a, b) => Math.abs(a.rootMidi - preferredMidi) - Math.abs(b.rootMidi - preferredMidi));
   const chosen = candidates.find(r => r.velocityLow <= 80 && r.velocityHigh >= 80) ?? candidates[0];
-  const sample = job.samples.find(s => s.id === chosen.id);
+  const sample = job.samples.find(s => s.id === sourceRegionId(chosen.id));
   const playable = regions.filter(r => chosen.rootMidi >= r.keyLow && chosen.rootMidi <= r.keyHigh);
-  const available = r => Math.min(job.samples.find(s => s.id === r.id).durationSeconds, TONE_SECONDS)
+  const available = r => Math.min(job.samples.find(s => s.id === sourceRegionId(r.id)).durationSeconds, TONE_SECONDS)
     / 2 ** ((chosen.rootMidi - r.rootMidi + r.tuneCents / 100) / 12);
   const held = Math.max(.005, Math.min(.6, ...playable.map(r => available(r) - .02)));
   // Include every velocity and alternate take's tail, not just the first take.

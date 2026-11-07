@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir, stat, copyFile, readdir, realpath, unlink }
 import path from "node:path";
 import { instrumentJobs, instrumentProject, recordingId } from "./builtin-instruments.mjs";
 import { legacyInstrumentLevels, standaloneBoostDb } from "./builtin-levels.mjs";
+import { buildRecordings } from "./builtin-recordings.mjs";
 import { levels } from "./audit-builtin-library.mjs";
 import { gameSfxJobs, gameSfxProject } from "./builtin-game-sfx.mjs";
 import { natureSfxJobs, natureSfxProject } from "./builtin-nature-sfx.mjs";
@@ -87,7 +88,7 @@ for (const id of ["piano", "flute", "violin", "cello", "horn", "trumpet"]) jobs.
 
 const sourceFiles = [...new Set([
   "tools/build-builtin-library.mjs", "tools/builtin-game-sfx.mjs", "tools/builtin-nature-sfx.mjs", "tools/builtin-instruments.mjs", "tools/builtin-levels.mjs", "tools/audit-builtin-library.mjs", "tools/builtin-quality.json", "src/sampleTail.ts", "src/engine.ts", "src/instruments.ts", "src/model.ts", "src/advanced.ts", "src/nodeEffects.ts", "src/playerPlayback.ts", "src/effectTypes.ts", "src/synthesizers.ts", "src/synthExpression.ts",
-  "src/recordingSources.ts", `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
+  "src/recordingSources.ts", "tools/builtin-velocity-regions.mjs", "tools/builtin-recordings.mjs", `${fxRoot}/manifest.json`, `${fxRoot}/examples/recipes.json`, `${orchestraRoot}/manifest.json`,
   `${fxRoot}/licenses/kenney-impact-License.txt`, `${orchestraRoot}/licenses/VSCO-LICENSE`,
   `${expandedRoot}/manifest.json`,
   `${gameRoot}/manifest.json`, ...game.sources.map(s => `${gameRoot}/${s.includedLicenseFile}`),
@@ -101,7 +102,7 @@ const fingerprint = hash(JSON.stringify(await Promise.all(sourceFiles.map(async 
 try {
   if (!process.argv.includes("--force") && (await readFile(stampFile, "utf8")) === fingerprint) {
     const previous = await readJson("src/data/builtin-catalog.json");
-    await Promise.all(previous.sounds.map((sound) => stat(path.join(output, sound.file))));
+    await Promise.all([...previous.sounds, ...previous.recordings].map((sound) => stat(path.join(output, sound.file))));
     await Promise.all(["vsco-cc0.txt", "kenney-cc0.txt", "game-impact-sounds.txt", "game-rpg-audio.txt", "nature-cc0.txt", "sources.json"].map((file) => stat(path.join(output, "licenses", file))));
     console.log(`Built-in library ready: ${previous.sounds.length} sounds.`);
     process.exit(0);
@@ -123,9 +124,10 @@ try {
     if (input.player.type === 'instrument') input.player.noiseSeed = (input.player.noiseSeed ^ 2048) >>> 0;
     return input;
   };
-  const sounds = [];
+  const sounds = [], recordings = new Map();
   for (const job of jobs) {
     let source;
+    const assetGains = [];
     if (job.natureSfx) {
       source = await natureSfxProject(job, root, natureRoot, { makeLayer, encodeSamples });
     } else if (job.gameSfx) {
@@ -160,6 +162,7 @@ try {
       const channels = [new Float32Array(length), new Float32Array(length)];
       const level = legacyLevels.get(job.sample.id);
       const assetGain = 10 ** (level.assetGainDb / 20);
+      assetGains.push(assetGain);
       for (let i = 0; i < length; i++) for (let c = 0; c < 2; c++) channels[c][i] = wav.readInt16LE(44 + i * 4 + c * 2) / 32768 * assetGain;
       const { duration, release } = instrumentPlaybackRange(channels, 48000, job.sample.instrumentId);
       source = {
@@ -195,6 +198,7 @@ try {
         region.gainDb = Math.min(24, region.gainDb + boostDb);
         if (extraDb > 0) {
           const asset = project.assets[region.assetId], gain = 10 ** (extraDb / 20);
+          assetGains.push(gain);
           asset.channels = asset.channels.map(channel => encodeSamples(Float32Array.from(decodeSamples(channel), x => x * gain)));
         }
         project = parseProject(projectForSave(project));
@@ -220,11 +224,15 @@ try {
     const digest = hash(compressed), file = `${digest}.soundforge.bin`;
     await writeFile(path.join(output, file), compressed);
     const { id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback } = job;
+    const summaries = kind === 'instrument' ? recordingSummaries({schema:'momo.instrument/v1',instrument:project.inputs[0].player.score.instruments[0],assets:project.assets}) : undefined;
+    if (summaries) for (const recording of await buildRecordings(job, project, summaries, assetGains, root, output))
+      if (!recordings.has(recording.id)) recordings.set(recording.id, recording);
+    const revision = kind === 'instrument' && project.inputs[0].player.score.instruments[0].regions.some(r => /-velocity-\d+-\d+$/.test(r.id)) ? 2 : 1;
     sounds.push({ id, kind, nameKey, category, keywords, rootNote, velocity, variant, articulation, tone, keyLow, keyHigh, maxSourceSeconds, recordingIds, recordingGroup, recording, playback,
-      ...(kind==='instrument'?{recordings:recordingSummaries({schema:'momo.instrument/v1',instrument:project.inputs[0].player.score.instruments[0],assets:project.assets})}:{}),
+      ...(revision > 1 ? { revision } : {}), ...(summaries ? { recordings: summaries } : {}),
       duration: project.duration, file, compressedBytes: compressed.length, projectBytes: json.length, sha256: digest, waveform });
   }
-  const catalog = JSON.stringify({ schema: "momo.builtin-library/v1", sounds }, null, 2) + "\n";
+  const catalog = JSON.stringify({ schema: "momo.builtin-library/v1", sounds, recordings: [...recordings.values()] }, null, 2) + "\n";
   let previous;
   try { previous = await readFile(catalogFile, "utf8"); } catch {}
   if (catalog !== previous) await writeFile(catalogFile, catalog);
@@ -246,9 +254,9 @@ try {
   const expectedOutput = path.join(await realpath(root), "public/sound-library");
   if (path.resolve(resolvedOutput).toLowerCase() !== path.resolve(expectedOutput).toLowerCase())
     throw Error("Refusing to clean generated resources outside this workspace");
-  const currentFiles = new Set(sounds.map(sound => sound.file));
+  const currentFiles = new Set([...sounds, ...recordings.values()].map(sound => sound.file));
   for (const entry of await readdir(resolvedOutput, { withFileTypes: true }))
-    if (entry.isFile() && /^[a-f0-9]{64}\.soundforge\.(gz|bin)$/.test(entry.name) && !currentFiles.has(entry.name))
+    if (entry.isFile() && /^[a-f0-9]{64}\.(soundforge|recording)\.(gz|bin)$/.test(entry.name) && !currentFiles.has(entry.name))
       await unlink(path.join(resolvedOutput, entry.name));
   await writeFile(stampFile, fingerprint);
   console.log(`Built ${sounds.length} built-in sounds (${Math.round(sounds.reduce((sum, sound) => sum + sound.compressedBytes, 0) / 1048576)} MiB, loaded on demand).`);

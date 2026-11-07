@@ -1,0 +1,53 @@
+{
+  "purpose": "Small offline audio audit and portable render fixture. Bytes are unchanged publisher OGG and collected working WAV.",
+  "collection": "samples/game-sfx-starter-20261105",
+  "source": {
+    "id": "kenney-impact-sounds",
+    "title": "Impact Sounds",
+    "author": "Kenney",
+    "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "archiveSha256": "029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8",
+    "pageSnapshotSha256": "80c72bae16c8af45bb5f98ecb2e5d922623ef6369caf99b9d06f3819c4c72a55",
+    "includedLicenseFile": "licenses/impact-sounds-License.txt"
+  },
+  "sample": {
+    "id": "game-footstep-carpet-01",
+    "groupId": "game-footstep-carpet",
+    "nameKey": "builtin.game.footstep-carpet",
+    "name": "地毯脚步",
+    "englishName": "Carpet footstep",
+    "category": "footsteps",
+    "recording": 1,
+    "keywords": "walk run step soft indoor 走路 跑步 室内 轻柔",
+    "packId": "kenney-impact-sounds",
+    "author": "Kenney",
+    "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+    "sourceArchiveMember": "Audio/footstep_carpet_000.ogg",
+    "license": "CC0-1.0",
+    "sourceFormat": "OGG Vorbis",
+    "originalFile": "originals/game-footstep-carpet-01.ogg",
+    "originalSha256": "b9524658b52a99a20590f8feefc103088637fd13ea8ec35811aee785e1f2f330",
+    "wavFile": "wav/game-footstep-carpet-01.wav",
+    "wavSha256": "df6ba2ac4e9f9013d9b37d87ef210022726bd49fa4eb5e67d259ca288d1df143",
+    "pcmSha256": "cdaf75664b3f23c239907012768abc254d3b9411dbd392cbb077068176b5db20",
+    "sampleRate": 48000,
+    "channels": 2,
+    "bitsPerSample": 16,
+    "duration": 0.16689583333333333,
+    "peakDb": -1.082,
+    "playback": {
+      "trim": 0,
+      "duration": 0.16689583333333333,
+      "release": 0.025
+    },
+    "conversion": {
+      "gain": 1,
+      "decodedSourcePeakDb": -1.082,
+      "trimmed": false,
+      "denoised": false,
+      "note": "Publisher OGG decoded to PCM16; this WAV is not a lossless recording master."
+    }
+  }
+}

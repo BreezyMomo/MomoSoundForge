@@ -15,6 +15,8 @@ export const RESOURCE_MESSAGES: Record<string,[string,string]> = {
  'resources.recording':['录音','Recording'],
  'resources.soundSources':['音源（录音与合成器）','Sound sources (recordings and synthesizers)'],
  'resources.instrumentDetail':['乐器定义 · 引用 {0} 份录音','Instrument definition · Uses {0} recordings'],
+ 'resources.completeRecording':['完整录音 · {0} 秒','Complete recording · {0} s'],
+ 'resources.performanceExcerpt':['演奏片段最长 {0} 秒；完整录音可在音源中使用','Performance clips up to {0} s; full recordings are available under Sources'],
  'resources.recordingHelp':['一份独立录音，可直接使用，也可在乐器中绑定到音符。','An individual recording you can use directly or assign to instrument notes.'],
  'resources.unpitched':['未标记音高（保持原速）','Unpitched (keep original speed)'],
  'resources.rootHelp':['如果这是单音录音，请选择真实音高，绑定其他音符时会自动变调。未标记时保持原速；不会自动识别音高。','For a single-note recording, select its actual pitch so other notes can transpose it. Unpitched recordings keep their original speed. Pitch is not detected automatically.'],

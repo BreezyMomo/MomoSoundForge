@@ -15,7 +15,11 @@
     "pretest": "node tools/build-builtin-library.mjs",
     "test": "vitest run",
     "ai:build": "node tools/build-ai-skill.mjs",
-    "ai:serve": "node tools/ai-server.mjs"
+    "ai:serve": "node tools/ai-server.mjs",
+    "audit:sources": "node tools/review-sound-sources.mjs",
+    "audit:inventory": "node tools/inventory-sound-assets.mjs",
+    "audit:instruments": "node tools/diagnose-instruments.mjs",
+    "audit:restore-mappings": "node tools/restore-author-mappings.mjs"
   },
   "dependencies": {
     "@ffmpeg/core": "0.12.10",

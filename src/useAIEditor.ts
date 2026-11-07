@@ -22,7 +22,7 @@ import { beforeSoundPolish } from './polishAudition';
 import JSZip from 'jszip';
 import { validateSampleSource } from './sampleSource';
 import { t } from './i18n';
-import { recordingResource } from './recordingSources';
+import { BUILTIN_RECORDINGS, loadBuiltinRecording } from './builtinRecordings';
 import { pitchName } from './noteEditing';
 
 export function bytesBase64(bytes: Uint8Array) {
@@ -91,12 +91,16 @@ export function useAIEditor(props: Props) {
           if(local){if(!id.startsWith('local:'))throw Error('resources.invalid');return {resource:await folderLibrary.load(id.slice(6)),destination:folderLibrary.destination};}
           if(id==='generator:oscillator')return {resource:resourceFromDefinition(BASIC_SYNTH,'builtin-synth-oscillator')};
           if(id.startsWith('preset:'))return {resource:resourceFromProject(fromPreset(id.slice(7),id.slice(7),k=>k),[],'builtin-preset-'+id.slice(7))};
-          const recording=id.startsWith('recording:')?BUILTIN_SOUNDS.flatMap(s=>(s.recordings??[]).map(r=>({sound:s,recording:r}))).find(r=>'recording:'+r.recording.id===id):undefined;
-          const entry=recording?.sound??BUILTIN_SOUNDS.find(s=>'builtin:'+s.id===id);if(!entry)throw Error('resources.missing');
+          if(id.startsWith('recording:')) {
+            const r=BUILTIN_RECORDINGS.find(r=>'recording:'+r.id===id);if(!r)throw Error('resources.missing');
+            const name=t('resources.recordingTitle',t(r.nameKey)+' · '+t('builtin.articulation.'+r.articulation),r.unpitched?t('resources.unpitched'):pitchName(r.rootMidi),r.velocityLow,r.velocityHigh,r.variant);
+            return {resource:await loadBuiltinRecording(r.id,name)};
+          }
+          const entry=BUILTIN_SOUNDS.find(s=>'builtin:'+s.id===id);if(!entry)throw Error('resources.missing');
           const p=await loadBuiltinSound(entry.id,builtinSoundName(entry));
           if(entry.kind==='instrument'){
             const parent=resourceFromDefinition({schema:'momo.instrument/v1',instrument:p.inputs[0].player.score!.instruments[0],assets:p.assets},'builtin-'+entry.id);
-            return {resource:recording?recordingResource(parent,recording.recording.id,t('resources.recordingTitle',builtinSoundName(entry,t,true),pitchName(recording.recording.rootMidi),recording.recording.velocityLow,recording.recording.velocityHigh,recording.recording.variant)):parent};
+            return {resource:{...parent,version:entry.revision??1,category:entry.category}};
           }
           if(entry.kind==='sample'){
             const audio=await render.current!.render(p),assetId='builtin-'+entry.id;
@@ -108,7 +112,7 @@ export function useAIEditor(props: Props) {
           {id:'generator:oscillator',name:t('resources.oscillator'),kind:'synth',category:'uncategorized'},
           ...PRESETS.map(p=>({id:'preset:'+p.id,name:t('preset.'+p.id),kind:'sound',category:p.category})),
           ...BUILTIN_SOUNDS.map(s=>({id:'builtin:'+s.id,name:builtinSoundName(s),kind:s.kind==='instrument'?'instrument':s.kind==='sample'?'recording':'sound',category:s.category})),
-          ...[...new Map(BUILTIN_SOUNDS.flatMap(s=>(s.recordings??[]).map(r=>[r.id,{id:'recording:'+r.id,name:t('resources.recordingTitle',builtinSoundName(s,t,true),pitchName(r.rootMidi),r.velocityLow,r.velocityHigh,r.variant),kind:'recording',category:s.category} as const] as const))).values()],
+          ...BUILTIN_RECORDINGS.map(r=>({id:'recording:'+r.id,name:t('resources.recordingTitle',t(r.nameKey)+' · '+t('builtin.articulation.'+r.articulation),r.unpitched?t('resources.unpitched'):pitchName(r.rootMidi),r.velocityLow,r.velocityHigh,r.variant),kind:'recording',category:r.category,duration:r.duration})),
         ];
         const q=String(args.query??'').toLowerCase(),filtered=items.filter(e=>(!args.kind||e.kind===args.kind)&&JSON.stringify(e).toLowerCase().includes(q));
         const offset=Math.max(0,Number(args.offset)||0);

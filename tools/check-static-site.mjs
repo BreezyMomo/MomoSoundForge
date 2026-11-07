@@ -9,7 +9,7 @@ for (const match of html.matchAll(/(?:src|href)="(\.\/[^"?#]+)"/g)) {
   await stat(path.resolve(root, match[1]));
 }
 const catalog = JSON.parse(await readFile("src/data/builtin-catalog.json", "utf8"));
-for (const sound of catalog.sounds) {
+for (const sound of [...catalog.sounds, ...catalog.recordings]) {
   const bytes = await readFile(path.join(root, "sound-library", sound.file));
   if (bytes.length !== sound.compressedBytes ||
       createHash("sha256").update(bytes).digest("hex") !== sound.sha256) {

@@ -17,7 +17,8 @@ import { Waveform } from './Waveform';
 import { SOUND_CATEGORIES, rememberSound } from './libraryPreferences';
 import { useResourcePreferences } from './useResourcePreferences';
 import { pitchName } from './noteEditing';
-import { recordingResource, type RecordingSummary } from './recordingSources';
+import { type RecordingSummary } from './recordingSources';
+import { BUILTIN_RECORDINGS, loadBuiltinRecording } from './builtinRecordings';
 import './resources.css';
 
 type Props = {
@@ -40,10 +41,12 @@ const filterKeys=(card:Card)=>[card.key,...card.relatedKeys??[]];
 const recordingKey=(_parent:Card,recording:RecordingSummary)=>'recording-builtin-'+recording.id;
 const recordingName=(parent:string,recording:RecordingSummary)=>t('resources.recordingTitle',parent,recording.unpitched?t('resources.unpitched'):pitchName(recording.rootMidi),recording.velocityLow,recording.velocityHigh,recording.variant);
 function recordingCard(parent:Card,recording:RecordingSummary):Card {
+  const complete=BUILTIN_RECORDINGS.find(r=>r.id===recording.id)!;
+  recording=complete;
   const name=recordingName(parent.name,recording);
   return {key:recordingKey(parent,recording),relatedKeys:filterKeys(parent),name,kind:'recording',source:parent.source,category:parent.category,recording,
-    description:t('resources.recordingDetail',recording.unpitched?t('resources.unpitched'):pitchName(recording.rootMidi),recording.velocityLow,recording.velocityHigh,recording.variant)+(recording.release?' · '+t('resources.releaseRecording'):''),
-    preview:[],load:async()=>recordingResource(await parent.load(),recording.id,name)};
+    description:t('resources.recordingDetail',recording.unpitched?t('resources.unpitched'):pitchName(recording.rootMidi),recording.velocityLow,recording.velocityHigh,recording.variant)+' · '+t('resources.completeRecording',complete.duration.toFixed(2))+(recording.release?' · '+t('resources.releaseRecording'):''),
+    preview:[],load:()=>loadBuiltinRecording(recording.id,name)};
 }
 export function SoundLibrary(props:Props) {
   const [manage,setManage]=useState(false);
@@ -87,10 +90,10 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const seenRecordings=new Set<string>();
   for(const s of BUILTIN_SOUNDS){
     const parent:Card={key:'builtin-'+s.id,relatedKeys:['builtin-'+builtinToneKey(s)],name:builtinSoundName(s),kind:s.kind==='instrument'?'instrument':s.kind==='sample'?'recording':'sound',source:'builtin',category:s.category,
-      description:s.kind==='instrument'?t('resources.instrumentDetail',s.recordings?.length??0):builtinSoundDescription(s),preview:s.waveform,
+      description:s.kind==='instrument'?t('resources.instrumentDetail',s.recordings?.length??0)+(s.tone?' · '+t('resources.performanceExcerpt',s.maxSourceSeconds):''):builtinSoundDescription(s),preview:s.waveform,
       load:async()=>{
         const p=await loadBuiltinSound(s.id,builtinSoundName(s));
-        if(s.kind==='instrument')return {...resourceFromDefinition({schema:'momo.instrument/v1',instrument:p.inputs[0].player.score!.instruments[0],assets:p.assets},'builtin-'+s.id),category:s.category};
+        if(s.kind==='instrument')return {...resourceFromDefinition({schema:'momo.instrument/v1',instrument:p.inputs[0].player.score!.instruments[0],assets:p.assets},'builtin-'+s.id),category:s.category,version:s.revision??1};
         if(s.kind==='sample'){
           const audio=await onRender(p),id='builtin-'+s.id;
           return {...resourceFromRecording({id,name:builtinSoundName(s),sampleRate:audio.sampleRate,channels:[encodeSamples(audio.left),encodeSamples(audio.right)]},null,id),category:s.category};

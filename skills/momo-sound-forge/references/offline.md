@@ -18,7 +18,10 @@ node scripts/cli.mjs render --input pickup-v2.soundforge --out pickup-v2.wav
 
 ```sh
 node scripts/cli.mjs fetch-sound --id <catalog中的ID> --site <编辑器URL> --out instrument.soundforge
+node scripts/cli.mjs fetch-recording --id <catalog.recordings中的ID> --site <编辑器URL> --out recording.sfresource
 ```
+
+`fetch-recording` 获取独立完整录音资源，保留原始音高、调音与增益，可继续使用 `resource-project` / `resource-render`。`fetch-sound` 中的部分乐器只内嵌最长 4 秒的演奏片段；不要从这些片段提取音频并称为完整录音。两条路径都按需下载并校验大小与哈希。
 
 目录版本不匹配时更新 Skill。离线没有网络时使用用户提供的带采样工程。生成音符后修改原有乐器声部的 player.score，保留实际映射；不要伪造乐器覆盖。
 

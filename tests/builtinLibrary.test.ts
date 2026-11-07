@@ -279,17 +279,21 @@ it("ships the original mapped regions in every range without including quarantin
       tone.id,
     ).toEqual([]);
     for (const region of score.instruments[0].regions) {
-      const source = sources.get(region.id);
+      const originalId = region.id.replace(/-velocity-\d+-\d+$/, "");
+      const source = sources.get(originalId);
       expect(source).toBeTruthy();
       expect(region).toMatchObject({
         rootMidi: source!.rootMidi,
         keyLow: source!.keyLow,
         keyHigh: source!.keyHigh,
-        velocityLow: Math.max(1, source!.velocityLow),
-        velocityHigh: source!.velocityHigh,
       });
+      const fragments = score.instruments[0].regions.filter(r => r.id.replace(/-velocity-\d+-\d+$/, "") === originalId)
+        .sort((a, b) => a.velocityLow - b.velocityLow);
+      expect(fragments[0].velocityLow).toBe(Math.max(1, source!.velocityLow));
+      expect(fragments.at(-1)!.velocityHigh).toBe(source!.velocityHigh);
+      fragments.slice(1).forEach((r, i) => expect(r.velocityLow).toBe(fragments[i].velocityHigh + 1));
       expect(region.loop).toBeUndefined();
-      shipped.add(region.id);
+      shipped.add(originalId);
     }
   }
   expect(shipped).toEqual(new Set(sources.keys()));
