@@ -1,5 +1,5 @@
 import { BASIC_SYNTH, parseSynth, synthValues, type SynthDefinition } from "./synthesizers";
-import { emptyScore, type Instrument } from "./instruments";
+import { emptyScore, noteEndSeconds, type Instrument } from "./instruments";
 import { makeLayer, makeProject, parseProject, projectForSave, uid, type Project, type SampleAsset } from "./model";
 export type InstrumentDefinition = {
   schema: "momo.instrument/v1";
@@ -28,6 +28,7 @@ export function definitionProject(raw: SoundDefinition, preview = false): Projec
       const r = instrument.regions[0];
       score.notes = [{ id: 'definition-audition', instrumentId: instrument.id, midi: Math.max(r.keyLow,Math.min(r.keyHigh,r.rootMidi)),
         velocity: Math.round((r.velocityLow + r.velocityHigh) / 2), articulation: r.articulation, start: 0, duration: 1 }];
+      p.duration = Math.max(p.duration, noteEndSeconds(score.notes[0], r, d.assets, score.bpm));
     }
     p.assets = structuredClone(d.assets);
     p.inputs = [makeLayer({ name: instrument.name, type: "instrument", score, duration: p.duration,

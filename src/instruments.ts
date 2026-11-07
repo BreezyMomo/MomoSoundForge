@@ -11,12 +11,16 @@ export type SampleRegion = {
   synthValues?: Record<string, number>;
   rootMidi: number;
   fixedPitch?: boolean;
+  /** One-shot recordings ignore note-off; sustain loops and release samples are bypassed. */
+  playback?: 'gate' | 'one-shot';
   keyLow: number;
   keyHigh: number;
   velocityLow: number;
   velocityHigh: number;
   articulation: string;
   roundRobin: number;
+  /** Explicit alternating group for per-note overrides with different recording pitches. */
+  playbackGroup?: string;
   tuneCents: number;
   gainDb: number;
   releaseSeconds: number;
@@ -28,6 +32,8 @@ export type Instrument = {
   name: string;
   source?: string;
   license?: string;
+  /** Intended keyboard range; unassigned notes inside it remain silent. */
+  keyRange?: { low: number; high: number };
   regions: SampleRegion[];
 };
 export type NoteEvent = {
@@ -92,6 +98,7 @@ export function validateScore(
     )
       fail();
     ids.add(inst.id);
+    if (inst.keyRange !== undefined && (!inst.keyRange || !integer(inst.keyRange.low, 0, 127) || !integer(inst.keyRange.high, inst.keyRange.low, 127))) fail();
     const regionIds = new Set<string>();
     for (const r of inst.regions) {
       if (
@@ -102,21 +109,24 @@ export function validateScore(
         (!r.synth && (!text(r.assetId) || !Object.hasOwn(assets, r.assetId))) ||
         !integer(r.rootMidi, 0, 127) ||
         (r.fixedPitch !== undefined && typeof r.fixedPitch !== 'boolean') ||
+        (r.playback !== undefined && r.playback !== 'gate' && r.playback !== 'one-shot') ||
         !integer(r.keyLow, 0, 127) ||
         !integer(r.keyHigh, r.keyLow, 127) ||
         !integer(r.velocityLow, 1, 127) ||
         !integer(r.velocityHigh, r.velocityLow, 127) ||
         !text(r.articulation, 60) ||
         !integer(r.roundRobin, 0, 127) ||
+        (r.playbackGroup!==undefined&&!text(r.playbackGroup)) ||
         !number(r.tuneCents, -1200, 1200) ||
         !number(r.gainDb, -60, 24) ||
         !number(r.releaseSeconds, 0.005, 3)
       )
         fail();
       regionIds.add(r.id);
+      if (inst.keyRange && (r.keyLow < inst.keyRange.low || r.keyHigh > inst.keyRange.high)) fail();
       if (r.synth) {
         r.synth = parseSynth(r.synth); r.synthValues = synthValues(r.synth,r.synthValues);
-        if (r.assetId !== '' || r.loop || r.releaseAssetId) fail();
+        if (r.assetId !== '' || r.loop || r.releaseAssetId || r.playback === 'one-shot') fail();
       }
       if (
         r.releaseAssetId !== undefined &&
@@ -175,6 +185,10 @@ export function compareNoteRegions(midi: number, a: SampleRegion, b: SampleRegio
     || a.velocityHigh - a.velocityLow - (b.velocityHigh - b.velocityLow)
     || a.id.localeCompare(b.id, "en");
 }
+export function sameRegionGroup(a:SampleRegion,b:SampleRegion){
+  return (a.playbackGroup||b.playbackGroup ? !!a.playbackGroup&&a.playbackGroup===b.playbackGroup : a.rootMidi===b.rootMidi)
+    &&a.keyLow===b.keyLow&&a.keyHigh===b.keyHigh&&a.velocityLow===b.velocityLow&&a.velocityHigh===b.velocityHigh;
+}
 export function selectRegion(
   instrument: Instrument | undefined,
   note: NoteEvent,
@@ -195,21 +209,14 @@ export function selectRegion(
   const first = candidates[0];
   if (!first) return;
   const group = candidates
-    .filter(
-      (r) =>
-        r.rootMidi === first.rootMidi &&
-        r.keyLow === first.keyLow &&
-        r.keyHigh === first.keyHigh &&
-        r.velocityLow === first.velocityLow &&
-        r.velocityHigh === first.velocityHigh,
-    )
+    .filter(r=>sameRegionGroup(r,first))
     .sort(
       (a, b) => a.roundRobin - b.roundRobin || a.id.localeCompare(b.id, "en"),
     );
   const key = JSON.stringify([
     instrument.id,
     note.articulation,
-    first.rootMidi,
+    first.playbackGroup??first.rootMidi,
     first.keyLow,
     first.keyHigh,
     first.velocityLow,
@@ -235,6 +242,7 @@ export function noteEndSeconds(
   const a = assets[region.assetId],
     rate = 2 ** (((region.fixedPitch ? 0 : note.midi - region.rootMidi) + region.tuneCents / 100) / 12);
   const available = channels(a)[0].length / a.sampleRate / rate;
+  if (region.playback === 'one-shot') return start + available;
   const main = region.loop
     ? held + region.releaseSeconds
     : Math.min(available, held + region.releaseSeconds);
@@ -278,7 +286,7 @@ export function scoreIssues(
     }
     const rate = 2 ** (((r.fixedPitch ? 0 : n.midi - r.rootMidi) + r.tuneCents / 100) / 12);
     const available = channels(asset)[0].length / asset.sampleRate / rate;
-    if (!r.loop && beatsToSeconds(n.duration, score.bpm) > available)
+    if (r.playback !== 'one-shot' && !r.loop && beatsToSeconds(n.duration, score.bpm) > available)
       warn("score.noSustain");
     if (noteEndSeconds(n, r, assets, score.bpm) > duration + 0.001)
       warn("score.tailClipped");
@@ -355,10 +363,12 @@ export function renderScore(
       held = Math.round(beatsToSeconds(note.duration, score.bpm) * sampleRate);
     const tail = Math.round(region.releaseSeconds * sampleRate),
       gain = (note.velocity / 127) * 10 ** (region.gainDb / 20),
-      loop = region.loop;
+      loop = region.playback === 'one-shot' ? undefined : region.loop;
+    const oneShot = region.playback === 'one-shot';
+    const frames = oneShot ? Math.ceil(data[0].length / step) : held + tail;
     let pos = 0;
-    for (let i = 0; i < held + tail && start + i < left.length; i++) {
-      const off = i >= held;
+    for (let i = 0; i < frames && start + i < left.length; i++) {
+      const off = !oneShot && i >= held;
       if (loop && pos >= loop.end)
         pos =
           loop.start +

@@ -13,6 +13,7 @@ import { DEFAULT_EFFECTS } from '../src/advanced';
 import { saveSoundToLibrary as saveLegacySound, listSavedSounds as listLegacySounds } from '../src/storage';
 import { saveDefinition } from '../src/definitionStorage';
 import { migrateBrowserLibrary } from '../src/libraryMigration';
+import {ProjectResourceOrigins,resourceOrigin} from '../src/resourceOrigin';
 
 class MemoryFolder {
   files=new Map<string,Uint8Array>();
@@ -56,6 +57,24 @@ const instrument=():InstrumentDefinition=>({schema:'momo.instrument/v1',instrume
 }]},assets:{}});
 beforeEach(()=>{vi.stubGlobal('indexedDB',new IDBFactory());vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{});});
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
+
+it('saves an opened work back to its original resource, advances undo snapshots, and refuses stale or switched destinations',async()=>{
+  const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());
+  const r=resourceFromProject(definitionProject(expression()));await lib.save(r);
+  const opened=resourceProject(await lib.load(r.id)),edited={...opened,name:'Edited'},origins=new ProjectResourceOrigins();
+  origins.inherit(opened,opened,resourceOrigin(r,lib.destination));origins.inherit(opened,edited);
+  const origin=origins.get(edited)!;
+  const updated={...resourceFromProject(edited),id:origin.id,version:origin.version};
+  const entry=await lib.save(updated,origin.version,origin.destination);
+  origins.saved(edited,resourceOrigin({...updated,version:entry.version},origin.destination));
+  expect(await lib.list('sound')).toHaveLength(1);
+  expect((await lib.load(r.id)).name).toBe('Edited');
+  expect(origins.get(opened)?.version).toBe(2);
+  await expect(lib.save(updated,1,origin.destination)).rejects.toThrow('resources.conflict');
+  await lib.connect(new MemoryFolder('Another library').handle());
+  await expect(lib.save(updated,origin.version,origin.destination)).rejects.toThrow('resources.conflict');
+  expect(await lib.list()).toHaveLength(0);
+});
 
 it('indexes individual recordings and detects inconsistent metadata while reading older indexes',async()=>{
   const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());

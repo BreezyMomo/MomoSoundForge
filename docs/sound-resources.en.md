@@ -8,21 +8,33 @@ Recordings are individual audio sources with original pitch, tuning and gain. Sy
 
 Recordings and synthesizers are sound sources; instruments are named note-to-source definitions. No instrument-package type is exposed. Every factory recording has its own item, with pitch, strength and take labels, deduplicated by audio asset. The default source view reports the total count, searches all resources and loads 48 cards at a time through Show more. Use the type filter to browse instrument definitions separately.
 
-Open **Sound resources** or **Manage resources** in the sidebar. Both views show the same built-in and local resources, searchable by type, source, category and name, with favorites and recent use. Cards offer **Create with synthesizer**, **Write notes with instrument**, or **Add to work**. Factory instruments retain their existing recording ranges.
+Open **Manage resources** beside the sidebar search field. Creation, imports and folder management live in this window; **More actions** on each card applies only to that resource. Both views show the same built-in and local resources, searchable by type, source, category and name, with favorites and recent use. Cards offer **Create with synthesizer**, **Write notes with instrument**, or **Add to work**. Factory instruments retain their existing recording ranges.
 
 Under **Manage resources**:
 
 1. **Create / open local library…** selects a folder. An empty folder receives a new index; an existing index is validated first.
 2. **Import recording…** adds one audio source. Select the actual original pitch of a single-note recording, or leave it unpitched to keep original speed. There is no automatic pitch detection. **New synthesizer** offers the basic oscillator or a custom numeric sound expression with parameters, defaults and preview.
-3. **New instrument** shows all notes from C-1 to G9 in one continuously scrolling list, with each note appearing once and its source on the right. There are no range switches, groups or jump controls. Click **Add sound source** for an empty note, or an existing source name to change it. The shared library offers built-in and local recordings and synthesizers. Its **Add sound source** shortcut reuses normal library creation/upload/import; a successful save automatically assigns the source to the target note. Rows have audition buttons. Shared ranges, strength and playing style remain under collapsed **More settings**.
+3. **New instrument** starts with a name and a lowest/highest note range (C4–C5 by default; existing instruments infer their mapped range). Assign at least one note to save or compose; filling every note is optional. **Unassigned only** helps find empty notes. Note names span their strength, playing-style and alternate-take rows. Click **Add sound source** or an existing source name to select a recording or synthesizer from the shared library. Its creation shortcut also supports drafts. Audition each row separately; **⋯** opens that row's optional controls.
 4. **Start blank music / sound** opens a work for composition; **Create music / sound from audio…** opens an imported recording for review and saving or insertion.
-5. **Save current work as resource** captures the entire current work. Explicitly select an existing sound as the save destination to publish a new version, or save as a new resource. Layer selection does not silently change the save scope.
+5. **Save current work as resource** captures the entire current work. Works opened from a local resource default to a new version in the current session; Save as creates a new resource. Layer selection does not silently change the save scope.
 
 A synthesizer creates a configurable generated sound. An instrument creates an empty score; add melody notes afterward. Editing factory resources creates personal copies. Closing with unsaved edits opens a centered confirmation. Keep editing or Escape preserves the draft; Discard changes and close exits only the current editor.
 
-An individual assignment changes only its note. Existing shared ranges stay intact; removing the individual setting restores shared coverage. Synthesizers retain generator snapshots. Recordings retain their original audio, pitch, tuning and gain. Assigning C3 audio to C4 transposes it up an octave, with a row label explaining the source pitch. Unpitched recordings keep their original speed, including shared key ranges. Library updates and deletion do not alter embedded copies. Canceling selection/creation leaves mappings unchanged. If a new resource saves successfully but assignment fails, the saved source is retained with a message to select it again.
+An individual assignment changes only its row for that note; other velocity layers are preserved. Existing shared ranges stay intact; removing the individual setting restores shared coverage. Synthesizers retain generator snapshots. Recordings retain their original audio, pitch, tuning and gain. Assigning C3 audio to C4 transposes it up an octave, with a row label explaining the source pitch. Unpitched recordings keep their original speed, including shared key ranges. Library updates and deletion do not alter embedded copies. Canceling selection/creation leaves mappings unchanged. If a new resource saves successfully but assignment fails, the saved source is retained with a message to select it again.
 
 Instrument auditions are controlled per row. The playing row shows Stop; choosing another note switches the audition, and completion restores Play. The footer contains save, export and composition actions, without global Preview/Stop buttons.
+
+### Extend an instrument as needed
+
+One source initially responds to every velocity at different volumes; three strength levels are not mandatory. Velocity in a recording's name describes the original material. The row's **Trigger velocity** controls its assignment in this instrument.
+
+- **Add strength level** splits the current band into two contiguous ranges. Existing sounds and takes stay in the softer range; choose a new source for the stronger range. Cancel leaves the mapping unchanged; one undo restores the whole operation.
+- **Add alternate take** adds a source to the same note, strength and playing style. Repeated notes rotate deterministically. Row auditions isolate the selected take.
+- **Add playing style** names a style such as plucked or short, then assigns a source. The note editor offers that style. Other notes do not acquire it automatically.
+- **Use for other notes…** copies the note's entire performance set into empty notes in a chosen range. Existing assignments are skipped. Recordings transpose from their original pitch, synthesizers generate at the target pitch, and unpitched recordings keep their original speed. No new recordings or articulations are generated.
+- **Recording playback** defaults to **Follow note length**, fading after note-off; short recordings are not automatically extended. **Play through on trigger** plays the recording to its end, ignoring note length and bypassing sustain loops and release samples. Those settings remain available when switching back. Parent crops and the work window can still cut playback short.
+
+Narrowing a range cannot silently delete assigned sources. More settings retains shared ranges and precise velocity/gain controls, affecting every covered note. Extension actions reject ambiguous overlapping velocity mappings outside alternate groups; resolve them explicitly before copying so pitch priorities cannot silently select a different source.
 
 ## Folder storage and migration
 
@@ -79,3 +91,13 @@ Commands refuse to overwrite. Resource rendering creates temporary audition note
 ## Verification scope
 
 2026-11-07: 36 test files / 330 tests, production build and static deployment verification pass. Chrome verifies six separate C3 recordings, preview, recording pitch editing, C3-to-C4 binding and per-row audition. Audio upload, first folder permission and subjective listening quality were not revalidated.
+
+## Resource editing updates (2026-11-07)
+
+Creation, preview, export and use do not require a library connection; only saving to the library does. Draft sources can be assigned directly to instrument notes. Resource dialogs have independent undo/redo with up to 30 steps. Text inputs retain native text undo; elsewhere in the dialog use Ctrl/Cmd+Z, Shift+Z or Ctrl/Cmd+Y.
+
+Instrument notes show separate rows for soft/hard velocity layers, playing styles and alternate takes. Each row previews and replaces its own sound, preserving its performance settings and neighboring notes. Shared ranges get per-note overrides, with overridden fallback rows hidden. Advanced controls can explicitly replace an entire shared region. Identical recording audio is stored once inside an instrument, with independent pitch/gain per mapping.
+
+Opening a local music/sound resource remembers its save destination during this session. Saving the work defaults to a new version of that resource; Save as creates a new identity. New/imported projects and switching libraries start a new save destination. This provenance is not serialized and is not restored after reload. Version conflicts are still rejected.
+
+When a search matches instruments hidden by the type filter, View instruments switches that filter while retaining the search and other filters.

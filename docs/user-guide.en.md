@@ -96,9 +96,11 @@ Shortcuts: Space to play/pause; Ctrl/Cmd+Z to undo; Ctrl/Cmd+Shift+Z to redo; Ct
 
 ## Use sound resources
 
-The sidebar and top-bar resource manager share the same factory and local resources. The default source view shows recordings and synthesizers; filter recordings, synthesizers, instrument definitions and music/sounds by type, source or category, with search, favorites and recent use. Each recording is a separate counted item, labeled with original pitch, strength and take. Instruments define note bindings. Search covers the entire library; Show more loads the next group of cards.
+The sidebar browses factory and local resources. Use **Manage resources** beside its search field to open the single management window for creation, imports and library connections. The default source view shows recordings and synthesizers; filter recordings, synthesizers, instrument definitions and music/sounds by type, source or category, with search, favorites and recent use. Each recording is a separate counted item, labeled with original pitch, strength and take. Instruments define note bindings. Search covers the entire library; Show more loads the next group of cards.
 
 Use **Create with synthesizer**, **Write notes with instrument** or **Add to work**. Instrument insertion starts with an empty score. Resource management offers editing/export; local resources can be deleted. Library changes never update existing work instances.
+
+**New instrument** starts with its name and note range, then source assignments. One assigned note is enough to compose; filling the range is optional. Audition or replace individual rows. Use **⋯** to add strength levels, styles or alternating takes, or fill other empty notes. Recording playback can follow note length or play through on trigger. Instrument edits have their own undo/redo history.
 
 Open a local folder in **Manage resources** before saving personal resources. Create synthesizers, define instruments, import resource files or upload audio. **Save current work as resource** captures the whole work; explicitly select an existing sound to publish a new version or save a new resource. Packages and indexes are read-verified after writing. Factory resources and work editing remain usable without a connected folder.
 
@@ -187,3 +189,5 @@ Use **Sound resources → Manage resources**. Synthesizers can use the basic osc
 Existing layers offer same-type resource selection. Timing and effects survive; instrument changes preserve notes. Cross-algorithm synth switches remove obsolete source-parameter macro mappings and cutoff automation, retaining start/gain/pan mappings. The work edit is undoable.
 
 See [Sound resources and local libraries](sound-resources.en.md) for folder storage, detailed steps and AI imports.
+
+Resource editors have independent undo/redo. Create, preview and use drafts without a library connection; choose a folder when saving. Instrument velocity layers and alternate takes have separate preview/replace rows. Works opened from a local resource default to saving a new version during the current session; Save as creates a new resource.

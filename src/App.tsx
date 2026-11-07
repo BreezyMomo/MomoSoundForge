@@ -1,3 +1,4 @@
+import { ProjectResourceOrigins, type ResourceOrigin } from './resourceOrigin';
 import { projectDocument } from './model';
 import { timeAtPath, timeFromPath, fitPlayerRange, resetPlayerRange, playerDuration } from "./playerPlayback";
 import {
@@ -144,6 +145,7 @@ export default function App() {
   const [librarySaveHost, setLibrarySaveHost] = useState<HTMLDivElement | null>(
     null,
   );
+  const resourceOrigins=useRef(new ProjectResourceOrigins());
   const [history, setHistory] = useState<{
     past: Project[];
     project: Project;
@@ -335,7 +337,7 @@ export default function App() {
     setProgress(0);
   }, [updateCue]);
   const editRoot = useCallback(
-    (change: (p: Project) => Project, key = "") => {
+    (change: (p: Project) => Project, key = "", origin?:ResourceOrigin|null) => {
       stop();
       const now = Date.now(),
         coalesce =
@@ -361,6 +363,7 @@ export default function App() {
           return h;
         }
         if (next === h.project) return h;
+        resourceOrigins.current.inherit(h.project,next,origin);
         return {
           past: coalesce ? h.past : [...h.past, h.project].slice(-50),
           project: next,
@@ -424,6 +427,7 @@ export default function App() {
       if (rootCurrent.current !== expected) throw Error("ai.stale");
       stop();
       editGroup.current = { key: "", time: 0 };
+      resourceOrigins.current.inherit(expected,next);
       flushSync(() =>
         setHistory((h) => ({
           past: [...h.past, h.project].slice(-50),
@@ -958,7 +962,7 @@ export default function App() {
   };
   async function openLibrarySound(id: string) {
     const next = await readSavedSound(id);
-    editRoot(() => nodeDocument(next));
+    editRoot(() => nodeDocument(next),"",null);
     scopeEpoch.current++;
     setEditPath([]);
     setTimelinePath([]);
@@ -981,7 +985,7 @@ export default function App() {
     const next = await readBuiltinSound(id);
     if (target !== rootCurrent.current || epoch !== scopeEpoch.current)
       throw Error("error.scopeChanged");
-    editRoot(() => nodeDocument(next));
+    editRoot(() => nodeDocument(next),"",null);
     scopeEpoch.current++;
     setEditPath([]);
     setTimelinePath([]);
@@ -1056,7 +1060,7 @@ export default function App() {
     const next = nodeDocument(
       fromPreset(id, t(`preset.${id}`), (key) => t(`layer.${key}`)),
     );
-    editRoot(() => nodeDocument(next));
+    editRoot(() => nodeDocument(next),"",null);
     scopeEpoch.current++;
     setEditPath([]);
     setTimelinePath([]);
@@ -1250,7 +1254,7 @@ export default function App() {
     try {
       if (file.size > 36 * 1024 * 1024) throw Error("error.fileSize");
       const next = nodeDocument(parseProject(JSON.parse(await file.text())));
-      editRoot(() => next);
+      editRoot(() => next,"",null);
       scopeEpoch.current++;
       setEditPath([]);
     setTimelinePath([]);
@@ -1497,8 +1501,8 @@ export default function App() {
     !!result &&
     fullContentEnd > history.project.duration + 1 / result.sampleRate;
   const compareName = project.inputs.find((l) => l.id === selected)?.name ?? "";
-  const openResourceProject = (next: Project) => {
-    stop(); editRoot(() => nodeDocument(next)); scopeEpoch.current++;
+  const openResourceProject = (next: Project, origin?:ResourceOrigin) => {
+    stop(); editRoot(() => nodeDocument(next),"",origin??null); scopeEpoch.current++;
     setEditPath([]); setTimelinePath([]); setSelected(next.inputs[0]?.id ?? "");
     updateCue(0); setVariations([]); manager.current?.show("editor");
   };
@@ -1506,6 +1510,8 @@ export default function App() {
     project: history.project, ready: ready && !ioBusy, playback: playing ?? pendingPlayback,
     currentAssets: project.assets,
     onInsert: insertSound, onOpen: openResourceProject,
+    origin: resourceOrigins.current.get(history.project),
+    onProjectSaved:(p:Project,origin:ResourceOrigin)=>{resourceOrigins.current.saved(p,origin);setHistory(h=>({...h}));},
     onPreview: (p: Project, key: string) => { void play(() => renderer.current!.render(p), key); },
     onStop: stop, onRender: (p: Project) => renderer.current!.render(p),
     onImportAudio: async (file: File): Promise<Project> => {
@@ -2099,7 +2105,7 @@ export default function App() {
             aria-label={t("file.new")}
             disabled={!ready || ioBusy}
             onClick={() => {
-              editRoot(() => defaultProject());
+              editRoot(() => defaultProject(),"",null);
               scopeEpoch.current++;
               setEditPath([]);
     setTimelinePath([]);
@@ -2145,9 +2151,6 @@ export default function App() {
           </button>
         </div>
         <div className="header-right">
-          <button disabled={!ready || ioBusy} onClick={() => {
-            stop(); setDefinitionEditor({ base: rootCurrent.current, path: [...pathRef.current] });
-          }}>{t("resources.title")}</button>
           <div ref={menu} className="layout-menu" />
           <AppearancePreferences />
           <LanguagePreferences />

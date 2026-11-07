@@ -2,7 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Button, Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter, WorkbenchNumberInput } from '@momo/workbench/react';
 import { t } from './i18n';
 import { BASIC_SYNTH, SYNTH_RANGES, type SynthDefinition, type SynthParameter } from './synthesizers';
-import { folderLibrary, type ResourceEntry } from './folderLibrary';
+import { folderLibrary } from './folderLibrary';
+import { createResourceDraft, changeResourceDraft, travelResourceDraft } from './resourceDraft';
 import { parseResource, resourceProject, type SoundResource } from './soundResources';
 import type { InstrumentDefinition } from './soundDefinitions';
 import { uid, type Project, type SampleAsset, type RenderResult } from './model';
@@ -17,29 +18,40 @@ export const resourceError = (e:unknown) => t(e instanceof Error && /^(instrumen
 export function NumberSetting({label,value,min=-1e6,max=1e6,step=1,onChange}: {label:string;value:number;min?:number;max?:number;step?:number;onChange:(n:number)=>void}) {
   return <label className="resource-field"><span>{label}</span><WorkbenchNumberInput label={label} value={value} min={min} max={max} step={step} onValueCommit={onChange}/></label>;
 }
-export function ResourceEditor({initial,owned=false,onClose,onUse,onOpen,onPreview,onStop,playback,binding=false,onChooseSource,onRender,onSaved,saveAndBindNote}: {
+export function ResourceEditor({initial,owned=false,onClose,onUse,onOpen,onPreview,onStop,playback,binding=false,onChooseSource,onRender,onSaved,onPersisted,saveAndBindNote}: {
   initial:SoundResource;owned?:boolean;onClose:()=>void;onUse:(r:SoundResource)=>Promise<void>|void;onPreview:(p:Project,key:string)=>void;onStop:()=>void;playback:string|null;
   onImportAudio:(file:File)=>Promise<SampleAsset>;currentAssets?:Project['assets'];binding?:boolean;
-  onOpen?:(r:SoundResource)=>void;
+  onOpen?:(r:SoundResource,owned:boolean,destination:number)=>void;
+  onPersisted?:(r:SoundResource,destination:number)=>void;
   onChooseSource:ChooseInstrumentSource;onRender:(p:Project)=>Promise<RenderResult>;
   onSaved?:(r:SoundResource)=>Promise<void>|void;saveAndBindNote?:string;
 }) {
-  const [draft,setDraft]=useState(()=>structuredClone(initial)), [dirty,setDirty]=useState(false), [closing,setClosing]=useState(false);
-  const [error,setError]=useState(''), [status,setStatus]=useState(''), [busy,setBusy]=useState(false), [isOwn,setOwn]=useState(owned);
-  const [targets,setTargets]=useState<ResourceEntry[]>([]);
+  const [history,setHistory]=useState(()=>createResourceDraft(structuredClone(initial))), [closing,setClosing]=useState(false);
+  const draft=history.present, dirty=draft!==history.baseline;
+  const emptyInstrument=draft.kind==='instrument'&&!(draft.payload as InstrumentDefinition).instrument.regions.length;
+  const editGroup=useRef<{element:Element|null;time:number}>({element:null,time:0});
+  const [error,setError]=useState(''), [status,setStatus]=useState(''), [busy,setBusy]=useState(false), [target,setTarget]=useState(owned?{id:initial.id,version:initial.version}:undefined);
+  const isOwn=!!target;
+  const savedTarget=useRef(target);
   const alive=useRef(true);
   const previewKey='resource-editor-'+useId();
   const closeButton=useRef<HTMLButtonElement>(null), keepEditingButton=useRef<HTMLButtonElement>(null);
-  const destination=useRef(folderLibrary.destination);
+  const destination=useRef(folderLibrary.destination), newId=useRef(uid());
   useEffect(()=>{alive.current=true;return()=>{alive.current=false;onStop();};},[]);
-  useEffect(()=>{if(initial.kind==='sound')void folderLibrary.list('sound').then(e=>{if(alive.current)setTargets(e);}).catch(e=>{if(alive.current)setError(resourceError(e));});},[]);
-  const change=(r:SoundResource)=>{onStop();setDraft(r);setDirty(true);setStatus('');setError('');};
+  const change=(r:SoundResource)=>{
+    onStop();const element=document.activeElement;
+    const text=element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement && element.type==='text';
+    const coalesce=text&&element===editGroup.current.element&&Date.now()-editGroup.current.time<700;
+    editGroup.current={element,time:Date.now()};
+    setHistory(h=>changeResourceDraft(h,r,coalesce));setStatus('');setError('');
+  };
+  const travel=(redo=false)=>{if(busy||closing)return;onStop();editGroup.current={element:null,time:0};setHistory(h=>travelResourceDraft(h,redo));setStatus('');setError('');};
   const clean=()=>{
     const payload=structuredClone(draft.payload) as SynthDefinition | InstrumentDefinition | Record<string,unknown>;
     if(draft.kind==='synth') (payload as SynthDefinition).name=draft.name;
     if(draft.kind==='instrument') (payload as InstrumentDefinition).instrument.name=draft.name;
     if(draft.kind==='sound') (payload as Record<string,unknown>).name=draft.name;
-    return parseResource({...draft,payload});
+    return parseResource({...draft,...(target??{id:newId.current,version:1}),payload});
   };
   const act=async(fn:()=>Promise<void>|void)=>{
     if(busy)return;setBusy(true);setError('');
@@ -47,13 +59,24 @@ export function ResourceEditor({initial,owned=false,onClose,onUse,onOpen,onPrevi
   };
   const save=(copy=false)=>void act(async()=>{
     const r=clean();if(copy) {r.id=uid();r.version=1;}
-    const entry=await folderLibrary.save(r,isOwn&&!copy?draft.version:undefined,destination.current);
-    if(alive.current){setDraft({...r,version:entry.version});setOwn(true);setDirty(false);setStatus(t('resources.saved'));}
+    const saveDestination=copy||!target?folderLibrary.destination:destination.current;
+    const entry=await folderLibrary.save(r,isOwn&&!copy?target.version:undefined,saveDestination);
+    destination.current=saveDestination;newId.current=uid();
+    if(alive.current){const identity={id:r.id,version:entry.version};setTarget(identity);savedTarget.current=identity;setHistory(h=>({...h,baseline:h.present}));editGroup.current={element:null,time:0};setStatus(t('resources.saved'));onPersisted?.({...r,version:entry.version},destination.current);}
     if(alive.current&&onSaved){try{await onSaved({...r,version:entry.version});}catch{throw Error('instrument.savedBindFailed');}}
   });
   const close=()=>{if(busy||closing)return;if(dirty){onStop();setClosing(true);}else onClose();};
-  return <Dialog open onOpenChange={open=>{if(!open)close();}}><DialogContent className={'resource-dialog'+(draft.kind==='instrument'?' instrument-resource-dialog':'')} showCloseButton={false}>
+  return <Dialog open onOpenChange={open=>{if(!open)close();}}><DialogContent className={'resource-dialog'+(draft.kind==='instrument'?' instrument-resource-dialog':'')} showCloseButton={false} onKeyDown={e=>{
+      // Portal events bubble through parents: only the nearest resource dialog owns this shortcut.
+      const owner=(e.target as HTMLElement).closest('.resource-dialog');
+      if(owner!==e.currentTarget&&!(owner===null&&(e.target as HTMLElement).closest('.instrument-note-popover')))return;
+      if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key.toLowerCase()==='z'||e.key.toLowerCase()==='y')){
+        if((e.target as HTMLElement).matches('input,textarea,[contenteditable="true"]'))return;
+        e.preventDefault();e.stopPropagation();travel(e.shiftKey||e.key.toLowerCase()==='y');
+      }
+    }}>
     <header className="resource-header"><DialogTitle>{t('resources.edit')} · {t('resources.'+draft.kind)}</DialogTitle><Button ref={closeButton} variant="ghost" onClick={close} disabled={busy}>{t('resources.close')}</Button></header>
+    <div className="button-group resource-history"><Button variant="outline" disabled={busy||!history.past.length} onClick={()=>travel()}>{t("resources.undo")}</Button><Button variant="outline" disabled={busy||!history.future.length} onClick={()=>travel(true)}>{t("resources.redo")}</Button></div>
     <div className="resource-editor-scroll"><fieldset disabled={busy} className="resource-editor-fields">
       <p>{t('resources.'+draft.kind+'Help')}</p>
       <div className={draft.kind==='instrument'?'instrument-name-field':'resource-metadata'}>
@@ -64,24 +87,25 @@ export function ResourceEditor({initial,owned=false,onClose,onUse,onOpen,onPrevi
         <label className="resource-field"><span>{t('resources.category')}</span><input maxLength={120} value={SOUND_CATEGORIES.includes(draft.category as never)?t('library.'+draft.category):draft.category} onChange={e=>change({...draft,category:e.target.value})}/></label>
         <label className="resource-field"><span>{t('resources.description')}</span><textarea rows={2} maxLength={2000} value={draft.description} onChange={e=>change({...draft,description:e.target.value})}/></label>
       </div></details>:<label className="resource-field"><span>{t('resources.description')}</span><textarea rows={2} maxLength={2000} value={draft.description} onChange={e=>change({...draft,description:e.target.value})}/></label>}
-      {draft.kind==='sound'&&targets.length>0&&<label className="resource-field"><span>{t('resources.saveTarget')}</span><select value={isOwn?draft.id:''} onChange={e=>{
-        const target=targets.find(t=>t.id===e.target.value);setOwn(!!target);change({...draft,id:target?.id??uid(),version:target?.version??1});
-      }}><option value="">{t('resources.newResource')}</option>{targets.map(e=><option key={e.id} value={e.id}>{e.name} · {t('resources.version',e.version)}</option>)}</select></label>}
+      {draft.kind==='sound'&&savedTarget.current&&<label className="resource-field"><span>{t('resources.saveTarget')}</span><select value={isOwn?'original':'new'} onChange={e=>setTarget(e.target.value==='original'?savedTarget.current:undefined)}>
+        <option value="original">{initial.name} · {t('resources.update')}</option><option value="new">{t('resources.newResource')}</option>
+      </select></label>}
       {draft.kind==='synth'&&<SynthEditor synth={draft.payload as SynthDefinition} onChange={s=>change({...draft,payload:s})}/>}
       {draft.kind==='recording'&&<RecordingEditor recording={draft.payload as RecordingDefinition} onChange={r=>change({...draft,payload:r})}/>}
       {draft.kind==='instrument'&&<InstrumentEditor definition={draft.payload as InstrumentDefinition} onChange={d=>change({...draft,payload:d})}
         onChooseSource={onChooseSource} onRender={onRender} onStop={onStop} onError={error=>setError(resourceError(error))} onPreview={onPreview} playback={playback} previewKey={previewKey}/>}
-      {draft.kind==='sound'&&onOpen&&!onSaved&&<p className="field-help">{t('resources.soundHelp')} <Button variant="outline" onClick={()=>void act(()=>onOpen(clean()))}>{t('resources.open')}</Button></p>}
+      {draft.kind==='sound'&&onOpen&&!onSaved&&<p className="field-help">{t('resources.soundHelp')} <Button variant="outline" onClick={()=>void act(()=>onOpen(clean(),isOwn,destination.current))}>{t('resources.open')}</Button></p>}
     </fieldset></div>
     <footer className="resource-footer"><p className="field-help">{t('resources.snapshot')}</p>
-      {!folderLibrary.connected&&<p className="field-help">{t('resources.noFolder')} <Button variant="outline" onClick={()=>void act(async()=>{await folderLibrary.choose();destination.current=folderLibrary.destination;})}>{t('resources.choose')}</Button></p>}
+      {emptyInstrument&&<p className="field-help" role="status">{t('instrument.emptyHelp')}</p>}
+      {!folderLibrary.connected&&<p className="field-help">{t('resources.noFolder')} <Button variant="outline" onClick={()=>void act(async()=>{await folderLibrary.choose();destination.current=folderLibrary.destination;setTarget(undefined);savedTarget.current=undefined;})}>{t('resources.choose')}</Button></p>}
       <div className="button-group">
         {draft.kind!=='instrument'&&<><Button variant="outline" disabled={busy} onClick={()=>void act(()=>onPreview(resourceProject(clean(),true),previewKey))}>{t('resources.listen')}</Button>
         <Button variant="outline" onClick={onStop}>{t('resources.stop')}</Button></>}
-        <Button variant={onSaved?'default':'outline'} disabled={busy||!folderLibrary.connected} onClick={()=>save()}>{onSaved?t('instrument.saveAndBind',saveAndBindNote):t(isOwn?'resources.update':'resources.save')}</Button>
-        {!onSaved&&<Button variant="outline" disabled={busy||!folderLibrary.connected} onClick={()=>save(true)}>{t('resources.copy')}</Button>}
-        <Button variant="outline" disabled={busy} onClick={()=>void act(()=>{const r=clean();download(JSON.stringify(r,null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
-        {!onSaved&&<Button disabled={busy} onClick={()=>void act(()=>onUse(clean()))}>{t(binding?'resources.bind':draft.kind==='synth'?'resources.useSynth':draft.kind==='instrument'?'resources.useInstrument':draft.kind==='recording'?'resources.useRecording':'resources.use')}</Button>}
+        <Button variant={onSaved?'default':'outline'} disabled={busy||emptyInstrument||!folderLibrary.connected} onClick={()=>save()}>{onSaved?t('instrument.saveAndBind',saveAndBindNote):t(isOwn?'resources.update':'resources.save')}</Button>
+        {!onSaved&&<Button variant="outline" disabled={busy||emptyInstrument||!folderLibrary.connected} onClick={()=>save(true)}>{t('resources.copy')}</Button>}
+        <Button variant="outline" disabled={busy||emptyInstrument} onClick={()=>void act(()=>{const r=clean();download(JSON.stringify(r,null,2),safeFilename(r.name)+'.sfresource','application/json');})}>{t('resources.export')}</Button>
+        <Button disabled={busy||emptyInstrument} onClick={()=>void act(()=>onUse(clean()))}>{onSaved?t('instrument.useDraft',saveAndBindNote):t(binding?'resources.bind':draft.kind==='synth'?'resources.useSynth':draft.kind==='instrument'?'resources.useInstrument':draft.kind==='recording'?'resources.useRecording':'resources.use')}</Button>
       </div>
       {(error||status||busy)&&<p role={error?'alert':'status'}>{error|| (busy?t('resources.working'):status)}</p>}
     </footer>
