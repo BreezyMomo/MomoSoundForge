@@ -78,10 +78,8 @@ function resource(raw: unknown = fixture()) {
   };
 }
 
-it("ships audible defaults for timpani, harp and low flute", async () => {
+it("ships an audible playable low flute definition", async () => {
   for (const id of [
-    "instrument-17-timpani-2-Cs3-single-hit",
-    "instrument-06-harp-1-C3-single-hit",
     "tone-flute-sustain-60-70",
   ]) {
     const sound = BUILTIN_SOUNDS.find((s) => s.id === id)!;

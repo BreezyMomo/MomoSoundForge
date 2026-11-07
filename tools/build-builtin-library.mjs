@@ -73,7 +73,7 @@ for (const sample of orchestra.samples) {
   const group = [sample.instrumentId, sample.rootMidi, sample.articulation, sample.velocityLow, sample.velocityHigh].join(":");
   const variant = (variants.get(group) ?? 0) + 1; variants.set(group, variant);
   jobs.push({
-    id: `instrument-${sample.id}`, kind: "instrument", nameKey: `builtin.instrument.${sample.instrumentId}`,
+    id: `recording-${sample.id}`, kind: "instrument", recordingOnly: true, nameKey: `builtin.instrument.${sample.instrumentId}`,
     category: sample.family, source: `${orchestraRoot}/${sample.wavFile}`, sample,
     rootNote: sample.rootNote, velocity: `${sample.velocityLow}–${sample.velocityHigh}`,
     variant, articulation: sample.articulation, recordingIds: [recordingId(sample)],
@@ -261,6 +261,11 @@ try {
       return Number(peak.toFixed(6));
     });
     const summaries = job.kind === 'instrument' ? recordingSummaries({schema:'momo.instrument/v1',instrument:project.inputs[0].player.score.instruments[0],assets:project.assets}) : undefined;
+    if (job.recordingOnly) for (const summary of summaries) {
+      summary.velocityLow = job.sample.velocityLow;
+      summary.velocityHigh = job.sample.velocityHigh;
+      summary.variant = job.variant;
+    }
     const completeRecordings = summaries ? await buildRecordings(job, project, summaries, assetGains, root, output) : [];
     for (const recording of completeRecordings) {
       const pcm=builtinPCM(gunzipSync(await readFile(path.join(output,recording.file))),recording),ref=await audioReference(pcm);
@@ -268,6 +273,9 @@ try {
       audioObjects.set(ref.audioId,{...recording,id:ref.audioId,format:'wav16'});
       if (!recordings.has(recording.id)) recordings.set(recording.id, recording);
     }
+    // Standalone takes are recording resources, never selectable instruments.
+    // The temporary score above only calibrates their preview level and release.
+    if (job.recordingOnly) continue;
     const stored = job.tone ? parseProject(await shareBuiltinRecordings(project, completeRecordings, output)) : project;
     const graph=await sealResource(resourceFromProject(stored,[],job.id),async(ref,pcm)=>{
       if(audioObjects.has(ref.audioId))return;

@@ -17,10 +17,11 @@ const load = createBuiltinRecordingLoader(BUILTIN_RECORDINGS, async url => new R
 const sha = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 
 
-it('ships exactly one complete, verified working WAV per instrument recording', async () => {
+it('ships unique verified working WAVs for instrument mappings and standalone takes', async () => {
   const expected = new Set(BUILTIN_SOUNDS.flatMap(s => (s.recordings ?? []).map(r => r.id)));
-  expect(new Set(BUILTIN_RECORDINGS.map(r => r.id))).toEqual(expected);
-  expect(BUILTIN_RECORDINGS.length).toBe(expected.size);
+  const ids = new Set(BUILTIN_RECORDINGS.map(r => r.id));
+  for (const id of expected) expect(ids.has(id)).toBe(true);
+  expect(ids.size).toBe(BUILTIN_RECORDINGS.length);
   const sourceHashes = new Map<string, { frames: number; hash: string }>();
   for (const collection of ['orchestra-basics-20261104', 'orchestra-expanded-20261105', 'vcsl-kawai-20261107', 'orchestra-complete-20261107']) {
     const m = JSON.parse(readFileSync(`samples/${collection}/manifest.json`, 'utf8'));
@@ -65,10 +66,15 @@ it('loads the complete flute tail without a parent download and preserves the or
 it('keeps legacy gain passes and unpitched percussion metadata', async () => {
   for (const r of [BUILTIN_RECORDINGS.find(r => r.assetGains.length)!, BUILTIN_RECORDINGS.find(r => r.unpitched)!]) {
     const full = await load(r.id), d = full.payload as RecordingDefinition;
-    const parent = BUILTIN_SOUNDS.find(s => s.recordings?.some(x => x.id === r.id))!;
-    const p = await projectFromGraph(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${parent.file}`)).toString()));
-    const bytes=await createAudioReader(async url=>new Response(readFileSync('public'+url)),'/')(p.assets[r.id]);
-    expect(d.asset.channels.map(c=>createHash('sha256').update(c).digest('hex'))).toEqual(audioChannels(bytes).map(encodeSamples).map(c=>createHash('sha256').update(c).digest('hex')));
+    const wav = gunzipSync(bytesOf(r));
+    for (let channel = 0; channel < 2; channel++) {
+      const expected = Float32Array.from({length:r.frames}, (_, i) => {
+        let value = wav.readInt16LE(44 + i * 4 + channel * 2) / 32768;
+        for (const gain of r.assetGains) value = Math.fround(value * gain);
+        return value;
+      });
+      expect(decodeSamples(d.asset.channels[channel])).toEqual(expected);
+    }
     expect(d.rootMidi).toBe(r.unpitched ? null : r.rootMidi);
     expect(d.asset.source?.license).toBe('CC0-1.0');
   }

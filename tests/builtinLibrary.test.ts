@@ -87,7 +87,7 @@ it("indexes all collected samples and examples with matching categories, semanti
   );
   expect(
     BUILTIN_SOUNDS.filter((x) => x.kind === "instrument" && !x.tone && !x.completeInstrument),
-  ).toHaveLength(34);
+  ).toHaveLength(0);
   for (const [id, recordings] of Object.entries({
     "instrument-vsco-solo-violin": 90,
     "instrument-vsco-clarinet": 97,
@@ -198,14 +198,14 @@ it("uses translated built-in labels while names of opened independent projects r
   expect(pristine.inputs[0].gain).not.toBe(0);
   expect(renderProject(await createSamplePreparer()(pristine)).left).toEqual(renderProject(fixture()).left);
   expect(opened.name).toBe("我的钢琴");
-  const instrument = BUILTIN_SOUNDS.find((x) => x.kind === "instrument")!;
+  const instrument = BUILTIN_SOUNDS.find((x) => x.tone)!;
   const translate = (key: string, ...args: unknown[]) =>
     `${key}:${args.join("|")}`;
   expect(builtinSoundName(instrument, translate)).toContain(
-    "builtin.instrumentVariant",
+    instrument.nameKey,
   );
   expect(builtinSoundDescription(instrument, translate)).toContain(
-    "builtin.instrumentDetails",
+    "builtin.toneDetails",
   );
 });
 

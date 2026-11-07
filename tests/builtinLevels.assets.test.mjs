@@ -1,25 +1,34 @@
-import { projectFromGraph, prepareTestProject } from './helpers/resourceGraph';
 import { expect, it } from 'vitest';
-import { legacyInstrumentLevels, standaloneBoostDb } from '../tools/builtin-levels.mjs';
 import { levels } from '../tools/audit-builtin-library.mjs';
-import { readFileSync, existsSync } from 'node:fs';
-import { gunzipSync } from 'node:zlib';
-import { parseProject } from '../src/model';
+import { readFileSync } from 'node:fs';
 import { renderProject } from '../src/engine';
+import { BUILTIN_RECORDINGS, createBuiltinRecordingLoader } from '../src/builtinRecordings';
+import { resourceProject } from '../src/soundResources';
+import { createRemoteLoader, parseRemoteIndex } from '../src/remoteLibrary';
+
+it('ships audible standalone timpani and harp recordings with original pitch metadata', async () => {
+  const load = createBuiltinRecordingLoader(BUILTIN_RECORDINGS, async url => new Response(readFileSync(`public${url}`)), '/');
+  for (const id of ['17-timpani-2-Cs3-single-hit', '06-harp-1-C3-single-hit']) {
+    const resource = await load(id);
+    expect(resource.kind).toBe('recording');
+    expect(resource.payload.rootMidi).toBe(BUILTIN_RECORDINGS.find(r => r.id === id).rootMidi);
+    const audio = renderProject(resourceProject(resource));
+    const measured = levels([audio.left, audio.right], audio.sampleRate);
+    expect(measured.status).toBe('ok');
+    expect(audio.peak).toBeGreaterThan(.03);
+    expect(audio.sourcePeak).toBeLessThan(1);
+  }
+});
 
 
-it('renders the shipped timpani at usable default loudness and retains velocity control', async () => {
-    const catalog = JSON.parse(readFileSync('src/data/builtin-catalog.json', 'utf8'));
-    expect(catalog.sounds.some(s => s.id === 'instrument-17-timpani-1-Fs2-single-hit')).toBe(false);
-    const sound = catalog.sounds.find(s => s.id === 'instrument-17-timpani-2-Cs3-single-hit');
-    const project = await projectFromGraph(JSON.parse(gunzipSync(readFileSync(`public/sound-library/${sound.file}`))));
-    const ready=await prepareTestProject(project);project.assets=ready.assets;
-    const normal = renderProject(project);
-    const measured = levels([normal.left, normal.right], normal.sampleRate);
-    expect(measured.activeRmsDb).toBeGreaterThanOrEqual(-20.1);
-    expect(normal.peak).toBeGreaterThan(.2);
-    (project.inputs[0].player.score).notes[0].velocity = 50;
-    expect(renderProject(project).peak / normal.peak).toBeCloseTo(.5, 4);
-    (project.inputs[0].player.score).notes[0].velocity = 127;
-    expect(renderProject(project).sourcePeak).toBeLessThan(.8);
+it('publishes standalone takes as recordings in the actual selectable library', async () => {
+  const url = 'http://localhost/sound-library/index.json';
+  const index = parseRemoteIndex(JSON.parse(readFileSync('public/sound-library/index.json', 'utf8')), url);
+  const load = createRemoteLoader(index, url, async url => new Response(readFileSync('public' + new URL(url).pathname)));
+  for (const id of ['17-timpani-2-Cs3-single-hit', '06-harp-1-C3-single-hit']) {
+    expect(index.entries.some(e => e.id === 'instrument-' + id)).toBe(false);
+    const entry = index.entries.find(e => e.id === 'builtin-recording-' + id);
+    expect(entry?.kind).toBe('recording');
+    expect((await load(entry)).kind).toBe('recording');
+  }
 });
