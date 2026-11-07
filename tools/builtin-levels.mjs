@@ -1,6 +1,10 @@
 // Restore the author's balance as a baseline before setting standalone defaults.
 // This baseline is shared across pitches/articulations; multisample banks never
 // receive per-take loudness normalization.
+// Math.pow/log10 can differ by one double-precision ULP between Node platforms.
+// Generated calibration controls need stable serialized values, far below PCM precision.
+export const stableCalibrationGain = value => Number(value.toFixed(12));
+
 export function standaloneBoostDb(measured) {
   if (measured.peakDb === null || measured.activeRmsDb === null) throw Error('Silent standalone source');
   // A usable default, not just a non-silence gate. Keep 6 dB peak headroom at

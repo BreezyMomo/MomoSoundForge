@@ -2,7 +2,7 @@ import { readAsset } from './sound-asset-store.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { gzipSync } from 'node:zlib';
+import { deterministicGzip as gzipSync } from './deterministic-gzip.mjs';
 import { recordingId } from './builtin-instruments.mjs';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 

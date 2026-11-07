@@ -1,12 +1,13 @@
 import { assetResolver, fileDigest, walkFiles } from './sound-asset-store.mjs';
 import { pianoJob, pianoProject } from './builtin-vcsl-piano.mjs';
 import { createServer } from "vite";
-import { gzipSync, gunzipSync } from "node:zlib";
+import { gunzipSync } from "node:zlib";
+import { deterministicGzip as gzipSync } from './deterministic-gzip.mjs';
 import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir, stat, copyFile, readdir, realpath, unlink } from "node:fs/promises";
 import path from "node:path";
 import { instrumentJobs, instrumentProject, recordingId } from "./builtin-instruments.mjs";
-import { legacyInstrumentLevels, standaloneBoostDb } from "./builtin-levels.mjs";
+import { legacyInstrumentLevels, standaloneBoostDb, stableCalibrationGain } from "./builtin-levels.mjs";
 import { buildRecordings } from "./builtin-recordings.mjs";
 import { shareBuiltinRecordings } from './share-builtin-recordings.mjs';
 import { levels } from "./audit-builtin-library.mjs";
@@ -223,7 +224,7 @@ try {
       const measured = levels([audio.left, audio.right], audio.sampleRate);
       if (measured.status === "silent" || audio.sourcePeak >= 1) throw Error(`Review SFX default: ${job.id}`);
       const gainDb = Math.min((job.natureSfx ? -23 : -20) - measured.activeRmsDb, -6 - 20 * Math.log10(audio.sourcePeak));
-      project.master = Math.min(1.5, project.master * 10 ** (gainDb / 20));
+      project.master = stableCalibrationGain(Math.min(1.5, project.master * 10 ** (gainDb / 20)));
       project = parseProject(projectForSave(project));
       audio = await renderAudio(project);
     }

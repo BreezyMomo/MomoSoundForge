@@ -54,7 +54,7 @@ export const RESOURCE_MESSAGES: Record<string,[string,string]> = {
  'resources.error':['操作失败，请检查文件夹权限、资源内容和剩余磁盘空间。','Operation failed. Check folder permissions, resource contents and free disk space.'],
  'resources.saved':['资源已保存到本地库','Resource saved to the local library'],
  'resources.import':['导入资源文件…','Import resource file…'],
- 'resources.importHint':['支持 .sfresource、.sfsynth、.sfinstrument 和 .soundforge；导入后先检查与试听，再保存到本地库。','Import .sfresource, .sfsynth, .sfinstrument or .soundforge. Review and preview before saving to the local library.'],
+ 'resources.importHint':['支持 .sfresource 和 .soundforge；导入后先检查与试听，再保存到本地库。','Import .sfresource or .soundforge. Review and preview before saving to the local library.'],
  'resources.importAudio':['上传音频创建音乐／音效…','Create music / sound from audio…'],
  'resources.newMusic':['开始空白音乐／音效','Start blank music / sound'],
  'resources.current':['保存当前作品为资源','Save current work as resource'],
