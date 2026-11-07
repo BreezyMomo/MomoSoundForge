@@ -87,7 +87,16 @@ it("indexes all collected samples and examples with matching categories, semanti
   );
   expect(
     BUILTIN_SOUNDS.filter((x) => x.kind === "instrument" && !x.tone && !x.completeInstrument),
-  ).toHaveLength(43);
+  ).toHaveLength(34);
+  for (const [id, recordings] of Object.entries({
+    "instrument-vsco-solo-violin": 90,
+    "instrument-vsco-clarinet": 97,
+    "instrument-vsco-trombone": 86,
+  })) {
+    const instrument = BUILTIN_SOUNDS.find((sound) => sound.id === id);
+    expect(instrument?.completeInstrument, id).toBe(true);
+    expect(instrument?.recordingIds, id).toHaveLength(recordings);
+  }
   expect(BUILTIN_SOUNDS.filter((x) => x.kind === "sample")).toHaveLength(126);
   expect(BUILTIN_SOUNDS.filter((x) => x.kind === "example")).toHaveLength(30);
   for (const sound of BUILTIN_SOUNDS) {
