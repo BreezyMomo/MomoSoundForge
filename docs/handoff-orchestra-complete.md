@@ -141,3 +141,12 @@ Chrome 实测工具栏放大、手形拖动改变 scrollLeft 且撤销仍不可�
 - 正式浏览器已验证中提琴三份独立录音可搜索并进入试听播放；用户 5202 开发页订阅已恢复为正式线上目录。
 - [主站任务](https://github.com/BreezyMomo/MomoSoundForge/actions/runs/42399453802) 已成功构建和部署。正式页面 JS/CSS 文件名与本地外置构建一致；Chrome 确认新版添加轨道、时间轴导航入口，以及选择乐器中 78 个定义。验证创建的空轨道已撤销，截图 test-results/published-instrument-library.png。
 - 正式入口：https://breezymomo.github.io/MomoSoundForge/ 。本轮部署与应用验证完成；此前个人本地库“资源无效”问题未在本轮处理。
+
+
+### 本地库错误诊断与隔离（2026-11-08，未发布）
+
+- 已定位用户旧提示的实际原因：E:/UnityProjects/MomoSoundLocalLibrary/index.json 为 momo.sound-library/v1，仅一条“乐器绑定示例音源”；当前文件夹库使用 v2。未自动迁移、删除或修改个人资源文件。
+- FolderLibrary.inspect 区分不支持版本、目录缺失／损坏及单条元数据异常。坏条目与重复 ID 单独报告，正常条目继续列出并加载；写入仍严格校验整个目录，防止容错读取后保存时丢掉异常条目。
+- 资源加载失败会携带资源名称和对应文件位置；本地库诊断与普通操作错误分开显示。侧栏折叠详情，管理窗口展开，提供重新检查、选择其他库／空文件夹新建库、关闭连接入口。
+- 410 项测试通过，覆盖旧库只读诊断、坏条目隔离、重复 ID、写入保护、缺失依赖定位与正常资源继续加载。页面构建通过（复用已生成音库）；Chrome 验证旧库诊断、重新检查、展开详情及线上录音列表仍显示。
+- 截图 test-results/local-library-diagnostics.png。未提交、推送或部署本轮修复；此前发布记录不代表本轮已上线。

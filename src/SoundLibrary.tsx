@@ -7,7 +7,7 @@ import { BASIC_SYNTH } from './synthesizers';
 import { t, language } from './i18n';
 import { remoteLibraries } from './remoteSubscriptions';
 import { RemoteLibrarySettings } from './RemoteLibrarySettings';
-import { folderLibrary, libraryReady, onLibraryChange, type ResourceEntry } from './folderLibrary';
+import { folderLibrary, libraryReady, onLibraryChange, type ResourceEntry, type LibraryIssue } from './folderLibrary';
 import { importResource, resourceFromDefinition, resourceFromProject, resourceFromRecording, resourceProject, RESOURCE_BYTES, type SoundResource, type ResourceKind } from './soundResources';
 import { resourceOrigin, type ResourceOrigin } from './resourceOrigin';
 import { ResourceEditor, resourceError } from './ResourceEditor';
@@ -54,6 +54,7 @@ export function ResourceManager({onClose,...props}:Props&{onClose:()=>void}) {
 function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const {project,ready,playback,onInsert,onOpen,onPreview,onStop,onImportAudio,onRender,bindingType,onBind,stale,sourceSelection}=props;
   const [entries,setEntries]=useState<ResourceEntry[]>([]),[query,setQuery]=useState(''),[kind,setKind]=useState<LibraryKind|''>(bindingType??'source'),[source,setSource]=useState('');
+  const [libraryIssues,setLibraryIssues]=useState<LibraryIssue[]>([]),[libraryError,setLibraryError]=useState('');
   const [error,setError]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
   const [loadProgress,setLoadProgress]=useState<(RemoteLoadProgress&{name:string})|null>(null);
   const loadController=useRef<AbortController|null>(null);
@@ -64,7 +65,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
   const audioMode=useRef<'recording'|'sound'>('recording');
   const file=useRef<HTMLInputElement>(null),audio=useRef<HTMLInputElement>(null),latest=useRef(project),alive=useRef(true);
   latest.current=project;
-  const refresh=async()=>{try{await libraryReady;const list=await folderLibrary.list();if(alive.current){setEntries(list);setError('');}}catch(e){if(alive.current)setError(resourceError(e));}};
+  const refresh=async()=>{try{await libraryReady;const report=await folderLibrary.inspect();if(alive.current){setEntries(report.entries);setLibraryIssues(report.issues);setLibraryError('');}}catch(e){if(alive.current){setEntries([]);setLibraryIssues([]);setLibraryError(resourceError(e));}}};
   useEffect(()=>{alive.current=true;void refresh();
     const off=onLibraryChange(()=>void refresh());return()=>{alive.current=false;loadController.current?.abort();off();};},[]);
   const run=async(fn:()=>Promise<void>|void)=>{if(busy)return;setBusy(true);setError('');setStatus('');try{await fn();}catch(e){if((e as DOMException).name!=='AbortError'&&alive.current)setError(resourceError(e));}finally{if(alive.current){setBusy(false);setLoadProgress(null);}}};
@@ -131,6 +132,27 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     {subscriptions.some(s=>s.enabled&&s.loading)&&<p role="status" className="field-help">{t('remote.loading')}</p>}
     {subscriptions.some(s=>s.enabled&&s.error)&&<p role="alert" className="field-help">{t('remote.problem')}</p>}
     {props.expanded&&<RemoteLibrarySettings/>}
+    {(libraryIssues.length>0||libraryError)&&<section className="resource-library-problems" aria-label={t('resources.localProblems',folderLibrary.name)}>
+      <strong>{t('resources.localProblems',folderLibrary.name)}</strong>
+      {libraryError&&<p role="alert">{libraryError}</p>}
+      {libraryIssues[0]?.reason==='resources.libraryVersion'&&<p role="status">{t('resources.libraryVersionShort')}</p>}
+      <details open={props.expanded||undefined}><summary>{t('resources.problemDetails')}</summary>
+      {libraryIssues.length>0&&<>
+        <p role="status">{t('resources.localProblemHint',entries.length,libraryIssues.length)}</p>
+        <ul>{libraryIssues.map((issue,i)=><li key={i}>
+          {issue.name&&<strong>{issue.name} · </strong>}<span>{t(issue.reason)}</span>
+          <small>{t('resources.problemFile',issue.file)}</small>
+        </li>)}</ul>
+      </>}
+      <div className="button-group">
+        {libraryError&&folderLibrary.connected&&<Button variant="outline" disabled={busy} onClick={()=>void run(()=>folderLibrary.authorize())}>{t('resources.authorize')}</Button>}
+        <Button variant="outline" disabled={busy} onClick={()=>void refresh()}>{t('resources.retryLibrary')}</Button>
+        <Button variant="outline" disabled={busy} onClick={()=>void run(()=>folderLibrary.choose())}>{t('resources.chooseOtherLibrary')}</Button>
+        {folderLibrary.connected&&<Button variant="outline" disabled={busy} onClick={()=>void run(()=>folderLibrary.disconnect())}>{t('resources.disconnect')}</Button>}
+      </div>
+      <small>{t('resources.problemFilesPreserved')}</small>
+      </details>
+    </section>}
     {bindingType&&<p className="field-help">{t(bindingType==='instrument'?'add.voiceHint':'resources.bindingHint')}</p>}
     {stale&&<p className="field-help" role="alert">{t('error.scopeChanged')}</p>}
     {props.initialDefinition&&<Button variant="outline" disabled={busy} onClick={()=>openEditor(resourceFromDefinition(props.initialDefinition!))}>{t('resources.fromCurrent')}</Button>}

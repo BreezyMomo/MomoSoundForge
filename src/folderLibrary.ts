@@ -7,6 +7,10 @@ import type { InstrumentDefinition } from './soundDefinitions';
 import type { RecordingDefinition } from './recordingDefinition';
 
 export type ResourceEntry = Omit<SoundResource, 'schema' | 'payload'> & { contentId?:string; file: string; hash: string; updatedAt: number; duration?:number;layerCount?:number;recordings?:RecordingSummary[];sourceFingerprint?:string;sourceResourceIds?:string[] };
+export type LibraryIssue = { file: string; name?: string; reason: string };
+export class LibraryIssueError extends Error {
+  constructor(public readonly issue: LibraryIssue) { super(issue.reason); }
+}
 type Index = { schema: 'momo.sound-library/v2'; id: string; name: string; entries: ResourceEntry[] };
 type Directory = FileSystemDirectoryHandle & { queryPermission?: (p: {mode: 'readwrite'}) => Promise<string>; requestPermission?: (p: {mode: 'readwrite'}) => Promise<string> };
 const encode = new TextEncoder();
@@ -52,7 +56,7 @@ export class FolderLibrary {
   }
   async connect(folder: Directory) {
     await this.permission(folder, true);
-    const old = await this.readIndex(folder);
+    const old = await this.readIndex(folder, true);
     if (!old) {
       const state={schema:'momo.sound-library/v2',id:uid(),name:folder.name,entries:[]};
       const create=async()=>{if(await this.readIndex(folder))return;await this.write(folder,'index.json',encode.encode(JSON.stringify(state)));};
@@ -87,46 +91,85 @@ export class FolderLibrary {
     const actual = await this.read(folder, path);
     if (!actual || await hash(actual) !== await hash(data)) throw Error('resources.verify');
   }
-  private async readIndex(folder: Directory): Promise<{index: Index; revision: string} | null> {
+  private async readIndex(folder: Directory, tolerant = false): Promise<{index: Index; revision: string; issues: LibraryIssue[]} | null> {
     const bytes = await this.read(folder, 'index.json', 4 * 1024 * 1024); if (!bytes) return null;
-    const index = JSON.parse(new TextDecoder().decode(bytes)) as Index;
-    if (index.schema !== 'momo.sound-library/v2' || typeof index.id !== 'string' || !index.id || typeof index.name !== 'string' ||
-      !Array.isArray(index.entries) || index.entries.length > 2000 || new Set(index.entries.map(e => e.id)).size !== index.entries.length) throw Error('resources.invalid');
-    for (const e of index.entries) if (!e || !pathOK.test(e.file) || typeof e.id !== 'string' || !/^[a-zA-Z0-9-]{1,120}$/.test(e.id) ||
-      e.file !== `resources/${e.id}-v${e.version}-${e.hash}.sfresource` || !/^[a-f0-9]{64}$/.test(e.hash) || !Number.isSafeInteger(e.version) || e.version < 1 ||
-      typeof e.name !== 'string' || !e.name.trim() || e.name.length > 120 || !['recording','synth','instrument','sound'].includes(e.kind) ||
-      typeof e.category !== 'string' || e.category.length > 120 || typeof e.description !== 'string' || e.description.length > 2000 || !Number.isFinite(e.updatedAt) ||
-      !Array.isArray(e.preview) || e.preview.length > 160 || e.preview.some(x => !Number.isFinite(x) || Math.abs(x) > 1)) throw Error('resources.invalid');
-    for(const e of index.entries)if(e.kind==='sound'&&(!Number.isFinite(e.duration)||e.duration!<0.1||!Number.isInteger(e.layerCount)||e.layerCount!<0||e.layerCount!>128))throw Error('resources.invalid');
-    for(const e of index.entries)if(e.recordings!==undefined){if(e.kind!=='instrument')throw Error('resources.invalid');e.recordings=parseRecordingSummaries(e.recordings);}
-    for(const e of index.entries){
-      if(e.sourceFingerprint!==undefined&&(!['recording','synth'].includes(e.kind)||!/^[a-f0-9]{64}$/.test(e.sourceFingerprint)))throw Error('resources.invalid');
-      if(e.sourceResourceIds!==undefined&&(e.kind!=='instrument'||!Array.isArray(e.sourceResourceIds)||e.sourceResourceIds.length>192||e.sourceResourceIds.some(id=>typeof id!=='string'||!/^[a-zA-Z0-9-]{1,120}$/.test(id))))throw Error('resources.invalid');
+    const fail = (reason: string): never => { throw new LibraryIssueError({file:'index.json',reason}); };
+    let index: Index;
+    try { index = JSON.parse(new TextDecoder().decode(bytes)); } catch { return fail('resources.indexUnreadable'); }
+    if (!index || typeof index !== 'object') return fail('resources.indexUnreadable');
+    if (index.schema !== 'momo.sound-library/v2') return fail('resources.libraryVersion');
+    if (typeof index.id !== 'string' || !index.id || typeof index.name !== 'string' ||
+      !Array.isArray(index.entries) || index.entries.length > 2000) return fail('resources.indexUnreadable');
+    const issues: LibraryIssue[] = [], entries: ResourceEntry[] = [];
+    const counts = new Map<string,number>();
+    for (const e of index.entries) if (e && typeof e.id === 'string') counts.set(e.id,(counts.get(e.id)??0)+1);
+    for (const [position,e] of index.entries.entries()) {
+      try {
+        if (!e || !pathOK.test(e.file) || typeof e.id !== 'string' || !/^[a-zA-Z0-9-]{1,120}$/.test(e.id) ||
+          e.file !== `resources/${e.id}-v${e.version}-${e.hash}.sfresource` || !/^[a-f0-9]{64}$/.test(e.hash) || !Number.isSafeInteger(e.version) || e.version < 1 ||
+          typeof e.name !== 'string' || !e.name.trim() || e.name.length > 120 || !['recording','synth','instrument','sound'].includes(e.kind) ||
+          typeof e.category !== 'string' || e.category.length > 120 || typeof e.description !== 'string' || e.description.length > 2000 || !Number.isFinite(e.updatedAt) ||
+          !Array.isArray(e.preview) || e.preview.length > 160 || e.preview.some(x => !Number.isFinite(x) || Math.abs(x) > 1)) throw Error('resources.entryInvalid');
+        if (counts.get(e.id)! > 1) throw Error('resources.entryDuplicate');
+        if (e.kind==='sound' && (!Number.isFinite(e.duration)||e.duration!<0.1||!Number.isInteger(e.layerCount)||e.layerCount!<0||e.layerCount!>128)) throw Error('resources.entryInvalid');
+        if (e.recordings!==undefined) { if(e.kind!=='instrument')throw Error('resources.entryInvalid');e.recordings=parseRecordingSummaries(e.recordings); }
+        if(e.sourceFingerprint!==undefined&&(!['recording','synth'].includes(e.kind)||!/^[a-f0-9]{64}$/.test(e.sourceFingerprint)))throw Error('resources.entryInvalid');
+        if(e.sourceResourceIds!==undefined&&(e.kind!=='instrument'||!Array.isArray(e.sourceResourceIds)||e.sourceResourceIds.length>192||e.sourceResourceIds.some(id=>typeof id!=='string'||!/^[a-zA-Z0-9-]{1,120}$/.test(id))))throw Error('resources.entryInvalid');
+        entries.push(e);
+      } catch (error) {
+        const issue = {file:`index.json · #${position+1}`,name:typeof e?.name==='string'?e.name.slice(0,120):undefined,
+          reason:error instanceof Error && error.message==='resources.entryDuplicate'?'resources.entryDuplicate':'resources.entryInvalid'};
+        if (!tolerant) throw new LibraryIssueError(issue);
+        issues.push(issue);
+      }
     }
-    return {index, revision: await hash(bytes)};
+    return {index:{...index,entries}, revision:await hash(bytes), issues};
   }
-  async list(kind?: ResourceKind) { const folder=this.folder,token=this.token;if (!folder) return []; await this.permission(folder); const state = await this.readIndex(folder);
-    if(token!==this.token)throw Error('resources.conflict');
-    if (!state) throw Error('resources.invalid'); return state.index.entries.filter(e => !kind || e.kind === kind).sort((a,b) => b.updatedAt-a.updatedAt); }
+  async inspect() {
+    const folder=this.folder,token=this.token;
+    if (!folder) return {entries:[] as ResourceEntry[],issues:[] as LibraryIssue[]};
+    await this.permission(folder);
+    try {
+      const state=await this.readIndex(folder,true);
+      if(token!==this.token)throw Error('resources.conflict');
+      if(!state)throw new LibraryIssueError({file:'index.json',reason:'resources.indexMissing'});
+      return {entries:state.index.entries.sort((a,b)=>b.updatedAt-a.updatedAt),issues:state.issues};
+    } catch(error) {
+      if(token!==this.token)throw Error('resources.conflict');
+      if(error instanceof LibraryIssueError)return {entries:[] as ResourceEntry[],issues:[error.issue]};
+      throw error;
+    }
+  }
+  async list(kind?: ResourceKind) {
+    const report=await this.inspect();
+    return report.entries.filter(e=>!kind||e.kind===kind);
+  }
   async load(id: string) {
     const folder = this.folder, token = this.token; if (!folder) throw Error('resources.noFolder');
     const entry = (await this.list()).find(e => e.id === id); if (!entry) throw Error('resources.missing');
+    let problemFile=entry.file;
+    try {
     const data = await this.read(folder, entry.file); if (!data || await hash(data) !== entry.hash) throw Error('resources.verify');
     const manifest = JSON.parse(new TextDecoder().decode(data));
     if(!Array.isArray(manifest.objectIds)||manifest.objectIds.length>30000||new Set(manifest.objectIds).size!==manifest.objectIds.length)throw Error('resources.invalid');
     const objects:ResourceGraph['objects']=Object.create(null);
     let graphBytes=data.length;
     for(const key of manifest.objectIds){if(typeof key!=='string'||!/^(node|synth|instrument)-[a-f0-9]{64}$/.test(key))throw Error('resources.invalid');
-      const bytes=await this.read(folder,`objects/${key}.json`,GRAPH_BYTES);if(!bytes)throw Error('resources.missing');if((graphBytes+=bytes.length)>GRAPH_BYTES)throw Error('resources.budget');objects[key]=JSON.parse(new TextDecoder().decode(bytes));}
+      problemFile=`objects/${key}.json`;const bytes=await this.read(folder,problemFile,GRAPH_BYTES);if(!bytes)throw Error('resources.missing');if((graphBytes+=bytes.length)>GRAPH_BYTES)throw Error('resources.budget');objects[key]=JSON.parse(new TextDecoder().decode(bytes));}
+    problemFile=entry.file;
     const {resource:r,audio}=await openResourceGraph({...manifest,objects});
     if(manifest.root!==entry.contentId)throw Error('resources.conflict');
     if (r.id !== id || r.version !== entry.version || r.kind !== entry.kind || r.name!==entry.name || r.category!==entry.category || r.description!==entry.description || JSON.stringify(r.preview)!==JSON.stringify(entry.preview) || token !== this.token) throw Error('resources.conflict');
     if(entry.recordings!==undefined&&JSON.stringify(entry.recordings)!==JSON.stringify(recordingSummaries(r.payload as InstrumentDefinition)))throw Error('resources.conflict');
     if(entry.sourceFingerprint!==undefined&&entry.sourceFingerprint!==await this.sourceFingerprint(r))throw Error('resources.conflict');
     // Cache the full closure separately from listings so draft reload and undo survive disconnecting the folder.
-    for(const [audioId]of audio){const bytes=await this.read(folder,`audio/${audioId}.pcm.gz`);if(!bytes)throw Error('resources.missing');await cacheAudio(audioId,await decompressAudio(bytes),bytes);}
+    for(const [audioId]of audio){problemFile=`audio/${audioId}.pcm.gz`;const bytes=await this.read(folder,problemFile);if(!bytes)throw Error('resources.missing');await cacheAudio(audioId,await decompressAudio(bytes),bytes);}
     if(typeof indexedDB==='undefined')for(const [audioId]of audio)registerAudioProvider(audioId,async()=>{const bytes=await this.read(folder,`audio/${audioId}.pcm.gz`);if(!bytes)throw Error('resources.missing');return decompressAudio(bytes);});
     return r;
+    } catch(error) {
+      const reason=error instanceof Error && /^resources\./.test(error.message)?error.message:'resources.entryInvalid';
+      throw new LibraryIssueError({file:problemFile,name:entry.name,reason});
+    }
   }
   private mutate<T>(action: (folder: Directory, state: {index: Index; revision: string}, check: () => void) => Promise<T>): Promise<T> {
     const folder = this.folder, token = this.token;

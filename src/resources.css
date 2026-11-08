@@ -67,3 +67,7 @@
 .resource-load-progress progress { width: 100%; accent-color: var(--ui-accent); }
 .resource-load-progress p { margin: 0; }
 .resource-load-progress small { overflow-wrap: anywhere; }
+
+.resource-library-problems { border:1px solid var(--border); border-radius:8px; padding:12px; margin:8px 0; overflow-wrap:anywhere; }
+.resource-library-problems p,.resource-library-problems ul { margin:8px 0; }
+.resource-library-problems small { display:block; margin-top:6px; opacity:.8; }

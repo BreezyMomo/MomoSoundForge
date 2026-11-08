@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Button, Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter, WorkbenchNumberInput } from '@momo/workbench/react';
 import { t } from './i18n';
 import { BASIC_SYNTH, SYNTH_RANGES, type SynthDefinition, type SynthParameter } from './synthesizers';
-import { folderLibrary } from './folderLibrary';
+import { folderLibrary, LibraryIssueError } from './folderLibrary';
 import { createResourceDraft, changeResourceDraft, travelResourceDraft } from './resourceDraft';
 import { parseResource, resourceProject, type SoundResource } from './soundResources';
 import type { InstrumentDefinition } from './soundDefinitions';
@@ -15,7 +15,7 @@ import type { RecordingDefinition } from './recordingDefinition';
 import { pitchName } from './noteEditing';
 import './resources.css';
 
-export const resourceError = (e:unknown) => t(e instanceof Error && /^(remote\.|instrument\.|resources\.|library\.|error\.|score\.|definition\.)/.test(e.message) ? e.message : 'resources.error');
+export const resourceError = (e:unknown):string => e instanceof LibraryIssueError ? t('resources.fileProblem',e.issue.name??e.issue.file,e.issue.file,t(e.issue.reason==='resources.verify'?'resources.loadVerify':e.issue.reason)) : t(e instanceof Error && /^(remote\.|instrument\.|resources\.|library\.|error\.|score\.|definition\.)/.test(e.message) ? e.message : 'resources.error');
 export function NumberSetting({label,value,min=-1e6,max=1e6,step=1,onChange}: {label:string;value:number;min?:number;max?:number;step?:number;onChange:(n:number)=>void}) {
   return <label className="resource-field"><span>{label}</span><WorkbenchNumberInput label={label} value={value} min={min} max={max} step={step} onValueCommit={onChange}/></label>;
 }

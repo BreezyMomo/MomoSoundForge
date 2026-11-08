@@ -1,7 +1,7 @@
 import { prepareProjectSamples } from '../src/prepareSamples';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
-import { FolderLibrary, folderLibrary } from '../src/folderLibrary';
+import { FolderLibrary, folderLibrary, LibraryIssueError } from '../src/folderLibrary';
 import { parseResource, resourceFromDefinition, resourceFromProject, resourceFromRecording, resourceProject, importResource } from '../src/soundResources';
 import { BASIC_SYNTH, parseSynth, expressionVoice, type SynthDefinition } from '../src/synthesizers';
 import { compileExpression } from '../src/synthExpression';
@@ -106,7 +106,8 @@ it('indexes individual recordings and detects inconsistent metadata while readin
   index.entries[0].recordings[0].rootMidi=61;write();
   await expect(lib.load(r.id)).rejects.toThrow('resources.conflict');
   index.entries[0].recordings[0].variant=0;write();
-  await expect(lib.list()).rejects.toThrow('resources.invalid');
+  expect((await lib.list()).some(e=>e.id===r.id)).toBe(false);
+  expect((await lib.inspect()).issues[0].reason).toBe('resources.entryInvalid');
   delete index.entries[0].recordings;write();
   expect((await lib.load(r.id)).id).toBe(r.id);
 });
@@ -180,7 +181,7 @@ it('keeps the old index on disk failure and rejects missing, tampered and traver
   disk.failWrite='';expect((await lib.load(r.id)).name).toBe(r.name);
   disk.files.set(entry.file,new TextEncoder().encode('{}'));await expect(lib.load(r.id)).rejects.toThrow('resources.verify');
   const index=JSON.parse(new TextDecoder().decode(disk.files.get('index.json')));index.entries[0].file='../private.json';
-  disk.files.set('index.json',new TextEncoder().encode(JSON.stringify(index)));await expect(lib.list()).rejects.toThrow('resources.invalid');
+  disk.files.set('index.json',new TextEncoder().encode(JSON.stringify(index)));expect(await lib.list()).toEqual([]);expect((await lib.inspect()).issues[0].reason).toBe('resources.entryInvalid');
 });
 it('rejects writes without permission or a folder, and prevents cross-folder delayed writes',async()=>{
   const lib=library(),a=new MemoryFolder(),b=new MemoryFolder('B'),r=resourceFromDefinition(expression());
@@ -264,4 +265,53 @@ it('validates resource metadata, versions, sample dependencies and mixed sample/
   const clean=resourceFromDefinition(d),p=resourceProject(clean,true);expect(p.assets.wave).toBeDefined();
   expect(parseProject(projectDocument(p)).inputs[0].player.score!.instruments[0].regions).toHaveLength(2);
   delete d.assets.wave;expect(()=>resourceFromDefinition(d)).toThrow();
+});
+
+
+it('reports an unsupported restored library without rewriting its index or resources',async()=>{
+  const disk=new MemoryFolder('Old library');
+  const bytes=new TextEncoder().encode(JSON.stringify({schema:'momo.sound-library/v1',id:'old',name:'Old library',entries:[]}));
+  disk.files.set('index.json',bytes);
+  const lib=new FolderLibrary({read:async()=>disk.handle(),write:async()=>{}});
+  await lib.restore();
+  expect(await lib.inspect()).toEqual({entries:[],issues:[{file:'index.json',reason:'resources.libraryVersion'}]});
+  await expect(lib.save(resourceFromDefinition(expression()))).rejects.toThrow('resources.libraryVersion');
+  expect(disk.files.get('index.json')).toEqual(bytes);
+  expect(disk.files.size).toBe(1);
+});
+
+it('isolates invalid and duplicate index entries while allowing healthy resources to load, and blocks lossy writes',async()=>{
+  const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());
+  const resource=resourceFromDefinition(expression());await lib.save(resource);
+  const index=JSON.parse(new TextDecoder().decode(disk.files.get('index.json')));
+  const duplicate={...index.entries[0],id:'duplicate',name:'Duplicate'};
+  duplicate.file=`resources/duplicate-v1-${duplicate.hash}.sfresource`;
+  index.entries.push(null,{...index.entries[0],id:'broken',name:'Broken',file:'../outside'},duplicate,duplicate);
+  const damaged=new TextEncoder().encode(JSON.stringify(index));disk.files.set('index.json',damaged);
+  await lib.connect(disk.handle());
+  const report=await lib.inspect();
+  expect(report.entries.map(e=>e.id)).toEqual([resource.id]);
+  expect(report.issues.map(e=>e.reason)).toEqual(['resources.entryInvalid','resources.entryInvalid','resources.entryDuplicate','resources.entryDuplicate']);
+  expect((await lib.load(resource.id)).payload).toEqual(resource.payload);
+  await expect(lib.save({...resource,name:'Edited'},1)).rejects.toBeInstanceOf(LibraryIssueError);
+  await expect(lib.remove(resource.id,1)).rejects.toBeInstanceOf(LibraryIssueError);
+  expect(disk.files.get('index.json')).toEqual(damaged);
+});
+
+it('identifies the affected resource and missing dependency file without blocking other resources',async()=>{
+  const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());
+  const bad=resourceFromDefinition(expression()),good=resourceFromDefinition({...structuredClone(BASIC_SYNTH),id:'other',name:'Other'});
+  const badEntry=await lib.save(bad);await lib.save(good);
+  const manifest=JSON.parse(new TextDecoder().decode(disk.files.get(badEntry.file)));
+  const file=`objects/${manifest.objectIds[0]}.json`;disk.files.delete(file);
+  await expect(lib.load(bad.id)).rejects.toMatchObject({issue:{file,name:bad.name,reason:'resources.missing'}});
+  expect((await lib.load(good.id)).name).toBe(good.name);
+});
+
+it('distinguishes unreadable and missing indexes from resource validation errors',async()=>{
+  const lib=library(),disk=new MemoryFolder();await lib.connect(disk.handle());
+  disk.files.set('index.json',new TextEncoder().encode('{broken'));
+  expect((await lib.inspect()).issues[0]).toEqual({file:'index.json',reason:'resources.indexUnreadable'});
+  disk.files.delete('index.json');
+  expect((await lib.inspect()).issues[0]).toEqual({file:'index.json',reason:'resources.indexMissing'});
 });
