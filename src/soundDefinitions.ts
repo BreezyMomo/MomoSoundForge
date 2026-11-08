@@ -70,6 +70,8 @@ export function bindDefinition(project: Project, id: string, raw: SoundDefinitio
     instrument.regions = instrument.regions.map(r => ({ ...r, assetId: r.synth ? '' : mapping.get(r.assetId)!,
       ...(r.releaseAssetId ? { releaseAssetId: mapping.get(r.releaseAssetId)! } : {}) }));
     input.player.score = { ...(input.player.score ?? emptyScore()), instruments: [instrument],
+      // Keep the note values intact. The editor exposes mapping choices for
+      // uncovered notes instead of silently changing the user's composition.
       notes: (input.player.score?.notes ?? []).map(n => ({ ...n, instrumentId: instrument.id })) };
   }
   // All parent read settings, notes, own effects and the player body duration survive selection.

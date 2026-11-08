@@ -1,6 +1,7 @@
 import { GAME_SFX_MESSAGES } from "./gameSfxMessages";
 import { NATURE_MESSAGES } from "./natureMessages";
 const instruments: Record<string, [string, string]> = {
+  "vcsl-kawai": ["钢琴", "Piano"],
   "violin-section": ["小提琴组", "Violin section"],
   "solo-violin": ["独奏小提琴", "Solo violin"],
   "viola-section": ["中提琴组", "Viola section"],

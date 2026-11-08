@@ -30,6 +30,8 @@ export const RESOURCE_MESSAGES: Record<string,[string,string]> = {
  'resources.visibleCount':['共 {0} 项','{0} items'],
  'resources.showMore':['继续显示 {0} 项（剩余 {1} 项）','Show {0} more ({1} remaining)'],
  'resources.recordingCount':['{0} 份独立录音','{0} individual recordings'],
+ 'resources.instrumentVariants':['{0} 个音域与演奏法变体','{0} range and articulation variants'],
+ 'resources.chooseInstrumentVariant':['选择音域与演奏法（{0}）','Choose range and articulation ({0})'],
  'resources.indexSourcesHint':['有 {0} 个旧版乐器尚未将引用的音源单独加入声音库。整理后可逐份查看和使用，乐器的声音与版本保持不变。','Sources used by {0} older instruments have not been added individually to the library. Add them to browse and use each source; instrument audio and versions stay unchanged.'],
  'resources.indexSources':['将旧版乐器音源加入声音库','Add older instrument sources to the library'],
  'resources.useRecording':['用这份录音创作','Create with this recording'],

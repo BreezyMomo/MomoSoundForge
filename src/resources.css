@@ -44,6 +44,12 @@
  .resource-card .field-help { max-height:5em;overflow:auto; }
  .resource-card>details { margin-top:10px; }
  .resource-card>details .button-group { margin-top:8px; }
+ .resource-variants { margin:10px 0; border-top:1px solid var(--ui-line); padding-top:8px; }
+ .resource-variants summary { cursor:pointer; color:var(--ui-muted); font-size:12px; }
+ .resource-variant-list { display:grid; gap:8px; margin-top:8px; }
+ .resource-variant { display:flex; align-items:center; justify-content:space-between; gap:8px; border-radius:6px; background:var(--ui-panel); padding:7px 8px; font-size:12px; }
+ .resource-variant>span { min-width:0; overflow-wrap:anywhere; }
+ .resource-variant .button-group { flex-shrink:0; }
  .resource-status { overflow-wrap:anywhere; }
  .resource-close-confirmation[data-slot="dialog-content"] { width:min(440px,calc(100vw - 32px)); max-width:calc(100vw - 32px); max-height:calc(100dvh - 32px); overflow:auto; }
  .resource-close-confirmation [data-slot="dialog-description"] { overflow-wrap:anywhere; }

@@ -86,6 +86,7 @@ const words: Record<string, [string, string]> = {
     "Suggestion: {0} · strength {1}% · {2}",
   ],
   "note.coverage.apply": ["应用建议", "Apply suggestion"],
+  "note.coverage.choose": ["选择可用映射", "Choose a playable mapping"],
   "roll.coverage": [
     "音符 {0} · {1} · {2} · 强弱 {3}%：有录音 {4}",
     "Note {0} · {1} · {2} · strength {3}%: recordings at {4}",

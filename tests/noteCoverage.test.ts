@@ -10,6 +10,7 @@ import {
   playablePitches,
   pitchRanges,
   suggestPlayableNote,
+  playableNoteCandidates,
   velocityPercent,
   percentVelocity,
   constrainNotePitch,
@@ -209,6 +210,36 @@ describe("recorded note coverage", () => {
         missing,
       ),
     ).toEqual(result);
+  });
+  it("exposes multiple playable mappings so the editor can let users choose", () => {
+    const choices = playableNoteCandidates(instrument, {
+      ...note,
+      articulation: "missing-style",
+      midi: 65,
+      velocity: 40,
+    });
+    expect(choices.length).toBeGreaterThan(1);
+    expect(choices.every((candidate) => !noteCoverageIssue(instrument, candidate))).toBe(true);
+    expect(choices[0]).toEqual(suggestPlayableNote(instrument, {
+      ...note,
+      articulation: "missing-style",
+      midi: 65,
+      velocity: 40,
+    }));
+  });
+  it("can repair a note after switching to a complete instrument mapping", () => {
+    const switched = {
+      ...note,
+      instrumentId: "piano",
+      articulation: "harmonics",
+      midi: 90,
+      velocity: 120,
+    };
+    const repaired = suggestPlayableNote(instrument, switched)!;
+    expect(noteCoverageIssue(instrument, repaired)).toBeUndefined();
+    expect(repaired.start).toBe(switched.start);
+    expect(repaired.duration).toBe(switched.duration);
+    expect(repaired.id).toBe(switched.id);
   });
   it("maps strengths to valid engine values while preserving endpoints", () => {
     expect([1, 127].map(velocityPercent)).toEqual([1, 100]);

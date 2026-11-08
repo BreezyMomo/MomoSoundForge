@@ -75,6 +75,23 @@ it("switches an instrument without changing notes, read settings or effects, rem
   expect(parseProject(projectDocument(result)).inputs[0].player.score).toEqual(bound.player.score);
   expect(p.inputs[0].player.score!.instruments[0].id).toBe("keys");
 });
+it("preserves uncovered notes for the editor to resolve after switching instruments", () => {
+  const p = definitionProject(instrument(), true), input = p.inputs[0];
+  input.player.score!.notes[0] = {
+    ...input.player.score!.notes[0],
+    midi: 90,
+    articulation: "missing-style",
+  };
+  const next = instrument();
+  next.instrument.id = "other";
+  const bound = bindDefinition(p, input.id, next).inputs[0];
+  const note = bound.player.score!.notes[0];
+  expect(note.instrumentId).toBe("other");
+  expect(note.midi).toBe(90);
+  expect(note.articulation).toBe("missing-style");
+  expect(note.start).toBe(input.player.score!.notes[0].start);
+  expect(note.duration).toBe(input.player.score!.notes[0].duration);
+});
 it("binds synth defaults without replacing duration or read range and rejects a mismatched type", () => {
   const p = definitionProject(BASIC_SYNTH), input = p.inputs[0]; input.sourceStart = 0.1;
   const d = { ...structuredClone(BASIC_SYNTH), id: "custom" }; d.defaults.frequency = 880;

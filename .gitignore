@@ -21,6 +21,10 @@ __pycache__/
 # Re-downloadable VCSL originals; working WAVs are in the asset release, mappings stay in Git.
 /samples/vcsl-kawai-20261107/originals/
 
+# Re-downloadable VCSL harp and tenor sax source/working audio; metadata and mappings stay tracked.
+/samples/vcsl-harp-sax-20261108/originals/
+/samples/vcsl-harp-sax-20261108/wav/
+
 # Exact externalized paths from sound-assets.lock.json; keep metadata and new sources visible.
 /exports/cc0-starter-20261104.zip
 /exports/piano-window-light-20261104/piano-window-light.soundforge

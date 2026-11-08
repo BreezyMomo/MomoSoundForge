@@ -84,7 +84,15 @@ export function suggestPlayableNote(
   instrument: Instrument | undefined,
   note: NoteEvent,
 ): NoteEvent | undefined {
-  if (!instrument || !noteCoverageIssue(instrument, note)) return undefined;
+  return playableNoteCandidates(instrument, note)[0];
+}
+
+/** Return deterministic, distinct playable choices for an invalid note. */
+export function playableNoteCandidates(
+  instrument: Instrument | undefined,
+  note: NoteEvent,
+): NoteEvent[] {
+  if (!instrument || !noteCoverageIssue(instrument, note)) return [];
   const sameArt = instrument.regions.filter(
     (r) => r.articulation === note.articulation,
   );
@@ -109,7 +117,16 @@ export function suggestPlayableNote(
         Math.abs(b.note.velocity - note.velocity) ||
       a.region.localeCompare(b.region, "en"),
   );
-  return candidates[0]?.note;
+  const seen = new Set<string>();
+  return candidates
+    .map((candidate) => candidate.note)
+    .filter((candidate) => {
+      const key = `${candidate.midi}:${candidate.velocity}:${candidate.articulation}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 12);
 }
 
 export const velocityPercent = (velocity: number) =>

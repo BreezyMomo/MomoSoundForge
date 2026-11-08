@@ -1,11 +1,12 @@
-import { Button } from "@momo/workbench/react";
+import { Button, WorkbenchChoice } from "@momo/workbench/react";
+import { useEffect, useState } from "react";
 import type { Instrument, NoteEvent } from "./instruments";
 import { BUILTIN_MESSAGES } from "./builtinMessages";
 import { t } from "./i18n";
 import { pitchName } from "./noteEditing";
 import {
   noteCoverageIssue,
-  suggestPlayableNote,
+  playableNoteCandidates,
   velocityPercent,
   pitchRanges,
   playablePitches,
@@ -39,23 +40,37 @@ export function NoteCoverageNotice({
   note: NoteEvent;
   onApply: (note: NoteEvent) => void;
 }) {
+  const [selected, setSelected] = useState("0");
   const issue = noteCoverageIssue(instrument, note);
+  const candidates = playableNoteCandidates(instrument, note);
+  useEffect(() => setSelected("0"), [instrument?.id, note.id, note.midi, note.velocity, note.articulation]);
   if (!issue) return null;
-  const suggestion = suggestPlayableNote(instrument, note);
+  const choice = candidates[Number(selected)] ?? candidates[0];
   return (
     <div className="note-coverage-notice" role="status">
       <p>{t(`note.coverage.${issue}`)}</p>
-      {suggestion && (
+      {choice && (
         <>
           <p>
             {t(
               "note.coverage.proposal",
-              pitchName(suggestion.midi),
-              velocityPercent(suggestion.velocity),
-              articulationName(suggestion.articulation),
+              pitchName(choice.midi),
+              velocityPercent(choice.velocity),
+              articulationName(choice.articulation),
             )}
           </p>
-          <Button variant="outline" onClick={() => onApply(suggestion)}>
+          {candidates.length > 1 && (
+            <WorkbenchChoice
+              label={t("note.coverage.choose")}
+              value={selected}
+              items={candidates.map((candidate, index) => ({
+                value: String(index),
+                label: `${pitchName(candidate.midi)} · ${velocityPercent(candidate.velocity)}% · ${articulationName(candidate.articulation)}`,
+              }))}
+              onValueChange={setSelected}
+            />
+          )}
+          <Button variant="outline" onClick={() => onApply(choice)}>
             {t("note.coverage.apply")}
           </Button>
         </>

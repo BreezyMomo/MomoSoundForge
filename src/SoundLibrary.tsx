@@ -38,8 +38,29 @@ const fresh=(kind:'synth'|'instrument'):SoundResource => kind==='synth'?resource
   payload:{schema:'momo.instrument/v1',instrument:{id:uid(),name:t('definition.untitledInstrument'),keyRange:{low:60,high:72},regions:[]},assets:{}}
 };
 type LibraryKind=ResourceKind|'source';
-type Card = {key:string;relatedKeys?:string[];name:string;kind:ResourceKind;source:'builtin'|'local'|'remote';sourceLabel?:string;contentId?:string;category:string;description:string;preview:number[];load:(complete?:boolean,options?:RemoteLoadOptions)=>Promise<SoundResource>;entry?:ResourceEntry;recording?:RecordingSummary};
+type Card = {key:string;relatedKeys?:string[];name:string;kind:ResourceKind;source:'builtin'|'local'|'remote';sourceLabel?:string;contentId?:string;category:string;description:string;preview:number[];load:(complete?:boolean,options?:RemoteLoadOptions)=>Promise<SoundResource>;entry?:ResourceEntry;recording?:RecordingSummary;variants?:Card[]};
 const filterKeys=(card:Card)=>[card.key,...card.relatedKeys??[]];
+const instrumentGroupName=(name:string) => name.split(' · ')[0].trim() || name;
+const groupInstrumentCards=(cards:Card[]) => {
+  const groups = new Map<string,Card>();
+  for (const card of cards) {
+    if (card.kind !== 'instrument') { groups.set(card.key, card); continue; }
+    const groupName = instrumentGroupName(card.name);
+    const groupKey = `${card.source}:${card.sourceLabel ?? ''}:${groupName}`;
+    const current = groups.get(groupKey);
+    if (!current) {
+      groups.set(groupKey, {...card, key:`instrument-group-${groupKey}`, name:groupName, description:'', preview:[], variants:[card]});
+    } else {
+      current.variants!.push(card);
+      current.relatedKeys = [...(current.relatedKeys ?? []), ...filterKeys(card)];
+    }
+  }
+  return [...groups.values()].map(card => {
+    if (!card.variants || card.variants.length <= 1) return card.variants?.[0] ?? card;
+    const variantCount = card.variants.length;
+    return {...card, description:t('resources.instrumentVariants',variantCount)};
+  });
+};
 export function SoundLibrary(props:Props) {
   const [manage,setManage]=useState(false);
   useEffect(()=>{const open=()=>setManage(true);window.addEventListener('soundforge-open-resources',open);return()=>window.removeEventListener('soundforge-open-resources',open);},[]);
@@ -112,7 +133,8 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
     `${c.name} ${c.description} ${c.category} ${SOUND_CATEGORIES.includes(c.category as never)?t('library.'+c.category):''}`.toLowerCase().includes(query.trim().toLowerCase())&&
     (preferences.filter==='all'||filterKeys(c).some(key=>(preferences.filter==='favorites'?preferences.favorites:preferences.recent).includes(key)));
   const matchingInstruments=!sourceSelection&&!bindingType&&query.trim()&&kind!==''&&kind!=='instrument'?cards.filter(c=>c.kind==='instrument'&&matches(c)).length:0;
-  const visible=cards.filter(c=>matches(c)&&(!kind||c.kind===kind||kind==='source'&&(c.kind==='recording'||c.kind==='synth')))
+  const visibleRaw=cards.filter(c=>matches(c)&&(!kind||c.kind===kind||kind==='source'&&(c.kind==='recording'||c.kind==='synth')));
+  const visible=groupInstrumentCards(visibleRaw)
     .sort((a,b)=>preferences.filter==='recent'?Math.min(...filterKeys(a).map(k=>preferences.recent.indexOf(k)).filter(i=>i>=0))-Math.min(...filterKeys(b).map(k=>preferences.recent.indexOf(k)).filter(i=>i>=0)):0);
   const fileImport=async(f:File)=>{const r=await readResourceFile(f);if(sourceSelection&&r.kind!=='recording'&&r.kind!=='synth')throw Error('instrument.invalidSource');openEditor(r);};
   const current=()=>void run(async()=>{const snapshot=latest.current,audio=await onRender(snapshot);const preview=Array.from({length:160},(_,i)=>{let peak=0;for(let n=Math.floor(i*audio.left.length/160);n<Math.floor((i+1)*audio.left.length/160);n++)if(Math.abs(audio.left[n])>Math.abs(peak))peak=audio.left[n];return Math.max(-1,Math.min(1,peak));});const origin=props.origin?.destination===folderLibrary.destination&&folderLibrary.connected?props.origin:undefined;const resource=resourceFromProject(snapshot,preview);openEditor(origin?{...resource,id:origin.id,version:origin.version,category:origin.category,description:origin.description}:resource,!!origin,snapshot,true);});
@@ -180,7 +202,7 @@ function ResourceBrowser(props:Props&{expanded?:boolean;onManage?:()=>void}) {
       <header><strong>{c.name}</strong><button aria-label={t(preferences.favorites.includes(c.key)?'library.unfavorite':'library.favorite',c.name)} aria-pressed={preferences.favorites.includes(c.key)} onClick={()=>setPreferences(p=>({...p,favorites:p.favorites.includes(c.key)?p.favorites.filter(k=>k!==(c.key)):[...p.favorites,c.key]}))}>{preferences.favorites.includes(c.key)?'★':'☆'}</button></header>
       <div className="resource-badges"><span>{t('resources.'+c.kind)}</span><span>{c.sourceLabel??t('resources.'+c.source)}</span>{c.entry&&<span>{t('resources.version',c.entry.version)}</span>}</div>
       {c.preview.length>0&&<Waveform data={Float32Array.from(c.preview)} label={c.name}/>}
-      <p className="field-help">{c.description}</p><div className="button-group">
+      <p className="field-help">{c.description}</p>{c.variants&&c.variants.length>1&&<details className="resource-variants"><summary>{t('resources.chooseInstrumentVariant',c.variants.length)}</summary><div className="resource-variant-list">{c.variants.map(variant=><div className="resource-variant" key={variant.key}><span>{variant.name}</span><div className="button-group"><Button variant="outline" disabled={busy||!ready} onClick={()=>void run(async()=>{if(playback===variant.key){onStop();return;}remember(variant.key);const r=await loadCard(variant,false);onPreview(resourceProject(r,true),variant.key);})}>{t(playback===variant.key?'resources.stop':'resources.listen')}</Button><Button disabled={busy||!ready||!!stale} onClick={()=>void run(async()=>{const base=latest.current,r=await loadCard(variant);remember(variant.key);await useResource(r,base);})}>{sourceSelection?t('instrument.bind',sourceSelection.note):t(bindingType?'resources.bind':'add.title')}</Button></div></div>)}</div></details>}<div className="button-group">
         <Button variant="outline" disabled={busy||!ready} aria-pressed={playback===c.key} onClick={()=>void run(async()=>{if(playback===c.key){onStop();return;}remember(c.key);const r=await loadCard(c,false);onPreview(resourceProject(r,true),c.key);})}>{t(playback===c.key?'resources.stop':'resources.listen')}</Button>
         <Button disabled={busy||!ready||!!stale} onClick={()=>void run(async()=>{const base=latest.current,r=await loadCard(c);remember(c.key);await useResource(r,base);})}>{sourceSelection?t('instrument.bind',sourceSelection.note):t(bindingType?'resources.bind':'add.title')}</Button>
       </div>{!sourceSelection&&!props.selectionOnly&&<details><summary>{t('resources.actions')}</summary><div className="button-group">

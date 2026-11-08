@@ -124,11 +124,17 @@ export function NoteRoll({
     layer.player.duration ?? layer.duration,
     score.bpm,
   );
+  // The editable lane must cover the whole visible sound layer. The player
+  // duration can be shorter than the layer's read/playback duration (for
+  // example a 2 s source placed in a 10 s layer), so keep that tail visible
+  // and mark it as outside the source range below.
+  const layerBeats = secondsToBeats(layer.duration, score.bpm);
   const totalBeats = Math.min(
     Number.MAX_SAFE_INTEGER,
     Math.max(
       4,
       Math.ceil(sourceBeats),
+      Math.ceil(layerBeats),
       ...score.notes.map((n) => Math.ceil(n.start + n.duration)),
     ),
   );
