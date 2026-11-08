@@ -245,8 +245,7 @@ export function TreeTimeline({
           aria-label={t("tree.title")}
         >
           <div className="tree-row tree-ruler">
-            <span />
-            <span />
+            <span className="tree-frozen-identity" aria-hidden="true" />
             <PlayheadTimeline
               compact
               duration={duration}
@@ -261,8 +260,7 @@ export function TreeTimeline({
           </div>
           {!viewPath.length && !!root.videoReference?.markers.length && (
             <div className="tree-row">
-              <span />
-              <span />
+              <span className="tree-frozen-identity" aria-hidden="true" />
               <div className="tree-marker-strip">
                 {root.videoReference.markers
                   .filter((m) => m.time <= duration)
@@ -327,6 +325,7 @@ export function TreeTimeline({
                 aria-selected={chosen}
                 aria-expanded={group ? !closed.has(key) && !hasTimeTransform(layer) : undefined}
               >
+                <div className="tree-frozen-identity">
                 <div
                   className={`tree-identity ${group ? "tree-group-identity" : ""}`}
                   style={{
@@ -453,6 +452,7 @@ export function TreeTimeline({
                     <Play size={13} />
                   )}
                 </button>
+                </div>
                 {layer.player.type === "instrument" && !layer.player.score?.instruments.length ? <button className="empty-note-voice" onClick={() => onChooseNoteVoice(address)}>{t("add.chooseVoice")}</button> : <TimelineClip
                   layer={layer}
                   offset={offset}

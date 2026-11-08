@@ -48,7 +48,7 @@
   max-width: 220px;
 }
 .node-tree .tree-row {
-  grid-template-columns: minmax(120px, 160px) 28px minmax(150px, 1fr) 116px;
+  grid-template-columns: 160px 28px minmax(150px, 1fr) 116px;
   gap: 8px;
   padding: 5px;
   border: 1px solid transparent;
@@ -151,3 +151,20 @@
 .timeline-zoom-value { min-width:44px; text-align:center; font-size:11px; font-variant-numeric:tabular-nums; }
 .timeline-navigation.is-hand-mode, .timeline-navigation.is-hand-mode * { cursor:grab !important; }
 .timeline-navigation.is-panning, .timeline-navigation.is-panning * { cursor:grabbing !important; user-select:none; }
+
+/* The name, hierarchy and audition target stay visible while time scrolls. */
+.node-tree .tree-row { --tree-row-background: var(--ui-panel); }
+.node-tree .tree-row.selected, .node-tree .tree-row.node-drop-inside { --tree-row-background: var(--ui-surface); }
+.tree-frozen-identity {
+  grid-column: 1 / 3;
+  display: grid;
+  grid-template-columns: minmax(0, 160px) 28px;
+  gap: 8px;
+  position: sticky;
+  left: 6px;
+  z-index: 8;
+  align-self: stretch;
+  background: var(--tree-row-background);
+  box-shadow: -6px 0 var(--tree-row-background), 8px 0 var(--tree-row-background);
+}
+.tree-frozen-identity > .icon-button { align-self: center; }

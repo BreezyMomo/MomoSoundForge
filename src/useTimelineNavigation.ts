@@ -12,7 +12,11 @@ export function useTimelineNavigation(zoom: number, maxZoom: number, onZoom: (va
     const el = viewport.current, lane = el?.querySelector<HTMLElement>('.layer-time-ruler');
     if (el && lane) {
       const rect = lane.getBoundingClientRect();
-      const x = clientX ?? el.getBoundingClientRect().left + el.clientWidth / 2;
+      const view = el.getBoundingClientRect();
+      const frozen = el.querySelector<HTMLElement>('.tree-frozen-identity')?.getBoundingClientRect();
+      const left = Math.max(view.left, frozen?.right ?? view.left);
+      const right = view.left + el.clientWidth;
+      const x = Math.max(left, Math.min(right, clientX ?? (left + right) / 2));
       anchor.current = { fraction: Math.max(0, Math.min(1, (x - rect.left) / rect.width)), x };
     }
     onZoom(Math.max(1, Math.min(maxZoom, value)));
