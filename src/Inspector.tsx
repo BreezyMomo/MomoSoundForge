@@ -150,7 +150,7 @@ export function Range({
   );
 }
 export function Inspector({
-  layer, project, onChange, onDuplicate, onDelete, onEnter, onExpose,
+  layer, project, scopeLabel = project.name, onChange, onDuplicate, onDelete, onEnter, onExpose,
   postProcessing, sourceEditor, onReplaceContent, onFitRange, definitionControl,
 }: {
   postProcessing?: ReactNode;
@@ -160,6 +160,7 @@ export function Inspector({
   onFitRange?: () => void;
   layer?: PlayerInput;
   project: Project;
+  scopeLabel?: string;
   onChange: (key: LayerField, value: LayerValue) => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -216,7 +217,7 @@ export function Inspector({
               onClick={onDelete}><Trash2 size={15} /></button>
           </div>
         </div>
-        <p className="inspector-path" title={project.name}>{t("inspector.scope", project.name)}</p>
+        <p className="inspector-path" title={scopeLabel}>{t("inspector.scope", scopeLabel)}</p>
       </header>
         <TabsList variant="line" aria-label={t("inspector.tabs")} className="inspector-tab-list">
           {(["sound", "playback", "mix", "automation"] as const).map(value => (
@@ -240,7 +241,7 @@ export function Inspector({
               </p>}
             </>}
             {type === "composition" && <>
-              <p className="inspector-resource-name">{layer.player.mix?.name}</p>
+              <p className="inspector-resource-name">{layer.name}</p>
               <p className="field-help">{t("composition.sourceInfo", layer.player.mix?.inputs.length ?? 0,
                 layer.player.mix?.duration.toFixed(2) ?? "0")}</p>
             </>}

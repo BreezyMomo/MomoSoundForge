@@ -239,7 +239,7 @@ export function ContentReplacementDialog({
               {t(`content.${layer.player.type}`)} ·{" "}
               {layer.player.type === "sample"
                 ? parent.assets[layer.player.assetId!]?.name
-                : (layer.player.mix?.name ?? layer.name)}
+                : layer.name}
             </p>
           </div>
           <div aria-live="polite">

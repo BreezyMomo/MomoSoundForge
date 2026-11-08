@@ -1750,7 +1750,7 @@ export default function App() {
       </div>
       <div className="layers-heading">
         <div className="layer-title-status">
-          <h2>{timelineScope.path.length ? t("player.localTimeline", timelineScope.project.name) : t("tree.title")}</h2>
+          <h2>{timelineScope.path.length ? t("player.localTimeline", timelineScope.breadcrumbs[timelineScope.breadcrumbs.length - 1].name) : t("tree.title")}</h2>
           <span
             className="field-help"
             role="status"
@@ -2315,6 +2315,7 @@ export default function App() {
                   )
                 }
                 layer={selectedLayer}
+                scopeLabel={context.breadcrumbs.map(item => item.name).join(" / ")}
                 project={project}
                 onChange={changeLayer}
                 onFitRange={() => edit(p => ({ ...p, inputs: p.inputs.map(l => l.id === selected ? fitPlayerRange(l) : l) }))}
