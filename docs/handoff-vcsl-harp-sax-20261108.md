@@ -25,3 +25,7 @@
 - Pages 已部署：[音库目录](https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/index.json)，`index.json` SHA-256 `9f5f9f2dbcfb73a2a111cebadb7ee293fe383028faadc7ede3531879f691c1ce`，CORS `Access-Control-Allow-Origin: *`。
 - Pages CI：[成功运行 42490524828](https://github.com/BreezyMomo/MomoSoundForge-assets-vcsl-harp-sax/actions/runs/42490524828)。
 - 主应用的默认订阅入口由部署配置提供；资源包本身不依赖主仓库的样本清单或映射文件。
+
+## 2026-11-09 名称修订
+
+后续固定发布 `2026.11.09-vcsl-harp-sax` 保留同一套 150 个音频和资源图，只更新两个图的显示元数据与目录分类：`竖琴` / `Concert Harp`（`strings`）以及 `次中音萨克斯管` / `Tenor Saxophone`（`woodwinds`）。目录 SHA-256 为 `86e46f0e869c308f2f4061a52995566e42cc4790a4a0bd2582be5f51dc69b0ce`，资源包 SHA-256 为 `2a8b54209b6c25ee074c7e4c4dbbe0923730f6ef10956f9fe1c05b4154baed7c`。

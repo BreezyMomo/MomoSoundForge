@@ -1108,8 +1108,8 @@ const words: Record<string, [string, string]> = {
   ],
   "help.samples.title": ["内置采样", "Factory samples"],
   "help.samples.body": [
-    "内置实录采样采用 CC0 素材，来源与许可记录随声音库分发，也可在仓库 samples 目录查看。",
-    "Factory recordings use CC0 material. Sources and license records ship with the sound library and are available in the repository’s samples directory.",
+    "内置实录采样采用 CC0 素材，来源与许可记录随官方音库分发。",
+    "Factory recordings use CC0 material. Sources and license records ship with the official sound library.",
   ],
   "help.imports.title": ["自行导入的素材", "Imported material"],
   "help.imports.body": [
