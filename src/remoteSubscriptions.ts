@@ -65,7 +65,20 @@ export function parseRemoteLibraryUrls(raw:string, excluded=''){
 const base=import.meta.env?.VITE_SOUND_LIBRARY_URL || 'https://breezymomo.github.io/MomoSoundForge-assets/';
 const defaultUrl=new URL('index.json',new URL(base,typeof document==='undefined'?'http://localhost/':document.baseURI)).href;
 const configuredUrls=parseRemoteLibraryUrls(
-  import.meta.env?.VITE_SOUND_LIBRARY_URLS ?? 'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/',
+  import.meta.env?.VITE_SOUND_LIBRARY_URLS ?? [
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-winds/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-plucked/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-keyboards/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harpsichords/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-knight/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-steinway/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-steinway-2/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-yamaha/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-mallets/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-percussion/',
+    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-timpani/',
+  ].join(','),
   defaultUrl,
 );
 const externalDefaults:Subscription[]=configuredUrls.map((url:string,index:number)=>({id:`external-${index+1}`,name:'External sound library',url,enabled:true,autoName:true}));

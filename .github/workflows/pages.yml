@@ -37,7 +37,7 @@ jobs:
         env:
           VITE_SOUND_LIBRARY_URL: ${{ vars.SOUND_LIBRARY_URL || 'https://breezymomo.github.io/MomoSoundForge-assets/' }}
           # Additional self-describing libraries are discovered from deployment config.
-          VITE_SOUND_LIBRARY_URLS: ${{ vars.SOUND_LIBRARY_URLS || 'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/' }}
+          VITE_SOUND_LIBRARY_URLS: ${{ vars.SOUND_LIBRARY_URLS || 'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-winds/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-plucked/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-keyboards/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harpsichords/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-knight/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-steinway/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-steinway-2/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-yamaha/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-mallets/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-percussion/,https://breezymomo.github.io/MomoSoundForge-assets-vcsl-timpani/' }}
         run: npm run build
       - name: Configure Pages
         uses: actions/configure-pages@v5
