@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   Button,
   Dialog,
@@ -13,10 +13,10 @@ import {
 import JSZip from "jszip";
 import { t } from "./i18n";
 import type { ConnectionStatus } from "./aiConnection";
-import { BUILTIN_SOUNDS, builtinSoundName } from "./builtinLibrary";
 import { PRESETS } from "./presets";
 import { download } from "./storage";
 import type { Project } from "./model";
+import { remoteLibraries } from "./remoteSubscriptions";
 import "./ai-tools.css";
 
 type Directory = {
@@ -49,6 +49,8 @@ export function AITools({
   const [origin, setOrigin] = useState("http://127.0.0.1:8799");
   const [notice, setNotice] = useState(""),
     [installing, setInstalling] = useState(false);
+  const subscriptions = useSyncExternalStore(remoteLibraries.subscribe, remoteLibraries.snapshot);
+  useEffect(() => { remoteLibraries.start(); }, []);
   const archive = `${import.meta.env.BASE_URL}ai/momo-sound-forge.zip`;
   let port = "8799";
   try {
@@ -291,12 +293,17 @@ export function AITools({
                         inputs: undefined,
                         id: `preset:${p.id}`,
                       })),
-                      sounds: BUILTIN_SOUNDS.map((s) => ({
-                        ...s,
-                        waveform: undefined,
-                        name: builtinSoundName(s),
-                        id: `builtin:${s.id}`,
-                      })),
+                      sounds: subscriptions.flatMap((subscription) => subscription.enabled && subscription.index
+                        ? subscription.index.entries.map((entry) => ({
+                            id: `remote:${subscription.id}:${entry.id}`,
+                            name: entry.name,
+                            kind: entry.kind,
+                            category: entry.category,
+                            description: entry.description,
+                            contentId: entry.contentId,
+                            library: subscription.name,
+                          }))
+                        : []),
                     },
                     null,
                     2,

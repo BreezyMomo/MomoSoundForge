@@ -8,7 +8,7 @@ Create game sound effects and short melodies in your browser: choose sounds, lay
 
 **[Use online (GitHub Pages)](https://breezymomo.github.io/MomoSoundForge/) · [User guide](docs/user-guide.en.md) · [Instruments and notes (Chinese)](docs/instruments.md) · [Development and deployment](docs/development.md)**
 
-No account is required. Synthesis, mixing and export run on your device. Factory sounds download on demand; imported audio, video and personal projects are not uploaded. Work drafts stay in the browser. Personal recordings, synthesizers, instrument definitions and music/sound resources live in a user-selected folder; exported resources and projects carry their dependencies.
+No account is required. Synthesis, mixing and export run on your device. Official and supplemental libraries load on demand from self-describing remote indexes; imported audio, video and personal projects are not uploaded. Work drafts stay in the browser. Personal recordings, synthesizers, instrument definitions and music/sound resources live in a user-selected folder; exported resources and projects carry their dependencies.
 
 ![Momo Sound Forge: sound library, note tracks and layer inspector](docs/images/workspace.png)
 
@@ -17,7 +17,7 @@ No account is required. Synthesis, mixing and export run on your device. Factory
 ## What you can create
 
 - **Game effects:** confirm, deny, pickup, impact, laser, charge, whoosh and explosion presets, plus recorded impacts, liquids, cloth and other sounds.
-- **A basic sound library:** instruments and articulations, CC0 sound effects and synth presets. Instruments use 868 distinct recordings and effects provide 126 selectable clips, with search, audition, favorites, range and recording selection.
+- **Remote sound libraries:** official and supplemental libraries carry complete definitions, audio dependencies, provenance and licenses. Resources load on demand with search, audition, favorites and source filtering.
 - **Instrument parts:** piano, strings, woodwinds, brass and percussion. Edit pitch, beat timing and velocity, with sample mappings for ranges, dynamics and articulations.
 - **Multitrack arrangement:** move selected tracks together, resize, crop non-destructively, fade, mute and solo. Compact note contours expand into an editable piano roll.
 - **Compositions and reuse:** groups, nested projects, editable examples, a local library and macro controls that adjust several parameters together.
@@ -37,7 +37,7 @@ SoundForge registers its own Sound night · Violet & cyan theme with Workbench: 
 4. Audition the full work. Use **Keep full sound** to retain effect tails.
 5. **Save project** keeps editable content and samples. **Export…** produces audio for your game.
 
-**Sound resources → Manage resources** provides folder connections, new synthesizers, instrument mappings, audio uploads and imports. Factory and local resources share browsing and use flows. Work instances are independent. See [Sound resources and local libraries](docs/sound-resources.en.md).
+**Sound resources → Manage resources** provides folder connections, new synthesizers, instrument mappings, audio uploads and imports. Remote and local resources share browsing and use flows. Work instances are independent. See [Sound resources and local libraries](docs/sound-resources.en.md).
 
 ## Common controls
 
@@ -71,7 +71,7 @@ Run `npm run ai:build` to build the portable skill ZIP, or `npm run ai:serve -- 
 - [User guide](docs/user-guide.en.md): library, timeline, groups, processing, saving and video reference.
 - [Instruments and notes (Chinese)](docs/instruments.md): sample ranges, velocity layers, articulations, note JSON and portable instrument packages.
 - [Flute example](examples/instruments/flute/): editable project, instrument package and note data.
-- [Development and deployment](docs/development.md): local setup, resource generation, checks and GitHub Pages.
+- [Development and deployment](docs/development.md): local setup, remote library configuration, checks and GitHub Pages.
 - [Product goals (Chinese)](docs/product-vision.md): design direction for developers without audio expertise.
 
 Multivoice note editing is available. Realtime MIDI input, VST hosting, speech generation and online AI generation are not implemented. A professional mode is a future direction. Instrument range, articulations and sustain depend on the available recordings.
@@ -82,18 +82,16 @@ Requires Node.js 22 or later.
 
 ```sh
 npm ci
-npm run assets:sync
 npm run dev
 ```
 
 Open the printed URL, normally `http://127.0.0.1:5180/`, or run `start.bat` on Windows. The pinned MomoWorkbench package is included in `vendor/`; sibling repositories are not required.
 
-Assets restore from the fixed release URLs in the lock file. Use `npm run assets:sync -- --from <PACKAGE_DIRECTORY>` for offline synchronization. Ordinary `npm test` needs no large audio files; `npm run test:assets` validates the complete library. See [migration handoff](docs/asset-storage-implementation.md).
+The editor contains only the framework, sound protocol and project features. The official and supplemental sound libraries are auto-subscribed through self-describing indexes and loaded on demand; audio, manifests, mappings and asset lock files are not copied into this repository.
 
 ```sh
 npm test
 npm run build
-node tools/check-static-site.mjs
 npm run preview
 ```
 
@@ -101,9 +99,7 @@ npm run preview
 
 ## Samples and third-party components
 
-Factory samples use CC0 material, with source information and licenses distributed alongside the library. Original records are in [samples/](samples/). Imported material retains its own licensing. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for encoder versions, licenses and source locations.
-
-The new game SFX starter organizes 66 recordings into 19 sound groups covering footsteps, landings, impacts, doors, mechanisms and blade actions, with eight editable combinations. See [collection notes](samples/game-sfx-starter-20261105/使用说明.txt) for sources, licenses and processing records.
+Official and third-party libraries carry their complete definitions, audio dependencies, source records and licenses. The app repository does not keep library copies, manifests, mappings or asset lock files. Imported material retains its own licensing. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for encoder versions, licenses and source locations.
 
 ## Feedback
 

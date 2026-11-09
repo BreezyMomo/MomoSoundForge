@@ -85,11 +85,6 @@ import { Waveform } from "./Waveform";
 import { PlayheadTimeline } from "./PlayheadTimeline";
 import { fromPreset } from "./presets";
 import {
-  BUILTIN_SOUNDS,
-  builtinSoundName,
-  loadBuiltinSound,
-} from "./builtinLibrary";
-import {
   SAMPLE_RATE,
   MAX_ASSET_BYTES,
   MAX_SAMPLE_FRAMES,
@@ -135,11 +130,6 @@ import { language, t, useLanguage } from "./i18n";
 type Variation = { project: Project; result: RenderResult };
 const defaultProject = () => makeProject(t("file.untitled"));
 const db = (v: number) => (v > 0 ? (20 * Math.log10(v)).toFixed(1) : "−∞");
-function readBuiltinSound(id: string) {
-  const sound = BUILTIN_SOUNDS.find((entry) => entry.id === id);
-  if (!sound) throw Error("library.builtinLoadError");
-  return loadBuiltinSound(id, builtinSoundName(sound));
-}
 export default function App() {
   const lang = useLanguage();
   const [replacement, setReplacement] = useState<{
@@ -987,29 +977,6 @@ export default function App() {
     const target = current.current,
       epoch = scopeEpoch.current,
       child = await readSavedSound(id);
-    if (target !== current.current || epoch !== scopeEpoch.current)
-      throw Error("error.scopeChanged");
-    insertSound(child);
-  }
-  async function openBuiltinSound(id: string) {
-    const target = rootCurrent.current,
-      epoch = scopeEpoch.current;
-    const next = await readBuiltinSound(id);
-    if (target !== rootCurrent.current || epoch !== scopeEpoch.current)
-      throw Error("error.scopeChanged");
-    editRoot(() => nodeDocument(next),"",null);
-    scopeEpoch.current++;
-    setEditPath([]);
-    setTimelinePath([]);
-    setSelected(next.inputs[0]?.id ?? "");
-    updateCue(0);
-    setVariations([]);
-    manager.current?.show("editor");
-  }
-  async function insertBuiltinSound(id: string) {
-    const target = current.current,
-      epoch = scopeEpoch.current;
-    const child = await readBuiltinSound(id);
     if (target !== current.current || epoch !== scopeEpoch.current)
       throw Error("error.scopeChanged");
     insertSound(child);

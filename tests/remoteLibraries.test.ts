@@ -6,7 +6,7 @@ import { resourceFromDefinition, resourceFromProject, resourceProject } from '..
 import { BASIC_SYNTH } from '../src/synthesizers';
 import { digest, readAudio, registerAudioProvider } from '../src/sharedAudio';
 import { createRemoteLoader, fetchRemoteIndex, parseRemoteIndex, REMOTE_SCHEMA, remoteIndexUrl, type RemoteIndex } from '../src/remoteLibrary';
-import { RemoteLibraries } from '../src/remoteSubscriptions';
+import { parseRemoteLibraryUrls, RemoteLibraries } from '../src/remoteSubscriptions';
 import { makeProject, makeLayer, encodeSamples } from '../src/model';
 import { packResource, unpackResource } from '../src/resourcePackage';
 import { createSamplePreparer } from '../src/prepareSamples';
@@ -29,6 +29,12 @@ it('loads a generic library from any HTTPS origin and checks immutable graph ide
   expect(f.fetcher.mock.calls[0][0]).toBe(url);
   const bad=structuredClone(index.entries[0]);bad.contentId='node-'+'a'.repeat(64);
   await expect(createRemoteLoader(index,url,f.fetcher)(bad)).rejects.toThrow('remote.verify');
+});
+it('normalizes deployment library URLs without storing package metadata in the app',()=>{
+  expect(parseRemoteLibraryUrls(' https://one.example/library/\nhttps://two.example/library/index.json,https://one.example/library/','https://official.example/index.json')).toEqual([
+    'https://one.example/library/index.json','https://two.example/library/index.json',
+  ]);
+  expect(parseRemoteLibraryUrls('https://official.example/','https://official.example/index.json')).toEqual([]);
 });
 it('collects a complete resource for offline rendering and portable sharing',async()=>{
   const f=await fixture(true),index=parseRemoteIndex(f.index,'https://audio.example/index.json');

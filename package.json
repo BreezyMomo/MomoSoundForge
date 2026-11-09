@@ -7,27 +7,15 @@
     "node": ">=22"
   },
   "scripts": {
-    "predev": "node tools/build-builtin-library.mjs && node tools/build-remote-library.mjs --official --output public/sound-library && node tools/build-ai-skill.mjs",
+    "predev": "node tools/build-ai-skill.mjs",
     "dev": "vite --host 127.0.0.1 --port 5180",
-    "prebuild": "node tools/build-builtin-library.mjs && node tools/build-remote-library.mjs --official --output public/sound-library && node tools/build-ai-skill.mjs",
+    "prebuild": "node tools/build-ai-skill.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4180",
     "test": "vitest run --project unit",
     "ai:build": "node tools/build-ai-skill.mjs",
     "ai:serve": "node tools/ai-server.mjs",
-    "audit:sources": "node tools/review-sound-sources.mjs",
-    "audit:inventory": "node tools/inventory-sound-assets.mjs",
-    "audit:instruments": "node tools/diagnose-instruments.mjs",
-    "audit:restore-mappings": "node tools/restore-author-mappings.mjs",
-    "test:assets": "node tools/sound-assets.mjs verify && node tools/build-builtin-library.mjs && node tools/build-remote-library.mjs --official --output public/sound-library && vitest run --project assets",
-    "test:provenance": "node tools/sound-assets.mjs verify --profile audit && node tools/build-builtin-library.mjs && vitest run --project provenance",
-    "assets:pack": "node tools/sound-assets.mjs pack",
-    "assets:sync": "node tools/sound-assets.mjs sync",
-    "assets:verify": "node tools/sound-assets.mjs verify",
-    "assets:status": "node tools/sound-assets.mjs status",
-    "library:publish-build": "node tools/build-remote-library.mjs",
-    "library:stage": "node tools/sound-distribution.mjs stage",
-    "library:check": "node tools/sound-distribution.mjs check"
+    "test:all": "npm test"
   },
   "dependencies": {
     "@ffmpeg/core": "0.12.10",

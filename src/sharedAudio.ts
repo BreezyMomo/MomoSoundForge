@@ -1,7 +1,5 @@
-import { createBuiltinFileLoader } from './builtinFiles';
 import type { SampleAsset } from './model';
 import type { BuiltinSampleReference, SharedSampleReference } from './sampleReference';
-import catalog from './data/builtin-catalog.json';
 
 export const AUDIO_BYTES = 16 + 5760000 * 8;
 export async function compressAudio(bytes:Uint8Array){return new Uint8Array(await new Response(new Blob([new Uint8Array(bytes).buffer]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());}
@@ -87,14 +85,11 @@ export function builtinPCM(wav:Uint8Array,r:BuiltinSampleReference):Uint8Array{
   return audioBytes(48000,[0,1].map(c=>Float32Array.from({length:r.frames},(_,i)=>{let value=v.getInt16(44+i*4+c*2,true)/32768;for(const gain of r.assetGains)value=Math.fround(value*gain);return value;})));
 }
 export function createAudioReader(fetcher:(url:string)=>Promise<Response>=url=>fetch(url),base=import.meta.env?.BASE_URL??'/'){
-  const files=createBuiltinFileLoader([],fetcher,base);
-  const builtins=new Map(((catalog as unknown as {audio?: (BuiltinSampleReference & {id:string;format:'pcm'|'wav16'})[]}).audio??[]).map(r=>[r.id,r]));
   return async(asset:SampleAsset):Promise<Uint8Array>=>{
     if(asset.reference?.schema==='momo.audio-reference/v1'){
-      const ref=asset.reference,r=builtins.get(ref.audioId);
-      return resolveAudio(ref,r?async()=>{const bytes=await files.loadFile(r);return r.format==='pcm'?bytes:builtinPCM(bytes,r);}:undefined);
+      return resolveAudio(asset.reference);
     }
-    if(asset.reference){const r=asset.reference,bytes=builtinPCM(await files.loadFile({...r,id:r.sha256}),r);if(r.audioId&&(await audioReference(bytes)).audioId!==r.audioId)throw Error('resources.verify');return bytes;}
+    if(asset.reference){throw Error('resources.missing');}
     return audioBytes(asset.sampleRate,asset.channels.map(c=>{const binary=atob(c),view=new DataView(Uint8Array.from(binary,x=>x.charCodeAt(0)).buffer);return Float32Array.from({length:binary.length/4},(_,i)=>view.getFloat32(i*4,true));}));
   };
 }

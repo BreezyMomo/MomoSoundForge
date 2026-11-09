@@ -33,24 +33,12 @@ jobs:
         run: npm ci
       - name: Test
         run: npm test
-      - name: Restore pinned sound asset cache
-        uses: actions/cache@v4
-        with:
-          path: .cache/sound-assets
-          key: sound-assets-v1-${{ runner.os }}-${{ hashFiles('sound-assets.lock.json') }}
-      - name: Sync and verify build assets
-        run: npm run assets:sync
-      - name: Test complete built-in library
-        run: npm run test:assets
-      - name: Build app and sound library
+      - name: Build app
         env:
-          VITE_SOUND_LIBRARY_URL: ${{ vars.SOUND_LIBRARY_URL }}
+          VITE_SOUND_LIBRARY_URL: ${{ vars.SOUND_LIBRARY_URL || 'https://breezymomo.github.io/MomoSoundForge-assets/' }}
+          # Additional self-describing libraries are discovered from deployment config.
+          VITE_SOUND_LIBRARY_URLS: ${{ vars.SOUND_LIBRARY_URLS || 'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/' }}
         run: npm run build
-      - name: Check deployment files
-        env:
-          SOUND_LIBRARY_ORIGIN: ${{ vars.SOUND_LIBRARY_ORIGIN || format('https://{0}.github.io', github.repository_owner) }}
-        # GitHub account names preserve casing; browser origins lowercase the hostname.
-        run: node tools/check-static-site.mjs --origin "${SOUND_LIBRARY_ORIGIN,,}"
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload website

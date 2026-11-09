@@ -74,10 +74,16 @@
 
 接入技能无需修改完整知识库：先查实际可用区域，再输出以上事件或原配方，导入后检查“实际采样”和静音提示，最终保存 `.soundforge`。库中缺失的音域不要宣称已用真实录音覆盖。
 
-## 本地采集清单转换
+## 远程音库与本地导入
+
+官方与补充音库通过自描述 `index.json` 自动订阅。主工程不包含采集清单、映射或音频副本；需要离线使用时，在声音资源库中下载完整资源到个人库，保存的资源包会携带完整依赖。
+
+如果要从自己的 WAV 创建乐器，使用「管理资源 → 导入音频」或 AI CLI 的 `import-wav`／`instrument` 命令，并把 WAV 与元数据放在个人工作区。采样映射会写入导出的资源包，不会回写主工程。
+
+旧版采集清单转换示例（仅作历史记录，当前主工程不再提供该目录）
 
 ```powershell
-node scripts/pack-instrument.mjs --collection E:/MomoSoundForge/samples/orchestra-basics-20261104/manifest.json --instrument flute --articulation staccato --out examples/instruments/flute
+node scripts/pack-instrument.mjs --collection <external-collection>/manifest.json --instrument flute --articulation staccato --out examples/instruments/flute
 ```
 
 可选 `--roots 69,76` 缩小素材集合；大乐器（例如整个钢琴集合）可能超出预算，脚本会拒绝，需选择更小集合。脚本只读取采集目录，不修改或下载素材。转换接受 `momo.instrument-collection/v1` 的 PCM16 WAV 工作副本，验证相对路径不越界。保留根音、音域、力度、演奏法、调音及作者建议增益；力度 0 下限转为 1；原随机窗口重复样本转换为明确的确定性循环，不能声称与完整 SFZ 引擎逐项等价。循环点不自动启用；原始字段、来源及转换记录保存在 `conversion.json`。释放采样只在同包确实包含所引用素材时接入。不是通用 SFZ 导入器。

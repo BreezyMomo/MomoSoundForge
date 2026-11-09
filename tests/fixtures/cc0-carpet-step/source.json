@@ -1,6 +1,6 @@
 {
   "purpose": "Small offline audio audit and portable render fixture. Bytes are unchanged publisher OGG and collected working WAV.",
-  "collection": "samples/game-sfx-starter-20261105",
+  "collection": "external-library-fixture/game-sfx-starter-20261105",
   "source": {
     "id": "kenney-impact-sounds",
     "title": "Impact Sounds",

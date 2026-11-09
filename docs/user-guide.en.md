@@ -2,7 +2,7 @@
 
 [简体中文](user-guide.md) · [English](user-guide.en.md) · [Home](../README.en.md)
 
-Create layered game sound effects in your browser using procedural synthesis and local samples. Audio processing and project storage run on your device; no account or online inference service is required.
+Create layered game sound effects in your browser using procedural synthesis and remote sound libraries. Audio processing and project storage run on your device; no account or online inference service is required.
 
 ## Track selection and compact notes
 
@@ -35,9 +35,7 @@ npm run preview
 
 `dist/` is a static site. Serve it over HTTP/HTTPS rather than opening its HTML directly.
 
-After building, run `node tools/audit-builtin-library.mjs` to write `test-results/builtin-audit.json`. It checks each entry's engine output, file checksum and embedded recordings. Outputs below −36 dBFS peak or −42 dBFS in their loudest 100 ms RMS window are flagged. Standalone notes additionally target −20 dBFS active RMS when boosting, with a −6 dBFS peak ceiling, so merely avoiding near-silence is insufficient. Quiet raw velocity layers are reported separately, never individually normalized. Level checks do not replace listening review.
-
-Legacy standalone notes restore authored gain, then receive an audible default level per independent library entry. Performance character and note velocity control remain, but separate standalone entries no longer preserve the original soft/loud level differences. Original WAV files are unchanged. Multisample velocity layers and mappings remain intact; an unusually quiet default note is replaced with an audible nearby root in the same range. Library generation rejects quiet defaults. Updates affect newly opened or added factory resources, not independent copies already saved in user projects.
+The official and supplemental libraries publish their own provenance, licenses, mappings and audio checks. The app validates the directory protocol, dependency closure, byte budgets and hashes, while keeping collection files and resource manifests outside the app repository.
 
 ## Included in v0.1
 
@@ -70,7 +68,7 @@ Tab and section preferences stay on this device, outside projects and undo histo
 
 Replacement retains name, placement, read range, speed, loop, playback length, volume, pan, mute/solo, variation lock and volume/pan curves. The new player replaces the old sound, children, notes and own effects; parent mix effects stay. Old content bindings and filter automation are removed. Out-of-range reads play silence without shortening the loop period. Fit to new sound length is an explicit action and preserves loop playback length. The work window stays fixed.
 
-Audition in the full work before confirming. Cancel makes no document change; confirmation is one undoable edit. Group multiple layers before replacing them as a whole. Native documents use v4 with a root player; unpublished older formats are not supported. Built-in resources have been updated.
+Audition in the full work before confirming. Cancel makes no document change; confirmation is one undoable edit. Group multiple layers before replacing them as a whole. Native documents use v4 with a root player; unpublished older formats are not supported. Remote catalog refreshes do not rewrite resources already added to a project.
 
 ## Workflow
 
@@ -96,7 +94,7 @@ Shortcuts: Space to play/pause; Ctrl/Cmd+Z to undo; Ctrl/Cmd+Shift+Z to redo; Ct
 
 ## Use sound resources
 
-The sidebar browses factory and local resources. Use **Manage resources** beside its search field to open the single management window for creation, imports and library connections. The default source view shows recordings and synthesizers; filter recordings, synthesizers, instrument definitions and music/sounds by type, source or category, with search, favorites and recent use. Each recording is a separate counted item, labeled with original pitch, strength and take. Instruments define note bindings. Search covers the entire library; Show more loads the next group of cards.
+The sidebar browses official, supplemental and local resources. Use **Manage resources** beside its search field to open the single management window for creation, imports and library connections. The default source view shows recordings and synthesizers; filter recordings, synthesizers, instrument definitions and music/sounds by type, library source or category, with search, favorites and recent use. Each recording is a separate counted item, labeled with original pitch, strength and take. Instruments define note bindings. Search covers the entire library; Show more loads the next group of cards.
 
 Use **Create with synthesizer**, **Write notes with instrument** or **Add to work**. Instrument insertion starts with an empty score. Resource management offers editing/export; local resources can be deleted. Library changes never update existing work instances.
 
@@ -179,7 +177,7 @@ Each layer row also has a trash icon that deletes only that row, independently o
 
 ## Nature ambience
 
-Wind, rain & thunder and Birds & nature provide 20 working clips in eight groups, selected from 11 publisher originals. Rain is separated into water and ground surfaces; the publisher describes the three isolated thunder recordings as being without rain. Ambient loops use 10–12 seconds with processed cycle boundaries; bird calls and thunder events retain their attacks and natural tails. Multiple selections can come from one long recording. Forest morning, Rainstorm and Crickets by the stream are editable combinations. See [collection notes](../samples/nature-ambience-20261105/使用说明.txt) for originals, licensing, processing and source formats.
+Wind, rain & thunder and Birds & nature are provided by the official remote library. Each entry carries its own source, license, conversion and source-format metadata; the app reads audio on demand without copying a collection directory into the main repository.
 
 
 ## Create synthesizers and instruments

@@ -1,7 +1,6 @@
 import { openResourceGraph } from '../src/resourceGraph';
 import { fetchRemoteIndex, createRemoteLoader, remoteIndexUrl } from '../src/remoteLibrary';
 import { createSamplePreparer } from '../src/prepareSamples';
-import { createPublishedLibraryFetcher } from '../src/builtinDistribution.mjs';
 import { packProject, unpackProject, packResource, unpackResource } from '../src/resourcePackage';
 import { createAudioReader } from '../src/sharedAudio';
 import { PACKAGE_BYTES } from '../src/resourceGraph';
@@ -9,15 +8,12 @@ import { projectDocument } from '../src/model';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { makeProject, makeLayer, parseProject, projectForSave, encodeSamples, MAX_ASSET_BYTES, MAX_SAMPLE_FRAMES, type Project } from '../src/model';
 import { renderProject, encodeWav } from '../src/engine';
 import { applyEdits, AUTHORING_SCHEMA, projectScoreIssues } from '../src/aiAuthoring';
 import { fromPreset, PRESETS } from '../src/presets';
 import { validateSampleSource } from '../src/sampleSource';
-import catalog from '../src/data/builtin-catalog.json';
-import { createBuiltinRecordingLoader } from '../src/builtinRecordings';
 import { importResource, resourceProject, RESOURCE_BYTES } from '../src/soundResources';
 
 const [command, ...args] = process.argv.slice(2);
@@ -36,8 +32,8 @@ const sampleBase = () => {
   if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
   site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = ''; return site.href;
 };
-const download = options['--site'] ? createPublishedLibraryFetcher(sampleBase(), url =>
-  fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' })) : undefined;
+const download = options['--site'] ? (url: string) =>
+  fetch(url, { signal: AbortSignal.timeout(30000), redirect: 'error' }) : undefined;
 const prepare = createSamplePreparer(url => {
   if (!options['--site']) throw Error('Required recording is not embedded; pass --site EDITOR_URL to load it.');
   return download!(url);
@@ -76,7 +72,7 @@ async function run() {
     const resource=await createRemoteLoader(index,url)(entry);
     return write(need('--out'),await packResource(resource));
   }
-  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; remote-catalog --url INDEX_URL; remote-fetch --url INDEX_URL --id ID --out RESOURCE; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --site URL --out PROJECT; fetch-recording --id ID --site URL --out RESOURCE; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
+  if (!command || command === 'help' || command === '--help') return console.log('Commands: schema; catalog; remote-catalog --url INDEX_URL; remote-fetch --url INDEX_URL --id ID --out RESOURCE; resource-validate --input RESOURCE; resource-pack --input DEFINITION_OR_PROJECT --out RESOURCE; resource-project --input RESOURCE --out PROJECT; resource-render --input RESOURCE --out WAV; new --name NAME [--preset ID] --out FILE; edit --input PROJECT --operations JSON --out FILE; validate --input PROJECT; render --input PROJECT --out WAV; fetch-sound --id ID --url INDEX_URL --out PROJECT; fetch-recording --id ID --url INDEX_URL --out RESOURCE; import-wav --audio WAV --metadata JSON --out PROJECT; instrument --manifest JSON --out PROJECT; lesson --id e01-a --out PROJECT. Outputs never overwrite files.');
   if (command === 'schema') return console.log(JSON.stringify(AUTHORING_SCHEMA, null, 2));
   if (['resource-validate','resource-pack','resource-project','resource-render'].includes(command)) {
     const bytes=await readFile(need('--input'));if(bytes.length>PACKAGE_BYTES)throw Error('Resource exceeds budget');
@@ -88,7 +84,11 @@ async function run() {
     const audio=renderProject(await prepare(p));await write(need('--out'),new Uint8Array(encodeWav(audio)));
     return console.log(JSON.stringify({peak:audio.peak,rms:audio.rms,listeningVerified:false}));
   }
-  if (command === 'catalog') return console.log(JSON.stringify({ presets: PRESETS.map(p => ({ id: p.id, duration: p.duration })), sounds: catalog.sounds.map(({ waveform, ...s }) => s), recordings: catalog.recordings }));
+  if (command === 'catalog') {
+    const url = remoteIndexUrl(options['--url'] || process.env.VITE_SOUND_LIBRARY_URL || 'https://breezymomo.github.io/MomoSoundForge-assets/');
+    const index = await fetchRemoteIndex(url);
+    return console.log(JSON.stringify({ presets: PRESETS.map(p => ({ id: p.id, duration: p.duration })), sounds: index.entries.map(({ preview, ...entry }) => entry) }));
+  }
   if (command === 'new') {
     if (options['--preset'] && !PRESETS.some(p => p.id === options['--preset'])) throw Error('Unknown preset');
     return save(options['--preset'] ? fromPreset(options['--preset'], options['--name'] || 'Sound', k => k) : makeProject(options['--name'] || 'Sound'));
@@ -104,26 +104,21 @@ async function run() {
     return console.log(JSON.stringify({ peak: audio.peak, rms: audio.rms, sourcePeak: audio.sourcePeak, gainReduction: audio.gainReduction, tailLimited: audio.tailLimited, duration: audio.left.length / audio.sampleRate, sha256: createHash('sha256').update(wav).digest('hex'), listeningVerified: false }));
   }
   if (command === 'fetch-recording') {
-    const site = new URL(need('--site'));
-    if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
-    site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = '';
-    const loader = createBuiltinRecordingLoader(undefined, download!, site.href);
-    const resource = await loader(need('--id').replace(/^recording:/, ''));
+    const url = remoteIndexUrl(need('--url'));
+    const index = await fetchRemoteIndex(url);
+    const entry = index.entries.find(e => e.id === need('--id').replace(/^recording:/, ''));
+    if (!entry) throw Error('Unknown remote recording');
+    const resource = await createRemoteLoader(index, url)(entry);
     await write(need('--out'), await packResource(resource,audioReader));
     return console.log(JSON.stringify({ id: resource.id, version: resource.version, kind: resource.kind, listeningVerified: false }));
   }
   if (command === 'fetch-sound') {
-    const entry = catalog.sounds.find(s => s.id === need('--id').replace(/^builtin:/, '')); if (!entry) throw Error('Unknown factory sound');
-    const site = new URL(need('--site')); if (!['https:', 'http:'].includes(site.protocol)) throw Error('Use an explicit HTTP(S) editor URL');
-    site.pathname = site.pathname.replace(/\/?$/, '/'); site.search = ''; site.hash = '';
-    const url = new URL(`sound-library/${entry.file}`, site);
-    const response = await download!(url.href);
-    if (!response.ok || !response.body) throw Error(`Sound download failed: ${response.status}`);
-    const reader = response.body.getReader(), chunks: Uint8Array[] = []; let size = 0;
-    try { for (;;) { const item = await reader.read(); if (item.done) break; size += item.value.length; if (size > entry.compressedBytes) throw Error('Sound exceeds catalog budget'); chunks.push(item.value); } } finally { await reader.cancel(); }
-    const bytes = Buffer.concat(chunks);
-    if (bytes.length !== entry.compressedBytes || createHash('sha256').update(bytes).digest('hex') !== entry.sha256) throw Error('Catalog version or checksum mismatch; update the skill');
-    return save(resourceProject((await openResourceGraph(JSON.parse(gunzipSync(bytes, { maxOutputLength: entry.projectBytes }).toString('utf8')))).resource));
+    const url = remoteIndexUrl(need('--url'));
+    const index = await fetchRemoteIndex(url);
+    const entry = index.entries.find(e => e.id === need('--id').replace(/^builtin:/, ''));
+    if (!entry) throw Error('Unknown remote sound');
+    const resource = await createRemoteLoader(index, url)(entry);
+    return save(resourceProject(resource));
   }
   if (command === 'import-wav') {
     const meta = await json(need('--metadata'));
