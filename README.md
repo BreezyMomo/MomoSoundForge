@@ -69,6 +69,7 @@ MCP 还支持候选变体生成、试听与应用，声音修饰与原声对比�
 - [长笛示例](examples/instruments/flute/)：可编辑工程、乐器包和音符数据。
 - [开发与部署](docs/development.md)：本地运行、资源构建、验证与 GitHub Pages。
 - [内置资源维护](docs/builtin-resource-maintenance.md)：资源仓库的职责、新增音频、资源包发布顺序及 AI 交接要求。
+- [乐器整理规则](docs/instrument-library-rules.md)：完整乐器定义、旧资源替换、中英文名称、映射与发布验收；后续 AI 整理音库前必读。
 - [多音库交接](docs/handoff-multi-libraries.md)：自描述目录、远程订阅、完整依赖和发布约定。
 - [GitHub 音库 Pages](docs/github-audio-pages.md)：选定的免费分发方案、无损去重结果和两个站点的发布顺序。
 - [声音资源与本地库](docs/sound-resources.md)：统一资源管理、文件夹库、自定义合成算法、音符绑定、迁移及 AI 资源格式。

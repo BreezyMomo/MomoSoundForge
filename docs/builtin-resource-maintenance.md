@@ -2,6 +2,8 @@
 
 音库现在由资源仓库独立维护。主仓库只提供编辑器框架、通用资源协议、加载与校验逻辑，以及自动订阅官方目录的部署配置。
 
+整理或替换乐器时，先读 [乐器整理与替换规则](instrument-library-rules.md)；完整乐器组织、VCSL 对应项核查、旧条目移除、多语言和音符边界验收均以该规则为准。当前发布结果见 [管弦乐器交接](handoff-orchestra-complete.md)。
+
 ## 仓库职责
 
 - [BreezyMomo/MomoSoundForge](https://github.com/BreezyMomo/MomoSoundForge)：编辑器代码、资源协议、工程格式、用户个人库和远程目录加载器。

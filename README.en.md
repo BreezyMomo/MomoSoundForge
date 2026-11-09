@@ -70,6 +70,7 @@ Run `npm run ai:build` to build the portable skill ZIP, or `npm run ai:serve -- 
 - [Current development handoff](docs/handoff-sound-resources.md) (Chinese): agreed resource design, branch, code entry points, verification and remaining work.
 - [User guide](docs/user-guide.en.md): library, timeline, groups, processing, saving and video reference.
 - [Instruments and notes (Chinese)](docs/instruments.md): sample ranges, velocity layers, articulations, note JSON and portable instrument packages.
+- [Instrument library rules (Chinese)](docs/instrument-library-rules.md): complete definitions, verified replacements, bilingual names, mapping checks and publishing; required reading for AI maintainers.
 - [Flute example](examples/instruments/flute/): editable project, instrument package and note data.
 - [Development and deployment](docs/development.md): local setup, remote library configuration, checks and GitHub Pages.
 - [Product goals (Chinese)](docs/product-vision.md): design direction for developers without audio expertise.

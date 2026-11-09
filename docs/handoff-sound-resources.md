@@ -2,6 +2,8 @@
 
 当前架构是“工程框架 + 外部自描述音库”。主工程不包含采样目录、资源清单、映射副本或音频生成物。
 
+后续 AI 整理乐器前必读 [乐器整理规则](instrument-library-rules.md)，当前已发布结果见 [管弦乐器交接](handoff-orchestra-complete.md)。完整乐器组织、对应音源替换、中英文名称和映射验收不再只依赖聊天记录。
+
 ## 入口
 
 - 远程协议：`src/remoteLibrary.ts`、`src/remoteSubscriptions.ts`。
