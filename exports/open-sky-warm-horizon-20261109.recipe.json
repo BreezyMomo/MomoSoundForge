@@ -1,0 +1,1057 @@
+{
+  "schema": "momo.soundforge/v4",
+  "name": "Open Sky, Warm Horizon",
+  "seed": 20261109,
+  "duration": 48,
+  "master": 0.95,
+  "echo": 0,
+  "effects": {
+    "toneEnabled": true,
+    "delayEnabled": true,
+    "spaceEnabled": true,
+    "low": 1.2,
+    "mid": 0,
+    "high": 1.8,
+    "delayTime": 0.34,
+    "delayFeedback": 0.18,
+    "delayWet": 0.075,
+    "reverb": 0.24,
+    "ceiling": -1.2
+  },
+  "loopRegion": {
+    "start": 0,
+    "end": 48,
+    "crossfade": 0.12
+  },
+  "inputs": [
+    {
+      "id": "section-0",
+      "name": "Section 1",
+      "start": 0,
+      "duration": 12,
+      "sourceStart": 0,
+      "sourceEnd": 12,
+      "speed": 1,
+      "loop": false,
+      "reverse": false,
+      "gain": 1,
+      "pan": 0,
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "player": {
+        "type": "composition",
+        "wave": "sine",
+        "noiseSeed": 5000,
+        "level": 1,
+        "duration": 12,
+        "frequency": 220,
+        "endFrequency": 220,
+        "attack": 0,
+        "release": 0,
+        "decay": 0,
+        "cutoff": 22000,
+        "drive": 0,
+        "mix": {
+          "schema": "momo.soundforge/v4",
+          "name": "Section 1",
+          "seed": 20261109,
+          "duration": 12,
+          "master": 1,
+          "echo": 0,
+          "inputs": [
+            {
+              "id": "pad-0",
+              "name": "Sky pad",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.28,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "synth",
+                "wave": "triangle",
+                "noiseSeed": 2048,
+                "level": 1,
+                "duration": 12,
+                "frequency": 146.8323839587038,
+                "endFrequency": 146.8323839587038,
+                "attack": 0.75,
+                "release": 1.5,
+                "decay": 2,
+                "cutoff": 4200,
+                "drive": 0
+              }
+            },
+            {
+              "id": "music-0",
+              "name": "Melody and bass 1",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.5,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "instrument",
+                "wave": "triangle",
+                "noiseSeed": 8000,
+                "level": 1,
+                "duration": 12,
+                "frequency": 220,
+                "endFrequency": 220,
+                "attack": 0.01,
+                "release": 0.2,
+                "decay": 2,
+                "cutoff": 14000,
+                "drive": 0,
+                "score": {
+                  "schema": "momo.score/v1",
+                  "bpm": 80,
+                  "instruments": [
+                    {
+                      "id": "sky",
+                      "name": "Sky triangle",
+                      "keyRange": {
+                        "low": 0,
+                        "high": 127
+                      },
+                      "regions": [
+                        {
+                          "id": "sky-region",
+                          "assetId": "",
+                          "synth": {
+                            "schema": "momo.synth/v1",
+                            "id": "builtin.sky-triangle",
+                            "name": "Sky triangle",
+                            "algorithm": "oscillator-v1",
+                            "defaults": {
+                              "wave": "triangle",
+                              "frequency": 220,
+                              "endFrequency": 220,
+                              "attack": 0.01,
+                              "release": 0.2,
+                              "decay": 2,
+                              "cutoff": 14000,
+                              "drive": 0
+                            }
+                          },
+                          "rootMidi": 60,
+                          "keyLow": 0,
+                          "keyHigh": 127,
+                          "velocityLow": 1,
+                          "velocityHigh": 127,
+                          "articulation": "sustain",
+                          "roundRobin": 0,
+                          "tuneCents": 0,
+                          "gainDb": -1,
+                          "releaseSeconds": 0.18
+                        }
+                      ]
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "id": "mel-0-0",
+                      "instrumentId": "sky",
+                      "midi": 66,
+                      "start": 0,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-0-1",
+                      "instrumentId": "sky",
+                      "midi": 67,
+                      "start": 1.9,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-0-2",
+                      "instrumentId": "sky",
+                      "midi": 69,
+                      "start": 3.8,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-0-3",
+                      "instrumentId": "sky",
+                      "midi": 71,
+                      "start": 5.699999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-0-4",
+                      "instrumentId": "sky",
+                      "midi": 69,
+                      "start": 7.6,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-0-5",
+                      "instrumentId": "sky",
+                      "midi": 67,
+                      "start": 9.5,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-0-6",
+                      "instrumentId": "sky",
+                      "midi": 66,
+                      "start": 11.399999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-0-7",
+                      "instrumentId": "sky",
+                      "midi": 64,
+                      "start": 13.299999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-0-0",
+                      "instrumentId": "sky",
+                      "midi": 50,
+                      "start": 0,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-0-1",
+                      "instrumentId": "sky",
+                      "midi": 50,
+                      "start": 4,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-0-2",
+                      "instrumentId": "sky",
+                      "midi": 52,
+                      "start": 8,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-0-3",
+                      "instrumentId": "sky",
+                      "midi": 50,
+                      "start": 12,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "assets": {}
+        }
+      }
+    },
+    {
+      "id": "section-1",
+      "name": "Section 2",
+      "start": 12,
+      "duration": 12,
+      "sourceStart": 0,
+      "sourceEnd": 12,
+      "speed": 1,
+      "loop": false,
+      "reverse": false,
+      "gain": 1,
+      "pan": 0,
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "player": {
+        "type": "composition",
+        "wave": "sine",
+        "noiseSeed": 5001,
+        "level": 1,
+        "duration": 12,
+        "frequency": 220,
+        "endFrequency": 220,
+        "attack": 0,
+        "release": 0,
+        "decay": 0,
+        "cutoff": 22000,
+        "drive": 0,
+        "mix": {
+          "schema": "momo.soundforge/v4",
+          "name": "Section 2",
+          "seed": 20261110,
+          "duration": 12,
+          "master": 1,
+          "echo": 0,
+          "inputs": [
+            {
+              "id": "pad-1",
+              "name": "Sky pad",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.28,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "synth",
+                "wave": "triangle",
+                "noiseSeed": 2048,
+                "level": 1,
+                "duration": 12,
+                "frequency": 123.47082531403103,
+                "endFrequency": 123.47082531403103,
+                "attack": 0.75,
+                "release": 1.5,
+                "decay": 2,
+                "cutoff": 4200,
+                "drive": 0
+              }
+            },
+            {
+              "id": "music-1",
+              "name": "Melody and bass 2",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.5,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "instrument",
+                "wave": "triangle",
+                "noiseSeed": 8001,
+                "level": 1,
+                "duration": 12,
+                "frequency": 220,
+                "endFrequency": 220,
+                "attack": 0.01,
+                "release": 0.2,
+                "decay": 2,
+                "cutoff": 14000,
+                "drive": 0,
+                "score": {
+                  "schema": "momo.score/v1",
+                  "bpm": 80,
+                  "instruments": [
+                    {
+                      "id": "sky",
+                      "name": "Sky triangle",
+                      "keyRange": {
+                        "low": 0,
+                        "high": 127
+                      },
+                      "regions": [
+                        {
+                          "id": "sky-region",
+                          "assetId": "",
+                          "synth": {
+                            "schema": "momo.synth/v1",
+                            "id": "builtin.sky-triangle",
+                            "name": "Sky triangle",
+                            "algorithm": "oscillator-v1",
+                            "defaults": {
+                              "wave": "triangle",
+                              "frequency": 220,
+                              "endFrequency": 220,
+                              "attack": 0.01,
+                              "release": 0.2,
+                              "decay": 2,
+                              "cutoff": 14000,
+                              "drive": 0
+                            }
+                          },
+                          "rootMidi": 60,
+                          "keyLow": 0,
+                          "keyHigh": 127,
+                          "velocityLow": 1,
+                          "velocityHigh": 127,
+                          "articulation": "sustain",
+                          "roundRobin": 0,
+                          "tuneCents": 0,
+                          "gainDb": -1,
+                          "releaseSeconds": 0.18
+                        }
+                      ]
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "id": "mel-1-0",
+                      "instrumentId": "sky",
+                      "midi": 69,
+                      "start": 0,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-1-1",
+                      "instrumentId": "sky",
+                      "midi": 71,
+                      "start": 1.9,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-1-2",
+                      "instrumentId": "sky",
+                      "midi": 73,
+                      "start": 3.8,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-1-3",
+                      "instrumentId": "sky",
+                      "midi": 74,
+                      "start": 5.699999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-1-4",
+                      "instrumentId": "sky",
+                      "midi": 73,
+                      "start": 7.6,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-1-5",
+                      "instrumentId": "sky",
+                      "midi": 71,
+                      "start": 9.5,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-1-6",
+                      "instrumentId": "sky",
+                      "midi": 69,
+                      "start": 11.399999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-1-7",
+                      "instrumentId": "sky",
+                      "midi": 67,
+                      "start": 13.299999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-1-0",
+                      "instrumentId": "sky",
+                      "midi": 45,
+                      "start": 0,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-1-1",
+                      "instrumentId": "sky",
+                      "midi": 45,
+                      "start": 4,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-1-2",
+                      "instrumentId": "sky",
+                      "midi": 47,
+                      "start": 8,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-1-3",
+                      "instrumentId": "sky",
+                      "midi": 45,
+                      "start": 12,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "assets": {}
+        }
+      }
+    },
+    {
+      "id": "section-2",
+      "name": "Section 3",
+      "start": 24,
+      "duration": 12,
+      "sourceStart": 0,
+      "sourceEnd": 12,
+      "speed": 1,
+      "loop": false,
+      "reverse": false,
+      "gain": 1,
+      "pan": 0,
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "player": {
+        "type": "composition",
+        "wave": "sine",
+        "noiseSeed": 5002,
+        "level": 1,
+        "duration": 12,
+        "frequency": 220,
+        "endFrequency": 220,
+        "attack": 0,
+        "release": 0,
+        "decay": 0,
+        "cutoff": 22000,
+        "drive": 0,
+        "mix": {
+          "schema": "momo.soundforge/v4",
+          "name": "Section 3",
+          "seed": 20261111,
+          "duration": 12,
+          "master": 1,
+          "echo": 0,
+          "inputs": [
+            {
+              "id": "pad-2",
+              "name": "Sky pad",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.28,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "synth",
+                "wave": "triangle",
+                "noiseSeed": 2048,
+                "level": 1,
+                "duration": 12,
+                "frequency": 97.99885899543733,
+                "endFrequency": 97.99885899543733,
+                "attack": 0.75,
+                "release": 1.5,
+                "decay": 2,
+                "cutoff": 4200,
+                "drive": 0
+              }
+            },
+            {
+              "id": "music-2",
+              "name": "Melody and bass 3",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.5,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "instrument",
+                "wave": "triangle",
+                "noiseSeed": 8002,
+                "level": 1,
+                "duration": 12,
+                "frequency": 220,
+                "endFrequency": 220,
+                "attack": 0.01,
+                "release": 0.2,
+                "decay": 2,
+                "cutoff": 14000,
+                "drive": 0,
+                "score": {
+                  "schema": "momo.score/v1",
+                  "bpm": 80,
+                  "instruments": [
+                    {
+                      "id": "sky",
+                      "name": "Sky triangle",
+                      "keyRange": {
+                        "low": 0,
+                        "high": 127
+                      },
+                      "regions": [
+                        {
+                          "id": "sky-region",
+                          "assetId": "",
+                          "synth": {
+                            "schema": "momo.synth/v1",
+                            "id": "builtin.sky-triangle",
+                            "name": "Sky triangle",
+                            "algorithm": "oscillator-v1",
+                            "defaults": {
+                              "wave": "triangle",
+                              "frequency": 220,
+                              "endFrequency": 220,
+                              "attack": 0.01,
+                              "release": 0.2,
+                              "decay": 2,
+                              "cutoff": 14000,
+                              "drive": 0
+                            }
+                          },
+                          "rootMidi": 60,
+                          "keyLow": 0,
+                          "keyHigh": 127,
+                          "velocityLow": 1,
+                          "velocityHigh": 127,
+                          "articulation": "sustain",
+                          "roundRobin": 0,
+                          "tuneCents": 0,
+                          "gainDb": -1,
+                          "releaseSeconds": 0.18
+                        }
+                      ]
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "id": "mel-2-0",
+                      "instrumentId": "sky",
+                      "midi": 71,
+                      "start": 0,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-2-1",
+                      "instrumentId": "sky",
+                      "midi": 73,
+                      "start": 1.9,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-2-2",
+                      "instrumentId": "sky",
+                      "midi": 74,
+                      "start": 3.8,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-2-3",
+                      "instrumentId": "sky",
+                      "midi": 76,
+                      "start": 5.699999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-2-4",
+                      "instrumentId": "sky",
+                      "midi": 74,
+                      "start": 7.6,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-2-5",
+                      "instrumentId": "sky",
+                      "midi": 73,
+                      "start": 9.5,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-2-6",
+                      "instrumentId": "sky",
+                      "midi": 71,
+                      "start": 11.399999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-2-7",
+                      "instrumentId": "sky",
+                      "midi": 69,
+                      "start": 13.299999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-2-0",
+                      "instrumentId": "sky",
+                      "midi": 47,
+                      "start": 0,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-2-1",
+                      "instrumentId": "sky",
+                      "midi": 47,
+                      "start": 4,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-2-2",
+                      "instrumentId": "sky",
+                      "midi": 49,
+                      "start": 8,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-2-3",
+                      "instrumentId": "sky",
+                      "midi": 47,
+                      "start": 12,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "assets": {}
+        }
+      }
+    },
+    {
+      "id": "section-3",
+      "name": "Section 4",
+      "start": 36,
+      "duration": 12,
+      "sourceStart": 0,
+      "sourceEnd": 12,
+      "speed": 1,
+      "loop": false,
+      "reverse": false,
+      "gain": 1,
+      "pan": 0,
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "player": {
+        "type": "composition",
+        "wave": "sine",
+        "noiseSeed": 5003,
+        "level": 1,
+        "duration": 12,
+        "frequency": 220,
+        "endFrequency": 220,
+        "attack": 0,
+        "release": 0,
+        "decay": 0,
+        "cutoff": 22000,
+        "drive": 0,
+        "mix": {
+          "schema": "momo.soundforge/v4",
+          "name": "Section 4",
+          "seed": 20261112,
+          "duration": 12,
+          "master": 1,
+          "echo": 0,
+          "inputs": [
+            {
+              "id": "pad-3",
+              "name": "Sky pad",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.28,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "synth",
+                "wave": "triangle",
+                "noiseSeed": 2048,
+                "level": 1,
+                "duration": 12,
+                "frequency": 82.4068892282175,
+                "endFrequency": 82.4068892282175,
+                "attack": 0.75,
+                "release": 1.5,
+                "decay": 2,
+                "cutoff": 4200,
+                "drive": 0
+              }
+            },
+            {
+              "id": "music-3",
+              "name": "Melody and bass 4",
+              "start": 0,
+              "duration": 12,
+              "sourceStart": 0,
+              "sourceEnd": 12,
+              "speed": 1,
+              "loop": false,
+              "reverse": false,
+              "gain": 0.5,
+              "pan": 0,
+              "muted": false,
+              "solo": false,
+              "locked": false,
+              "player": {
+                "type": "instrument",
+                "wave": "triangle",
+                "noiseSeed": 8003,
+                "level": 1,
+                "duration": 12,
+                "frequency": 220,
+                "endFrequency": 220,
+                "attack": 0.01,
+                "release": 0.2,
+                "decay": 2,
+                "cutoff": 14000,
+                "drive": 0,
+                "score": {
+                  "schema": "momo.score/v1",
+                  "bpm": 80,
+                  "instruments": [
+                    {
+                      "id": "sky",
+                      "name": "Sky triangle",
+                      "keyRange": {
+                        "low": 0,
+                        "high": 127
+                      },
+                      "regions": [
+                        {
+                          "id": "sky-region",
+                          "assetId": "",
+                          "synth": {
+                            "schema": "momo.synth/v1",
+                            "id": "builtin.sky-triangle",
+                            "name": "Sky triangle",
+                            "algorithm": "oscillator-v1",
+                            "defaults": {
+                              "wave": "triangle",
+                              "frequency": 220,
+                              "endFrequency": 220,
+                              "attack": 0.01,
+                              "release": 0.2,
+                              "decay": 2,
+                              "cutoff": 14000,
+                              "drive": 0
+                            }
+                          },
+                          "rootMidi": 60,
+                          "keyLow": 0,
+                          "keyHigh": 127,
+                          "velocityLow": 1,
+                          "velocityHigh": 127,
+                          "articulation": "sustain",
+                          "roundRobin": 0,
+                          "tuneCents": 0,
+                          "gainDb": -1,
+                          "releaseSeconds": 0.18
+                        }
+                      ]
+                    }
+                  ],
+                  "notes": [
+                    {
+                      "id": "mel-3-0",
+                      "instrumentId": "sky",
+                      "midi": 69,
+                      "start": 0,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-3-1",
+                      "instrumentId": "sky",
+                      "midi": 71,
+                      "start": 1.9,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-3-2",
+                      "instrumentId": "sky",
+                      "midi": 73,
+                      "start": 3.8,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-3-3",
+                      "instrumentId": "sky",
+                      "midi": 76,
+                      "start": 5.699999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-3-4",
+                      "instrumentId": "sky",
+                      "midi": 74,
+                      "start": 7.6,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-3-5",
+                      "instrumentId": "sky",
+                      "midi": 73,
+                      "start": 9.5,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-3-6",
+                      "instrumentId": "sky",
+                      "midi": 71,
+                      "start": 11.399999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "mel-3-7",
+                      "instrumentId": "sky",
+                      "midi": 69,
+                      "start": 13.299999999999999,
+                      "duration": 1.95,
+                      "velocity": 92,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-3-0",
+                      "instrumentId": "sky",
+                      "midi": 43,
+                      "start": 0,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-3-1",
+                      "instrumentId": "sky",
+                      "midi": 43,
+                      "start": 4,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-3-2",
+                      "instrumentId": "sky",
+                      "midi": 45,
+                      "start": 8,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    },
+                    {
+                      "id": "bass-3-3",
+                      "instrumentId": "sky",
+                      "midi": 43,
+                      "start": 12,
+                      "duration": 3.7,
+                      "velocity": 60,
+                      "articulation": "sustain"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "assets": {}
+        }
+      }
+    }
+  ],
+  "assets": {}
+}
