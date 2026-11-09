@@ -400,7 +400,7 @@ export function NoteRoll({
                   "roll.coverage",
                   score.notes.findIndex((n) => n.id === current.id) + 1,
                   currentInstrument?.name ?? t("note.coverage.missing"),
-                  articulationName(current.articulation),
+                  articulationName(current.articulation, currentInstrument),
                   velocityPercent(current.velocity),
                   coverageLabel(currentInstrument, current),
                 )}

@@ -3,6 +3,7 @@ import { decodeSamples, stableHash, rng } from "./model";
 import { parseSynth, synthValues, expressionVoice, synthSample, type SynthDefinition } from './synthesizers';
 import { compileExpression } from './synthExpression';
 import { sampleFrames, embeddedFrames } from './sampleReference';
+import { validateArticulationNames, type ArticulationNames } from './articulationNames';
 export const MAX_SCORE_NOTES = 256;
 export const MAX_TOTAL_NOTES = 1024;
 export type SampleRegion = {
@@ -37,6 +38,8 @@ export type Instrument = {
   name: string;
   source?: string;
   license?: string;
+  /** Localized display labels; excluded from immutable sound identity. */
+  articulationNames?: ArticulationNames;
   /** Intended keyboard range; unassigned notes inside it remain silent. */
   keyRange?: { low: number; high: number };
   regions: SampleRegion[];
@@ -103,6 +106,7 @@ export function validateScore(
     )
       fail();
     ids.add(inst.id);
+    if (inst.articulationNames !== undefined) validateArticulationNames(inst.articulationNames);
     if (inst.keyRange !== undefined && (!inst.keyRange || !integer(inst.keyRange.low, 0, 127) || !integer(inst.keyRange.high, inst.keyRange.low, 127))) fail();
     const regionIds = new Set<string>();
     for (const r of inst.regions) {

@@ -2,7 +2,8 @@ import { Button, WorkbenchChoice } from "@momo/workbench/react";
 import { useEffect, useState } from "react";
 import type { Instrument, NoteEvent } from "./instruments";
 import { BUILTIN_MESSAGES } from "./builtinMessages";
-import { t } from "./i18n";
+import { t, language } from "./i18n";
+import { localizedArticulationName } from './articulationNames';
 import { pitchName } from "./noteEditing";
 import {
   noteCoverageIssue,
@@ -13,9 +14,11 @@ import {
 } from "./noteCoverage";
 import "./note-coverage.css";
 
-export function articulationName(value: string) {
-  const key = `builtin.articulation.${value}`;
-  return Object.hasOwn(BUILTIN_MESSAGES, key) ? t(key) : value;
+export function articulationName(value: string, instrument?: Instrument) {
+  return localizedArticulationName(value, instrument?.articulationNames, language.interfaceLanguage(), id => {
+    const key = `builtin.articulation.${id}`;
+    return Object.hasOwn(BUILTIN_MESSAGES, key) ? t(key) : id;
+  });
 }
 
 export function coverageLabel(
@@ -56,7 +59,7 @@ export function NoteCoverageNotice({
               "note.coverage.proposal",
               pitchName(choice.midi),
               velocityPercent(choice.velocity),
-              articulationName(choice.articulation),
+              articulationName(choice.articulation, instrument),
             )}
           </p>
           {candidates.length > 1 && (
@@ -65,7 +68,7 @@ export function NoteCoverageNotice({
               value={selected}
               items={candidates.map((candidate, index) => ({
                 value: String(index),
-                label: `${pitchName(candidate.midi)} · ${velocityPercent(candidate.velocity)}% · ${articulationName(candidate.articulation)}`,
+                label: `${pitchName(candidate.midi)} · ${velocityPercent(candidate.velocity)}% · ${articulationName(candidate.articulation, instrument)}`,
               }))}
               onValueChange={setSelected}
             />

@@ -37,6 +37,7 @@ import {
 } from "./instruments";
 import "./score.css";
 import { BasicScoreEditor } from "./BasicScoreEditor";
+import { articulationName } from './NoteCoverageNotice';
 function NumberField({
   label,
   value,
@@ -613,7 +614,7 @@ export function ScoreEditor({
                               label={`${t("score.articulation")} ${index + 1}`}
                               value={n.articulation}
                               className="wb:w-full wb:min-w-0"
-                              items={arts.map((a) => ({ value: a, label: a }))}
+                              items={arts.map((a) => ({ value: a, label: articulationName(a, i) }))}
                               onValueChange={(articulation) =>
                                 updateNote(n.id, { articulation })
                               }
@@ -724,7 +725,7 @@ export function ScoreEditor({
                       className="wb:w-full wb:min-w-0"
                       items={inst.regions.map((r, i) => ({
                         value: r.id,
-                        label: `${i + 1}. ${r.synth?.name ?? project.assets[r.assetId]?.name} · ${r.articulation} · MIDI ${r.keyLow}–${r.keyHigh} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`,
+                        label: `${i + 1}. ${r.synth?.name ?? project.assets[r.assetId]?.name} · ${articulationName(r.articulation, inst)} · MIDI ${r.keyLow}–${r.keyHigh} · vel ${r.velocityLow}–${r.velocityHigh} · RR ${r.roundRobin}`,
                       }))}
                     />
                   </Field>

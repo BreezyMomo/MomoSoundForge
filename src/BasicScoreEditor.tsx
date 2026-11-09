@@ -179,7 +179,7 @@ export function BasicScoreEditor({
                     value={note.articulation}
                     items={articulations.map((value) => ({
                       value,
-                      label: articulationName(value),
+                      label: articulationName(value, instrument),
                     }))}
                     onValueChange={(articulation) =>
                       onUpdate(note.id, { articulation })
@@ -192,7 +192,7 @@ export function BasicScoreEditor({
               {t(
                 "note.basic.coverage",
                 instrument?.name ?? t("note.coverage.missing"),
-                articulationName(note.articulation),
+                articulationName(note.articulation, instrument),
                 coverageLabel(instrument, note),
               )}
             </p>

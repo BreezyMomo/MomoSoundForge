@@ -2,6 +2,7 @@ import { parseResource, type SoundResource } from './soundResources';
 import type { SampleAsset } from './model';
 import { audioReference, canonical, contentId, readAudio } from './sharedAudio';
 import { parseSampleReference, type SharedSampleReference } from './sampleReference';
+import { validateArticulationNames } from './articulationNames';
 
 export type ContentObject={kind:'node'|'synth'|'instrument';value:Record<string,unknown>};
 export type ResourceGraph={schema:'momo.resource-graph/v1';renderContract:'momo.engine/1';
@@ -12,7 +13,7 @@ export const PACKAGE_BYTES=768*1024*1024;
 export const PACKAGE_EXPANDED_BYTES=1536*1024*1024;
 const objectId=/^(node|synth|instrument)-[a-f0-9]{64}$/;
 const record=(x:unknown):x is Record<string,unknown>=>!!x&&typeof x==='object'&&!Array.isArray(x);
-const annotationKeys=new Set(['name','source','license','id']);
+const annotationKeys=new Set(['name','source','license','id','articulationNames']);
 export async function sealResource(raw:SoundResource,writeAudio:(ref:SharedSampleReference,bytes:Uint8Array)=>Promise<void>,reader=readAudio):Promise<ResourceGraph>{
   const resource=parseResource(raw),objects:ResourceGraph['objects']=Object.create(null),annotations:ResourceGraph['annotations']=Object.create(null);
   let audioTotal=0;const audioSeen=new Set<string>(),sourceSeen=new Map<string,SharedSampleReference>();
@@ -46,7 +47,7 @@ export async function sealResource(raw:SoundResource,writeAudio:(ref:SharedSampl
     for(const [key,item] of Object.entries(v)){
       if(item===undefined)continue;
       if(['__proto__','prototype','constructor'].includes(key))throw Error('resources.invalid');
-      if((key==='name'&&typeof item==='string')||((key==='source'||key==='license')&&typeof v.id==='string'&&typeof v.name==='string')||(key==='id'&&kind!=='node'))meta[key]=item;
+      if((key==='name'&&typeof item==='string')||((key==='source'||key==='license')&&typeof v.id==='string'&&typeof v.name==='string')||(key==='id'&&kind!=='node')||(key==='articulationNames'&&kind==='instrument'))meta[key]=item;
       else body[key]=await visit(item,path+'/'+key.replace(/~/g,'~0').replace(/\//g,'~1'),depth+1,assets);
     }
     if(Object.keys(meta).length)annotations[path]=meta;
@@ -80,8 +81,15 @@ export async function openResourceGraph(raw:unknown):Promise<{resource:SoundReso
     const out:Record<string,unknown>=Object.create(null);
     for(const [k,v] of Object.entries(obj.value)){if(['__proto__','prototype','constructor'].includes(k))throw Error('resources.invalid');out[k]=inflate(v,path+'/'+k.replace(/~/g,'~0').replace(/\//g,'~1'),stack,depth+1);}
     stack.delete(id);
+    // Localized labels belong only to an instrument annotation. Reject hashed
+    // copies so a display-only edit can never change sound identity.
+    if(Object.hasOwn(out,'articulationNames'))throw Error('resources.invalid');
     const meta=g.annotations[path];
     if(meta){if(!record(meta)||Object.keys(meta).some(k=>!annotationKeys.has(k)||Object.hasOwn(out,k))||('id'in meta&&obj.kind==='node'))throw Error('resources.invalid');Object.assign(out,meta);annotationPaths.add(path);}
+    if(meta&&Object.hasOwn(meta,'articulationNames')){
+      if(obj.kind!=='instrument'||!Array.isArray(out.regions))throw Error('resources.invalid');
+      validateArticulationNames(meta.articulationNames,'resources.invalid');
+    }
     if(out.schema==='momo.audio-reference/v1'){
       const ref=parseSampleReference(out) as SharedSampleReference,prior=audio.get(ref.audioId);
       if(prior&&(prior.frames!==ref.frames||prior.sampleRate!==ref.sampleRate||prior.channelCount!==ref.channelCount))throw Error('resources.conflict');audio.set(ref.audioId,ref);

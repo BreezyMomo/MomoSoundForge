@@ -5,7 +5,7 @@ import { t } from "./i18n";
 import { uid, type Project, type RenderResult } from "./model";
 import { parseDefinition, type InstrumentDefinition } from "./soundDefinitions";
 import { resourceProject, type SoundResource } from "./soundResources";
-import { selectRegion, type SampleRegion } from "./instruments";
+import { selectRegion, type Instrument, type SampleRegion } from "./instruments";
 import { articulationName } from "./NoteCoverageNotice";
 import { pitchName } from "./noteEditing";
 import { bindInstrumentNote, instrumentSource, noteMappings, playableNoteMappings } from "./instrumentMapping";
@@ -138,7 +138,7 @@ export function InstrumentEditor({ definition, onChange, onChooseSource, onRende
           const rows: (SampleRegion|undefined)[]=mappings.length?mappings:[undefined];
           return rows.map((current,index)=>{
             const shared=current&&current.keyLow!==current.keyHigh;
-            const label=current?variantLabel(current,mappings):'';
+            const label=current?variantLabel(current,mappings,definition.instrument):'';
             const target=[pitchName(midi),label].filter(Boolean).join(' · ');
             const gaps=current&&mappings.find(r=>r.articulation===current.articulation)===current?missingVelocities(mappings,current.articulation):'';
             const previewing=!!current&&playback===`${previewKey}:note:${midi}:${current.id}`;
@@ -171,7 +171,7 @@ export function InstrumentEditor({ definition, onChange, onChooseSource, onRende
       <summary>{t("instrument.moreSettings")}</summary>
       <p className="field-help">{t("instrument.advancedHelp")}</p>
       <label className="resource-field"><span>{t("instrument.setting")}</span><select value={region.id} onChange={e => setSelected(e.target.value)}>
-        {definition.instrument.regions.map(r => <option key={r.id} value={r.id}>{rangeName(r)} · {sourceName(definition, r)} · {r.articulation} · {r.velocityLow}–{r.velocityHigh}</option>)}
+        {definition.instrument.regions.map(r => <option key={r.id} value={r.id}>{rangeName(r)} · {sourceName(definition, r)} · {articulationName(r.articulation,definition.instrument)} · {r.velocityLow}–{r.velocityHigh}</option>)}
       </select></label>
       <div className="resource-metadata">
         {pitchField("keyLow", t("resources.low"))}{pitchField("keyHigh", t("resources.high"))}
@@ -246,12 +246,12 @@ function NumberSetting({ label, value, min, max, step = 1, onChange }: {
   return <label className="resource-field"><span>{label}</span><WorkbenchNumberInput label={label} value={value} min={min} max={max} step={step} onValueCommit={onChange} /></label>;
 }
 
-function variantLabel(region:SampleRegion,mappings:SampleRegion[]){
+function variantLabel(region:SampleRegion,mappings:SampleRegion[],instrument:Instrument){
   const styled=mappings.filter(r=>r.articulation===region.articulation);
   const bands=[...new Set(styled.map(r=>`${r.velocityLow}:${r.velocityHigh}`))];
   const band=bands.indexOf(`${region.velocityLow}:${region.velocityHigh}`);
   const strength=bands.length>1?t(band===0?'instrument.soft':band===bands.length-1?'instrument.hard':'instrument.medium',band+1):'';
   const takes=styled.filter(r=>r.velocityLow===region.velocityLow&&r.velocityHigh===region.velocityHigh);
-  const style=region.articulation==='sustain'?'':articulationName(region.articulation);
+  const style=region.articulation==='sustain'?'':articulationName(region.articulation,instrument);
   return [style,strength,takes.length>1?t('instrument.take',takes.findIndex(r=>r.id===region.id)+1):''].filter(Boolean).join(' · ');
 }
