@@ -1,4 +1,5 @@
 import { createRemoteLoader, fetchRemoteIndex, remoteIndexUrl, REMOTE_LIMITS, type RemoteIndex } from './remoteLibrary';
+import { PRIMARY_SOUND_LIBRARY_URL, relocatedSoundLibrary, SUPPLEMENTAL_SOUND_LIBRARY_URLS } from './officialSoundLibraries';
 
 export type Subscription = { id:string; name:string; url:string; enabled:boolean; libraryId?:string; official?:boolean; autoName?:boolean };
 export type RemoteState = Subscription & { index?:RemoteIndex; loading?:boolean; error?:string };
@@ -10,9 +11,25 @@ export class RemoteLibraries {
   private revisions=new Map<string,number>();
   constructor(defaults:Subscription[],private storage?:Storage,private fetcher:typeof fetch=fetch){
     this.states=defaults.map(s=>({...s,autoName:s.autoName===true}));
-    try{const raw=storage?.getItem(KEY);if(raw){const saved=JSON.parse(raw);if(!Array.isArray(saved)||saved.length>REMOTE_LIMITS.sources)throw Error();
-      const ids=new Set();this.states=saved.map(s=>{if(typeof s.id!=='string'||ids.has(s.id)||typeof s.name!=='string'||!s.name.trim()||s.name.length>120||typeof s.enabled!=='boolean'||(s.libraryId!==undefined&&!/^[a-zA-Z0-9-]{1,120}$/.test(s.libraryId))||(s.autoName!==undefined&&typeof s.autoName!=='boolean'))throw Error();ids.add(s.id);return {id:s.id,name:s.name,url:remoteIndexUrl(s.url),enabled:s.enabled,libraryId:s.libraryId,official:s.id==='official',autoName:s.autoName===true};});}}
-    catch{this.states=defaults;}
+    try{
+      const raw=storage?.getItem(KEY);
+      if(!raw)return;
+      const saved=JSON.parse(raw);
+      if(!Array.isArray(saved)||saved.length>REMOTE_LIMITS.sources)throw Error();
+      const ids=new Set();
+      let moved=false;
+      this.states=saved.map(s=>{
+        if(typeof s.id!=='string'||ids.has(s.id)||typeof s.name!=='string'||!s.name.trim()||s.name.length>120||typeof s.enabled!=='boolean'||(s.libraryId!==undefined&&!/^[a-zA-Z0-9-]{1,120}$/.test(s.libraryId))||(s.autoName!==undefined&&typeof s.autoName!=='boolean'))throw Error();
+        ids.add(s.id);
+        const url=remoteIndexUrl(s.url);
+        const relocation=relocatedSoundLibrary(url,s.libraryId);
+        moved ||= Boolean(relocation);
+        return {id:s.id,name:s.name,url,enabled:s.enabled,libraryId:s.libraryId,official:s.id==='official',autoName:s.autoName===true,...relocation};
+      });
+      if(moved){
+        try{this.persist(this.states);}catch{/* Storage can be read-only. Keep the relocated subscriptions in memory. */}
+      }
+    }catch{this.states=defaults;}
   }
   snapshot=()=>this.states;
   subscribe=(fn:()=>void)=>{this.listeners.add(fn);return()=>{this.listeners.delete(fn);};};
@@ -57,28 +74,17 @@ export class RemoteLibraries {
   loader(s:RemoteState){if(!s.index)throw Error('remote.invalid');return createRemoteLoader(s.index,s.url,this.fetcher);}
 }
 export function parseRemoteLibraryUrls(raw:string, excluded=''){
-  const excludedUrl=excluded?remoteIndexUrl(excluded):'';
-  return [...new Set(raw.split(/[\r\n,]+/).map(value=>value.trim()).filter(Boolean).map(value=>remoteIndexUrl(value)).filter(url=>url!==excludedUrl))];
+  const current=(value:string)=>{const url=remoteIndexUrl(value);return relocatedSoundLibrary(url)?.url??url;};
+  const excludedUrl=excluded?current(excluded):'';
+  return [...new Set(raw.split(/[\r\n,]+/).map(value=>value.trim()).filter(Boolean).map(current).filter(url=>url!==excludedUrl))];
 }
 // The editor is a framework; factory resources live in the published library
 // and are discovered from its self-describing index at runtime.
-const base=import.meta.env?.VITE_SOUND_LIBRARY_URL || 'https://breezymomo.github.io/MomoSoundForge-assets/';
-const defaultUrl=new URL('index.json',new URL(base,typeof document==='undefined'?'http://localhost/':document.baseURI)).href;
+const base=import.meta.env?.VITE_SOUND_LIBRARY_URL || PRIMARY_SOUND_LIBRARY_URL;
+const baseIndex=new URL('index.json',new URL(base,typeof document==='undefined'?'http://localhost/':document.baseURI)).href;
+const defaultUrl=relocatedSoundLibrary(baseIndex)?.url??baseIndex;
 const configuredUrls=parseRemoteLibraryUrls(
-  import.meta.env?.VITE_SOUND_LIBRARY_URLS ?? [
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-winds/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-plucked/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-keyboards/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harpsichords/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-knight/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-steinway/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-steinway-2/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-piano-yamaha/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-mallets/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-percussion/',
-    'https://breezymomo.github.io/MomoSoundForge-assets-vcsl-timpani/',
-  ].join(','),
+  import.meta.env?.VITE_SOUND_LIBRARY_URLS ?? SUPPLEMENTAL_SOUND_LIBRARY_URLS.join(','),
   defaultUrl,
 );
 const externalDefaults:Subscription[]=configuredUrls.map((url:string,index:number)=>({id:`external-${index+1}`,name:'External sound library',url,enabled:true,autoName:true}));

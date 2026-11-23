@@ -36,6 +36,36 @@ it('normalizes deployment library URLs without storing package metadata in the a
   ]);
   expect(parseRemoteLibraryUrls('https://official.example/','https://official.example/index.json')).toEqual([]);
 });
+it('normalizes old deployment URLs to the published mirrors and deduplicates them',()=>{
+  const oldRoot='https://breezymomo.github.io/MomoSoundForge-assets';
+  const mirror='https://audio.breezymomo.com/';
+  const winds=mirror+'MomoSoundForge-assets-vcsl-winds/index.json';
+  expect(parseRemoteLibraryUrls([oldRoot+'/',oldRoot+'-vcsl-winds/',winds].join(','),mirror)).toEqual([winds]);
+});
+it('migrates saved official subscriptions once while preserving settings and other sources',()=>{
+  const oldRoot='https://breezymomo.github.io/MomoSoundForge-assets';
+  const saved=[
+    {id:'official',name:'Momo SoundForge',url:oldRoot+'/index.json',enabled:true,libraryId:'momo-official-sounds'},
+    {id:'external-1',name:'My instruments',url:oldRoot+'-vcsl-harp-sax/',enabled:false},
+    {id:'external-2',name:'Winds',url:oldRoot+'-vcsl-winds/index.json',enabled:true,libraryId:'vcsl-winds',autoName:true},
+    {id:'external-3',name:'Different identity',url:oldRoot+'-vcsl-plucked/index.json',enabled:false,libraryId:'custom-library'},
+    {id:'custom',name:'Custom',url:'https://other.example/index.json',enabled:true,libraryId:'custom-library'},
+  ];
+  let raw=JSON.stringify(saved);
+  const storage={getItem:()=>raw,setItem:vi.fn((_key:string,value:string)=>{raw=value;})};
+  const mirror='https://audio.breezymomo.com/';
+  const expected=[
+    {...saved[0],url:mirror+'index.json'},
+    {...saved[1],url:mirror+'MomoSoundForge-assets-vcsl-harp-sax/index.json',libraryId:'momo-vcsl-harp-sax'},
+    {...saved[2],url:mirror+'MomoSoundForge-assets-vcsl-winds/index.json'},
+    saved[3],saved[4],
+  ];
+  const migrated=new RemoteLibraries([],storage).snapshot();
+  expect(migrated).toMatchObject(expected);
+  expect(JSON.parse(raw)).toMatchObject(expected);
+  expect(new RemoteLibraries([],storage).snapshot()).toEqual(migrated);
+  expect(storage.setItem).toHaveBeenCalledTimes(1);
+});
 it('collects a complete resource for offline rendering and portable sharing',async()=>{
   const f=await fixture(true),index=parseRemoteIndex(f.index,'https://audio.example/index.json');
   const r=await createRemoteLoader(index,'https://audio.example/index.json',f.fetcher)(index.entries[0]);

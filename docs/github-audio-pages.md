@@ -1,12 +1,8 @@
-# GitHub Pages 音库部署
+# 编辑器与音库部署
 
-编辑器与音库分别发布在以下仓库：
+[MomoSoundForge](https://github.com/BreezyMomo/MomoSoundForge) 构建编辑器，供正式站和 GitHub Pages 发布。两个站点的默认音库地址一致，主库使用 `https://audio.breezymomo.com/index.json`，补充库使用 `https://audio.breezymomo.com/MomoSoundForge-assets-<库名>/index.json`。
 
-- [MomoSoundForge](https://github.com/BreezyMomo/MomoSoundForge)：框架、协议和工程逻辑。
-- [MomoSoundForge-assets](https://github.com/BreezyMomo/MomoSoundForge-assets)：官方自描述音库。
-- [MomoSoundForge-assets-vcsl-harp-sax](https://github.com/BreezyMomo/MomoSoundForge-assets-vcsl-harp-sax)：补充音库。
-
-官方目录为 `https://breezymomo.github.io/MomoSoundForge-assets/index.json`，补充目录为 `https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/index.json`。编辑器通过 `VITE_SOUND_LIBRARY_URL` 和 `VITE_SOUND_LIBRARY_URLS` 订阅它们；资源仓库不需要被克隆到主工程，主工程也不生成音库目录。
+编辑器的默认订阅定义见 `src/officialSoundLibraries.ts`。自定义部署可以用 `VITE_SOUND_LIBRARY_URL` 和 `VITE_SOUND_LIBRARY_URLS` 指定本部署的目录。
 
 发布顺序：先发布不可变资源文件，再发布目录；验证 HTTPS、CORS、目录 schema、依赖闭包、大小和哈希；最后构建并发布编辑器。不要覆盖已发布目录，不使用 `latest`，不要把音频提交到任一 Git 历史。
 

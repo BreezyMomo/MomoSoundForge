@@ -1,5 +1,6 @@
 import { openResourceGraph } from '../src/resourceGraph';
 import { fetchRemoteIndex, createRemoteLoader, remoteIndexUrl } from '../src/remoteLibrary';
+import { PRIMARY_SOUND_LIBRARY_URL, relocatedSoundLibrary } from '../src/officialSoundLibraries';
 import { createSamplePreparer } from '../src/prepareSamples';
 import { packProject, unpackProject, packResource, unpackResource } from '../src/resourcePackage';
 import { createAudioReader } from '../src/sharedAudio';
@@ -85,7 +86,8 @@ async function run() {
     return console.log(JSON.stringify({peak:audio.peak,rms:audio.rms,listeningVerified:false}));
   }
   if (command === 'catalog') {
-    const url = remoteIndexUrl(options['--url'] || process.env.VITE_SOUND_LIBRARY_URL || 'https://breezymomo.github.io/MomoSoundForge-assets/');
+    const configured = remoteIndexUrl(options['--url'] || process.env.VITE_SOUND_LIBRARY_URL || PRIMARY_SOUND_LIBRARY_URL);
+    const url = relocatedSoundLibrary(configured)?.url ?? configured;
     const index = await fetchRemoteIndex(url);
     return console.log(JSON.stringify({ presets: PRESETS.map(p => ({ id: p.id, duration: p.duration })), sounds: index.entries.map(({ preview, ...entry }) => entry) }));
   }

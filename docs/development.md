@@ -25,20 +25,16 @@ Verify interactions in a real browser. The build validates the editor, audio wor
 
 ## 音源分发 / Library distribution
 
-新增、替换或发布音源时，资源仓库负责生成并发布完整的 `momo.remote-sound-library/v1` 目录。主工程通过 `VITE_SOUND_LIBRARY_URL` 指定官方目录，通过 `VITE_SOUND_LIBRARY_URLS` 自动订阅补充目录。每个目录自带资源身份、定义、完整音频依赖、来源和授权信息。
-When adding, replacing or publishing sounds, the asset repository builds and publishes a complete `momo.remote-sound-library/v1` directory. The app receives the official URL through `VITE_SOUND_LIBRARY_URL` and optional library URLs through `VITE_SOUND_LIBRARY_URLS`. Each directory carries its own identity, definitions, complete audio dependencies, provenance and licenses.
+音库独立生成完整的 `momo.remote-sound-library/v1` 目录，发布到 `audio.breezymomo.com`。每个目录包含资源身份、定义、完整音频依赖、来源和授权信息。
+Libraries are built independently and published to `audio.breezymomo.com` as complete `momo.remote-sound-library/v1` catalogs. Each catalog carries its own identity, definitions, complete audio dependencies, provenance and licenses.
 
 主工程不生成或提交 `samples/`、`sound-assets.lock.json`、`src/data/builtin-catalog.json` 或 `public/sound-library/`。用户可以把远程资源下载到自己的个人库，之后离线编辑和分享。
 The app repository does not generate or commit `samples/`, `sound-assets.lock.json`, `src/data/builtin-catalog.json` or `public/sound-library/`. Users can download remote resources into their personal library for offline editing and sharing.
 
-两个官方目录当前为：
-
-- [MomoSoundForge-assets](https://breezymomo.github.io/MomoSoundForge-assets/)
-- [MomoSoundForge-assets-vcsl-harp-sax](https://breezymomo.github.io/MomoSoundForge-assets-vcsl-harp-sax/)
-
-The deployment workflow supplies these URLs through environment variables; URLs are configuration, while the package contents remain in the asset repositories.
+默认订阅[主音库](https://audio.breezymomo.com/index.json)和同域名下的 12 个补充音库。可以通过 `VITE_SOUND_LIBRARY_URL` 和 `VITE_SOUND_LIBRARY_URLS` 覆盖这些默认地址。
+The app subscribes to the [main library](https://audio.breezymomo.com/index.json) and 12 supplemental libraries on the same host by default. Override their URLs with `VITE_SOUND_LIBRARY_URL` and `VITE_SOUND_LIBRARY_URLS`.
 
 ## GitHub Pages
 
-`.github/workflows/pages.yml` 只安装依赖、运行测试、构建并发布小型编辑器站点。它不会恢复本地音频包，也不会在主仓库生成音库目录。资源仓库独立发布音库 Pages，两个站点通过 CORS 协作。
-The Pages workflow installs dependencies, tests, builds and publishes the small editor site. It does not restore local audio packs or generate a library directory in this repository. The asset repositories publish library Pages independently and the sites work together through CORS.
+`.github/workflows/pages.yml` 安装依赖、运行测试、构建并发布编辑器。GitHub Pages 和正式站都通过 CORS 访问 `audio.breezymomo.com`。
+The Pages workflow installs dependencies, tests, builds and publishes the editor. Both GitHub Pages and the production site load the libraries from `audio.breezymomo.com` via CORS.
